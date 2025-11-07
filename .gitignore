@@ -114,6 +114,11 @@ contracts/build/
 contracts/.movement/
 Move.lock
 
+# Test App
+test-app/node_modules/
+test-app/.next/
+test-app/out/
+
 # Misc
 .sass-cache/
 .parcel-cache/
