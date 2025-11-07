@@ -41,6 +41,7 @@ module marketplace::access {
         created_at: u64
     }
 
+    #[allow(unused_field)]
     public struct KeyServer has store, drop, copy {
         object_id: ID,
         url: String,
