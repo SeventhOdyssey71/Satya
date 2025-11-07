@@ -5,7 +5,13 @@ authors = ["Satya Team"]
 edition = "2024.beta"
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet-v1.38.0" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "9c04e1840eb5" }
 
 [addresses]
 marketplace = "0x0"
+
+[dev-dependencies]
+# Test utilities for comprehensive testing
+
+[dev-addresses]
+# Addresses for testing

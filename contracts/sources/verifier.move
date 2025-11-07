@@ -8,15 +8,23 @@ module marketplace::verifier {
     use std::vector;
     use std::string::String;
 
-    // ======= Constants =======
-    const ERROR_INVALID_ATTESTATION: u64 = 0;
-    const ERROR_NOT_AUTHORIZED: u64 = 1;
-    const ERROR_ALREADY_VERIFIED: u64 = 2;
-    const ERROR_INVALID_PCR: u64 = 3;
+    // ======= Errors =======
+    #[error]
+    const EInvalidAttestation: vector<u8> = b"Invalid attestation data";
+    #[error]
+    const ENotAuthorized: vector<u8> = b"Caller not authorized";
+    #[error]
+    const EAlreadyVerified: vector<u8> = b"Request already verified";
+    #[error]
+    const EInvalidPCR: vector<u8> = b"Invalid PCR values";
 
     const ATTESTATION_VALIDITY_MS: u64 = 86400000; // 24 hours
 
     // ======= Structs =======
+    
+    public struct AdminCap has key, store {
+        id: UID
+    }
     
     public struct VerifierRegistry has key {
         id: UID,
@@ -105,6 +113,12 @@ module marketplace::verifier {
             total_verifications: 0
         };
         transfer::share_object(registry);
+        
+        // Create and transfer admin capability to deployer
+        let admin_cap = AdminCap {
+            id: object::new(ctx)
+        };
+        transfer::transfer(admin_cap, tx_context::sender(ctx));
     }
 
     // ======= Public Functions =======
@@ -139,9 +153,9 @@ module marketplace::verifier {
         let verifier = tx_context::sender(ctx);
         assert!(
             is_authorized_verifier(registry, verifier),
-            ERROR_NOT_AUTHORIZED
+            ENotAuthorized
         );
-        assert!(request.status == 0, ERROR_ALREADY_VERIFIED);
+        assert!(request.status == 0, EAlreadyVerified);
 
         request.status = 1; // in_progress
         request.updated_at = clock::timestamp_ms(clock);
@@ -167,13 +181,13 @@ module marketplace::verifier {
         let verifier = tx_context::sender(ctx);
         assert!(
             is_authorized_verifier(registry, verifier),
-            ERROR_NOT_AUTHORIZED
+            ENotAuthorized
         );
-        assert!(request.asset_id == asset_id, ERROR_INVALID_ATTESTATION);
-        assert!(request.status == 1, ERROR_INVALID_ATTESTATION);
+        assert!(request.asset_id == asset_id, EInvalidAttestation);
+        assert!(request.status == 1, EInvalidAttestation);
 
         // Validate PCR values (simplified for hackathon)
-        assert!(vector::length(&pcr_values) > 0, ERROR_INVALID_PCR);
+        assert!(vector::length(&pcr_values) > 0, EInvalidPCR);
 
         let current_time = clock::timestamp_ms(clock);
         let attestation = Attestation {
@@ -220,9 +234,9 @@ module marketplace::verifier {
         let verifier = tx_context::sender(ctx);
         assert!(
             is_authorized_verifier(registry, verifier),
-            ERROR_NOT_AUTHORIZED
+            ENotAuthorized
         );
-        assert!(request.status == 1, ERROR_INVALID_ATTESTATION);
+        assert!(request.status == 1, EInvalidAttestation);
 
         request.status = 3; // failed
         request.updated_at = clock::timestamp_ms(clock);
@@ -241,9 +255,8 @@ module marketplace::verifier {
         registry: &mut VerifierRegistry,
         verifier: address,
         clock: &Clock,
-        _ctx: &mut TxContext
+        _admin_cap: &AdminCap
     ) {
-        // TODO: Add admin capability check
         if (!is_authorized_verifier(registry, verifier)) {
             vector::push_back(&mut registry.authorized_verifiers, verifier);
             
@@ -258,9 +271,8 @@ module marketplace::verifier {
         registry: &mut VerifierRegistry,
         verifier: address,
         clock: &Clock,
-        _ctx: &mut TxContext
+        _admin_cap: &AdminCap
     ) {
-        // TODO: Add admin capability check
         let (found, index) = vector::index_of(&registry.authorized_verifiers, &verifier);
         if (found) {
             vector::remove(&mut registry.authorized_verifiers, index);
@@ -347,7 +359,7 @@ module marketplace::verifier {
             throughput: 1000,
             memory_usage_mb: 512,
             model_size_bytes: 1048576,
-            dataset_used: string::utf8(b"MNIST"),
+            dataset_used: std::string::utf8(b"MNIST"),
             additional_metrics: vector::empty()
         }
     }

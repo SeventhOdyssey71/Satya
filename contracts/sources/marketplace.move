@@ -9,18 +9,28 @@ module marketplace::core {
     use sui::clock::{Self, Clock};
     use std::vector;
 
-    // ======= Constants =======
-    const ERROR_INSUFFICIENT_PAYMENT: u64 = 0;
-    const ERROR_NOT_AUTHORIZED: u64 = 1;
-    const ERROR_INVALID_PRICE: u64 = 3;
-    const ERROR_INVALID_FEE: u64 = 4;
-    const ERROR_MARKETPLACE_PAUSED: u64 = 5;
-    const ERROR_ASSET_NOT_ACTIVE: u64 = 6;
+    // ======= Errors =======
+    #[error]
+    const EInsufficientPayment: vector<u8> = b"Insufficient payment provided";
+    #[error]
+    const ENotAuthorized: vector<u8> = b"Caller not authorized";
+    #[error]
+    const EInvalidPrice: vector<u8> = b"Price must be greater than zero";
+    #[error] 
+    const EInvalidFee: vector<u8> = b"Verify fee must be greater than zero";
+    #[error]
+    const EMarketplacePaused: vector<u8> = b"Marketplace is currently paused";
+    #[error]
+    const EAssetNotActive: vector<u8> = b"Asset is not active";
 
     const PLATFORM_FEE_PERCENTAGE: u64 = 250; // 2.5%
     const FEE_DENOMINATOR: u64 = 10000;
 
     // ======= Structs =======
+    
+    public struct AdminCap has key, store {
+        id: UID
+    }
     
     public struct Marketplace has key {
         id: UID,
@@ -103,12 +113,18 @@ module marketplace::core {
         let marketplace = Marketplace {
             id: object::new(ctx),
             fee_percentage: PLATFORM_FEE_PERCENTAGE,
-            treasury: @0x1, // TODO: Replace with actual treasury address
+            treasury: @0xcb4a3c693a334fe1be0161f446471a923c462178ef279b20f847f23c225a8d09,
             total_volume: 0,
             total_listings: 0,
             paused: false
         };
         transfer::share_object(marketplace);
+        
+        // Create and transfer admin capability to deployer
+        let admin_cap = AdminCap {
+            id: object::new(ctx)
+        };
+        transfer::transfer(admin_cap, tx_context::sender(ctx));
     }
 
     // ======= Public Functions =======
@@ -123,9 +139,9 @@ module marketplace::core {
         clock: &Clock,
         ctx: &mut TxContext
     ): ID {
-        assert!(!marketplace.paused, ERROR_MARKETPLACE_PAUSED);
-        assert!(price > 0, ERROR_INVALID_PRICE);
-        assert!(verify_fee > 0, ERROR_INVALID_FEE);
+        assert!(!marketplace.paused, EMarketplacePaused);
+        assert!(price > 0, EInvalidPrice);
+        assert!(verify_fee > 0, EInvalidFee);
 
         let asset = Asset {
             id: object::new(ctx),
@@ -162,10 +178,10 @@ module marketplace::core {
         clock: &Clock,
         ctx: &mut TxContext
     ) {
-        assert!(asset.active, ERROR_ASSET_NOT_ACTIVE);
+        assert!(asset.active, EAssetNotActive);
         assert!(
             coin::value(&payment) >= asset.verify_fee,
-            ERROR_INSUFFICIENT_PAYMENT
+            EInsufficientPayment
         );
 
         // Transfer verification fee to seller
@@ -186,15 +202,15 @@ module marketplace::core {
         clock: &Clock,
         ctx: &mut TxContext
     ): ID {
-        assert!(!marketplace.paused, ERROR_MARKETPLACE_PAUSED);
-        assert!(asset.active, ERROR_ASSET_NOT_ACTIVE);
+        assert!(!marketplace.paused, EMarketplacePaused);
+        assert!(asset.active, EAssetNotActive);
         
         let buyer = tx_context::sender(ctx);
         let price = asset.price;
         
         assert!(
             coin::value(&payment) >= price,
-            ERROR_INSUFFICIENT_PAYMENT
+            EInsufficientPayment
         );
 
         // Calculate platform fee
@@ -270,19 +286,17 @@ module marketplace::core {
     
     public fun toggle_marketplace_pause(
         marketplace: &mut Marketplace,
-        _ctx: &mut TxContext
+        _admin_cap: &AdminCap
     ) {
-        // TODO: Add admin capability check
         marketplace.paused = !marketplace.paused;
     }
 
     public fun update_fee_percentage(
         marketplace: &mut Marketplace,
         new_fee: u64,
-        _ctx: &mut TxContext
+        _admin_cap: &AdminCap
     ) {
-        // TODO: Add admin capability check
-        assert!(new_fee <= 1000, ERROR_INVALID_FEE); // Max 10%
+        assert!(new_fee <= 1000, EInvalidFee); // Max 10%
         marketplace.fee_percentage = new_fee;
     }
 
@@ -292,7 +306,7 @@ module marketplace::core {
     ) {
         assert!(
             tx_context::sender(ctx) == asset.seller,
-            ERROR_NOT_AUTHORIZED
+            ENotAuthorized
         );
         asset.active = false;
     }

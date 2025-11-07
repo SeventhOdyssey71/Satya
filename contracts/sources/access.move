@@ -8,12 +8,17 @@ module marketplace::access {
     use std::vector;
     use std::string::String;
 
-    // ======= Constants =======
-    const ERROR_NOT_AUTHORIZED: u64 = 0;
-    const ERROR_ALREADY_GRANTED: u64 = 1;
-    const ERROR_EXPIRED_ACCESS: u64 = 3;
-    const ERROR_POLICY_NOT_ACTIVE: u64 = 4;
-    const ERROR_INSUFFICIENT_THRESHOLD: u64 = 5;
+    // ======= Errors =======
+    #[error]
+    const ENotAuthorized: vector<u8> = b"Caller not authorized";
+    #[error]
+    const EAlreadyGranted: vector<u8> = b"Access already granted";
+    #[error]
+    const EExpiredAccess: vector<u8> = b"Access has expired";
+    #[error]
+    const EPolicyNotActive: vector<u8> = b"Policy is not active";
+    #[error]
+    const EInsufficientThreshold: vector<u8> = b"Insufficient threshold for key servers";
 
     const DEFAULT_ACCESS_DURATION_MS: u64 = 2592000000; // 30 days
 
@@ -36,7 +41,6 @@ module marketplace::access {
         created_at: u64
     }
 
-    #[allow(unused_field)]
     public struct KeyServer has store, drop, copy {
         object_id: ID,
         url: String,
@@ -129,10 +133,10 @@ module marketplace::access {
         clock: &Clock,
         ctx: &mut TxContext
     ): ID {
-        assert!(threshold > 0, ERROR_INSUFFICIENT_THRESHOLD);
+        assert!(threshold > 0, EInsufficientThreshold);
         assert!(
             vector::length(&key_servers) >= threshold,
-            ERROR_INSUFFICIENT_THRESHOLD
+            EInsufficientThreshold
         );
 
         let policy = AccessPolicy {
@@ -169,10 +173,10 @@ module marketplace::access {
         clock: &Clock,
         ctx: &mut TxContext
     ): ID {
-        assert!(policy.active, ERROR_POLICY_NOT_ACTIVE);
+        assert!(policy.active, EPolicyNotActive);
         assert!(
             tx_context::sender(ctx) == policy.creator,
-            ERROR_NOT_AUTHORIZED
+            ENotAuthorized
         );
 
         let current_time = clock::timestamp_ms(clock);
@@ -216,7 +220,7 @@ module marketplace::access {
         clock: &Clock,
         ctx: &mut TxContext
     ): ID {
-        assert!(policy.active, ERROR_POLICY_NOT_ACTIVE);
+        assert!(policy.active, EPolicyNotActive);
         // This would typically be called by the marketplace contract
         // after a successful purchase
         
@@ -254,13 +258,13 @@ module marketplace::access {
         ctx: &mut TxContext
     ): ID {
         let requester = tx_context::sender(ctx);
-        assert!(requester == grant.grantee, ERROR_NOT_AUTHORIZED);
-        assert!(!grant.revoked, ERROR_NOT_AUTHORIZED);
+        assert!(requester == grant.grantee, ENotAuthorized);
+        assert!(!grant.revoked, ENotAuthorized);
         assert!(
             clock::timestamp_ms(clock) < grant.expires_at,
-            ERROR_EXPIRED_ACCESS
+            EExpiredAccess
         );
-        assert!(policy.active, ERROR_POLICY_NOT_ACTIVE);
+        assert!(policy.active, EPolicyNotActive);
 
         let request = DecryptionRequest {
             id: object::new(ctx),
@@ -293,7 +297,7 @@ module marketplace::access {
     ) {
         // This would typically be called by an authorized service
         // after validating the request with Seal
-        assert!(request.status == 0, ERROR_ALREADY_GRANTED);
+        assert!(request.status == 0, EAlreadyGranted);
         
         request.status = 1; // approved
 
@@ -312,9 +316,9 @@ module marketplace::access {
     ) {
         assert!(
             tx_context::sender(ctx) == policy.creator,
-            ERROR_NOT_AUTHORIZED
+            ENotAuthorized
         );
-        assert!(!grant.revoked, ERROR_ALREADY_GRANTED);
+        assert!(!grant.revoked, EAlreadyGranted);
 
         grant.revoked = true;
 
@@ -333,7 +337,7 @@ module marketplace::access {
     ) {
         assert!(
             tx_context::sender(ctx) == policy.creator,
-            ERROR_NOT_AUTHORIZED
+            ENotAuthorized
         );
         policy.active = false;
     }
@@ -345,11 +349,11 @@ module marketplace::access {
     ) {
         assert!(
             tx_context::sender(ctx) == policy.creator,
-            ERROR_NOT_AUTHORIZED
+            ENotAuthorized
         );
         assert!(
             vector::length(&new_key_servers) >= policy.threshold,
-            ERROR_INSUFFICIENT_THRESHOLD
+            EInsufficientThreshold
         );
         policy.key_servers = new_key_servers;
     }
