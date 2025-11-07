@@ -1,0 +1,17 @@
+# <type>: <subject> (max 50 chars)
+
+# <body> (optional, wrap at 72 chars)
+
+# <footer> (optional)
+
+# Type can be:
+#   feat:     New feature
+#   fix:      Bug fix
+#   docs:     Documentation changes
+#   style:    Code style changes (formatting, semicolons, etc)
+#   refactor: Code refactoring
+#   perf:     Performance improvements
+#   test:     Test additions or corrections
+#   build:    Build system or external dependency changes
+#   ci:       CI/CD configuration changes
+#   chore:    Other changes that don't modify src or test files
