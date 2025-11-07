@@ -11,7 +11,6 @@ module marketplace::core {
     // ======= Constants =======
     const ERROR_INSUFFICIENT_PAYMENT: u64 = 0;
     const ERROR_NOT_AUTHORIZED: u64 = 1;
-    const ERROR_ALREADY_PURCHASED: u64 = 2;
     const ERROR_INVALID_PRICE: u64 = 3;
     const ERROR_INVALID_FEE: u64 = 4;
     const ERROR_MARKETPLACE_PAUSED: u64 = 5;
@@ -22,7 +21,7 @@ module marketplace::core {
 
     // ======= Structs =======
     
-    struct Marketplace has key {
+    public struct Marketplace has key {
         id: UID,
         fee_percentage: u64,
         treasury: address,
@@ -31,7 +30,7 @@ module marketplace::core {
         paused: bool
     }
 
-    struct Asset has key, store {
+    public struct Asset has key, store {
         id: UID,
         seller: address,
         walrus_blob_id: vector<u8>,
@@ -45,7 +44,7 @@ module marketplace::core {
         created_at: u64
     }
 
-    struct Purchase has key, store {
+    public struct Purchase has key, store {
         id: UID,
         buyer: address,
         asset_id: ID,
@@ -56,7 +55,7 @@ module marketplace::core {
 
     // ======= Events =======
     
-    struct AssetListed has copy, drop {
+    public struct AssetListed has copy, drop {
         asset_id: ID,
         seller: address,
         price: u64,
@@ -64,7 +63,7 @@ module marketplace::core {
         timestamp: u64
     }
 
-    struct AssetPurchased has copy, drop {
+    public struct AssetPurchased has copy, drop {
         purchase_id: ID,
         asset_id: ID,
         buyer: address,
@@ -73,26 +72,31 @@ module marketplace::core {
         timestamp: u64
     }
 
-    struct VerificationRequested has copy, drop {
+    public struct VerificationRequested has copy, drop {
         asset_id: ID,
         requester: address,
         fee_paid: u64,
         timestamp: u64
     }
 
-    struct AttestationAdded has copy, drop {
+    public struct AttestationAdded has copy, drop {
         asset_id: ID,
         attestation_id: ID,
         timestamp: u64
     }
 
-    struct DecryptionGranted has copy, drop {
+    public struct DecryptionGranted has copy, drop {
         purchase_id: ID,
         buyer: address,
         timestamp: u64
     }
 
     // ======= Initialization =======
+    
+    #[test_only]
+    public fun init_for_testing(ctx: &mut TxContext) {
+        init(ctx);
+    }
     
     fun init(ctx: &mut TxContext) {
         let marketplace = Marketplace {
@@ -177,7 +181,7 @@ module marketplace::core {
     public fun purchase_asset(
         marketplace: &mut Marketplace,
         asset: &mut Asset,
-        payment: Coin<SUI>,
+        mut payment: Coin<SUI>,
         clock: &Clock,
         ctx: &mut TxContext
     ): ID {
@@ -194,7 +198,7 @@ module marketplace::core {
 
         // Calculate platform fee
         let fee_amount = (price * marketplace.fee_percentage) / FEE_DENOMINATOR;
-        let seller_amount = price - fee_amount;
+        let _seller_amount = price - fee_amount;
 
         // Split payment
         if (fee_amount > 0) {
