@@ -1,0 +1,11 @@
+[package]
+name = "DataMarketplace"
+license = "Apache-2.0"
+authors = ["Satya Team"]
+edition = "2024.beta"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet-v1.38.0" }
+
+[addresses]
+marketplace = "0x0"
