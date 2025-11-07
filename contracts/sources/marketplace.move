@@ -1,3 +1,4 @@
+#[allow(duplicate_alias, lint(self_transfer))]
 module marketplace::core {
     use sui::object::{Self, UID, ID};
     use sui::transfer;

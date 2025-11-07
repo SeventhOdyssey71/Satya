@@ -1,3 +1,4 @@
+#[allow(duplicate_alias)]
 module marketplace::verifier {
     use sui::object::{Self, UID, ID};
     use sui::transfer;
@@ -5,8 +6,7 @@ module marketplace::verifier {
     use sui::event;
     use sui::clock::{Self, Clock};
     use std::vector;
-    use std::string::{Self, String};
-    use std::option::{Self, Option};
+    use std::string::String;
 
     // ======= Constants =======
     const ERROR_INVALID_ATTESTATION: u64 = 0;
@@ -35,6 +35,7 @@ module marketplace::verifier {
         expires_at: u64
     }
 
+    #[allow(unused_field)]
     public struct BenchmarkResults has store, drop, copy {
         accuracy_score: u64,      // Score out of 10000 (e.g., 9500 = 95%)
         latency_ms: u64,          // Average latency in milliseconds
@@ -50,7 +51,8 @@ module marketplace::verifier {
         asset_id: ID,
         requester: address,
         status: u8, // 0 = pending, 1 = in_progress, 2 = completed, 3 = failed
-        attestation_id: Option<ID>,
+        has_attestation: bool,
+        attestation_id: ID,
         created_at: u64,
         updated_at: u64
     }
@@ -117,7 +119,8 @@ module marketplace::verifier {
             asset_id,
             requester: tx_context::sender(ctx),
             status: 0, // pending
-            attestation_id: option::none(),
+            has_attestation: false,
+            attestation_id: object::id_from_address(@0x0), // placeholder
             created_at: clock::timestamp_ms(clock),
             updated_at: clock::timestamp_ms(clock)
         };
@@ -188,7 +191,8 @@ module marketplace::verifier {
         
         // Update request
         request.status = 2; // completed
-        request.attestation_id = option::some(attestation_id);
+        request.has_attestation = true;
+        request.attestation_id = attestation_id;
         request.updated_at = current_time;
 
         // Update registry stats
