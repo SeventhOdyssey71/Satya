@@ -1,3 +1,4 @@
+#[allow(duplicate_alias)]
 module marketplace::access {
     use sui::object::{Self, UID, ID};
     use sui::transfer;
@@ -6,7 +7,6 @@ module marketplace::access {
     use sui::clock::{Self, Clock};
     use std::vector;
     use std::string::String;
-    use std::option::{Self, Option};
 
     // ======= Constants =======
     const ERROR_NOT_AUTHORIZED: u64 = 0;
@@ -36,6 +36,7 @@ module marketplace::access {
         created_at: u64
     }
 
+    #[allow(unused_field)]
     public struct KeyServer has store, drop, copy {
         object_id: ID,
         url: String,
