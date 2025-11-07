@@ -25,11 +25,8 @@ out/
 
 # Environment files
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.env
+.env.*
+!.env.example
 
 # IDE and editor files
 .vscode/
@@ -112,12 +109,10 @@ site/
 *.tar.gz
 *.zip
 
-# Lock files (keep these in version control)
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml
-# Gemfile.lock
-# poetry.lock
+# Sui/Move
+contracts/build/
+contracts/.movement/
+Move.lock
 
 # Misc
 .sass-cache/
@@ -129,3 +124,4 @@ site/
 .rts2_cache_cjs/
 .rts2_cache_es/
 .rts2_cache_umd/
+.gitkeep
