@@ -114,6 +114,10 @@ contracts/build/
 contracts/.movement/
 Move.lock
 
+# Rust
+target/
+Cargo.lock
+
 # Test App
 test-app/node_modules/
 test-app/.next/
