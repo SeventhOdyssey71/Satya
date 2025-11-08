@@ -1,90 +1,138 @@
 # Nautilus Integration for Satya Marketplace
 
-This integration enables secure off-chain computation with on-chain attestation for AI model processing and validation.
+## Overview
+
+The Nautilus integration provides a secure, verifiable AI model training marketplace built on AWS Nitro Enclaves and Sui blockchain. It enables model creators to monetize their AI models while maintaining IP protection, and allows data owners to train models in a trusted execution environment with cryptographic attestation.
 
 ## Architecture
 
-The Nautilus integration follows the pattern: **User Input → Enclave Processing → Signed Response → On-Chain Attestation**
-
 ### Core Components
 
-1. **Enclave Server** (`/enclave-server`)
-   - Runs inside AWS Nitro Enclave
-   - Processes AI model validation requests
-   - Generates signed attestations
+1. **Trusted Execution Environment (TEE)**
+   - AWS Nitro Enclaves for hardware-isolated execution
+   - Secure model storage and training
+   - Cryptographic attestation generation
 
-2. **Move Contracts** (`/move-contracts`)
-   - On-chain verification of enclave signatures
-   - Stores attestation records
-   - Manages enclave registration
+2. **Blockchain Layer**
+   - Sui smart contracts for payment escrow
+   - On-chain attestation verification
+   - Model registry and marketplace logic
 
-3. **Client Library** (`/client`)
-   - TypeScript SDK for interacting with enclaves
-   - Handles attestation verification
-   - Manages enclave connections
+3. **Client SDK**
+   - TypeScript SDK for frontend integration
+   - Model upload and management
+   - Training orchestration
 
-## Data Flow
+## Features
 
-```
-1. User submits AI model/data for processing
-   ↓
-2. Request sent to Nautilus enclave
-   ↓
-3. Enclave processes data securely
-   ↓
-4. Enclave signs result with ephemeral key
-   ↓
-5. Signed attestation returned to user
-   ↓
-6. User verifies attestation on-chain
-   ↓
-7. Attestation stored on Sui blockchain
-```
-
-## Use Cases
-
-- **Model Validation**: Verify AI model integrity and performance
-- **Data Processing**: Secure computation on sensitive data
-- **Compliance Checks**: Automated regulatory compliance verification
-- **Performance Benchmarking**: Trusted model performance metrics
+- **Secure Model Storage**: Models encrypted at rest and in transit
+- **Verifiable Training**: Hardware attestation proves computation integrity
+- **Payment Escrow**: Smart contract-based payment protection
+- **Privacy Preservation**: Training data never leaves the enclave
+- **Scalable Architecture**: Support for multiple concurrent training sessions
 
 ## Directory Structure
 
 ```
 nautilus/
-├── enclave-server/     # Rust server running in enclave
-│   ├── src/
-│   │   ├── apps/       # Application-specific logic
-│   │   ├── common/     # Shared utilities
-│   │   └── main.rs     # Entry point
-│   └── Cargo.toml
-├── move-contracts/     # Sui Move smart contracts
-│   ├── sources/
-│   │   ├── attestation.move
-│   │   └── enclave_registry.move
-│   └── Move.toml
-├── client/            # TypeScript client library
-│   ├── src/
-│   │   ├── attestation.ts
-│   │   ├── enclave.ts
-│   │   └── types.ts
-│   └── package.json
+├── src/               # Core implementation
 ├── config/            # Configuration files
-│   ├── enclave.yaml
-│   └── endpoints.yaml
-├── types/             # Shared type definitions
-├── utils/             # Helper utilities
-├── tests/             # Integration tests
-└── docs/              # Documentation
+├── tests/             # Test suites
+├── docs/              # Documentation
+├── types/             # TypeScript type definitions
+├── utils/             # Utility functions
+├── move-contracts/    # Sui Move smart contracts
+└── client/            # Client SDK implementation
 ```
 
-## Setup Instructions
+## Installation
 
-See [docs/setup.md](docs/setup.md) for detailed setup instructions.
+```bash
+# Install dependencies
+npm install
 
-## Integration with Marketplace
+# Build the project
+npm run build
 
-This integration connects with:
-- **Walrus**: For storing model data
-- **Seal**: For access control and encryption
-- **Sui Blockchain**: For attestation records
+# Run tests
+npm run test
+```
+
+## Configuration
+
+Create a `.env` file with:
+
+```env
+# AWS Configuration
+AWS_REGION=us-east-1
+ENCLAVE_INSTANCE_ID=i-xxxxx
+
+# Sui Configuration
+SUI_NETWORK=testnet
+MARKETPLACE_PACKAGE_ID=0x...
+ENCLAVE_PACKAGE_ID=0x...
+
+# API Configuration
+ENCLAVE_URL=http://localhost:3000
+API_KEY=your-api-key
+```
+
+## Usage
+
+### Initialize Client
+
+```typescript
+import { NautilusClient } from '@satya/nautilus-integration';
+
+const client = new NautilusClient({
+  enclaveUrl: process.env.ENCLAVE_URL,
+  suiNetwork: 'testnet',
+  marketplacePackageId: process.env.MARKETPLACE_PACKAGE_ID
+});
+```
+
+### Upload Model
+
+```typescript
+const modelResult = await client.uploadModel({
+  modelFile: file,
+  name: 'My AI Model',
+  description: 'Classification model',
+  price: 100000000, // in MIST
+  category: 'classification'
+});
+```
+
+### Purchase Training
+
+```typescript
+const purchase = await client.purchaseTraining({
+  modelId: 'model-id',
+  paymentAmount: 100000000
+});
+```
+
+### Execute Training
+
+```typescript
+const training = await client.startTraining({
+  purchaseId: purchase.id,
+  datasetFile: dataset,
+  params: {
+    epochs: 10,
+    learning_rate: 0.001,
+    batch_size: 32
+  }
+});
+```
+
+## Security Considerations
+
+- Models are encrypted using AES-256-GCM
+- All communication uses TLS 1.3
+- Enclave attestation verifies code integrity
+- Smart contracts enforce payment guarantees
+
+## License
+
+Apache 2.0
