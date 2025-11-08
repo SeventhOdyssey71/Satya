@@ -15,7 +15,6 @@ export interface EnvironmentConfig {
   
   marketplace: {
     packageId?: string;
-    objectId?: string;
     adminCapId?: string;
     treasuryAddress?: string;
     platformFeePercentage: number;
@@ -67,8 +66,7 @@ export function loadEnvironmentConfig(): EnvironmentConfig {
     
     marketplace: {
       packageId: process.env.MARKETPLACE_PACKAGE_ID,
-      objectId: process.env.MARKETPLACE_V2_OBJECT_ID,
-      adminCapId: process.env.MARKETPLACE_V2_ADMIN_CAP,
+      adminCapId: process.env.MARKETPLACE_ADMIN_CAP_ID,
       treasuryAddress: process.env.TREASURY_ADDRESS,
       platformFeePercentage: getNumber('PLATFORM_FEE_PERCENTAGE', 250),
     },
