@@ -156,7 +156,11 @@ export default function TestUpload() {
 
     try {
       setStatus('Downloading from Walrus...');
-      const data = await walrus.downloadBlob(downloadBlobId);
+      const result = await walrus.downloadBlob(downloadBlobId);
+      if (!result.success) {
+        throw new Error('Download failed');
+      }
+      const data = result.data;
       
       // Try to get file metadata
       const storedMetadata = localStorage.getItem(`file_${downloadBlobId}`);
@@ -195,7 +199,11 @@ export default function TestUpload() {
 
     try {
       setStatus('Downloading encrypted data from Walrus...');
-      const encryptedData = await walrus.downloadBlob(downloadBlobId);
+      const result = await walrus.downloadBlob(downloadBlobId);
+      if (!result.success) {
+        throw new Error('Download failed');
+      }
+      const encryptedData = result.data;
       
       // Get encryption metadata
       const storedData = localStorage.getItem(`encryption_${downloadBlobId}`);

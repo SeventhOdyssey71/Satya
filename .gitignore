@@ -109,9 +109,14 @@ site/
 *.tar.gz
 *.zip
 
+# Lock files (keep pnpm-lock.yaml only)
+package-lock.json
+yarn.lock
+
 # Sui/Move
 contracts/build/
 contracts/.movement/
+**/build/
 Move.lock
 
 # Misc
