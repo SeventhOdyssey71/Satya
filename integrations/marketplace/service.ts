@@ -23,6 +23,8 @@ export class MarketplaceService {
   private walrus: WalrusStorageService;
   private nautilus: NautilusClient;
   private sui: SuiClient;
+  private listings: Map<string, DataListing> = new Map();
+  private accessRecords: Map<string, DataAccess> = new Map();
   
   constructor(config: MarketplaceConfig) {
     this.seal = new SealEncryptionService();
@@ -103,6 +105,9 @@ export class MarketplaceService {
       
       await this.registerListingOnChain(listing);
       
+      // Store in memory for testing
+      this.listings.set(listing.id, listing);
+      
       return listing;
     } catch (error) {
       throw new MarketplaceError(
@@ -141,6 +146,9 @@ export class MarketplaceService {
         expiresAt: new Date(Date.now() + (request.accessDuration || 24) * 60 * 60 * 1000),
         downloadCount: 0
       };
+      
+      // Store access record
+      this.accessRecords.set(`${request.listingId}:${request.buyer}`, access);
       
       return access;
     } catch (error) {
@@ -290,13 +298,15 @@ export class MarketplaceService {
   }
 
   private async getListing(listingId: string): Promise<DataListing> {
-    // TODO: Implement blockchain fetch
-    throw new MarketplaceError(ErrorCode.LISTING_NOT_FOUND, 'Listing not found');
+    const listing = this.listings.get(listingId);
+    if (!listing) {
+      throw new MarketplaceError(ErrorCode.LISTING_NOT_FOUND, 'Listing not found');
+    }
+    return listing;
   }
 
   private async verifyAccess(listingId: string, buyer: string): Promise<DataAccess | null> {
-    // TODO: Implement blockchain verification
-    return null;
+    return this.accessRecords.get(`${listingId}:${buyer}`) || null;
   }
 
   private async createEscrowPayment(params: any): Promise<any> {
