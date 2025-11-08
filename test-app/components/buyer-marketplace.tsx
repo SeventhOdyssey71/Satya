@@ -229,7 +229,7 @@ export function BuyerMarketplace() {
             <CardContent className="pt-6">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                   <Input
                     placeholder="Search datasets..."
                     value={searchTerm}
@@ -285,15 +285,15 @@ export function BuyerMarketplace() {
                   
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Size:</span>
+                      <span className="text-gray-600">Size:</span>
                       <span>{formatFileSize(listing.size)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Format:</span>
+                      <span className="text-gray-600">Format:</span>
                       <span>{listing.format}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Seller:</span>
+                      <span className="text-gray-600">Seller:</span>
                       <span className="font-mono">{listing.seller}</span>
                     </div>
                     
@@ -348,26 +348,26 @@ export function BuyerMarketplace() {
                           <div className="space-y-4">
                             <div>
                               <h4 className="font-semibold">{selectedListing.title}</h4>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-gray-600">
                                 {selectedListing.description}
                               </p>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div>
-                                <span className="text-muted-foreground">Price:</span>
+                                <span className="text-gray-600">Price:</span>
                                 <div className="font-semibold">{selectedListing.price} SUI</div>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">Size:</span>
+                                <span className="text-gray-600">Size:</span>
                                 <div>{formatFileSize(selectedListing.size)}</div>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">Format:</span>
+                                <span className="text-gray-600">Format:</span>
                                 <div>{selectedListing.format}</div>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">Verified:</span>
+                                <span className="text-gray-600">Verified:</span>
                                 <div className="flex items-center gap-1">
                                   {selectedListing.verified ? (
                                     <>
@@ -405,9 +405,9 @@ export function BuyerMarketplace() {
           {purchases.length === 0 ? (
             <Card>
               <CardContent className="pt-6 text-center">
-                <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <Database className="h-12 w-12 mx-auto text-gray-500 mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No purchases yet</h3>
-                <p className="text-muted-foreground">
+                <p className="text-gray-600">
                   Start exploring the marketplace to find valuable datasets
                 </p>
               </CardContent>
@@ -435,7 +435,7 @@ export function BuyerMarketplace() {
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Price paid:</span>
+                        <span className="text-gray-600">Price paid:</span>
                         <span>{purchase.listing.price} SUI</span>
                       </div>
                       

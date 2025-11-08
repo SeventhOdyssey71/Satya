@@ -308,7 +308,7 @@ export function SellerDashboard() {
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
                       <h4 className="font-semibold">{listing.title}</h4>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-gray-600">
                         {listing.description}
                       </p>
                     </div>
@@ -354,7 +354,7 @@ export function SellerDashboard() {
                   )}
 
                   {listing.blobId && (
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-gray-500">
                       Blob ID: {listing.blobId}
                     </div>
                   )}
