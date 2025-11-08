@@ -22,10 +22,11 @@ router.get('/listings',
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: { message: 'Validation failed', details: errors.array() }
         });
+        return;
       }
 
       const page = parseInt(req.query.page as string) || 1;
@@ -76,10 +77,11 @@ router.post('/listings',
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: { message: 'Validation failed', details: errors.array() }
         });
+        return;
       }
 
       const listingData = {
@@ -118,19 +120,21 @@ router.get('/listings/:id', async (req: Request, res: Response): Promise<void> =
     const listingId = req.params.id;
     
     if (!listingId) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: { message: 'Listing ID is required' }
       });
+      return;
     }
 
     const listing = await marketplaceService.getListing(listingId);
 
     if (!listing) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: { message: 'Listing not found' }
       });
+      return;
     }
 
     res.json({
@@ -159,10 +163,11 @@ router.post('/purchase',
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: { message: 'Validation failed', details: errors.array() }
         });
+        return;
       }
 
       const { listingId, paymentTxHash } = req.body;
@@ -197,7 +202,15 @@ router.get('/downloads/:purchaseId',
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const purchaseId = req.params.purchaseId;
-      const buyerAddress = req.walletAddress as string;
+      const buyerAddress = req.walletAddress!;
+
+      if (!purchaseId) {
+        res.status(400).json({
+          success: false,
+          error: { message: 'Purchase ID is required' }
+        });
+        return;
+      }
 
       const downloadInfo = await marketplaceService.getDownloadLink({
         purchaseId,

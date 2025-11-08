@@ -42,15 +42,16 @@ router.get('/info', async (req: Request, res: Response): Promise<void> => {
 });
 
 // GET /api/contracts/objects/:id - Get object details
-router.get('/objects/:id', async (req: Request, res: Response) => {
+router.get('/objects/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
     if (!id) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: { message: 'Object ID is required' }
       });
+      return;
     }
 
     const object = await suiClient.getObject({
@@ -84,10 +85,11 @@ router.get('/transactions/:digest', async (req: Request, res: Response): Promise
     const { digest } = req.params;
 
     if (!digest) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: { message: 'Transaction digest is required' }
       });
+      return;
     }
 
     const transaction = await suiClient.getTransactionBlock({
@@ -125,17 +127,19 @@ router.post('/simulate',
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: { message: 'Validation failed', details: errors.array() }
         });
+        return;
       }
 
       const { transactionBytes } = req.body;
 
       // Simulate the transaction
+      const txBlock = TransactionBlock.from(transactionBytes);
       const result = await suiClient.dryRunTransactionBlock({
-        transactionBlock: TransactionBlock.from(transactionBytes)
+        transactionBlock: txBlock.serialize()
       });
 
       res.json({
@@ -155,7 +159,7 @@ router.post('/simulate',
 );
 
 // GET /api/contracts/gas-price - Get current gas price
-router.get('/gas-price', async (req: Request, res: Response) => {
+router.get('/gas-price', async (req: Request, res: Response): Promise<void> => {
   try {
     const gasPrice = await suiClient.getReferenceGasPrice();
 
@@ -178,10 +182,11 @@ router.get('/gas-price', async (req: Request, res: Response) => {
 router.get('/events', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!MARKETPLACE_PACKAGE_ID) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: { message: 'Marketplace package not configured' }
       });
+      return;
     }
 
     const events = await suiClient.queryEvents({

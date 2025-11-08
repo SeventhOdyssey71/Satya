@@ -17,10 +17,11 @@ router.post('/verify',
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: { message: 'Validation failed', details: errors.array() }
         });
+        return;
       }
 
       const { blobId, metadata } = req.body;
@@ -48,24 +49,26 @@ router.post('/verify',
 );
 
 // GET /api/nautilus/verify/:requestId - Get verification status
-router.get('/verify/:requestId', async (req: Request, res: Response) => {
+router.get('/verify/:requestId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { requestId } = req.params;
 
     if (!requestId) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: { message: 'Request ID is required' }
       });
+      return;
     }
 
     const status = await nautilusService.getVerificationStatus(requestId);
 
     if (!status) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: { message: 'Verification request not found' }
       });
+      return;
     }
 
     res.json({
@@ -94,10 +97,11 @@ router.post('/process',
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: { message: 'Validation failed', details: errors.array() }
         });
+        return;
       }
 
       const { blobId, operations } = req.body;
@@ -121,15 +125,16 @@ router.post('/process',
 );
 
 // GET /api/nautilus/attestation/:enclaveId - Get attestation report
-router.get('/attestation/:enclaveId', async (req: Request, res: Response) => {
+router.get('/attestation/:enclaveId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { enclaveId } = req.params;
 
     if (!enclaveId) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: { message: 'Enclave ID is required' }
       });
+      return;
     }
 
     const report = await nautilusService.getAttestationReport(enclaveId);

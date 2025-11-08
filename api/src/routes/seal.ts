@@ -22,10 +22,11 @@ router.post('/policies',
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: { message: 'Validation failed', details: errors.array() }
         });
+        return;
       }
 
       const policyData = {
@@ -56,15 +57,16 @@ router.post('/policies',
 );
 
 // GET /api/seal/policies/:id - Get policy status
-router.get('/policies/:id', async (req: Request, res: Response) => {
+router.get('/policies/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const policyId = req.params.id;
 
     if (!policyId) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: { message: 'Policy ID is required' }
       });
+      return;
     }
 
     const policy = await sealService.getPolicyStatus(policyId);
@@ -94,14 +96,23 @@ router.post('/policies/:id/grant',
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: { message: 'Validation failed', details: errors.array() }
         });
+        return;
       }
 
-      const policyId = req.params.id as string;
+      const policyId = req.params.id;
       const { buyerAddress } = req.body;
+
+      if (!policyId) {
+        res.status(400).json({
+          success: false,
+          error: { message: 'Policy ID is required' }
+        });
+        return;
+      }
 
       await sealService.grantAccess({
         policyId,
@@ -133,6 +144,14 @@ router.get('/keys/:policyId',
       const policyId = req.params.policyId;
       const buyerAddress = req.walletAddress!;
 
+      if (!policyId) {
+        res.status(400).json({
+          success: false,
+          error: { message: 'Policy ID is required' }
+        });
+        return;
+      }
+
       const decryptionKey = await sealService.getDecryptionKey({
         policyId,
         buyerAddress
@@ -160,6 +179,14 @@ router.delete('/policies/:id/access/:buyerAddress',
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const { id: policyId, buyerAddress } = req.params;
+
+      if (!policyId || !buyerAddress) {
+        res.status(400).json({
+          success: false,
+          error: { message: 'Policy ID and buyer address are required' }
+        });
+        return;
+      }
 
       await sealService.revokeAccess(policyId, buyerAddress);
 

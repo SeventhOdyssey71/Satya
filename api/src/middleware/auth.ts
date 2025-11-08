@@ -17,10 +17,11 @@ export const authenticateWallet = async (
     const authHeader = req.headers.authorization;
     
     if (!authHeader) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: { message: 'No authorization header provided' }
       });
+      return;
     }
 
     // For now, we'll use a simple bearer token approach
@@ -28,10 +29,11 @@ export const authenticateWallet = async (
     const token = authHeader.split(' ')[1];
     
     if (!token) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: { message: 'Invalid authorization format' }
       });
+      return;
     }
 
     // TODO: Implement proper wallet signature verification
