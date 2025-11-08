@@ -12,7 +12,7 @@ export default function Home() {
       <div className="container mx-auto py-8 px-4">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold mb-2">Satya Data Marketplace</h1>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-xl text-gray-700">
             Secure data trading with SEAL encryption, Walrus storage, and Nautilus TEE verification
           </p>
         </div>
