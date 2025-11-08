@@ -1,0 +1,195 @@
+# SATYA SECURE DATA MARKETPLACE ARCHITECTURE
+# ==========================================
+
+## TECHNOLOGY STACK INTEGRATION
+
+### 1. SEAL (Encryption Layer)
+- Purpose: Encrypt/decrypt data with policy-based access control
+- Key Features:
+  - Threshold encryption (k-of-n access)
+  - Time-based access policies
+  - Identity-based encryption
+  - Data encryption keys (DEK) management
+
+### 2. WALRUS (Storage Layer)
+- Purpose: Decentralized storage with erasure coding
+- Key Features:
+  - Blob storage (up to 100GB)
+  - Content addressing
+  - Redundancy across validators
+  - Permanent storage with proof
+
+### 3. NAUTILUS (Computation Layer)
+- Purpose: Secure computation in TEE with attestation
+- Key Features:
+  - AWS Nitro Enclaves
+  - File processing without exposure
+  - Cryptographic attestation
+  - Verifiable computation
+
+## DATA MARKETPLACE FLOW
+
+### SELLER PROTECTION FLOW
+```
+1. DATA PREPARATION (Seller Side)
+   ├── Seller uploads raw data
+   ├── Data encrypted with SEAL (buyer-specific policy)
+   ├── Encrypted data stored on WALRUS
+   └── Metadata + blobId registered on-chain
+
+2. LISTING CREATION
+   ├── Create marketplace listing (Sui contract)
+   ├── Set price and access conditions
+   ├── Define computation allowed (view/process/analyze)
+   └── Store encryption policy ID
+
+3. ACCESS CONTROL
+   ├── SEAL policy ensures only paid buyers decrypt
+   ├── Time-limited access windows
+   └── Revocable permissions
+```
+
+### BUYER PROTECTION FLOW
+```
+1. DISCOVERY & VERIFICATION
+   ├── Browse marketplace listings
+   ├── View data samples (if provided)
+   ├── Check seller reputation
+   └── Verify data attestations
+
+2. PURCHASE & ACCESS
+   ├── Escrow payment in smart contract
+   ├── Receive decryption rights from SEAL
+   ├── Download from WALRUS using blobId
+   └── Decrypt data with granted permissions
+
+3. VERIFICATION
+   ├── Process data in NAUTILUS enclave
+   ├── Verify data quality/authenticity
+   ├── Generate attestation of receipt
+   └── Release payment or dispute
+```
+
+## INTEGRATION ARCHITECTURE
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    USER INTERFACE                        │
+│         (React + Sui Wallet + File Management)          │
+└────────────────┬───────────────────────┬────────────────┘
+                 │                       │
+        ┌────────▼────────┐     ┌───────▼────────┐
+        │   MARKETPLACE   │     │   ATTESTATION  │
+        │   SMART CONTRACT│     │    SERVICE     │
+        │    (Sui Move)   │     │   (Nautilus)   │
+        └────────┬────────┘     └───────┬────────┘
+                 │                       │
+    ┌────────────┼───────────────────────┼────────────┐
+    │            │                       │            │
+┌───▼───┐   ┌───▼───┐             ┌─────▼─────┐ ┌───▼───┐
+│ SEAL  │   │WALRUS │             │ NAUTILUS  │ │  SUI  │
+│       │   │       │             │  ENCLAVE  │ │CHAIN  │
+└───────┘   └───────┘             └───────────┘ └───────┘
+    │           │                       │            │
+    └───────────┼───────────────────────┼────────────┘
+                │      DATA FLOW        │
+                └───────────────────────┘
+```
+
+## SECURITY GUARANTEES
+
+### For Sellers:
+1. **Data Sovereignty**: Data remains encrypted until payment confirmed
+2. **Access Control**: SEAL policies enforce who can decrypt
+3. **Payment Guarantee**: Smart contract escrow ensures payment
+4. **Audit Trail**: All access attempts logged on-chain
+
+### For Buyers:
+1. **Data Authenticity**: NAUTILUS attestation proves data integrity
+2. **Quality Verification**: Can process sample in enclave before purchase
+3. **Non-repudiation**: Blockchain records prove purchase
+4. **Dispute Resolution**: Escrow allows refunds if data invalid
+
+## IMPLEMENTATION STEPS
+
+### Phase 1: Core Integration
+1. Create unified API service combining all three techs
+2. Implement data encryption pipeline (SEAL → WALRUS)
+3. Set up NAUTILUS for data verification
+
+### Phase 2: Marketplace Contracts
+1. Design escrow smart contract
+2. Implement listing management
+3. Create reputation system
+
+### Phase 3: User Interface
+1. Build seller dashboard
+2. Create buyer marketplace
+3. Implement dispute resolution
+
+### Phase 4: Advanced Features
+1. Multi-party computation support
+2. Data streaming capabilities
+3. Automated quality checks
+
+## KEY INTEGRATION POINTS
+
+### SEAL ↔ WALRUS
+```typescript
+// Encrypt then store
+const encrypted = await seal.encrypt(data, policy);
+const blobId = await walrus.upload(encrypted.ciphertext);
+```
+
+### WALRUS ↔ NAUTILUS
+```typescript
+// Retrieve and process in enclave
+const encrypted = await walrus.download(blobId);
+const result = await nautilus.processInEnclave(encrypted);
+```
+
+### NAUTILUS ↔ SEAL
+```typescript
+// Verify then decrypt
+const attestation = await nautilus.attest(dataHash);
+const decrypted = await seal.decrypt(encrypted, attestation);
+```
+
+## CRITICAL SECURITY CONSIDERATIONS
+
+1. **Key Management**
+   - SEAL master keys in HSM/KMS
+   - Nautilus signing keys in enclave only
+   - User keys in browser wallet
+
+2. **Access Patterns**
+   - All data access through smart contracts
+   - Rate limiting on API endpoints
+   - DDoS protection on storage nodes
+
+3. **Privacy**
+   - Metadata encryption
+   - Access pattern obfuscation
+   - Zero-knowledge proofs for ownership
+
+4. **Compliance**
+   - GDPR right to erasure (via encryption key deletion)
+   - Data residency controls
+   - Audit logging for compliance
+
+## ECONOMIC MODEL
+
+1. **Transaction Fees**
+   - Platform fee: 2.5% of sale
+   - Storage fee: Based on blob size
+   - Computation fee: Per enclave usage
+
+2. **Incentives**
+   - Seller: Maximize data value
+   - Buyer: Verify before purchase
+   - Platform: Maintain reputation
+
+3. **Dispute Resolution**
+   - Escrow holds funds
+   - Attestation as evidence
+   - DAO governance for disputes
