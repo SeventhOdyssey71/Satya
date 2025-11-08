@@ -126,6 +126,64 @@ const training = await client.startTraining({
 });
 ```
 
+## AWS Deployment Quick Start
+
+### Prerequisites
+```bash
+export KEY_PAIR=satya-nautilus-keypair
+export EC2_INSTANCE_NAME=satya-nautilus-instance
+export AWS_REGION=us-east-1
+```
+
+### Deploy to AWS
+```bash
+# 1. Generate SSH key
+aws ec2 create-key-pair --key-name $KEY_PAIR \
+  --query 'KeyMaterial' --output text > ${KEY_PAIR}.pem
+chmod 400 ${KEY_PAIR}.pem
+
+# 2. Run deployment script
+./configure_enclave.sh satya
+
+# 3. Get instance details
+INSTANCE_ID=$(aws ec2 describe-instances \
+  --filters "Name=tag:Name,Values=$EC2_INSTANCE_NAME" \
+  --query "Reservations[0].Instances[0].InstanceId" --output text)
+
+PUBLIC_IP=$(aws ec2 describe-instances \
+  --instance-ids $INSTANCE_ID \
+  --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+
+# 4. SSH and start enclave
+ssh -i ${KEY_PAIR}.pem ec2-user@$PUBLIC_IP
+sudo nitro-cli run-enclave \
+  --cpu-count 2 --memory 4096 \
+  --eif-path ~/satya/satya.eif
+```
+
+### Essential Commands
+```bash
+# Local development
+make dev
+
+# Build enclave
+make build
+
+# Deploy contracts
+cd move/enclave && sui client publish .
+
+# Check enclave status
+sudo nitro-cli describe-enclaves
+
+# View logs
+sudo nitro-cli console --enclave-id <id>
+```
+
+### Instance Types & Pricing
+- **Development**: m5.large (2 vCPU, 8GB) - $0.096/hour
+- **Production**: m5.xlarge (4 vCPU, 16GB) - $0.192/hour  
+- **High Load**: m5.2xlarge (8 vCPU, 32GB) - $0.384/hour
+
 ## Security Considerations
 
 - Models are encrypted using AES-256-GCM
