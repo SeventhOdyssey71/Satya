@@ -4,6 +4,7 @@ import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { WalrusClient } from './WalrusClientStub';
 import { SealService } from './SealService';
 import { NautilusService } from './NautilusService';
+import { TransactionService, MarketplaceTransaction, TransactionConfig } from './TransactionService';
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger();
@@ -44,6 +45,7 @@ export class MarketplaceService {
   private walrusClient: WalrusClient;
   private sealService: SealService;
   private nautilusService: NautilusService;
+  private transactionService: TransactionService;
   private contractPackageId: string;
   private marketplaceObjectId: string;
 
@@ -56,6 +58,7 @@ export class MarketplaceService {
     this.walrusClient = new WalrusClient();
     this.sealService = new SealService();
     this.nautilusService = new NautilusService();
+    this.transactionService = new TransactionService();
 
     // Contract addresses (from deployment)
     this.contractPackageId = process.env.MARKETPLACE_PACKAGE_ID || '';
@@ -136,16 +139,18 @@ export class MarketplaceService {
         }
       });
 
-      // Step 4: Create listing in smart contract
-      const listingTx = await this.createListingOnChain({
+      // Step 4: Create transaction for listing creation (to be signed by client)
+      const transactionBlock = await this.createListingTransaction({
         ...data,
         blobId: walrusUpload.blobId,
         sealPolicyId,
         verificationRequestId: verificationRequest.requestId
       });
 
+      // Return transaction details for client signing
       return {
-        id: listingTx.objectId,
+        transactionBlock,
+        requiresUserSignature: true,
         title: data.title,
         description: data.description,
         price: data.price,
@@ -154,13 +159,85 @@ export class MarketplaceService {
         blobId: walrusUpload.blobId,
         sealPolicyId,
         verificationStatus: 'pending',
-        transactionHash: listingTx.digest,
         createdAt: new Date().toISOString()
       };
 
     } catch (error) {
       logger.error('Error creating listing:', error);
       throw new Error('Failed to create listing');
+    }
+  }
+
+  /**
+   * Creates a transaction block for listing creation that needs to be signed by the user
+   */
+  async createListingTransaction(data: any): Promise<string> {
+    try {
+      const transaction: MarketplaceTransaction = {
+        type: 'create_listing',
+        params: {
+          title: data.title,
+          description: data.description,
+          price: data.price,
+          category: data.category,
+          blobId: data.blobId,
+          metadata: data.metadata || {}
+        },
+        sender: data.sellerAddress
+      };
+
+      const config: TransactionConfig = {
+        sender: data.sellerAddress,
+        gasBudget: 10000000 // 0.01 SUI for gas
+      };
+
+      return await this.transactionService.createMarketplaceTransaction(transaction, config);
+
+    } catch (error) {
+      logger.error('Error creating listing transaction:', error);
+      throw new Error('Failed to create listing transaction');
+    }
+  }
+
+  /**
+   * Processes a signed listing creation transaction
+   */
+  async submitSignedListingTransaction(
+    transactionBlock: string,
+    signature: string,
+    listingData: any
+  ): Promise<any> {
+    try {
+      // Execute the signed transaction
+      const result = await this.transactionService.executeSignedTransaction({
+        transactionBlockBytes: transactionBlock,
+        signature
+      });
+
+      if (result.effects?.status?.status !== 'success') {
+        throw new Error('Transaction execution failed');
+      }
+
+      // Extract created objects from transaction effects
+      const createdObjects = result.objectChanges?.filter(
+        (change: any) => change.type === 'created'
+      ) || [];
+
+      const listingObject = createdObjects.find(
+        (obj: any) => obj.objectType.includes('Listing')
+      );
+
+      return {
+        id: listingObject?.objectId || `listing_${Date.now()}`,
+        transactionHash: result.digest,
+        status: 'confirmed',
+        blockNumber: result.checkpoint,
+        ...listingData
+      };
+
+    } catch (error) {
+      logger.error('Error submitting signed listing transaction:', error);
+      throw new Error('Failed to submit signed transaction');
     }
   }
 
@@ -197,37 +274,123 @@ export class MarketplaceService {
     try {
       logger.info('Processing purchase', { listingId: data.listingId, buyer: data.buyerAddress });
 
-      // Step 1: Verify payment transaction
-      const paymentValid = await this.verifyPaymentTransaction(data.paymentTxHash);
-      if (!paymentValid) {
-        throw new Error('Invalid payment transaction');
-      }
-
-      // Step 2: Create purchase record on-chain
-      const purchaseTx = await this.createPurchaseOnChain(data);
-
-      // Step 3: Grant SEAL access if listing is encrypted
+      // Get listing details first
       const listing = await this.fetchListingFromContract(data.listingId);
-      if (listing.sealPolicyId) {
-        await this.sealService.grantAccess({
-          policyId: listing.sealPolicyId,
-          buyerAddress: data.buyerAddress
-        });
+      if (!listing) {
+        throw new Error('Listing not found');
       }
+
+      // Create purchase transaction for user to sign
+      const transactionBlock = await this.createPurchaseTransaction({
+        listingId: data.listingId,
+        buyerAddress: data.buyerAddress,
+        amount: listing.price
+      });
 
       return {
-        purchaseId: purchaseTx.objectId,
+        transactionBlock,
+        requiresUserSignature: true,
         listingId: data.listingId,
         buyerAddress: data.buyerAddress,
         amount: listing.price,
-        transactionHash: purchaseTx.digest,
-        accessGranted: !!listing.sealPolicyId,
-        purchasedAt: new Date().toISOString()
+        listing: {
+          title: listing.title,
+          sellerAddress: listing.sellerAddress,
+          encrypted: !!listing.sealPolicyId
+        }
       };
 
     } catch (error) {
       logger.error('Error processing purchase:', error);
       throw new Error('Failed to process purchase');
+    }
+  }
+
+  /**
+   * Creates a transaction block for purchasing a listing
+   */
+  async createPurchaseTransaction(data: {
+    listingId: string;
+    buyerAddress: string;
+    amount: number;
+  }): Promise<string> {
+    try {
+      const transaction: MarketplaceTransaction = {
+        type: 'purchase_listing',
+        params: {
+          listingId: data.listingId,
+          amount: data.amount
+        },
+        sender: data.buyerAddress
+      };
+
+      const config: TransactionConfig = {
+        sender: data.buyerAddress,
+        gasBudget: 15000000 // 0.015 SUI for gas (slightly higher for purchases)
+      };
+
+      return await this.transactionService.createMarketplaceTransaction(transaction, config);
+
+    } catch (error) {
+      logger.error('Error creating purchase transaction:', error);
+      throw new Error('Failed to create purchase transaction');
+    }
+  }
+
+  /**
+   * Processes a signed purchase transaction
+   */
+  async submitSignedPurchaseTransaction(
+    transactionBlock: string,
+    signature: string,
+    purchaseData: any
+  ): Promise<any> {
+    try {
+      // Execute the signed transaction
+      const result = await this.transactionService.executeSignedTransaction({
+        transactionBlockBytes: transactionBlock,
+        signature
+      });
+
+      if (result.effects?.status?.status !== 'success') {
+        throw new Error('Transaction execution failed');
+      }
+
+      // Extract created objects from transaction effects
+      const createdObjects = result.objectChanges?.filter(
+        (change: any) => change.type === 'created'
+      ) || [];
+
+      const purchaseObject = createdObjects.find(
+        (obj: any) => obj.objectType.includes('Purchase')
+      );
+
+      // Grant SEAL access if listing is encrypted
+      const listing = await this.fetchListingFromContract(purchaseData.listingId);
+      if (listing?.sealPolicyId) {
+        try {
+          await this.sealService.grantAccess({
+            policyId: listing.sealPolicyId,
+            buyerAddress: purchaseData.buyerAddress
+          });
+        } catch (error) {
+          logger.warn('Failed to grant SEAL access:', error);
+        }
+      }
+
+      return {
+        purchaseId: purchaseObject?.objectId || `purchase_${Date.now()}`,
+        listingId: purchaseData.listingId,
+        buyerAddress: purchaseData.buyerAddress,
+        amount: purchaseData.amount,
+        transactionHash: result.digest,
+        accessGranted: !!listing?.sealPolicyId,
+        purchasedAt: new Date().toISOString()
+      };
+
+    } catch (error) {
+      logger.error('Error submitting signed purchase transaction:', error);
+      throw new Error('Failed to submit signed purchase transaction');
     }
   }
 

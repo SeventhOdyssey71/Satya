@@ -2,6 +2,11 @@ import { Router, Request, Response } from 'express';
 import { body, query, validationResult } from 'express-validator';
 import { authenticateWallet, AuthenticatedRequest } from '../middleware/auth';
 import { MarketplaceService } from '../services/MarketplaceService';
+import { 
+  marketplaceRateLimit, 
+  transactionRateLimit,
+  createWalletRateLimit 
+} from '../middleware/rateLimiting';
 import { createLogger } from '../utils/logger';
 
 const router: Router = Router();
@@ -10,6 +15,7 @@ const marketplaceService = new MarketplaceService();
 
 // GET /api/marketplace/listings - Browse all listings
 router.get('/listings', 
+  marketplaceRateLimit,
   [
     query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
@@ -63,7 +69,9 @@ router.get('/listings',
 
 // POST /api/marketplace/listings - Create new listing
 router.post('/listings',
+  transactionRateLimit,
   authenticateWallet,
+  createWalletRateLimit('create_listing'),
   [
     body('title').notEmpty().isLength({ min: 3, max: 200 }).withMessage('Title must be 3-200 characters'),
     body('description').notEmpty().isLength({ min: 10, max: 2000 }).withMessage('Description must be 10-2000 characters'),
@@ -100,7 +108,9 @@ router.post('/listings',
       res.status(201).json({
         success: true,
         data: listing,
-        message: 'Listing created successfully',
+        message: listing.requiresUserSignature 
+          ? 'Transaction created successfully. Please sign with your wallet to complete listing creation.'
+          : 'Listing created successfully',
         timestamp: new Date().toISOString()
       });
 
@@ -114,8 +124,55 @@ router.post('/listings',
   }
 );
 
+// POST /api/marketplace/listings/submit-signed - Submit signed listing transaction
+router.post('/listings/submit-signed',
+  transactionRateLimit,
+  authenticateWallet,
+  [
+    body('transactionBlock').notEmpty().isString().withMessage('Transaction block is required'),
+    body('signature').notEmpty().isString().withMessage('Signature is required'),
+    body('listingData').isObject().withMessage('Listing data is required')
+  ],
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          error: { message: 'Validation failed', details: errors.array() }
+        });
+        return;
+      }
+
+      const { transactionBlock, signature, listingData } = req.body;
+
+      const result = await marketplaceService.submitSignedListingTransaction(
+        transactionBlock,
+        signature,
+        listingData
+      );
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Listing created successfully',
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      logger.error('Error submitting signed listing transaction:', error);
+      res.status(500).json({
+        success: false,
+        error: { message: 'Failed to submit signed transaction' }
+      });
+    }
+  }
+);
+
 // GET /api/marketplace/listings/:id - Get specific listing
-router.get('/listings/:id', async (req: Request, res: Response): Promise<void> => {
+router.get('/listings/:id', 
+  marketplaceRateLimit,
+  async (req: Request, res: Response): Promise<void> => {
   try {
     const listingId = req.params.id;
     
@@ -154,10 +211,11 @@ router.get('/listings/:id', async (req: Request, res: Response): Promise<void> =
 
 // POST /api/marketplace/purchase - Purchase a listing
 router.post('/purchase',
+  transactionRateLimit,
   authenticateWallet,
+  createWalletRateLimit('purchase'),
   [
-    body('listingId').notEmpty().isString().withMessage('Listing ID is required'),
-    body('paymentTxHash').notEmpty().isString().withMessage('Payment transaction hash is required')
+    body('listingId').notEmpty().isString().withMessage('Listing ID is required')
   ],
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
@@ -170,19 +228,21 @@ router.post('/purchase',
         return;
       }
 
-      const { listingId, paymentTxHash } = req.body;
+      const { listingId } = req.body;
       const buyerAddress = req.walletAddress!;
 
       const purchase = await marketplaceService.purchaseListing({
         listingId,
         buyerAddress,
-        paymentTxHash
+        paymentTxHash: '' // This field is now deprecated
       });
 
       res.json({
         success: true,
         data: purchase,
-        message: 'Purchase completed successfully',
+        message: purchase.requiresUserSignature 
+          ? 'Transaction created successfully. Please sign with your wallet to complete the purchase.'
+          : 'Purchase completed successfully',
         timestamp: new Date().toISOString()
       });
 
@@ -191,6 +251,51 @@ router.post('/purchase',
       res.status(500).json({
         success: false,
         error: { message: 'Failed to process purchase' }
+      });
+    }
+  }
+);
+
+// POST /api/marketplace/purchase/submit-signed - Submit signed purchase transaction
+router.post('/purchase/submit-signed',
+  transactionRateLimit,
+  authenticateWallet,
+  [
+    body('transactionBlock').notEmpty().isString().withMessage('Transaction block is required'),
+    body('signature').notEmpty().isString().withMessage('Signature is required'),
+    body('purchaseData').isObject().withMessage('Purchase data is required')
+  ],
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          error: { message: 'Validation failed', details: errors.array() }
+        });
+        return;
+      }
+
+      const { transactionBlock, signature, purchaseData } = req.body;
+
+      const result = await marketplaceService.submitSignedPurchaseTransaction(
+        transactionBlock,
+        signature,
+        purchaseData
+      );
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Purchase completed successfully',
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      logger.error('Error submitting signed purchase transaction:', error);
+      res.status(500).json({
+        success: false,
+        error: { message: 'Failed to submit signed purchase transaction' }
       });
     }
   }

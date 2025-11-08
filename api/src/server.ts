@@ -1,11 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { createLogger } from './utils/logger';
 import { errorHandler, notFound } from './middleware/errorHandler';
-import { authenticateWallet } from './middleware/auth';
+import { generalRateLimit } from './middleware/rateLimiting';
 
 // Import route handlers
 import { marketplaceRoutes } from './routes/marketplace';
@@ -13,6 +12,7 @@ import { walrusRoutes } from './routes/walrus';
 import { sealRoutes } from './routes/seal';
 import { nautilusRoutes } from './routes/nautilus';
 import { contractRoutes } from './routes/contracts';
+import { authRoutes } from './routes/auth';
 
 // Load environment variables
 dotenv.config();
@@ -29,12 +29,7 @@ app.use(cors({
 }));
 
 // Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
-app.use('/api/', limiter);
+app.use('/api/', generalRateLimit);
 
 // Body parsing middleware
 app.use(express.json({ limit: '50mb' }));
@@ -65,6 +60,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/walrus', walrusRoutes);
 app.use('/api/seal', sealRoutes);
