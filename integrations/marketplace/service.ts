@@ -322,7 +322,7 @@ export class MarketplaceService {
   }
 
   private async updateAccessRecord(access: DataAccess): Promise<void> {
-    // TODO: Implement access record update
+    this.accessRecords.set(`${access.listingId}:${access.buyer}`, access);
   }
 
   private async submitToArbitration(params: any): Promise<void> {
