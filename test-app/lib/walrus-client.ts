@@ -1,4 +1,5 @@
-// Simplified Walrus Client for testing
+// Simple Walrus Client stub for test-app
+// This avoids module format conflicts with the full implementation
 
 export class WalrusClient {
   async uploadBlob(data: Uint8Array): Promise<{ blobId: string; success: boolean }> {
@@ -18,27 +19,36 @@ export class WalrusClient {
       const result = await response.json();
       return {
         blobId: result.blobId,
-        success: result.success
+        success: true
       };
     } catch (error) {
       console.error('Upload error:', error);
-      throw error;
+      return {
+        blobId: '',
+        success: false
+      };
     }
   }
 
-  async downloadBlob(blobId: string): Promise<Uint8Array> {
+  async downloadBlob(blobId: string): Promise<{ data: Uint8Array; success: boolean }> {
     try {
-      const response = await fetch(`/api/walrus/download?blobId=${encodeURIComponent(blobId)}`);
+      const response = await fetch(`/api/walrus/download?blob_id=${blobId}`);
       
       if (!response.ok) {
         throw new Error(`Download failed: ${response.statusText}`);
       }
 
       const arrayBuffer = await response.arrayBuffer();
-      return new Uint8Array(arrayBuffer);
+      return {
+        data: new Uint8Array(arrayBuffer),
+        success: true
+      };
     } catch (error) {
       console.error('Download error:', error);
-      throw error;
+      return {
+        data: new Uint8Array(),
+        success: false
+      };
     }
   }
 }
