@@ -1,0 +1,49 @@
+# Build stage
+FROM rust:1.75 AS builder
+
+WORKDIR /app
+COPY . .
+
+# Install required dependencies
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Build the application
+RUN cargo build --release --no-default-features --features=satya
+
+# Runtime stage
+FROM debian:bookworm-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app user
+RUN useradd -m -s /bin/bash satya
+
+# Copy the built binary
+COPY --from=builder /app/target/release/nautilus-server /usr/local/bin/
+
+# Set ownership
+RUN chown satya:satya /usr/local/bin/nautilus-server
+RUN chmod +x /usr/local/bin/nautilus-server
+
+# Switch to app user
+USER satya
+
+# Expose port
+EXPOSE 3000
+
+# Set environment variables
+ENV RUST_LOG=info
+ENV API_KEY=enclave_production_key
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Run the application
+CMD ["nautilus-server"]

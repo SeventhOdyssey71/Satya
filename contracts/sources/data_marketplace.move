@@ -1,0 +1,483 @@
+/// Satya Data Marketplace - Secure data trading with escrow
+module satya::data_marketplace;
+
+use sui::coin::{Self, Coin};
+use sui::sui::SUI;
+use sui::balance::{Self, Balance};
+use sui::table::{Self, Table};
+use sui::clock::{Self, Clock};
+use sui::event;
+use std::string::{Self, String};
+
+// ==================== Constants ====================
+
+/// Error codes
+const EInsufficientPayment: u64 = 1;
+const EListingNotFound: u64 = 2;
+const EUnauthorizedAccess: u64 = 3;
+const EAlreadyPurchased: u64 = 4;
+const EListingExpired: u64 = 5;
+const EDisputeActive: u64 = 6;
+const EInvalidBuyer: u64 = 7;
+
+/// Platform fee in basis points (250 = 2.5%)
+const PLATFORM_FEE_BPS: u64 = 250;
+
+/// Dispute resolution timeout (7 days in milliseconds)
+const DISPUTE_TIMEOUT_MS: u64 = 7 * 24 * 60 * 60 * 1000;
+
+// ==================== Structures ====================
+
+/// Main marketplace registry
+public struct DataMarketplace has key {
+    id: UID,
+    listings: Table<ID, DataListing>,
+    purchases: Table<ID, PurchaseRecord>,
+    disputes: Table<ID, Dispute>,
+    platform_balance: Balance<SUI>,
+    total_listings: u64,
+    total_volume: u64,
+}
+
+/// Data listing by seller
+public struct DataListing has store {
+    seller: address,
+    title: String,
+    description: String,
+    category: String,
+    price: u64,
+    
+    // Storage references
+    encrypted_blob_id: String,      // Walrus storage ID
+    encryption_policy_id: String,   // Seal policy ID
+    data_hash: vector<u8>,         // SHA-256 hash for verification
+    attestation_id: Option<String>, // Nautilus attestation
+    
+    // Access control
+    allowed_buyers: vector<address>,
+    max_downloads: u64,
+    expiry_timestamp: u64,
+    
+    // Stats
+    purchase_count: u64,
+    total_earned: u64,
+    is_active: bool,
+    created_at: u64,
+}
+
+/// Purchase record with escrow
+public struct PurchaseRecord has store {
+    listing_id: ID,
+    buyer: address,
+    seller: address,
+    amount_paid: u64,
+    escrow_balance: Balance<SUI>,
+    
+    // Access details
+    access_granted_at: u64,
+    access_expires_at: u64,
+    download_count: u64,
+    max_downloads: u64,
+    
+    // Verification
+    data_verified: bool,
+    attestation_id: Option<String>,
+    
+    // Status
+    status: u8, // 0: pending, 1: active, 2: completed, 3: disputed, 4: refunded
+    completed_at: Option<u64>,
+}
+
+/// Dispute record
+public struct Dispute has store {
+    purchase_id: ID,
+    listing_id: ID,
+    buyer: address,
+    seller: address,
+    reason: String,
+    evidence_hash: Option<vector<u8>>,
+    attestation_id: Option<String>,
+    
+    // Resolution
+    status: u8, // 0: open, 1: resolved_for_buyer, 2: resolved_for_seller
+    resolution_deadline: u64,
+    resolved_at: Option<u64>,
+    resolution_note: Option<String>,
+}
+
+/// Admin capability
+public struct AdminCap has key, store {
+    id: UID,
+}
+
+// ==================== Events ====================
+
+/// Emitted when a new listing is created
+public struct ListingCreated has copy, drop {
+    listing_id: ID,
+    seller: address,
+    title: String,
+    price: u64,
+    category: String,
+}
+
+/// Emitted when a purchase is made
+public struct PurchaseMade has copy, drop {
+    purchase_id: ID,
+    listing_id: ID,
+    buyer: address,
+    seller: address,
+    amount: u64,
+}
+
+/// Emitted when payment is released
+public struct PaymentReleased has copy, drop {
+    purchase_id: ID,
+    seller: address,
+    amount: u64,
+}
+
+/// Emitted when a dispute is created
+public struct DisputeCreated has copy, drop {
+    dispute_id: ID,
+    purchase_id: ID,
+    buyer: address,
+    reason: String,
+}
+
+// ==================== Initialize ====================
+
+fun init(ctx: &mut TxContext) {
+    let marketplace = DataMarketplace {
+        id: object::new(ctx),
+        listings: table::new(ctx),
+        purchases: table::new(ctx),
+        disputes: table::new(ctx),
+        platform_balance: balance::zero<SUI>(),
+        total_listings: 0,
+        total_volume: 0,
+    };
+    
+    let admin_cap = AdminCap {
+        id: object::new(ctx),
+    };
+    
+    transfer::share_object(marketplace);
+    transfer::transfer(admin_cap, tx_context::sender(ctx));
+}
+
+// ==================== Seller Functions ====================
+
+/// Create a new data listing
+public fun create_listing(
+    marketplace: &mut DataMarketplace,
+    title: String,
+    description: String,
+    category: String,
+    price: u64,
+    encrypted_blob_id: String,
+    encryption_policy_id: String,
+    data_hash: vector<u8>,
+    max_downloads: u64,
+    expiry_days: u64,
+    clock: &Clock,
+    ctx: &mut TxContext
+): ID {
+    let listing_id = object::new(ctx);
+    let id_copy = object::uid_to_inner(&listing_id);
+    let current_time = clock::timestamp_ms(clock);
+    
+    let listing = DataListing {
+        seller: tx_context::sender(ctx),
+        title,
+        description,
+        category,
+        price,
+        encrypted_blob_id,
+        encryption_policy_id,
+        data_hash,
+        attestation_id: option::none(),
+        allowed_buyers: vector::empty(),
+        max_downloads,
+        expiry_timestamp: current_time + (expiry_days * 24 * 60 * 60 * 1000),
+        purchase_count: 0,
+        total_earned: 0,
+        is_active: true,
+        created_at: current_time,
+    };
+    
+    table::add(&mut marketplace.listings, id_copy, listing);
+    marketplace.total_listings = marketplace.total_listings + 1;
+    
+    event::emit(ListingCreated {
+        listing_id: id_copy,
+        seller: tx_context::sender(ctx),
+        title,
+        price,
+        category,
+    });
+    
+    object::delete(listing_id);
+    id_copy
+}
+
+/// Update listing attestation (after Nautilus verification)
+public fun update_listing_attestation(
+    marketplace: &mut DataMarketplace,
+    listing_id: ID,
+    attestation_id: String,
+    ctx: &TxContext
+) {
+    let listing = table::borrow_mut(&mut marketplace.listings, listing_id);
+    assert!(listing.seller == tx_context::sender(ctx), EUnauthorizedAccess);
+    listing.attestation_id = option::some(attestation_id);
+}
+
+// ==================== Buyer Functions ====================
+
+/// Purchase data with payment going to escrow
+public fun purchase_data(
+    marketplace: &mut DataMarketplace,
+    listing_id: ID,
+    payment: Coin<SUI>,
+    access_duration_hours: u64,
+    clock: &Clock,
+    ctx: &mut TxContext
+): ID {
+    let listing = table::borrow(&marketplace.listings, listing_id);
+    assert!(listing.is_active, EListingNotFound);
+    assert!(clock::timestamp_ms(clock) < listing.expiry_timestamp, EListingExpired);
+    assert!(coin::value(&payment) >= listing.price, EInsufficientPayment);
+    
+    let buyer = tx_context::sender(ctx);
+    let current_time = clock::timestamp_ms(clock);
+    
+    // Check if allowed buyers list is set and buyer is in it
+    if (vector::length(&listing.allowed_buyers) > 0) {
+        assert!(vector::contains(&listing.allowed_buyers, &buyer), EUnauthorizedAccess);
+    };
+    
+    // Create purchase record
+    let purchase_id = object::new(ctx);
+    let id_copy = object::uid_to_inner(&purchase_id);
+    
+    // Split platform fee
+    let payment_balance = coin::into_balance(payment);
+    let platform_fee = (listing.price * PLATFORM_FEE_BPS) / 10000;
+    let platform_fee_balance = balance::split(&mut payment_balance, platform_fee);
+    balance::join(&mut marketplace.platform_balance, platform_fee_balance);
+    
+    let purchase = PurchaseRecord {
+        listing_id,
+        buyer,
+        seller: listing.seller,
+        amount_paid: listing.price,
+        escrow_balance: payment_balance, // Rest goes to escrow
+        access_granted_at: current_time,
+        access_expires_at: current_time + (access_duration_hours * 60 * 60 * 1000),
+        download_count: 0,
+        max_downloads: listing.max_downloads,
+        data_verified: false,
+        attestation_id: option::none(),
+        status: 1, // active
+        completed_at: option::none(),
+    };
+    
+    table::add(&mut marketplace.purchases, id_copy, purchase);
+    
+    // Update listing stats
+    let listing_mut = table::borrow_mut(&mut marketplace.listings, listing_id);
+    listing_mut.purchase_count = listing_mut.purchase_count + 1;
+    marketplace.total_volume = marketplace.total_volume + listing.price;
+    
+    event::emit(PurchaseMade {
+        purchase_id: id_copy,
+        listing_id,
+        buyer,
+        seller: listing.seller,
+        amount: listing.price,
+    });
+    
+    object::delete(purchase_id);
+    id_copy
+}
+
+/// Confirm successful data download and release escrow
+public fun confirm_download(
+    marketplace: &mut DataMarketplace,
+    purchase_id: ID,
+    attestation_id: Option<String>,
+    ctx: &mut TxContext
+) {
+    let purchase = table::borrow_mut(&mut marketplace.purchases, purchase_id);
+    assert!(purchase.buyer == tx_context::sender(ctx), EInvalidBuyer);
+    assert!(purchase.status == 1, EUnauthorizedAccess); // Must be active
+    
+    purchase.download_count = purchase.download_count + 1;
+    purchase.data_verified = true;
+    
+    if (option::is_some(&attestation_id)) {
+        purchase.attestation_id = attestation_id;
+    };
+    
+    // Release payment from escrow to seller if first successful download
+    if (purchase.download_count == 1) {
+        let seller = purchase.seller;
+        let amount = balance::value(&purchase.escrow_balance);
+        let payment = coin::from_balance(
+            balance::split(&mut purchase.escrow_balance, amount),
+            ctx
+        );
+        
+        transfer::public_transfer(payment, seller);
+        
+        purchase.status = 2; // completed
+        purchase.completed_at = option::some(clock::timestamp_ms(clock::create_for_testing(ctx)));
+        
+        // Update listing earnings
+        let listing = table::borrow_mut(&mut marketplace.listings, purchase.listing_id);
+        listing.total_earned = listing.total_earned + amount;
+        
+        event::emit(PaymentReleased {
+            purchase_id,
+            seller,
+            amount,
+        });
+    }
+}
+
+// ==================== Dispute Functions ====================
+
+/// Buyer initiates dispute
+public fun create_dispute(
+    marketplace: &mut DataMarketplace,
+    purchase_id: ID,
+    reason: String,
+    evidence_hash: Option<vector<u8>>,
+    clock: &Clock,
+    ctx: &mut TxContext
+): ID {
+    let purchase = table::borrow_mut(&mut marketplace.purchases, purchase_id);
+    assert!(purchase.buyer == tx_context::sender(ctx), EInvalidBuyer);
+    assert!(purchase.status == 1, EUnauthorizedAccess); // Must be active
+    
+    let dispute_id = object::new(ctx);
+    let id_copy = object::uid_to_inner(&dispute_id);
+    let current_time = clock::timestamp_ms(clock);
+    
+    let dispute = Dispute {
+        purchase_id,
+        listing_id: purchase.listing_id,
+        buyer: purchase.buyer,
+        seller: purchase.seller,
+        reason,
+        evidence_hash,
+        attestation_id: option::none(),
+        status: 0, // open
+        resolution_deadline: current_time + DISPUTE_TIMEOUT_MS,
+        resolved_at: option::none(),
+        resolution_note: option::none(),
+    };
+    
+    table::add(&mut marketplace.disputes, id_copy, dispute);
+    purchase.status = 3; // disputed
+    
+    event::emit(DisputeCreated {
+        dispute_id: id_copy,
+        purchase_id,
+        buyer: tx_context::sender(ctx),
+        reason,
+    });
+    
+    object::delete(dispute_id);
+    id_copy
+}
+
+/// Resolve dispute (admin only for now, could be DAO later)
+public fun resolve_dispute(
+    _admin: &AdminCap,
+    marketplace: &mut DataMarketplace,
+    dispute_id: ID,
+    resolution: u8, // 1: buyer wins (refund), 2: seller wins (release)
+    note: String,
+    clock: &Clock,
+    ctx: &mut TxContext
+) {
+    let dispute = table::borrow_mut(&mut marketplace.disputes, dispute_id);
+    assert!(dispute.status == 0, EUnauthorizedAccess); // Must be open
+    
+    dispute.status = resolution;
+    dispute.resolved_at = option::some(clock::timestamp_ms(clock));
+    dispute.resolution_note = option::some(note);
+    
+    let purchase = table::borrow_mut(&mut marketplace.purchases, dispute.purchase_id);
+    
+    if (resolution == 1) {
+        // Refund to buyer
+        let refund = coin::from_balance(
+            balance::split(&mut purchase.escrow_balance, balance::value(&purchase.escrow_balance)),
+            ctx
+        );
+        transfer::public_transfer(refund, dispute.buyer);
+        purchase.status = 4; // refunded
+    } else {
+        // Release to seller
+        let payment = coin::from_balance(
+            balance::split(&mut purchase.escrow_balance, balance::value(&purchase.escrow_balance)),
+            ctx
+        );
+        transfer::public_transfer(payment, dispute.seller);
+        purchase.status = 2; // completed
+    }
+}
+
+// ==================== Admin Functions ====================
+
+/// Withdraw platform fees
+public fun withdraw_platform_fees(
+    _admin: &AdminCap,
+    marketplace: &mut DataMarketplace,
+    amount: u64,
+    recipient: address,
+    ctx: &mut TxContext
+) {
+    let withdrawal = coin::from_balance(
+        balance::split(&mut marketplace.platform_balance, amount),
+        ctx
+    );
+    transfer::public_transfer(withdrawal, recipient);
+}
+
+/// Emergency pause listing
+public fun pause_listing(
+    _admin: &AdminCap,
+    marketplace: &mut DataMarketplace,
+    listing_id: ID,
+) {
+    let listing = table::borrow_mut(&mut marketplace.listings, listing_id);
+    listing.is_active = false;
+}
+
+// ==================== View Functions ====================
+
+public fun get_listing_details(
+    marketplace: &DataMarketplace,
+    listing_id: ID
+): (address, String, u64, bool, u64) {
+    let listing = table::borrow(&marketplace.listings, listing_id);
+    (
+        listing.seller,
+        listing.title,
+        listing.price,
+        listing.is_active,
+        listing.purchase_count
+    )
+}
+
+public fun get_marketplace_stats(marketplace: &DataMarketplace): (u64, u64, u64) {
+    (
+        marketplace.total_listings,
+        marketplace.total_volume,
+        balance::value(&marketplace.platform_balance)
+    )
+}
