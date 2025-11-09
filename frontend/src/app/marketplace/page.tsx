@@ -78,7 +78,7 @@ function ModelGrid() {
     id: i,
     title: "Opus Model x229",
     description: "Model with training data from top NHS inc. hospitals, works like magic.",
-    image: "https://placehold.co/400x320"
+    image: "/images/Claude.png"
   }))
 
   return (
@@ -101,7 +101,10 @@ function ModelCard({ title, description, image }: {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
       </div>
-      <div className="absolute bottom-0 left-0 right-0 p-4 text-white bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30"></div>
+      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
         <h3 className="text-xl font-russo mb-2 leading-tight">{title}</h3>
         <p className="text-sm font-albert text-gray-200 mb-3 line-clamp-2 leading-relaxed">
           {description}

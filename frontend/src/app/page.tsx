@@ -75,11 +75,19 @@ function HeroSection() {
           <div className="text-center mt-8">
             <p className="text-2xl font-albert text-neutral-500 mb-4">Built on the Sui Stack</p>
             <div className="flex items-center justify-center gap-8">
-              <div className="w-28 h-6 bg-gray-200 rounded flex items-center justify-center">
-                <span className="text-xs font-albert text-gray-600">SEAL</span>
+              <div className="flex items-center justify-center">
+                <img 
+                  src="/images/Seal.svg" 
+                  alt="SEAL"
+                  className="h-8"
+                />
               </div>
-              <div className="w-28 h-8 bg-gray-200 rounded flex items-center justify-center">
-                <span className="text-xs font-albert text-gray-600">WALRUS</span>
+              <div className="flex items-center justify-center">
+                <img 
+                  src="/images/Walrus.png" 
+                  alt="WALRUS"
+                  className="h-6"
+                />
               </div>
             </div>
           </div>
