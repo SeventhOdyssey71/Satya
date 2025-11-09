@@ -8,8 +8,8 @@ export default function MarketplacePage() {
       <MarketplaceHeader />
       
       {/* Main Content */}
-      <main className="relative z-10 py-8">
-        <div className="container max-w-[1728px] mx-auto px-4">
+      <main className="relative z-10 py-6">
+        <div className="container max-w-6xl mx-auto px-6">
           {/* Navigation Tabs */}
           <MarketplaceNavigation />
           
@@ -56,11 +56,11 @@ function BackgroundLines() {
 
 function MarketplaceHeader() {
   return (
-    <header className="relative z-10">
-      <div className="container max-w-[1728px] mx-auto px-8">
-        <div className="flex items-center justify-between py-6">
-          <h1 className="text-4xl font-russo text-cyan-950 ml-4">Satya</h1>
-          <button className="px-6 py-3 bg-white rounded-[30px] shadow-sm border border-neutral-500 text-xl font-light font-albert text-black hover:shadow-md transition-shadow mr-4">
+    <header className="relative z-10 border-b border-neutral-100">
+      <div className="container max-w-6xl mx-auto px-6">
+        <div className="flex items-center justify-between py-4">
+          <h1 className="text-3xl font-russo text-cyan-950">Satya</h1>
+          <button className="px-5 py-2.5 bg-white rounded-lg shadow-sm border border-neutral-300 text-sm font-medium font-albert text-black hover:shadow-md transition-shadow">
             Connect Wallet
           </button>
         </div>
@@ -71,48 +71,50 @@ function MarketplaceHeader() {
 
 function MarketplaceNavigation() {
   return (
-    <div className="flex items-center gap-8 mb-8">
-      <div className="text-2xl font-albert text-black">Marketplace</div>
-      <div className="text-2xl font-albert text-zinc-500">Dashboard</div>
-      <div className="text-2xl font-albert text-zinc-500">More</div>
+    <div className="flex items-center gap-8 mb-6 py-4">
+      <div className="text-lg font-medium font-albert text-black border-b-2 border-black pb-1">Marketplace</div>
+      <div className="text-lg font-medium font-albert text-zinc-500 hover:text-zinc-700 cursor-pointer pb-1">Dashboard</div>
+      <div className="text-lg font-medium font-albert text-zinc-500 hover:text-zinc-700 cursor-pointer pb-1">More</div>
     </div>
   )
 }
 
 function SearchBar() {
   return (
-    <div className="mb-8">
+    <div className="mb-8 space-y-4">
       {/* Category Tabs */}
-      <div className="bg-white rounded-[35px] border border-black p-2 mb-6 max-w-4xl">
-        <div className="flex items-center gap-4">
-          <div className="bg-neutral-200 rounded-[35px] border border-black px-6 py-3">
-            <span className="text-xl font-albert text-black">Designs</span>
-          </div>
-          <div className="px-6 py-3">
-            <span className="text-xl font-albert text-zinc-500">Machine Learning</span>
-          </div>
-          <div className="px-6 py-3">
-            <span className="text-xl font-albert text-zinc-500">HealthCare</span>
-          </div>
-          <div className="px-6 py-3">
-            <span className="text-xl font-albert text-zinc-500">Education</span>
-          </div>
-          <div className="px-6 py-3">
-            <span className="text-xl font-albert text-zinc-500">Others</span>
-          </div>
+      <div className="bg-gray-50 rounded-xl border border-gray-200 p-1 inline-flex">
+        <div className="bg-white rounded-lg px-4 py-2 shadow-sm">
+          <span className="text-sm font-medium font-albert text-black">Designs</span>
+        </div>
+        <div className="px-4 py-2 hover:bg-white hover:rounded-lg transition-colors cursor-pointer">
+          <span className="text-sm font-medium font-albert text-gray-600">Machine Learning</span>
+        </div>
+        <div className="px-4 py-2 hover:bg-white hover:rounded-lg transition-colors cursor-pointer">
+          <span className="text-sm font-medium font-albert text-gray-600">HealthCare</span>
+        </div>
+        <div className="px-4 py-2 hover:bg-white hover:rounded-lg transition-colors cursor-pointer">
+          <span className="text-sm font-medium font-albert text-gray-600">Education</span>
+        </div>
+        <div className="px-4 py-2 hover:bg-white hover:rounded-lg transition-colors cursor-pointer">
+          <span className="text-sm font-medium font-albert text-gray-600">Others</span>
         </div>
       </div>
       
       {/* Search Input */}
-      <div className="bg-white rounded-[10px] shadow-sm border border-neutral-500 p-4 max-w-lg">
-        <div className="flex items-center justify-between">
-          <input 
-            type="text" 
-            placeholder="Type in your search here..."
-            className="text-xl font-light font-albert text-neutral-600 bg-transparent outline-none flex-1"
-          />
-          <div className="w-12 h-10 bg-zinc-300 rounded-[10px] flex items-center justify-center">
-            <div className="w-4 h-4 bg-black"></div>
+      <div className="flex items-center justify-between">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3 flex-1 max-w-md">
+          <div className="flex items-center gap-3">
+            <input 
+              type="text" 
+              placeholder="Type in your search here..."
+              className="text-sm font-albert text-gray-600 bg-transparent outline-none flex-1 placeholder-gray-400"
+            />
+            <button className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center hover:bg-gray-200 transition-colors">
+              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -125,7 +127,7 @@ function ModelGrid() {
     id: i,
     title: "Opus Model x229",
     description: "Model with training data from top NHS inc. hospitals, works like magic.",
-    image: "https://placehold.co/484x397"
+    image: "https://placehold.co/400x320"
   }))
 
   return (
@@ -143,19 +145,18 @@ function ModelCard({ title, description, image }: {
   image: string 
 }) {
   return (
-    <div className="relative bg-gray-600 rounded-3xl border border-neutral-400 overflow-hidden">
-      <img src={image} alt={title} className="w-full h-96 object-cover" />
-      <div className="absolute bottom-0 left-0 right-0 p-6 text-white bg-gradient-to-t from-black/80 to-transparent">
-        <h3 className="text-4xl font-russo mb-4">{title}</h3>
-        <p className="text-xs font-albert text-zinc-300 mb-6 w-72">
+    <div className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+      <div className="aspect-[4/3] overflow-hidden">
+        <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 p-4 text-white bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+        <h3 className="text-xl font-russo mb-2 leading-tight">{title}</h3>
+        <p className="text-sm font-albert text-gray-200 mb-3 line-clamp-2 leading-relaxed">
           {description}
         </p>
-        <div className="flex items-center gap-2">
-          <button className="w-40 h-10 bg-zinc-500 rounded-[30px] flex items-center justify-center text-white text-base font-albert hover:bg-zinc-600 transition-colors">
-            Verify Model
-          </button>
-          <div className="w-2.5 h-1 bg-white"></div>
-        </div>
+        <button className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-2 text-sm font-medium font-albert text-white hover:bg-white/30 transition-colors">
+          Verify Model
+        </button>
       </div>
     </div>
   )
@@ -164,20 +165,24 @@ function ModelCard({ title, description, image }: {
 function Pagination() {
   return (
     <div className="flex items-center justify-center gap-6 mb-8">
-      <button className="w-28 h-10 bg-white rounded-[30px] border border-black flex items-center justify-center gap-2 text-base font-light font-albert text-black hover:bg-gray-50 transition-colors">
-        <div className="w-1.5 h-2 bg-black"></div>
-        Prev.
+      <button className="px-4 py-2 bg-white rounded-lg border border-gray-200 flex items-center gap-2 text-sm font-medium font-albert text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        Prev
       </button>
       
       <div className="flex items-center gap-2">
-        <div className="w-3 h-3 bg-zinc-300 rounded-full"></div>
-        <div className="w-3 h-3 bg-neutral-100 rounded-full"></div>
-        <div className="w-3 h-3 bg-neutral-100 rounded-full"></div>
+        <div className="w-2 h-2 bg-black rounded-full"></div>
+        <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+        <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
       </div>
       
-      <button className="w-28 h-10 bg-white rounded-[30px] border border-black flex items-center justify-center gap-2 text-base font-light font-albert text-black hover:bg-gray-50 transition-colors">
+      <button className="px-4 py-2 bg-white rounded-lg border border-gray-200 flex items-center gap-2 text-sm font-medium font-albert text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors">
         Next
-        <div className="w-1.5 h-2 bg-black"></div>
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
       </button>
     </div>
   )
@@ -185,12 +190,11 @@ function Pagination() {
 
 function MarketplaceGuide() {
   return (
-    <div className="flex items-center gap-2 mt-16">
-      <span className="text-xl font-inter text-stone-500">Marketplace Guide</span>
-      <div className="flex items-center">
-        <div className="w-4 h-4 bg-black"></div>
-        <div className="w-[5px] h-2 bg-black ml-1"></div>
-      </div>
+    <div className="flex items-center gap-2 mt-12 pt-6 border-t border-gray-100">
+      <span className="text-sm font-albert text-gray-500">Marketplace Guide</span>
+      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
     </div>
   )
 }
