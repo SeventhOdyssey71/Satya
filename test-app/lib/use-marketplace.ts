@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useCurrentAccount, useSignTransactionBlock } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSignTransaction } from '@mysten/dapp-kit';
 import { apiClient, type ListingData, type CreateListingRequest } from './api-client';
 import { useAuth } from './use-auth';
 
@@ -27,7 +27,7 @@ export interface PurchaseState {
 export function useMarketplace() {
   const { isAuthenticated } = useAuth();
   const currentAccount = useCurrentAccount();
-  const { mutateAsync: signTransactionBlock } = useSignTransactionBlock();
+  const { mutateAsync: signTransaction } = useSignTransaction();
 
   const [marketplaceState, setMarketplaceState] = useState<MarketplaceState>({
     listings: [],
@@ -116,13 +116,13 @@ export function useMarketplace() {
         // Check if we need to sign a transaction
         if (response.data.requiresUserSignature && response.data.transactionBlock) {
           try {
-            const signedTx = await signTransactionBlock({
-              transactionBlock: response.data.transactionBlock,
+            const signedTx = await signTransaction({
+              transaction: response.data.transactionBlock,
             });
 
             // Submit signed transaction
             const submitResponse = await apiClient.submitSignedListing(
-              signedTx.transactionBlockBytes,
+              signedTx.bytes,
               signedTx.signature,
               listingData
             );
@@ -156,7 +156,7 @@ export function useMarketplace() {
       });
       return false;
     }
-  }, [isAuthenticated, currentAccount?.address, signTransactionBlock, fetchListings]);
+  }, [isAuthenticated, currentAccount?.address, signTransaction, fetchListings]);
 
   const purchaseListing = useCallback(async (listingId: string): Promise<boolean> => {
     if (!isAuthenticated || !currentAccount?.address) {
@@ -177,13 +177,13 @@ export function useMarketplace() {
         // Check if we need to sign a transaction
         if (response.data.requiresUserSignature && response.data.transactionBlock) {
           try {
-            const signedTx = await signTransactionBlock({
-              transactionBlock: response.data.transactionBlock,
+            const signedTx = await signTransaction({
+              transaction: response.data.transactionBlock,
             });
 
             // Submit signed transaction
             const submitResponse = await apiClient.submitSignedPurchase(
-              signedTx.transactionBlockBytes,
+              signedTx.bytes,
               signedTx.signature,
               { listingId }
             );
@@ -223,7 +223,7 @@ export function useMarketplace() {
       });
       return false;
     }
-  }, [isAuthenticated, currentAccount?.address, signTransactionBlock]);
+  }, [isAuthenticated, currentAccount?.address, signTransaction]);
 
   const getDownloadLink = useCallback(async (purchaseId: string): Promise<string | null> => {
     try {

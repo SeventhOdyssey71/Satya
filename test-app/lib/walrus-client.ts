@@ -10,7 +10,7 @@ export class WalrusClient {
   async uploadBlob(data: Uint8Array): Promise<{ blobId: string; success: boolean }> {
     try {
       // Convert Uint8Array to File for the API
-      const file = new File([data], 'upload.bin', { type: 'application/octet-stream' });
+      const file = new File([Buffer.from(data)], 'upload.bin', { type: 'application/octet-stream' });
       
       const response = await apiClient.uploadFile(file);
       
