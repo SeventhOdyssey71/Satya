@@ -151,8 +151,156 @@ export default function Home() {
               </div>
             </div>
           </section>
+
+          {/* Built on Sui Stack Section */}
+          <section className="mt-32 px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-6xl font-russo text-black mb-6">
+                Built on the Sui Stack
+              </h2>
+              <p className="text-2xl font-light font-albert text-black max-w-[974px] mx-auto">
+                Model with training data from top NHS inc. hospitals, works like magic.
+              </p>
+            </div>
+
+            {/* Feature Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+              <div className="w-full h-56 bg-white border border-black p-6 flex items-center justify-center">
+                <div className="w-72 h-28 bg-gray-200 rounded"></div>
+              </div>
+              <div className="w-full h-56 bg-white border border-black"></div>
+              <div className="w-full h-56 bg-white border border-black"></div>
+              <div className="w-full h-56 bg-white border border-black"></div>
+            </div>
+          </section>
+
+          {/* Trust Enforced Section */}
+          <section className="mt-32 px-4">
+            <div className="flex flex-col lg:flex-row gap-16 items-start">
+              <div className="lg:w-1/2">
+                <h2 className="text-6xl font-russo text-black mb-6 max-w-[490px]">
+                  Trust Enforced
+                </h2>
+                <p className="text-2xl font-light font-albert text-black max-w-[514px] mb-8">
+                  Model with training data from top NHS inc. hospitals, works like magic. Model with training data from top NHS inc. hospitals, works like magic.
+                </p>
+                <button className="w-80 h-20 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.5px] border-neutral-500 text-3xl font-light font-albert text-black">
+                  Read Docs
+                </button>
+              </div>
+              
+              <div className="lg:w-1/2">
+                <div className="bg-stone-50 rounded-[50px] border border-black p-4 max-w-[933px] h-[568px]">
+                  <div className="grid grid-cols-2 gap-4 h-full">
+                    <div className="bg-white rounded-[50px] border border-black"></div>
+                    <div className="bg-white rounded-[50px] border border-black"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* FAQ Section */}
+          <section className="mt-32 px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-6xl font-russo text-black">
+                FAQ
+              </h2>
+            </div>
+
+            <div className="space-y-6 max-w-[1555px] mx-auto">
+              {/* FAQ Item 1 - Expanded */}
+              <div className="h-80 bg-black rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.5px] border-neutral-200 p-8 flex items-center justify-between">
+                <div className="text-white">
+                  <h3 className="text-6xl font-russo mb-6 max-w-[490px]">
+                    Trust Enforced
+                  </h3>
+                  <p className="text-2xl font-light font-albert max-w-[514px]">
+                    Model with training data from top NHS inc. hospitals, works like magic. Model with training data from top NHS inc. hospitals, works like magic.
+                  </p>
+                </div>
+                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center">
+                  <div className="w-9 h-0.5 bg-black"></div>
+                </div>
+              </div>
+
+              {/* FAQ Item 2 */}
+              <div className="h-48 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.5px] border-neutral-500 p-8 flex items-center justify-between">
+                <div className="text-black">
+                  <h3 className="text-6xl font-russo max-w-[490px]">
+                    Trust Enforced
+                  </h3>
+                </div>
+                <div className="w-24 h-24 bg-white rounded-full border border-black flex items-center justify-center">
+                  <div className="w-9 h-0 border-t-2 border-black"></div>
+                  <div className="w-0 h-9 border-l-2 border-black absolute"></div>
+                </div>
+              </div>
+
+              {/* FAQ Item 3 */}
+              <div className="h-48 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.5px] border-neutral-500 p-8 flex items-center justify-between">
+                <div className="text-black">
+                  <h3 className="text-6xl font-russo max-w-[490px]">
+                    Trust Enforced
+                  </h3>
+                </div>
+                <div className="w-24 h-24 bg-white rounded-full border border-black flex items-center justify-center">
+                  <div className="w-9 h-0 border-t-2 border-black"></div>
+                  <div className="w-0 h-9 border-l-2 border-black absolute"></div>
+                </div>
+              </div>
+
+              {/* FAQ Item 4 */}
+              <div className="h-48 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.5px] border-neutral-500 p-8 flex items-center justify-between">
+                <div className="text-black">
+                  <h3 className="text-6xl font-russo max-w-[490px]">
+                    Trust Enforced
+                  </h3>
+                </div>
+                <div className="w-24 h-24 bg-white rounded-full border border-black flex items-center justify-center">
+                  <div className="w-9 h-0 border-t-2 border-black"></div>
+                  <div className="w-0 h-9 border-l-2 border-black absolute"></div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="mt-32 px-4 pb-8">
+        <div className="w-full max-w-[1648px] mx-auto h-[476px] bg-black rounded-[50px] border border-stone-300 p-16 relative">
+          <div className="flex justify-between items-start h-full">
+            <div>
+              <h3 className="text-4xl font-russo text-sky-100 mb-8">
+                Satya
+              </h3>
+            </div>
+            
+            <div className="flex gap-32">
+              <div className="space-y-6">
+                <div className="text-2xl font-light font-albert text-white">Docs</div>
+                <div className="text-2xl font-light font-albert text-white">Team</div>
+                <div className="text-2xl font-light font-albert text-white">Support</div>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="text-2xl font-light font-albert text-white">FAQ</div>
+                <div className="text-2xl font-light font-albert text-white">Terms of Service</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Social Icons */}
+          <div className="absolute bottom-8 right-8 flex gap-4">
+            <div className="w-9 h-9 bg-white rounded"></div>
+            <div className="w-9 h-9 border border-white rounded flex items-center justify-center">
+              <div className="w-7 h-6 border border-white"></div>
+            </div>
+            <div className="w-7 h-6 bg-white"></div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
