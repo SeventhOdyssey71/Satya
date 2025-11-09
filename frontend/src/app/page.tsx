@@ -3,9 +3,6 @@ import Link from 'next/link'
 export default function Home() {
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
-      {/* Background Grid Lines */}
-      <BackgroundLines />
-      
       {/* Header */}
       <Header />
       
@@ -30,29 +27,6 @@ export default function Home() {
   )
 }
 
-function BackgroundLines() {
-  return (
-    <div className="absolute inset-0 pointer-events-none opacity-50">
-      {/* Vertical Grid Lines */}
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div
-          key={`vertical-${i}`}
-          className="absolute w-px h-full bg-neutral-200"
-          style={{ left: `${(i + 1) * 8.33}%` }}
-        />
-      ))}
-      
-      {/* Horizontal Grid Lines */}
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div
-          key={`horizontal-${i}`}
-          className="absolute w-full h-px bg-neutral-200"
-          style={{ top: `${(i + 1) * 12.5}%` }}
-        />
-      ))}
-    </div>
-  )
-}
 
 function Header() {
   return (

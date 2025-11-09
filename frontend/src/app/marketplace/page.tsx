@@ -1,9 +1,8 @@
+import Link from 'next/link'
+
 export default function MarketplacePage() {
   return (
     <div className="min-h-screen bg-white overflow-hidden">
-      {/* Background Lines */}
-      <BackgroundLines />
-      
       {/* Header */}
       <MarketplaceHeader />
       
@@ -27,29 +26,6 @@ export default function MarketplacePage() {
   )
 }
 
-function BackgroundLines() {
-  return (
-    <div className="absolute inset-0 pointer-events-none opacity-50">
-      {/* Vertical Grid Lines */}
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div
-          key={`vertical-${i}`}
-          className="absolute w-px h-full bg-neutral-200"
-          style={{ left: `${(i + 1) * 8.33}%` }}
-        />
-      ))}
-      
-      {/* Horizontal Grid Lines */}
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div
-          key={`horizontal-${i}`}
-          className="absolute w-full h-px bg-neutral-200"
-          style={{ top: `${(i + 1) * 12.5}%` }}
-        />
-      ))}
-    </div>
-  )
-}
 
 function MarketplaceHeader() {
   return (
@@ -57,11 +33,13 @@ function MarketplaceHeader() {
       <div className="container max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-8">
-            <h1 className="text-3xl font-russo text-cyan-950">Satya</h1>
+            <Link href="/">
+              <h1 className="text-3xl font-russo text-cyan-950 cursor-pointer hover:opacity-80 transition-opacity">Satya</h1>
+            </Link>
             <div className="flex items-center gap-8">
-              <div className="text-lg font-medium font-albert text-black border-b-2 border-black pb-1">Marketplace</div>
-              <div className="text-lg font-medium font-albert text-zinc-500 hover:text-zinc-700 cursor-pointer pb-1">Dashboard</div>
-              <div className="text-lg font-medium font-albert text-zinc-500 hover:text-zinc-700 cursor-pointer pb-1">More</div>
+              <div className="text-base font-medium font-albert text-black cursor-pointer">Marketplace</div>
+              <div className="text-base font-medium font-albert text-gray-400 hover:text-gray-600 cursor-pointer">Dashboard</div>
+              <div className="text-base font-medium font-albert text-gray-400 hover:text-gray-600 cursor-pointer">Upload Model</div>
             </div>
           </div>
           <button className="px-5 py-2.5 bg-white rounded-lg shadow-sm border border-neutral-300 text-sm font-medium font-albert text-black hover:shadow-md transition-shadow">
@@ -79,20 +57,20 @@ function CombinedNavigation() {
       {/* Categories and Search Bar in same row */}
       <div className="flex items-center justify-between gap-6">
         {/* Category Tabs */}
-        <div className="bg-gray-50 rounded-full border border-gray-200 p-1 flex">
-          <div className="bg-white rounded-full px-6 py-3 shadow-sm">
+        <div className="bg-gray-50 rounded-lg border border-gray-200 p-1 flex">
+          <div className="bg-white rounded-lg px-6 py-3 shadow-sm">
             <span className="text-sm font-medium font-albert text-black">Designs</span>
           </div>
-          <div className="px-6 py-3 hover:bg-white hover:rounded-full transition-colors cursor-pointer">
+          <div className="px-6 py-3 hover:bg-white hover:rounded-lg transition-colors cursor-pointer">
             <span className="text-sm font-medium font-albert text-gray-600">Machine Learning</span>
           </div>
-          <div className="px-6 py-3 hover:bg-white hover:rounded-full transition-colors cursor-pointer">
+          <div className="px-6 py-3 hover:bg-white hover:rounded-lg transition-colors cursor-pointer">
             <span className="text-sm font-medium font-albert text-gray-600">HealthCare</span>
           </div>
-          <div className="px-6 py-3 hover:bg-white hover:rounded-full transition-colors cursor-pointer">
+          <div className="px-6 py-3 hover:bg-white hover:rounded-lg transition-colors cursor-pointer">
             <span className="text-sm font-medium font-albert text-gray-600">Education</span>
           </div>
-          <div className="px-6 py-3 hover:bg-white hover:rounded-full transition-colors cursor-pointer">
+          <div className="px-6 py-3 hover:bg-white hover:rounded-lg transition-colors cursor-pointer">
             <span className="text-sm font-medium font-albert text-gray-600">Others</span>
           </div>
         </div>
@@ -141,7 +119,7 @@ function ModelCard({ title, description, image }: {
 }) {
   return (
     <div className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
-      <div className="aspect-[4/3] overflow-hidden">
+      <div className="aspect-[4/4] overflow-hidden">
         <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
       </div>
       <div className="absolute bottom-0 left-0 right-0 p-4 text-white bg-gradient-to-t from-black/90 via-black/60 to-transparent">
