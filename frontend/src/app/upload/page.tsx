@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Header from '@/components/ui/Header'
 import { FormField, FormRow, FormInput, FormSelect, FormTextarea } from '@/components/ui/FormField'
-import { useAuth, useWallet, useMarketplace, useWalrus } from '@/hooks'
+import { useAuth, useWallet, useMarketplace, useWalrus, useSeal } from '@/hooks'
 import type { ModelUpload } from '@/lib/types'
 
 export default function UploadPage() {
@@ -29,6 +29,7 @@ function UploadForm() {
   const { wallet, isConnected } = useWallet()
   const { uploadModel, isLoading: isUploading, error: marketplaceError } = useMarketplace()
   const { uploadFile, isUploading: isWalrusUploading, uploadProgress, error: walrusError } = useWalrus()
+  const { encryptData, isEncrypting, error: sealError } = useSeal()
   
   const [formData, setFormData] = useState<Partial<ModelUpload>>({
     title: '',
@@ -71,10 +72,45 @@ function UploadForm() {
     try {
       setIsSubmitting(true)
 
+      let processedFile = modelFile
+      let sealPolicyId: string | undefined
+
+      // Handle SEAL encryption if enabled
+      if (formData.enableSealEncryption) {
+        try {
+          console.log('Encrypting model with SEAL...')
+          
+          // Convert file to ArrayBuffer for encryption
+          const fileArrayBuffer = await modelFile.arrayBuffer()
+          
+          // Encrypt the model data using SEAL
+          const encryptionResult = await encryptData(fileArrayBuffer, 'threshold')
+          sealPolicyId = encryptionResult.policyId
+          
+          // Create new file with encrypted data
+          const encryptedBuffer = new TextEncoder().encode(encryptionResult.encryptedData)
+          processedFile = new File([encryptedBuffer], `encrypted_${modelFile.name}`, {
+            type: 'application/octet-stream'
+          })
+          
+          console.log('Model encrypted successfully with SEAL policy:', sealPolicyId)
+        } catch (encryptionError) {
+          console.error('SEAL encryption failed:', encryptionError)
+          alert('Failed to encrypt model. Please try again or disable encryption.')
+          return
+        }
+      }
+
       const modelUpload: ModelUpload = {
         ...formData,
-        file: modelFile,
+        file: processedFile,
         thumbnail: thumbnailFile || undefined,
+        metadata: {
+          ...formData.metadata,
+          ...(sealPolicyId && { sealPolicyId }),
+          originalFileName: modelFile.name,
+          isEncrypted: !!formData.enableSealEncryption
+        }
       } as ModelUpload
 
       await uploadModel(modelUpload)
@@ -116,9 +152,9 @@ function UploadForm() {
     <div className="max-w-6xl mx-auto">
       <h1 className="text-3xl font-russo text-black mb-12">Upload to Marketplace</h1>
       
-      {(marketplaceError || walrusError) && (
+      {(marketplaceError || walrusError || sealError) && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-          {marketplaceError || walrusError}
+          {marketplaceError || walrusError || sealError}
         </div>
       )}
       
@@ -181,11 +217,58 @@ function UploadForm() {
             </FormField>
           </FormRow>
           
+          {/* SEAL Encryption Options */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-russo text-black">Security & Privacy Options</h3>
+            
+            <FormRow>
+              <FormField label="Encryption">
+                <div className="space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.enableSealEncryption || false}
+                      onChange={(e) => handleInputChange('enableSealEncryption', e.target.checked)}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-albert text-gray-700">Enable SEAL Encryption</span>
+                  </label>
+                  {formData.enableSealEncryption && (
+                    <div className="ml-7 text-sm text-gray-600">
+                      Your model will be encrypted using threshold encryption for enhanced security
+                    </div>
+                  )}
+                </div>
+              </FormField>
+              
+              <FormField label="Visibility">
+                <div className="space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isPrivate || false}
+                      onChange={(e) => handleInputChange('isPrivate', e.target.checked)}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-albert text-gray-700">Private Listing</span>
+                  </label>
+                  {formData.isPrivate && (
+                    <div className="ml-7 text-sm text-gray-600">
+                      Your model will only be visible to users you share the link with
+                    </div>
+                  )}
+                </div>
+              </FormField>
+            </FormRow>
+          </div>
+          
           <div className="flex justify-center pt-10">
             <UploadButton 
               onClick={handleSubmit} 
-              isLoading={isSubmitting || isUploading || isWalrusUploading}
+              isLoading={isSubmitting || isUploading || isWalrusUploading || isEncrypting}
               disabled={!modelFile || !formData.title || !formData.description || !formData.category || !formData.price}
+              isEncrypting={isEncrypting}
+              isUploading={isUploading || isWalrusUploading}
             />
           </div>
         </div>
@@ -299,12 +382,22 @@ function FileUpload({
 function UploadButton({ 
   onClick, 
   isLoading, 
-  disabled 
+  disabled,
+  isEncrypting = false,
+  isUploading = false 
 }: { 
   onClick: () => void
   isLoading: boolean
   disabled: boolean
+  isEncrypting?: boolean
+  isUploading?: boolean
 }) {
+  const getLoadingText = () => {
+    if (isEncrypting) return 'Encrypting...'
+    if (isUploading) return 'Uploading...'
+    return 'Processing...'
+  }
+
   return (
     <button 
       className={`w-60 h-12 rounded-full text-white text-lg font-albert transition-colors ${
@@ -318,7 +411,7 @@ function UploadButton({
       {isLoading ? (
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-          Uploading...
+          {getLoadingText()}
         </div>
       ) : (
         'Upload Model'
