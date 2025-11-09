@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit'
 import { useAuth, useWallet } from '@/hooks'
 
 interface HeaderProps {
@@ -10,8 +11,10 @@ interface HeaderProps {
 
 export default function Header({ activeTab }: HeaderProps) {
   const { isAuthenticated, user, logout } = useAuth()
-  const { isConnected, wallet, connect, disconnect, isConnecting } = useWallet()
+  const { isConnected, wallet, disconnect, getBalance } = useWallet()
+  const currentAccount = useCurrentAccount()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [balance, setBalance] = useState('0')
 
   const getTabClass = (tab: string) => 
     `text-base font-medium font-albert cursor-pointer transition-colors ${
@@ -19,14 +22,6 @@ export default function Header({ activeTab }: HeaderProps) {
         ? 'text-black'
         : 'text-gray-400 hover:text-gray-600'
     }`
-
-  const handleConnectWallet = async () => {
-    try {
-      await connect()
-    } catch (error) {
-      console.error('Failed to connect wallet:', error)
-    }
-  }
 
   const handleDisconnect = async () => {
     try {
@@ -41,6 +36,23 @@ export default function Header({ activeTab }: HeaderProps) {
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (getBalance && isConnected) {
+        try {
+          const bal = await getBalance()
+          setBalance((parseFloat(bal) / 1000000000).toFixed(2))
+        } catch (error) {
+          console.error('Failed to fetch balance:', error)
+        }
+      }
+    }
+
+    if (isConnected) {
+      fetchBalance()
+    }
+  }, [isConnected, getBalance])
 
   return (
     <header className="relative z-10 border-b border-neutral-100">
@@ -76,7 +88,7 @@ export default function Header({ activeTab }: HeaderProps) {
                 className="flex items-center gap-3 px-4 py-2.5 bg-white rounded-lg shadow-sm border border-neutral-300 text-sm font-medium font-albert text-black hover:shadow-md transition-shadow"
               >
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span>{wallet ? formatAddress(wallet.address) : 'Connected'}</span>
+                <span>{currentAccount ? formatAddress(currentAccount.address) : 'Connected'}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -87,13 +99,13 @@ export default function Header({ activeTab }: HeaderProps) {
                   <div className="px-4 py-2 border-b border-gray-100">
                     <div className="text-xs text-gray-500">Wallet Address</div>
                     <div className="text-sm font-medium text-gray-900 font-mono">
-                      {wallet ? formatAddress(wallet.address) : ''}
+                      {currentAccount ? formatAddress(currentAccount.address) : ''}
                     </div>
                   </div>
                   <div className="px-4 py-2 border-b border-gray-100">
                     <div className="text-xs text-gray-500">Balance</div>
                     <div className="text-sm font-medium text-gray-900">
-                      {wallet ? `${parseFloat(wallet.balance) / 1000000000} SUI` : '0 SUI'}
+                      {balance} SUI
                     </div>
                   </div>
                   <button 
@@ -106,20 +118,12 @@ export default function Header({ activeTab }: HeaderProps) {
               )}
             </div>
           ) : (
-            <button 
-              onClick={handleConnectWallet}
-              disabled={isConnecting}
-              className="px-5 py-2.5 bg-white rounded-lg shadow-sm border border-neutral-300 text-sm font-medium font-albert text-black hover:shadow-md transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isConnecting ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                  Connecting...
-                </div>
-              ) : (
-                'Connect Wallet'
-              )}
-            </button>
+            <div className="custom-connect-button">
+              <ConnectButton 
+                connectText="Connect Wallet"
+                className="px-5 py-2.5 bg-white rounded-lg shadow-sm border border-neutral-300 text-sm font-medium font-albert text-black hover:shadow-md transition-shadow"
+              />
+            </div>
           )}
         </div>
       </div>

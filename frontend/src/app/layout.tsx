@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Russo_One, Albert_Sans } from 'next/font/google'
+import { WalletProviders } from '@/providers/WalletProvider'
 import './globals.css'
 
 const russo = Russo_One({
@@ -27,7 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${russo.variable} ${albert.variable}`}>
       <body className="antialiased font-albert">
-        {children}
+        <WalletProviders>
+          {children}
+        </WalletProviders>
       </body>
     </html>
   )

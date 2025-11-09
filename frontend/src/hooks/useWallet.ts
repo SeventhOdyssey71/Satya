@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useCallback, useMemo } from 'react'
+import { useCurrentAccount, useConnectWallet, useDisconnectWallet, useSignPersonalMessage, useSignTransaction, useSuiClient, useWallets } from '@mysten/dapp-kit'
 import type { WalletInfo, WalletSignature, SignedTransaction } from '@/lib/types'
 
 interface UseWalletReturn {
@@ -15,140 +16,39 @@ interface UseWalletReturn {
 }
 
 export function useWallet(): UseWalletReturn {
-  const [wallet, setWallet] = useState<WalletInfo | null>(null)
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const currentAccount = useCurrentAccount()
+  const { mutateAsync: connectWallet, isPending: isConnecting } = useConnectWallet()
+  const { mutateAsync: disconnectWallet } = useDisconnectWallet()
+  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage()
+  const { mutateAsync: signTransactionMutation } = useSignTransaction()
+  const suiClient = useSuiClient()
+  const wallets = useWallets()
 
-  const isConnected = !!wallet?.isConnected
+  const isConnected = !!currentAccount?.address
+
+  const wallet = useMemo((): WalletInfo | null => {
+    if (!currentAccount?.address) return null
+    
+    return {
+      address: currentAccount.address,
+      balance: '0', // Will be updated via getBalance
+      isConnected: true,
+      walletType: 'sui-wallet',
+    }
+  }, [currentAccount])
 
   const clearError = useCallback(() => {
-    setError(null)
+    // Error handling is managed by the dApp kit
   }, [])
-
-  const getSuiWallet = useCallback(() => {
-    if (typeof window === 'undefined') {
-      throw new Error('Wallet not available in server environment')
-    }
-
-    // @ts-ignore - Sui wallet extension
-    const suiWallet = window?.suiWallet
-    if (!suiWallet) {
-      throw new Error('Sui Wallet extension not installed')
-    }
-
-    return suiWallet
-  }, [])
-
-  const connect = useCallback(async (): Promise<WalletInfo> => {
-    try {
-      setIsConnecting(true)
-      setError(null)
-
-      const suiWallet = getSuiWallet()
-      
-      const accounts = await suiWallet.getAccounts()
-      if (!accounts || accounts.length === 0) {
-        await suiWallet.requestPermissions({
-          permissions: ['viewAccount', 'suggestTransactions'],
-        })
-        const newAccounts = await suiWallet.getAccounts()
-        if (!newAccounts || newAccounts.length === 0) {
-          throw new Error('No accounts available')
-        }
-      }
-
-      const account = accounts[0]
-      const balance = await getBalance()
-
-      const walletInfo: WalletInfo = {
-        address: account.address,
-        balance,
-        isConnected: true,
-        walletType: 'sui-wallet',
-      }
-
-      setWallet(walletInfo)
-      return walletInfo
-    } catch (error: any) {
-      const message = error?.message || 'Failed to connect wallet'
-      setError(message)
-      throw error
-    } finally {
-      setIsConnecting(false)
-    }
-  }, [])
-
-  const disconnect = useCallback(async (): Promise<void> => {
-    try {
-      setError(null)
-      setWallet(null)
-    } catch (error: any) {
-      const message = error?.message || 'Failed to disconnect wallet'
-      setError(message)
-      throw error
-    }
-  }, [])
-
-  const signMessage = useCallback(async (message: string): Promise<WalletSignature> => {
-    try {
-      setError(null)
-
-      if (!wallet?.isConnected) {
-        throw new Error('Wallet not connected')
-      }
-
-      const suiWallet = getSuiWallet()
-      const result = await suiWallet.signPersonalMessage({
-        message: new TextEncoder().encode(message),
-        account: wallet.address,
-      })
-
-      return {
-        signature: result.signature,
-        publicKey: result.publicKey,
-      }
-    } catch (error: any) {
-      const message = error?.message || 'Failed to sign message'
-      setError(message)
-      throw error
-    }
-  }, [wallet, getSuiWallet])
-
-  const signTransaction = useCallback(async (transaction: any): Promise<SignedTransaction> => {
-    try {
-      setError(null)
-
-      if (!wallet?.isConnected) {
-        throw new Error('Wallet not connected')
-      }
-
-      const suiWallet = getSuiWallet()
-      const result = await suiWallet.signTransaction({
-        transaction,
-        account: wallet.address,
-      })
-
-      return {
-        transactionBytes: result.transactionBytes,
-        signature: result.signature,
-        publicKey: result.publicKey,
-      }
-    } catch (error: any) {
-      const message = error?.message || 'Failed to sign transaction'
-      setError(message)
-      throw error
-    }
-  }, [wallet, getSuiWallet])
 
   const getBalance = useCallback(async (): Promise<string> => {
     try {
-      if (!wallet?.address) {
+      if (!currentAccount?.address) {
         return '0'
       }
 
-      const suiWallet = getSuiWallet()
-      const balance = await suiWallet.getBalance({
-        account: wallet.address,
+      const balance = await suiClient.getBalance({
+        owner: currentAccount.address,
       })
 
       return balance.totalBalance || '0'
@@ -156,41 +56,89 @@ export function useWallet(): UseWalletReturn {
       console.warn('Failed to get balance:', error)
       return '0'
     }
-  }, [wallet, getSuiWallet])
+  }, [currentAccount, suiClient])
 
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        if (typeof window !== 'undefined') {
-          // @ts-ignore
-          const suiWallet = window?.suiWallet
-          if (suiWallet) {
-            const accounts = await suiWallet.getAccounts()
-            if (accounts && accounts.length > 0) {
-              const account = accounts[0]
-              const balance = await getBalance()
-              setWallet({
-                address: account.address,
-                balance,
-                isConnected: true,
-                walletType: 'sui-wallet',
-              })
-            }
-          }
-        }
-      } catch (error) {
-        console.log('No existing wallet connection')
+  const connect = useCallback(async (): Promise<WalletInfo> => {
+    try {
+      // Try to connect to the first available wallet
+      const availableWallet = wallets.find(wallet => wallet.name.includes('Sui'))
+      if (!availableWallet) {
+        throw new Error('No Sui wallet found. Please install a Sui wallet extension.')
       }
-    }
 
-    checkConnection()
-  }, [])
+      await connectWallet({ wallet: availableWallet })
+      
+      if (!currentAccount?.address) {
+        throw new Error('Failed to connect wallet')
+      }
+
+      const balance = await getBalance()
+      
+      return {
+        address: currentAccount.address,
+        balance,
+        isConnected: true,
+        walletType: 'sui-wallet',
+      }
+    } catch (error: any) {
+      throw new Error(error?.message || 'Failed to connect wallet')
+    }
+  }, [connectWallet, currentAccount, getBalance, wallets])
+
+  const disconnect = useCallback(async (): Promise<void> => {
+    try {
+      await disconnectWallet()
+    } catch (error: any) {
+      throw new Error(error?.message || 'Failed to disconnect wallet')
+    }
+  }, [disconnectWallet])
+
+  const signMessage = useCallback(async (message: string): Promise<WalletSignature> => {
+    try {
+      if (!currentAccount?.address) {
+        throw new Error('Wallet not connected')
+      }
+
+      const result = await signPersonalMessage({
+        message: new TextEncoder().encode(message),
+        account: currentAccount,
+      })
+
+      return {
+        signature: result.signature,
+        publicKey: result.bytes || '', // Using bytes as fallback for publicKey
+      }
+    } catch (error: any) {
+      throw new Error(error?.message || 'Failed to sign message')
+    }
+  }, [signPersonalMessage, currentAccount])
+
+  const signTransaction = useCallback(async (transaction: any): Promise<SignedTransaction> => {
+    try {
+      if (!currentAccount?.address) {
+        throw new Error('Wallet not connected')
+      }
+
+      const result = await signTransactionMutation({
+        transaction,
+        account: currentAccount,
+      })
+
+      return {
+        transactionBytes: result.bytes || '', // Using bytes property from the result
+        signature: result.signature,
+        publicKey: '', // Mysten dApp Kit doesn't return publicKey in transaction signing
+      }
+    } catch (error: any) {
+      throw new Error(error?.message || 'Failed to sign transaction')
+    }
+  }, [signTransactionMutation, currentAccount])
 
   return {
     wallet,
     isConnected,
     isConnecting,
-    error,
+    error: null, // Error handling is managed by the dApp kit
     connect,
     disconnect,
     signMessage,
