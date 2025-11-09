@@ -68,8 +68,8 @@ export function BuyerMarketplace() {
 
     if (searchTerm) {
       filtered = filtered.filter(listing =>
-        listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        listing.description.toLowerCase().includes(searchTerm.toLowerCase())
+        (listing.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (listing.description?.toLowerCase() || '').includes(searchTerm.toLowerCase())
       );
     }
 
@@ -276,7 +276,7 @@ export function BuyerMarketplace() {
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">File Hash:</span>
-                      <span className="font-mono text-xs">{listing.fileHash.substring(0, 8)}...</span>
+                      <span className="font-mono text-xs">{listing.fileHash ? listing.fileHash.substring(0, 8) + '...' : 'N/A'}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Category:</span>
@@ -284,11 +284,11 @@ export function BuyerMarketplace() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Seller:</span>
-                      <span className="font-mono text-xs">{listing.sellerAddress.substring(0, 8)}...</span>
+                      <span className="font-mono text-xs">{listing.sellerAddress ? listing.sellerAddress.substring(0, 8) + '...' : 'N/A'}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Created:</span>
-                      <span>{new Date(listing.createdAt).toLocaleDateString()}</span>
+                      <span>{listing.createdAt ? new Date(listing.createdAt).toLocaleDateString() : 'N/A'}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -402,9 +402,9 @@ export function BuyerMarketplace() {
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
-                        <CardTitle className="text-lg">{purchase.listing.title}</CardTitle>
+                        <CardTitle className="text-lg">{purchase.listing?.title || 'Unknown Item'}</CardTitle>
                         <CardDescription>
-                          Purchased on {new Date(purchase.purchaseDate).toLocaleDateString()}
+                          Purchased on {purchase.purchaseDate ? new Date(purchase.purchaseDate).toLocaleDateString() : 'Unknown Date'}
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
@@ -419,7 +419,7 @@ export function BuyerMarketplace() {
                     <div className="space-y-3">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Price paid:</span>
-                        <span>{purchase.listing.price} SUI</span>
+                        <span>{purchase.listing?.price || 'N/A'} SUI</span>
                       </div>
                       
                       {purchase.verificationResult && (
