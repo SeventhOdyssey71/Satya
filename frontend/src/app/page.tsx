@@ -30,15 +30,24 @@ export default function Home() {
 
 function BackgroundLines() {
   return (
-    <div className="absolute inset-0 pointer-events-none">
-      <div className="absolute w-full h-px bg-neutral-200 top-[106px]" />
-      <div className="absolute w-[1470px] h-px bg-neutral-200 left-[129px] top-[228px]" />
-      <div className="absolute w-80 h-px bg-neutral-200 left-[285px] top-[343px] origin-top-left -rotate-90" />
-      <div className="absolute w-96 h-px bg-neutral-200 left-[528px] top-[410px] origin-top-left -rotate-[89deg]" />
-      <div className="absolute w-96 h-px bg-neutral-200 left-[788px] top-[445px] origin-top-left -rotate-90" />
-      <div className="absolute w-96 h-px bg-neutral-200 left-[1536px] top-[373px] origin-top-left -rotate-90" />
-      <div className="absolute w-96 h-px bg-neutral-200 left-[1284px] top-[428px] origin-top-left -rotate-90" />
-      <div className="absolute w-96 h-px bg-neutral-200 left-[1029px] top-[445px] origin-top-left -rotate-[89deg]" />
+    <div className="absolute inset-0 pointer-events-none opacity-50">
+      {/* Vertical Grid Lines */}
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div
+          key={`vertical-${i}`}
+          className="absolute w-px h-full bg-neutral-200"
+          style={{ left: `${(i + 1) * 8.33}%` }}
+        />
+      ))}
+      
+      {/* Horizontal Grid Lines */}
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div
+          key={`horizontal-${i}`}
+          className="absolute w-full h-px bg-neutral-200"
+          style={{ top: `${(i + 1) * 12.5}%` }}
+        />
+      ))}
     </div>
   )
 }
@@ -46,10 +55,10 @@ function BackgroundLines() {
 function Header() {
   return (
     <header className="relative z-10">
-      <div className="container max-w-[1728px] mx-auto px-4">
+      <div className="container max-w-[1728px] mx-auto px-8">
         <div className="flex items-center justify-between py-6">
-          <h1 className="text-4xl font-russo text-cyan-950">Satya</h1>
-          <button className="px-8 py-4 bg-white rounded-[30px] shadow-sm border border-neutral-500 text-2xl font-light font-albert text-black hover:shadow-md transition-shadow">
+          <h1 className="text-4xl font-russo text-cyan-950 ml-4">Satya</h1>
+          <button className="px-6 py-3 bg-white rounded-[30px] shadow-sm border border-neutral-500 text-lg font-light font-albert text-black hover:shadow-md transition-shadow mr-4">
             Get Started
           </button>
         </div>
@@ -60,30 +69,30 @@ function Header() {
 
 function HeroSection() {
   return (
-    <section className="relative z-10 py-16">
+    <section className="relative z-10 py-32">
       <div className="container max-w-[1728px] mx-auto px-4">
         <div className="text-center">
-          <h1 className="text-8xl font-russo text-black leading-tight max-w-[1155px] mx-auto mb-8">
+          <h1 className="text-7xl font-russo text-black leading-tight max-w-[1155px] mx-auto mb-8">
             Bringing verifiable + trusted data markets
           </h1>
           
-          <p className="text-2xl font-light font-albert text-black max-w-[974px] mx-auto mb-12">
+          <p className="text-xl font-light font-albert text-black max-w-[974px] mx-auto mb-12">
             Model with training data from top NHS inc. hospitals, works like magic. Model with training data from top NHS inc. hospitals, works like magic.
           </p>
 
-          <div className="flex items-center justify-center gap-8 mb-16">
-            <button className="w-80 h-20 bg-black rounded-[30px] shadow-sm border border-neutral-500 text-3xl font-light font-albert text-white hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-center gap-4 mb-40">
+            <button className="w-52 h-14 bg-black rounded-[30px] shadow-sm border border-neutral-500 text-lg font-light font-albert text-white hover:shadow-md transition-shadow">
               Launch App
             </button>
-            <button className="w-80 h-20 bg-white rounded-[30px] shadow-sm border border-neutral-500 text-3xl font-light font-albert text-black hover:shadow-md transition-shadow flex items-center justify-center gap-2">
+            <button className="w-52 h-14 bg-white rounded-[30px] shadow-sm border border-neutral-500 text-lg font-light font-albert text-black hover:shadow-md transition-shadow flex items-center justify-center gap-2">
               Read Docs
-              <svg className="w-5 h-6" viewBox="0 0 20 24" fill="none" stroke="currentColor">
+              <svg className="w-4 h-4" viewBox="0 0 20 24" fill="none" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 17L17 7M17 7H7M17 7V17" />
               </svg>
             </button>
           </div>
 
-          <div className="text-center">
+          <div className="text-center mt-8">
             <p className="text-2xl font-albert text-neutral-500 mb-4">Built on the Sui Stack</p>
             <div className="flex items-center justify-center gap-8">
               <div className="w-28 h-6 bg-gray-200 rounded flex items-center justify-center">
@@ -102,7 +111,7 @@ function HeroSection() {
 
 function TrustedMarketplacesSection() {
   return (
-    <section className="relative z-10 py-16">
+    <section className="relative z-10 py-24">
       <div className="container max-w-[1728px] mx-auto px-4">
         <div className="mb-12">
           <h2 className="text-6xl font-russo text-black mb-6 max-w-[1013px]">
@@ -113,42 +122,54 @@ function TrustedMarketplacesSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-12 gap-6 auto-rows-min">
+        {/* Model Cards with exact positioning */}
+        <div className="relative h-[1200px]">
           {/* AI Model x129 - Tall */}
-          <ModelCard
-            className="col-span-4 row-span-2"
-            title="AI Model x129"
-            description="Model with training data from top NHS inc. hospitals, works like magic."
-            bgColor="bg-black"
-            textColor="text-white"
-            buttonStyle="bg-zinc-300 text-black"
-          />
+          <div className="absolute w-[533px] h-[827px] left-[39px] top-0 bg-black rounded-3xl border border-stone-300 overflow-hidden">
+            <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black" />
+            <div className="absolute bottom-8 left-8 right-8 text-white">
+              <h3 className="text-4xl font-russo mb-4">AI Model x129</h3>
+              <p className="text-base font-albert mb-6 w-72">
+                Model with training data from top NHS inc. hospitals, works like magic.
+              </p>
+              <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert">
+                Verify Model
+              </button>
+            </div>
+          </div>
 
           {/* Opus Model x229 */}
-          <ModelCard
-            className="col-span-4"
-            title="Opus Model x229"
-            description="Model with training data from top NHS inc. hospitals, works like magic."
-            bgColor="bg-gray-600"
-            textColor="text-white"
-            descriptionColor="text-zinc-300"
-            buttonStyle="bg-zinc-500 text-white"
-          />
+          <div className="absolute w-[533px] h-[586px] left-[597px] top-0 bg-gray-600 rounded-3xl border border-neutral-400 overflow-hidden">
+            <div className="w-full h-2/3 bg-gradient-to-br from-gray-400 to-gray-600" />
+            <div className="absolute bottom-8 left-8 right-8 text-white">
+              <h3 className="text-4xl font-russo mb-4">Opus Model x229</h3>
+              <p className="text-base font-albert text-zinc-300 mb-6 w-72">
+                Model with training data from top NHS inc. hospitals, works like magic.
+              </p>
+              <button className="w-40 h-10 bg-zinc-500 rounded-[30px] flex items-center justify-center text-white text-base font-albert">
+                Verify Model
+              </button>
+            </div>
+          </div>
 
           {/* Self Drive Model - Top Right */}
-          <ModelCard
-            className="col-span-4"
-            title="Self Drive Model"
-            description="Model with training data from top NHS inc. hospitals, works like magic."
-            bgColor="bg-black"
-            textColor="text-white"
-            buttonStyle="bg-zinc-300 text-black"
-          />
+          <div className="absolute w-[533px] h-[586px] left-[1155px] top-[8px] bg-black rounded-3xl border border-stone-300 overflow-hidden">
+            <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black" />
+            <div className="absolute bottom-8 left-8 right-8 text-white">
+              <h3 className="text-4xl font-russo mb-4">Self Drive Model</h3>
+              <p className="text-base font-albert mb-6 w-72">
+                Model with training data from top NHS inc. hospitals, works like magic.
+              </p>
+              <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert">
+                Verify Model
+              </button>
+            </div>
+          </div>
 
           {/* Self Drive Model - Small */}
-          <div className="col-span-4 bg-gray-500 rounded-3xl border border-neutral-400 overflow-hidden h-80">
+          <div className="absolute w-[533px] h-80 left-[39px] top-[846px] bg-gray-500 rounded-3xl border border-neutral-400 overflow-hidden">
             <div className="w-full h-2/3 bg-gradient-to-br from-gray-400 to-gray-600" />
-            <div className="p-6 text-zinc-300">
+            <div className="absolute bottom-8 left-8 right-8 text-zinc-300">
               <h3 className="text-4xl font-russo mb-4">Self Drive Model</h3>
               <p className="text-base font-albert w-72">
                 Model with training data from top NHS inc. hospitals, works like magic.
@@ -157,18 +178,18 @@ function TrustedMarketplacesSection() {
           </div>
 
           {/* Large Self Drive Model */}
-          <div className="col-span-8 bg-black rounded-3xl border border-stone-300 overflow-hidden">
+          <div className="absolute w-[1092px] h-[586px] left-[596px] top-[607px] bg-black rounded-3xl border border-stone-300 overflow-hidden">
             <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black" />
-            <div className="p-6 text-white">
+            <div className="absolute bottom-8 left-8 right-8 text-white">
               <h3 className="text-4xl font-russo mb-4">Self Drive Model</h3>
               <p className="text-base font-albert mb-6 w-72">
                 Model with training data from top NHS inc. hospitals, works like magic.
               </p>
               <div className="flex gap-4">
-                <button className="w-40 h-10 bg-zinc-500 rounded-[30px] flex items-center justify-center text-white text-base font-albert hover:bg-zinc-600 transition-colors">
+                <button className="w-40 h-10 bg-zinc-500 rounded-[30px] flex items-center justify-center text-white text-base font-albert">
                   Verify Model
                 </button>
-                <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert hover:bg-zinc-400 transition-colors">
+                <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert">
                   Verify Model
                 </button>
               </div>
@@ -180,30 +201,6 @@ function TrustedMarketplacesSection() {
   )
 }
 
-function ModelCard({ className, title, description, bgColor, textColor, descriptionColor, buttonStyle }: {
-  className: string
-  title: string
-  description: string
-  bgColor: string
-  textColor: string
-  descriptionColor?: string
-  buttonStyle: string
-}) {
-  return (
-    <div className={`${className} ${bgColor} rounded-3xl border border-stone-300 overflow-hidden relative`}>
-      <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black" />
-      <div className={`absolute bottom-0 left-0 right-0 p-6 ${textColor}`}>
-        <h3 className="text-4xl font-russo mb-4">{title}</h3>
-        <p className={`text-base font-albert mb-6 w-72 ${descriptionColor || textColor}`}>
-          {description}
-        </p>
-        <button className={`w-40 h-10 ${buttonStyle} rounded-[30px] flex items-center justify-center text-base font-albert hover:opacity-80 transition-opacity`}>
-          Verify Model
-        </button>
-      </div>
-    </div>
-  )
-}
 
 function SuiStackSection() {
   return (
