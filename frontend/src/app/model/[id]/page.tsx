@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Header from '@/components/ui/Header'
-import { useAuth, useWallet, useMarketplace, useSeal, useWalrus } from '@/hooks'
+import { useAuth, useWallet, useMarketplace, useSeal, useWalrus, useSmartContract } from '@/hooks'
 import TEECompute from '@/components/tee/TEECompute'
 import type { ModelListing } from '@/lib/types'
 
@@ -18,6 +18,7 @@ export default function ModelPage({ params }: ModelPageProps) {
   const { getModel, purchaseModel, isLoading } = useMarketplace()
   const { decryptData, isDecrypting } = useSeal()
   const { downloadFile } = useWalrus()
+  const { executeTransaction, isExecuting } = useSmartContract()
   
   const [model, setModel] = useState<ModelListing | null>(null)
   const [isPurchasing, setIsPurchasing] = useState(false)
@@ -53,12 +54,25 @@ export default function ModelPage({ params }: ModelPageProps) {
       setIsPurchasing(true)
       setError(null)
 
-      // Create purchase request
-      await purchaseModel({
+      const purchaseRequest = {
         modelId: model.id,
         buyerAddress: '', // Will be filled by the backend from auth
         paymentAmount: model.price,
+      }
+
+      // Step 1: Create purchase transaction request
+      console.log('Creating purchase transaction...')
+      const transactionRequest = await purchaseModel(purchaseRequest)
+      
+      // Step 2: Execute smart contract transaction
+      console.log('Executing smart contract purchase...')
+      const transactionResult = await executeTransaction({
+        type: 'purchase',
+        purchaseData: purchaseRequest,
+        transactionRequest
       })
+      
+      console.log('Purchase transaction completed:', transactionResult)
 
       alert('Purchase successful! You can now download the model.')
       
@@ -196,7 +210,7 @@ export default function ModelPage({ params }: ModelPageProps) {
                 model={model}
                 onPurchase={handlePurchase}
                 onDownload={handleDownload}
-                isPurchasing={isPurchasing}
+                isPurchasing={isPurchasing || isExecuting}
                 isDecrypting={isDecrypting}
               />
             </div>

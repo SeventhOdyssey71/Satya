@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Header from '@/components/ui/Header'
 import { FormField, FormRow, FormInput, FormSelect, FormTextarea } from '@/components/ui/FormField'
-import { useAuth, useWallet, useMarketplace, useWalrus, useSeal } from '@/hooks'
+import { useAuth, useWallet, useMarketplace, useWalrus, useSeal, useSmartContract } from '@/hooks'
 import type { ModelUpload } from '@/lib/types'
 
 export default function UploadPage() {
@@ -30,6 +30,7 @@ function UploadForm() {
   const { uploadModel, isLoading: isUploading, error: marketplaceError } = useMarketplace()
   const { uploadFile, isUploading: isWalrusUploading, uploadProgress, error: walrusError } = useWalrus()
   const { encryptData, isEncrypting, error: sealError } = useSeal()
+  const { executeTransaction, isExecuting, error: contractError } = useSmartContract()
   
   const [formData, setFormData] = useState<Partial<ModelUpload>>({
     title: '',
@@ -113,9 +114,21 @@ function UploadForm() {
         }
       } as ModelUpload
 
-      await uploadModel(modelUpload)
+      // Step 1: Upload model and get transaction request
+      console.log('Creating listing transaction...')
+      const transactionRequest = await uploadModel(modelUpload)
       
-      alert('Model uploaded successfully!')
+      // Step 2: Execute smart contract transaction
+      console.log('Executing smart contract transaction...')
+      const transactionResult = await executeTransaction({
+        type: 'listing',
+        modelData: modelUpload,
+        transactionRequest
+      })
+      
+      console.log('Transaction completed:', transactionResult)
+      
+      alert('Model uploaded and listed successfully!')
       
       // Reset form
       setFormData({
@@ -152,9 +165,9 @@ function UploadForm() {
     <div className="max-w-6xl mx-auto">
       <h1 className="text-3xl font-russo text-black mb-12">Upload to Marketplace</h1>
       
-      {(marketplaceError || walrusError || sealError) && (
+      {(marketplaceError || walrusError || sealError || contractError) && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-          {marketplaceError || walrusError || sealError}
+          {marketplaceError || walrusError || sealError || contractError}
         </div>
       )}
       
@@ -265,10 +278,11 @@ function UploadForm() {
           <div className="flex justify-center pt-10">
             <UploadButton 
               onClick={handleSubmit} 
-              isLoading={isSubmitting || isUploading || isWalrusUploading || isEncrypting}
+              isLoading={isSubmitting || isUploading || isWalrusUploading || isEncrypting || isExecuting}
               disabled={!modelFile || !formData.title || !formData.description || !formData.category || !formData.price}
               isEncrypting={isEncrypting}
               isUploading={isUploading || isWalrusUploading}
+              isExecuting={isExecuting}
             />
           </div>
         </div>
@@ -384,17 +398,20 @@ function UploadButton({
   isLoading, 
   disabled,
   isEncrypting = false,
-  isUploading = false 
+  isUploading = false,
+  isExecuting = false 
 }: { 
   onClick: () => void
   isLoading: boolean
   disabled: boolean
   isEncrypting?: boolean
   isUploading?: boolean
+  isExecuting?: boolean
 }) {
   const getLoadingText = () => {
     if (isEncrypting) return 'Encrypting...'
     if (isUploading) return 'Uploading...'
+    if (isExecuting) return 'Creating Listing...'
     return 'Processing...'
   }
 
