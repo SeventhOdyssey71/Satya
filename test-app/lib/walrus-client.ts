@@ -1,26 +1,50 @@
-// Simple Walrus Client stub for test-app
-// This avoids module format conflicts with the full implementation
+import { apiClient } from './api-client';
 
 export class WalrusClient {
+  private useMockMode: boolean;
+
+  constructor() {
+    this.useMockMode = process.env.NEXT_PUBLIC_MOCK_MODE === 'true';
+  }
+
   async uploadBlob(data: Uint8Array): Promise<{ blobId: string; success: boolean }> {
     try {
-      const response = await fetch('/api/walrus/upload', {
-        method: 'PUT',
-        body: data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer,
-        headers: {
-          'Content-Type': 'application/octet-stream'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
+      // Convert Uint8Array to File for the API
+      const file = new File([data], 'upload.bin', { type: 'application/octet-stream' });
+      
+      const response = await apiClient.uploadFile(file);
+      
+      if (response.success && response.data) {
+        return {
+          blobId: response.data.blobId,
+          success: true
+        };
+      } else {
+        throw new Error(response.error?.message || 'Upload failed');
       }
-
-      const result = await response.json();
+    } catch (error) {
+      console.error('Upload error:', error);
       return {
-        blobId: result.blobId,
-        success: true
+        blobId: '',
+        success: false
       };
+    }
+  }
+
+  async uploadFile(file: File): Promise<{ blobId: string; success: boolean; filename?: string; size?: number }> {
+    try {
+      const response = await apiClient.uploadFile(file);
+      
+      if (response.success && response.data) {
+        return {
+          blobId: response.data.blobId,
+          success: true,
+          filename: response.data.filename,
+          size: response.data.size
+        };
+      } else {
+        throw new Error(response.error?.message || 'Upload failed');
+      }
     } catch (error) {
       console.error('Upload error:', error);
       return {
@@ -32,21 +56,37 @@ export class WalrusClient {
 
   async downloadBlob(blobId: string): Promise<{ data: Uint8Array; success: boolean }> {
     try {
-      const response = await fetch(`/api/walrus/download?blob_id=${blobId}`);
-      
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.statusText}`);
-      }
-
-      const arrayBuffer = await response.arrayBuffer();
+      const data = await apiClient.downloadFile(blobId);
       return {
-        data: new Uint8Array(arrayBuffer),
+        data,
         success: true
       };
     } catch (error) {
       console.error('Download error:', error);
       return {
         data: new Uint8Array(),
+        success: false
+      };
+    }
+  }
+
+  async getFileInfo(blobId: string): Promise<{ available: boolean; storedAt?: string; success: boolean }> {
+    try {
+      const response = await apiClient.getFileInfo(blobId);
+      
+      if (response.success && response.data) {
+        return {
+          available: response.data.available,
+          storedAt: response.data.storedAt,
+          success: true
+        };
+      } else {
+        throw new Error(response.error?.message || 'Failed to get file info');
+      }
+    } catch (error) {
+      console.error('File info error:', error);
+      return {
+        available: false,
         success: false
       };
     }

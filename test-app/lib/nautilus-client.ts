@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { apiClient } from './api-client';
 
 // Mock Nautilus attestation types
 export const AttestationDataSchema = z.object({
@@ -49,9 +50,9 @@ export class NautilusClient {
   private baseUrl: string;
   private mockMode: boolean;
 
-  constructor(baseUrl: string = '/api/nautilus', mockMode: boolean = false) {
+  constructor(baseUrl: string = '/api/nautilus', mockMode?: boolean) {
     this.baseUrl = baseUrl;
-    this.mockMode = mockMode;
+    this.mockMode = mockMode ?? (process.env.NEXT_PUBLIC_MOCK_MODE === 'true');
   }
 
   async requestVerification(request: VerificationRequest): Promise<{ requestId: string }> {
@@ -61,17 +62,17 @@ export class NautilusClient {
       return { requestId: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` };
     }
 
-    const response = await fetch(`${this.baseUrl}/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Verification request failed: ${response.statusText}`);
+    try {
+      const response = await apiClient.requestVerification(request);
+      if (response.success && response.data) {
+        return { requestId: response.data.requestId };
+      } else {
+        throw new Error(response.error?.message || 'Verification request failed');
+      }
+    } catch (error) {
+      console.error('Verification request error:', error);
+      throw error;
     }
-
-    return response.json();
   }
 
   async getAttestationResult(requestId: string): Promise<AttestationData | null> {
@@ -95,13 +96,19 @@ export class NautilusClient {
       };
     }
 
-    const response = await fetch(`${this.baseUrl}/attestation/${requestId}`);
-    if (!response.ok) {
-      if (response.status === 404) return null; // Still processing
-      throw new Error(`Failed to get attestation: ${response.statusText}`);
+    try {
+      const response = await apiClient.getAttestationResult(requestId);
+      if (response.success) {
+        return response.data || null;
+      } else if (response.error?.message.includes('not found')) {
+        return null; // Still processing
+      } else {
+        throw new Error(response.error?.message || 'Failed to get attestation');
+      }
+    } catch (error) {
+      console.error('Attestation result error:', error);
+      throw error;
     }
-
-    return response.json();
   }
 
   async processDataInEnclave(blobId: string, operations: string[]): Promise<{
@@ -130,17 +137,17 @@ export class NautilusClient {
       return { resultHash, attestation };
     }
 
-    const response = await fetch(`${this.baseUrl}/process`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ blobId, operations }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Processing failed: ${response.statusText}`);
+    try {
+      const response = await apiClient.processDataInEnclave(blobId, operations);
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        throw new Error(response.error?.message || 'Processing failed');
+      }
+    } catch (error) {
+      console.error('Data processing error:', error);
+      throw error;
     }
-
-    return response.json();
   }
 
   // Mock marketplace functionality

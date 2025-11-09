@@ -25,11 +25,15 @@ import {
   Database,
   Zap
 } from 'lucide-react';
-import { nautilusClient, type MarketplaceListing, type AttestationData } from '@/lib/nautilus-client';
+import { useAuth } from '@/lib/use-auth';
+import { useMarketplace } from '@/lib/use-marketplace';
+import { useCurrentAccount } from '@mysten/dapp-kit';
+import { nautilusClient, type AttestationData } from '@/lib/nautilus-client';
+import { type ListingData } from '@/lib/api-client';
 
 interface Purchase {
   id: string;
-  listing: MarketplaceListing;
+  listing: ListingData;
   status: 'pending' | 'processing' | 'verifying' | 'completed' | 'failed';
   purchaseDate: string;
   verificationResult?: AttestationData;
@@ -37,37 +41,30 @@ interface Purchase {
 }
 
 export function BuyerMarketplace() {
-  const [listings, setListings] = useState<MarketplaceListing[]>([]);
-  const [filteredListings, setFilteredListings] = useState<MarketplaceListing[]>([]);
+  const { isAuthenticated, error: authError } = useAuth();
+  const currentAccount = useCurrentAccount();
+  const { 
+    marketplaceState, 
+    purchaseState, 
+    fetchListings, 
+    purchaseListing,
+    getDownloadLink,
+    resetPurchaseState 
+  } = useMarketplace();
+  
+  const [filteredListings, setFilteredListings] = useState<ListingData[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
-  const [selectedListing, setSelectedListing] = useState<MarketplaceListing | null>(null);
+  const [selectedListing, setSelectedListing] = useState<ListingData | null>(null);
   const [verifyingData, setVerifyingData] = useState<string | null>(null);
 
   useEffect(() => {
-    loadListings();
-  }, []);
-
-  useEffect(() => {
     filterListings();
-  }, [listings, searchTerm, selectedType]);
-
-  const loadListings = async () => {
-    try {
-      setLoading(true);
-      const mockListings = await nautilusClient.getMockListings();
-      setListings(mockListings);
-    } catch (error) {
-      console.error('Failed to load listings:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [marketplaceState.listings, searchTerm, selectedType]);
 
   const filterListings = useCallback(() => {
-    let filtered = listings;
+    let filtered = marketplaceState.listings;
 
     if (searchTerm) {
       filtered = filtered.filter(listing =>
@@ -77,29 +74,25 @@ export function BuyerMarketplace() {
     }
 
     if (selectedType !== 'all') {
-      filtered = filtered.filter(listing => listing.dataType === selectedType);
+      filtered = filtered.filter(listing => listing.category === selectedType);
     }
 
     setFilteredListings(filtered);
-  }, [listings, searchTerm, selectedType]);
+  }, [marketplaceState.listings, searchTerm, selectedType]);
 
-  const handlePreviewData = async (listing: MarketplaceListing) => {
+  const handlePreviewData = async (listing: ListingData) => {
+    if (!isAuthenticated) {
+      alert('Please connect your wallet to preview data');
+      return;
+    }
+    
     setVerifyingData(listing.id);
     
     try {
-      // Simulate downloading a sample and verifying in Nautilus
+      // Use the file hash as blob ID for Nautilus verification
       const { resultHash, attestation } = await nautilusClient.processDataInEnclave(
-        listing.blobId,
+        listing.fileHash,
         ['preview', 'validate']
-      );
-      
-      // Update listing with fresh verification
-      setListings(prev => 
-        prev.map(l => 
-          l.id === listing.id 
-            ? { ...l, verified: true, attestation }
-            : l
-        )
       );
       
       alert(`Data preview verified! Quality score: ${attestation.verificationResult.quality}%`);
@@ -111,71 +104,38 @@ export function BuyerMarketplace() {
     }
   };
 
-  const handlePurchase = async (listing: MarketplaceListing) => {
-    const purchaseId = `purchase_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const handlePurchase = async (listing: ListingData) => {
+    if (!isAuthenticated) {
+      alert('Please connect your wallet to make a purchase');
+      return;
+    }
+
+    const success = await purchaseListing(listing.id);
     
-    const newPurchase: Purchase = {
-      id: purchaseId,
-      listing,
-      status: 'pending',
-      purchaseDate: new Date().toISOString(),
-    };
-
-    setPurchases(prev => [...prev, newPurchase]);
-
-    try {
-      // Step 1: Escrow payment (simulated)
-      setPurchases(prev => 
-        prev.map(p => 
-          p.id === purchaseId 
-            ? { ...p, status: 'processing' }
-            : p
-        )
-      );
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Step 2: Verify data in Nautilus before granting access
-      setPurchases(prev => 
-        prev.map(p => 
-          p.id === purchaseId 
-            ? { ...p, status: 'verifying' }
-            : p
-        )
-      );
-
-      const { resultHash, attestation } = await nautilusClient.processDataInEnclave(
-        listing.blobId,
-        ['verify', 'decrypt']
-      );
-
-      // Step 3: Grant access and complete purchase
-      setPurchases(prev => 
-        prev.map(p => 
-          p.id === purchaseId 
-            ? { 
-                ...p, 
-                status: 'completed', 
-                verificationResult: attestation 
-              }
-            : p
-        )
-      );
-
+    if (success && purchaseState.purchaseId) {
+      // Add to local purchases list
+      const newPurchase: Purchase = {
+        id: purchaseState.purchaseId,
+        listing,
+        status: 'completed',
+        purchaseDate: new Date().toISOString(),
+      };
+      setPurchases(prev => [...prev, newPurchase]);
       alert('Purchase completed! You now have access to the dataset.');
+    }
+  };
+
+  const handleDownload = async (purchase: Purchase) => {
+    try {
+      const downloadUrl = await getDownloadLink(purchase.id);
+      if (downloadUrl) {
+        window.open(downloadUrl, '_blank');
+      } else {
+        alert('Failed to generate download link');
+      }
     } catch (error) {
-      console.error('Purchase failed:', error);
-      setPurchases(prev => 
-        prev.map(p => 
-          p.id === purchaseId 
-            ? { 
-                ...p, 
-                status: 'failed', 
-                error: error instanceof Error ? error.message : 'Unknown error'
-              }
-            : p
-        )
-      );
+      console.error('Download failed:', error);
+      alert('Failed to download file');
     }
   };
 
@@ -201,7 +161,7 @@ export function BuyerMarketplace() {
     }
   };
 
-  if (loading) {
+  if (marketplaceState.isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -212,9 +172,41 @@ export function BuyerMarketplace() {
 
   return (
     <div className="space-y-6">
+      {/* Authentication Status */}
+      {!currentAccount ? (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Please connect your wallet to access marketplace features
+          </AlertDescription>
+        </Alert>
+      ) : !isAuthenticated ? (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Authenticating with wallet... Please sign the message when prompted
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {/* Error States */}
+      {marketplaceState.error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{marketplaceState.error}</AlertDescription>
+        </Alert>
+      )}
+
+      {authError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>Authentication Error: {authError}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Data Marketplace</h2>
-        <Badge variant="secondary">{listings.length} Datasets Available</Badge>
+        <Badge variant="secondary">{marketplaceState.listings.length} Datasets Available</Badge>
       </div>
 
       <Tabs defaultValue="browse" className="space-y-4">
@@ -242,12 +234,12 @@ export function BuyerMarketplace() {
                     <SelectValue placeholder="Filter by type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="Analytics">Analytics</SelectItem>
-                    <SelectItem value="IoT">IoT</SelectItem>
-                    <SelectItem value="Financial">Financial</SelectItem>
-                    <SelectItem value="Healthcare">Healthcare</SelectItem>
-                    <SelectItem value="Research">Research</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="financial">Financial</SelectItem>
+                    <SelectItem value="healthcare">Healthcare</SelectItem>
+                    <SelectItem value="research">Research</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -263,13 +255,11 @@ export function BuyerMarketplace() {
                     <div className="space-y-1">
                       <CardTitle className="text-lg">{listing.title}</CardTitle>
                       <div className="flex gap-2">
-                        <Badge variant="outline">{listing.dataType}</Badge>
-                        {listing.verified && (
-                          <Badge variant="default" className="flex items-center gap-1">
-                            <Shield className="h-3 w-3" />
-                            Verified
-                          </Badge>
-                        )}
+                        <Badge variant="outline">{listing.category}</Badge>
+                        <Badge variant="default" className="flex items-center gap-1">
+                          <Shield className="h-3 w-3" />
+                          Blockchain Verified
+                        </Badge>
                       </div>
                     </div>
                     <Badge variant="secondary" className="flex items-center gap-1">
@@ -285,27 +275,21 @@ export function BuyerMarketplace() {
                   
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Size:</span>
-                      <span>{formatFileSize(listing.size)}</span>
+                      <span className="text-gray-600">File Hash:</span>
+                      <span className="font-mono text-xs">{listing.fileHash.substring(0, 8)}...</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Format:</span>
-                      <span>{listing.format}</span>
+                      <span className="text-gray-600">Category:</span>
+                      <span className="capitalize">{listing.category}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Seller:</span>
-                      <span className="font-mono">{listing.seller}</span>
+                      <span className="font-mono text-xs">{listing.sellerAddress.substring(0, 8)}...</span>
                     </div>
-                    
-                    {listing.attestation && (
-                      <Alert>
-                        <Shield className="h-4 w-4" />
-                        <AlertDescription className="text-xs">
-                          Quality: {listing.attestation.verificationResult.quality}% | 
-                          Verified by Nautilus TEE
-                        </AlertDescription>
-                      </Alert>
-                    )}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Created:</span>
+                      <span>{new Date(listing.createdAt).toLocaleDateString()}</span>
+                    </div>
                   </div>
                 </CardContent>
                 
@@ -359,27 +343,18 @@ export function BuyerMarketplace() {
                                 <div className="font-semibold">{selectedListing.price} SUI</div>
                               </div>
                               <div>
-                                <span className="text-gray-600">Size:</span>
-                                <div>{formatFileSize(selectedListing.size)}</div>
+                                <span className="text-gray-600">Category:</span>
+                                <div className="capitalize">{selectedListing.category}</div>
                               </div>
                               <div>
-                                <span className="text-gray-600">Format:</span>
-                                <div>{selectedListing.format}</div>
+                                <span className="text-gray-600">File Hash:</span>
+                                <div className="font-mono text-xs">{selectedListing.fileHash.substring(0, 16)}...</div>
                               </div>
                               <div>
                                 <span className="text-gray-600">Verified:</span>
                                 <div className="flex items-center gap-1">
-                                  {selectedListing.verified ? (
-                                    <>
-                                      <CheckCircle className="h-3 w-3 text-green-500" />
-                                      Yes
-                                    </>
-                                  ) : (
-                                    <>
-                                      <AlertCircle className="h-3 w-3 text-yellow-500" />
-                                      No
-                                    </>
-                                  )}
+                                  <CheckCircle className="h-3 w-3 text-green-500" />
+                                  Blockchain
                                 </div>
                               </div>
                             </div>
@@ -387,8 +362,16 @@ export function BuyerMarketplace() {
                             <Button 
                               onClick={() => handlePurchase(selectedListing)}
                               className="w-full"
+                              disabled={purchaseState.isLoading}
                             >
-                              Confirm Purchase
+                              {purchaseState.isLoading ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                  Processing Purchase...
+                                </>
+                              ) : (
+                                'Confirm Purchase'
+                              )}
                             </Button>
                           </div>
                         )}
@@ -457,7 +440,11 @@ export function BuyerMarketplace() {
                       )}
                       
                       {purchase.status === 'completed' && (
-                        <Button size="sm" className="w-full">
+                        <Button 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => handleDownload(purchase)}
+                        >
                           <Download className="h-4 w-4 mr-2" />
                           Download Dataset
                         </Button>

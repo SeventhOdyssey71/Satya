@@ -10,30 +10,40 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, CheckCircle, AlertCircle, Loader2, Eye, DollarSign } from 'lucide-react';
+import { useAuth } from '@/lib/use-auth';
+import { useMarketplace } from '@/lib/use-marketplace';
+import { useCurrentAccount } from '@mysten/dapp-kit';
+import { WalrusClient } from '@/lib/walrus-client';
 import { nautilusClient, type VerificationRequest, type AttestationData } from '@/lib/nautilus-client';
 
 interface DataListing {
   id: string;
   title: string;
   description: string;
-  dataType: string;
+  category: string;
   price: number;
   file?: File;
-  blobId?: string;
+  fileHash?: string;
   status: 'draft' | 'uploading' | 'verifying' | 'listed' | 'error';
   attestation?: AttestationData;
   error?: string;
 }
 
 export function SellerDashboard() {
+  const { isAuthenticated, error: authError } = useAuth();
+  const currentAccount = useCurrentAccount();
+  const { createListingState, createListing, resetCreateListingState } = useMarketplace();
+  
   const [listings, setListings] = useState<DataListing[]>([]);
   const [currentListing, setCurrentListing] = useState<Partial<DataListing>>({
     title: '',
     description: '',
-    dataType: '',
+    category: '',
     price: 0,
     status: 'draft',
   });
+  
+  const walrusClient = new WalrusClient();
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -46,20 +56,22 @@ export function SellerDashboard() {
     setCurrentListing(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  const uploadToWalrus = async (file: File): Promise<string> => {
-    // Mock Walrus upload - in real implementation, use actual Walrus client
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    return `blob_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  };
-
-  const encryptWithSeal = async (blobId: string): Promise<string> => {
-    // Mock SEAL encryption - in real implementation, use actual SEAL client
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    return `policy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const generateFileHash = async (file: File): Promise<string> => {
+    // Generate a simple hash from file content for demo purposes
+    // In production, use a proper cryptographic hash
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
   const handleCreateListing = async () => {
-    if (!currentListing.title || !currentListing.file) {
+    if (!isAuthenticated) {
+      alert('Please connect and authenticate your wallet');
+      return;
+    }
+
+    if (!currentListing.title || !currentListing.file || !currentListing.category) {
       alert('Please fill in all required fields and select a file');
       return;
     }
@@ -69,7 +81,7 @@ export function SellerDashboard() {
       id: listingId,
       title: currentListing.title!,
       description: currentListing.description || '',
-      dataType: currentListing.dataType || 'Other',
+      category: currentListing.category || 'other',
       price: currentListing.price || 0,
       file: currentListing.file,
       status: 'uploading',
@@ -87,60 +99,60 @@ export function SellerDashboard() {
         )
       );
 
-      const blobId = await uploadToWalrus(currentListing.file);
+      const uploadResult = await walrusClient.uploadFile(currentListing.file);
       
-      // Step 2: Encrypt with SEAL
-      const sealPolicyId = await encryptWithSeal(blobId);
+      if (!uploadResult.success || !uploadResult.blobId) {
+        throw new Error('Failed to upload file to Walrus');
+      }
+
+      // Step 2: Generate file hash
+      const fileHash = await generateFileHash(currentListing.file);
       
-      // Step 3: Request Nautilus verification
+      // Step 3: Create listing on blockchain
       setListings(prev => 
         prev.map(listing => 
           listing.id === listingId 
-            ? { ...listing, status: 'verifying', blobId }
+            ? { ...listing, status: 'verifying', fileHash }
             : listing
         )
       );
 
-      const verificationRequest: VerificationRequest = {
-        assetId: listingId,
-        blobId,
-        expectedHash: `0x${Math.random().toString(16).substr(2, 64)}`,
+      const success = await createListing({
+        title: currentListing.title!,
+        description: currentListing.description || '',
+        price: currentListing.price || 0,
+        category: currentListing.category || 'other',
+        fileHash,
         metadata: {
-          format: currentListing.file.name.split('.').pop() || 'unknown',
-          expectedSize: currentListing.file.size,
-        },
-      };
+          blobId: uploadResult.blobId,
+          filename: currentListing.file.name,
+          size: currentListing.file.size,
+          mimeType: currentListing.file.type,
+        }
+      });
 
-      const { requestId } = await nautilusClient.requestVerification(verificationRequest);
-      
-      // Poll for attestation result
-      let attempts = 0;
-      const maxAttempts = 10;
-      
-      const pollAttestation = async (): Promise<void> => {
-        if (attempts >= maxAttempts) {
-          throw new Error('Verification timeout');
-        }
-        
-        attempts++;
-        const attestation = await nautilusClient.getAttestationResult(requestId);
-        
-        if (!attestation) {
-          setTimeout(pollAttestation, 2000);
-          return;
-        }
-        
-        // Update listing with attestation
+      if (success) {
         setListings(prev => 
           prev.map(listing => 
             listing.id === listingId 
-              ? { ...listing, status: 'listed', attestation }
+              ? { ...listing, status: 'listed' }
               : listing
           )
         );
-      };
-
-      await pollAttestation();
+        
+        // Reset form
+        setCurrentListing({
+          title: '',
+          description: '',
+          category: '',
+          price: 0,
+          status: 'draft',
+        });
+        
+        alert('Listing created successfully!');
+      } else {
+        throw new Error(createListingState.error || 'Failed to create listing');
+      }
 
     } catch (error) {
       console.error('Failed to create listing:', error);
@@ -156,15 +168,6 @@ export function SellerDashboard() {
         )
       );
     }
-
-    // Reset form
-    setCurrentListing({
-      title: '',
-      description: '',
-      dataType: '',
-      price: 0,
-      status: 'draft',
-    });
   };
 
   const getStatusIcon = (status: DataListing['status']) => {
@@ -198,6 +201,38 @@ export function SellerDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Authentication Status */}
+      {!currentAccount ? (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Please connect your wallet to create listings
+          </AlertDescription>
+        </Alert>
+      ) : !isAuthenticated ? (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Authenticating with wallet... Please sign the message when prompted
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {/* Error States */}
+      {createListingState.error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>Listing Error: {createListingState.error}</AlertDescription>
+        </Alert>
+      )}
+
+      {authError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>Authentication Error: {authError}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Seller Dashboard</h2>
         <Badge variant="secondary">{listings.length} Listings</Badge>
@@ -226,18 +261,17 @@ export function SellerDashboard() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dataType">Data Type</Label>
-              <Select onValueChange={(value) => handleInputChange('dataType', value)}>
+              <Label htmlFor="category">Category</Label>
+              <Select onValueChange={(value) => handleInputChange('category', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select data type" />
+                  <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Analytics">Analytics</SelectItem>
-                  <SelectItem value="IoT">IoT Sensor Data</SelectItem>
-                  <SelectItem value="Financial">Financial</SelectItem>
-                  <SelectItem value="Healthcare">Healthcare</SelectItem>
-                  <SelectItem value="Research">Research</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="financial">Financial</SelectItem>
+                  <SelectItem value="healthcare">Healthcare</SelectItem>
+                  <SelectItem value="research">Research</SelectItem>
+                  <SelectItem value="marketing">Marketing</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -280,11 +314,20 @@ export function SellerDashboard() {
 
           <Button 
             onClick={handleCreateListing}
-            disabled={!currentListing.title || !currentListing.file}
+            disabled={!currentListing.title || !currentListing.file || !currentListing.category || !isAuthenticated || createListingState.isLoading}
             className="w-full"
           >
-            <Upload className="h-4 w-4 mr-2" />
-            Create Listing & Verify with Nautilus
+            {createListingState.isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Creating Listing...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                Create Listing
+              </>
+            )}
           </Button>
         </CardContent>
       </Card>
@@ -321,7 +364,7 @@ export function SellerDashboard() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline">{listing.dataType}</Badge>
+                    <Badge variant="outline" className="capitalize">{listing.category}</Badge>
                     <Badge variant="outline" className="flex items-center gap-1">
                       <DollarSign className="h-3 w-3" />
                       {listing.price} SUI
@@ -353,9 +396,9 @@ export function SellerDashboard() {
                     </Alert>
                   )}
 
-                  {listing.blobId && (
+                  {listing.fileHash && (
                     <div className="text-xs text-gray-500">
-                      Blob ID: {listing.blobId}
+                      File Hash: {listing.fileHash.substring(0, 20)}...
                     </div>
                   )}
                 </div>
