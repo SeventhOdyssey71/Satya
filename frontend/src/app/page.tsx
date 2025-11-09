@@ -58,9 +58,11 @@ function Header() {
       <div className="container max-w-[1728px] mx-auto px-8">
         <div className="flex items-center justify-between py-6">
           <h1 className="text-4xl font-russo text-cyan-950 ml-4">Satya</h1>
-          <button className="px-6 py-3 bg-white rounded-[30px] shadow-sm border border-neutral-500 text-lg font-light font-albert text-black hover:shadow-md transition-shadow mr-4">
-            Get Started
-          </button>
+          <Link href="/marketplace">
+            <button className="px-6 py-3 bg-white rounded-[30px] shadow-sm border border-neutral-500 text-lg font-light font-albert text-black hover:shadow-md transition-shadow mr-4">
+              Get Started
+            </button>
+          </Link>
         </div>
       </div>
     </header>
@@ -81,9 +83,11 @@ function HeroSection() {
           </p>
 
           <div className="flex items-center justify-center gap-4 mb-40">
-            <button className="w-52 h-14 bg-black rounded-[30px] shadow-sm border border-neutral-500 text-lg font-light font-albert text-white hover:shadow-md transition-shadow">
-              Launch App
-            </button>
+            <Link href="/marketplace">
+              <button className="w-52 h-14 bg-black rounded-[30px] shadow-sm border border-neutral-500 text-lg font-light font-albert text-white hover:shadow-md transition-shadow">
+                Launch App
+              </button>
+            </Link>
             <button className="w-52 h-14 bg-white rounded-[30px] shadow-sm border border-neutral-500 text-lg font-light font-albert text-black hover:shadow-md transition-shadow flex items-center justify-center gap-2">
               Read Docs
               <svg className="w-4 h-4" viewBox="0 0 20 24" fill="none" stroke="currentColor">
