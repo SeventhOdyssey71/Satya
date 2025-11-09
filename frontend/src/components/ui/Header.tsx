@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit'
 import { useWallet } from '@/hooks'
@@ -10,10 +10,9 @@ interface HeaderProps {
 }
 
 export default function Header({ activeTab }: HeaderProps) {
-  const { isConnected, wallet, disconnect, getBalance } = useWallet()
+  const { isConnected, wallet, disconnect } = useWallet()
   const currentAccount = useCurrentAccount()
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [balance, setBalance] = useState('0')
 
   const getTabClass = (tab: string) => 
     `text-base font-medium font-albert cursor-pointer transition-colors ${
@@ -35,22 +34,6 @@ export default function Header({ activeTab }: HeaderProps) {
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
-  useEffect(() => {
-    const fetchBalance = async () => {
-      if (getBalance && isConnected) {
-        try {
-          const bal = await getBalance()
-          setBalance((parseFloat(bal) / 1000000000).toFixed(2))
-        } catch (error) {
-          console.error('Failed to fetch balance:', error)
-        }
-      }
-    }
-
-    if (isConnected) {
-      fetchBalance()
-    }
-  }, [isConnected, getBalance])
 
   return (
     <header className="relative z-10 border-b border-neutral-100">
@@ -93,17 +76,26 @@ export default function Header({ activeTab }: HeaderProps) {
               </button>
               
               {showUserMenu && (
-                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <div className="text-xs text-gray-500">Wallet Address</div>
-                    <div className="text-sm font-medium text-gray-900 font-mono">
-                      {currentAccount ? formatAddress(currentAccount.address) : ''}
-                    </div>
-                  </div>
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <div className="text-xs text-gray-500">Balance</div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {balance} SUI
+                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[9999]">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <div className="text-xs text-gray-500 mb-1">Wallet Address</div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-sm font-medium text-gray-900 font-mono">
+                        {currentAccount ? formatAddress(currentAccount.address) : ''}
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (currentAccount?.address) {
+                            navigator.clipboard.writeText(currentAccount.address)
+                          }
+                        }}
+                        className="p-1 rounded hover:bg-gray-100 transition-colors"
+                        title="Copy address"
+                      >
+                        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                   <button 
