@@ -9,7 +9,7 @@ export default function Home() {
             <div className="text-4xl font-russo text-cyan-950">
               Satya
             </div>
-            <button className="px-8 py-4 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.30px] border-neutral-500 text-2xl font-light font-albert text-black">
+            <button className="px-6 py-3 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.30px] border-neutral-500 text-lg font-light font-albert text-black">
               Get Started
             </button>
           </div>
@@ -32,20 +32,20 @@ export default function Home() {
         <div className="max-w-[1728px] mx-auto px-4 pt-16">
           {/* Main Heading */}
           <div className="text-center mb-16">
-            <h1 className="text-8xl font-russo text-black leading-tight max-w-[1155px] mx-auto">
+            <h1 className="text-5xl font-russo text-black leading-tight max-w-[800px] mx-auto">
               Bringing verifiable + trusted data markets
             </h1>
             
-            <p className="text-2xl font-light font-albert text-black max-w-[974px] mx-auto mt-8">
+            <p className="text-lg font-light font-albert text-black max-w-[650px] mx-auto mt-6">
               Model with training data from top NHS inc. hospitals, works like magic. Model with training data from top NHS inc. hospitals, works like magic.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex items-center justify-center gap-8 mt-12">
-              <button className="w-80 h-20 bg-black rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.30px] border-neutral-500 text-3xl font-light font-albert text-white">
+              <button className="w-60 h-14 bg-black rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.30px] border-neutral-500 text-lg font-light font-albert text-white">
                 Launch App
               </button>
-              <button className="w-80 h-20 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.30px] border-neutral-500 text-3xl font-light font-albert text-black flex items-center justify-center gap-2">
+              <button className="w-60 h-14 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.30px] border-neutral-500 text-lg font-light font-albert text-black flex items-center justify-center gap-2">
                 Read Docs
                 <svg className="w-5 h-6" viewBox="0 0 20 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 17L17 7M17 7H7M17 7V17" />
@@ -55,7 +55,7 @@ export default function Home() {
 
             {/* Built on Sui Stack */}
             <div className="mt-16 text-center">
-              <p className="text-2xl font-albert text-neutral-500 mb-4">
+              <p className="text-lg font-albert text-neutral-500 mb-4">
                 Built on the Sui Stack
               </p>
               <div className="flex items-center justify-center gap-8">
@@ -68,93 +68,87 @@ export default function Home() {
           {/* Trusted Marketplaces Section */}
           <section className="mt-32 px-4">
             <div className="max-w-[1013px] mx-auto text-left mb-8">
-              <h2 className="text-6xl font-russo text-black mb-6">
+              <h2 className="text-4xl font-russo text-black mb-4">
                 Trusted Marketplaces
               </h2>
-              <p className="text-2xl font-light font-albert text-black max-w-[832px]">
+              <p className="text-lg font-light font-albert text-black max-w-[600px]">
                 Eliminating the &ldquo;Trust me bro&rdquo; barrier with sensitive markets.
               </p>
             </div>
 
-            {/* Model Cards Grid */}
-            <div className="max-w-[1100px] mx-auto mt-16 space-y-4">
-              {/* First Row */}
-              <div className="flex gap-4">
-                {/* AI Model x129 - Tall */}
-                <div className="relative bg-black rounded-3xl border border-stone-300 overflow-hidden w-[533px] h-[400px]">
-                  <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <h3 className="text-2xl font-russo mb-3">AI Model x129</h3>
-                    <p className="text-sm font-albert text-white mb-4">
-                      Model with training data from top NHS inc. hospitals, works like magic.
-                    </p>
-                    <button className="w-32 h-8 bg-zinc-300 rounded-[20px] text-black text-sm font-albert">
-                      Verify Model
-                    </button>
-                  </div>
-                </div>
-
-                {/* Opus Model x229 */}
-                <div className="relative bg-gray-600 rounded-3xl border border-neutral-400 overflow-hidden w-[533px] h-[400px]">
-                  <div className="w-full h-2/3 bg-gradient-to-br from-gray-400 to-gray-600"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <h3 className="text-2xl font-russo mb-3">Opus Model x229</h3>
-                    <p className="text-sm font-albert text-zinc-300 mb-4">
-                      Model with training data from top NHS inc. hospitals, works like magic.
-                    </p>
-                    <button className="w-32 h-8 bg-zinc-500 rounded-[20px] text-white text-sm font-albert">
-                      Verify Model
-                    </button>
-                  </div>
+            {/* Model Cards Bento Grid */}
+            <div className="max-w-[1100px] mx-auto mt-12 relative h-[700px]">
+              {/* AI Model x129 - Tall left */}
+              <div className="absolute left-0 top-0 bg-black rounded-3xl border border-stone-300 overflow-hidden w-[350px] h-[420px]">
+                <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                  <h3 className="text-xl font-russo mb-2">AI Model x129</h3>
+                  <p className="text-sm font-albert text-white mb-3 leading-tight">
+                    Model with training data from top NHS inc. hospitals, works like magic.
+                  </p>
+                  <button className="w-28 h-8 bg-zinc-300 rounded-[20px] text-black text-sm font-albert">
+                    Verify Model
+                  </button>
                 </div>
               </div>
 
-              {/* Second Row */}
-              <div className="flex gap-4">
-                {/* Self Drive Model */}
-                <div className="relative bg-black rounded-3xl border border-stone-300 overflow-hidden w-[533px] h-[400px]">
-                  <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <h3 className="text-2xl font-russo mb-3">Self Drive Model</h3>
-                    <p className="text-sm font-albert text-white mb-4">
-                      Model with training data from top NHS inc. hospitals, works like magic.
-                    </p>
-                    <button className="w-32 h-8 bg-zinc-300 rounded-[20px] text-black text-sm font-albert">
-                      Verify Model
-                    </button>
-                  </div>
-                </div>
-
-                {/* Self Drive Model (small) */}
-                <div className="relative bg-gray-500 rounded-3xl border border-neutral-400 overflow-hidden w-[533px] h-[250px]">
-                  <div className="w-full h-2/3 bg-gradient-to-br from-gray-400 to-gray-600"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-zinc-300">
-                    <h3 className="text-2xl font-russo mb-3">Self Drive Model</h3>
-                    <p className="text-sm font-albert mb-4">
-                      Model with training data from top NHS inc. hospitals, works like magic.
-                    </p>
-                  </div>
+              {/* Opus Model x229 - Top middle */}
+              <div className="absolute left-[370px] top-0 bg-gray-500 rounded-3xl border border-neutral-400 overflow-hidden w-[350px] h-[280px]">
+                <div className="w-full h-2/3 bg-gradient-to-br from-gray-400 to-gray-600"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                  <h3 className="text-xl font-russo mb-2">Opus Model x229</h3>
+                  <p className="text-sm font-albert text-zinc-300 mb-3 leading-tight">
+                    Model with training data from top NHS inc. hospitals, works like magic.
+                  </p>
+                  <button className="w-28 h-8 bg-zinc-500 rounded-[20px] text-white text-sm font-albert">
+                    Verify Model
+                  </button>
                 </div>
               </div>
 
-              {/* Third Row */}
-              <div className="flex justify-center">
-                {/* Large Self Drive Model */}
-                <div className="relative bg-black rounded-3xl border border-stone-300 overflow-hidden w-[1070px] h-[400px]">
-                  <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <h3 className="text-2xl font-russo mb-3">Self Drive Model</h3>
-                    <p className="text-sm font-albert text-white mb-4">
-                      Model with training data from top NHS inc. hospitals, works like magic.
-                    </p>
-                    <div className="flex gap-4">
-                      <button className="w-32 h-8 bg-zinc-500 rounded-[20px] text-white text-sm font-albert">
-                        Verify Model
-                      </button>
-                      <button className="w-32 h-8 bg-zinc-300 rounded-[20px] text-black text-sm font-albert">
-                        Verify Model
-                      </button>
-                    </div>
+              {/* Self Drive Model - Top right */}
+              <div className="absolute left-[740px] top-0 bg-black rounded-3xl border border-stone-300 overflow-hidden w-[350px] h-[280px]">
+                <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                  <h3 className="text-xl font-russo mb-2">Self Drive Model</h3>
+                  <p className="text-sm font-albert text-white mb-3 leading-tight">
+                    Model with training data from top NHS inc. hospitals, works like magic.
+                  </p>
+                  <button className="w-28 h-8 bg-zinc-300 rounded-[20px] text-black text-sm font-albert">
+                    Verify Model
+                  </button>
+                </div>
+              </div>
+
+              {/* Self Drive Model (small) - Bottom left */}
+              <div className="absolute left-0 top-[440px] bg-gray-500 rounded-3xl border border-neutral-400 overflow-hidden w-[350px] h-[250px]">
+                <div className="w-full h-2/3 bg-gradient-to-br from-gray-400 to-gray-600"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-zinc-300">
+                  <h3 className="text-xl font-russo mb-2">Self Drive Model</h3>
+                  <p className="text-sm font-albert mb-3 leading-tight">
+                    Model with training data from top NHS inc. hospitals, works like magic.
+                  </p>
+                  <button className="w-28 h-8 bg-zinc-400 rounded-[20px] text-white text-sm font-albert">
+                    Verify Model
+                  </button>
+                </div>
+              </div>
+
+              {/* Large Self Drive Model - Bottom right */}
+              <div className="absolute left-[370px] top-[300px] bg-black rounded-3xl border border-stone-300 overflow-hidden w-[720px] h-[390px]">
+                <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                  <h3 className="text-xl font-russo mb-2">Self Drive Model</h3>
+                  <p className="text-sm font-albert text-white mb-3 leading-tight">
+                    Model with training data from top NHS inc. hospitals, works like magic.
+                  </p>
+                  <div className="flex gap-3">
+                    <button className="w-28 h-8 bg-zinc-500 rounded-[20px] text-white text-sm font-albert">
+                      Verify Model
+                    </button>
+                    <button className="w-28 h-8 bg-zinc-300 rounded-[20px] text-black text-sm font-albert">
+                      Verify Model
+                    </button>
                   </div>
                 </div>
               </div>
@@ -164,10 +158,10 @@ export default function Home() {
           {/* Built on Sui Stack Section */}
           <section className="mt-32 px-4">
             <div className="text-center mb-16">
-              <h2 className="text-6xl font-russo text-black mb-6">
+              <h2 className="text-4xl font-russo text-black mb-4">
                 Built on the Sui Stack
               </h2>
-              <p className="text-2xl font-light font-albert text-black max-w-[974px] mx-auto">
+              <p className="text-lg font-light font-albert text-black max-w-[650px] mx-auto">
                 Model with training data from top NHS inc. hospitals, works like magic.
               </p>
             </div>
@@ -187,13 +181,13 @@ export default function Home() {
           <section className="mt-32 px-4">
             <div className="flex flex-col lg:flex-row gap-16 items-start">
               <div className="lg:w-1/2">
-                <h2 className="text-6xl font-russo text-black mb-6 max-w-[490px]">
+                <h2 className="text-4xl font-russo text-black mb-4 max-w-[400px]">
                   Trust Enforced
                 </h2>
-                <p className="text-2xl font-light font-albert text-black max-w-[514px] mb-8">
+                <p className="text-lg font-light font-albert text-black max-w-[400px] mb-6">
                   Model with training data from top NHS inc. hospitals, works like magic. Model with training data from top NHS inc. hospitals, works like magic.
                 </p>
-                <button className="w-80 h-20 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.5px] border-neutral-500 text-3xl font-light font-albert text-black">
+                <button className="w-60 h-14 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.5px] border-neutral-500 text-lg font-light font-albert text-black">
                   Read Docs
                 </button>
               </div>
@@ -212,7 +206,7 @@ export default function Home() {
           {/* FAQ Section */}
           <section className="mt-32 px-4">
             <div className="text-center mb-16">
-              <h2 className="text-6xl font-russo text-black">
+              <h2 className="text-4xl font-russo text-black">
                 FAQ
               </h2>
             </div>
@@ -221,10 +215,10 @@ export default function Home() {
               {/* FAQ Item 1 - Expanded */}
               <div className="h-80 bg-black rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.5px] border-neutral-200 p-8 flex items-center justify-between">
                 <div className="text-white">
-                  <h3 className="text-6xl font-russo mb-6 max-w-[490px]">
+                  <h3 className="text-4xl font-russo mb-4 max-w-[400px]">
                     Trust Enforced
                   </h3>
-                  <p className="text-2xl font-light font-albert max-w-[514px]">
+                  <p className="text-lg font-light font-albert max-w-[400px]">
                     Model with training data from top NHS inc. hospitals, works like magic. Model with training data from top NHS inc. hospitals, works like magic.
                   </p>
                 </div>
@@ -236,7 +230,7 @@ export default function Home() {
               {/* FAQ Item 2 */}
               <div className="h-48 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.5px] border-neutral-500 p-8 flex items-center justify-between">
                 <div className="text-black">
-                  <h3 className="text-6xl font-russo max-w-[490px]">
+                  <h3 className="text-4xl font-russo max-w-[400px]">
                     Trust Enforced
                   </h3>
                 </div>
@@ -249,7 +243,7 @@ export default function Home() {
               {/* FAQ Item 3 */}
               <div className="h-48 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.5px] border-neutral-500 p-8 flex items-center justify-between">
                 <div className="text-black">
-                  <h3 className="text-6xl font-russo max-w-[490px]">
+                  <h3 className="text-4xl font-russo max-w-[400px]">
                     Trust Enforced
                   </h3>
                 </div>
@@ -262,7 +256,7 @@ export default function Home() {
               {/* FAQ Item 4 */}
               <div className="h-48 bg-white rounded-[30px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[0.5px] border-neutral-500 p-8 flex items-center justify-between">
                 <div className="text-black">
-                  <h3 className="text-6xl font-russo max-w-[490px]">
+                  <h3 className="text-4xl font-russo max-w-[400px]">
                     Trust Enforced
                   </h3>
                 </div>
@@ -281,21 +275,21 @@ export default function Home() {
         <div className="w-full max-w-[1648px] mx-auto h-[476px] bg-black rounded-[50px] border border-stone-300 p-16 relative">
           <div className="flex justify-between items-start h-full">
             <div>
-              <h3 className="text-4xl font-russo text-sky-100 mb-8">
+              <h3 className="text-3xl font-russo text-sky-100 mb-6">
                 Satya
               </h3>
             </div>
             
             <div className="flex gap-32">
               <div className="space-y-6">
-                <div className="text-2xl font-light font-albert text-white">Docs</div>
-                <div className="text-2xl font-light font-albert text-white">Team</div>
-                <div className="text-2xl font-light font-albert text-white">Support</div>
+                <div className="text-lg font-light font-albert text-white">Docs</div>
+                <div className="text-lg font-light font-albert text-white">Team</div>
+                <div className="text-lg font-light font-albert text-white">Support</div>
               </div>
               
               <div className="space-y-6">
-                <div className="text-2xl font-light font-albert text-white">FAQ</div>
-                <div className="text-2xl font-light font-albert text-white">Terms of Service</div>
+                <div className="text-lg font-light font-albert text-white">FAQ</div>
+                <div className="text-lg font-light font-albert text-white">Terms of Service</div>
               </div>
             </div>
           </div>
