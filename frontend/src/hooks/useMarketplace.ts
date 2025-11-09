@@ -21,6 +21,7 @@ interface UseMarketplaceReturn {
   submitModelListing: (transactionBytes: string, signature: string, modelData: Partial<ModelUpload>) => Promise<TransactionResult>
   purchaseModel: (request: PurchaseRequest) => Promise<TransactionRequest>
   submitModelPurchase: (transactionBytes: string, signature: string, purchaseData: PurchaseRequest) => Promise<TransactionResult>
+  getUserModels: (status?: 'uploaded' | 'downloaded') => Promise<ModelListing[]>
   clearError: () => void
 }
 
@@ -140,6 +141,22 @@ export function useMarketplace(): UseMarketplaceReturn {
     }
   }, [])
 
+  const getUserModels = useCallback(async (status?: 'uploaded' | 'downloaded'): Promise<ModelListing[]> => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const userModels = await apiClient.getUserModels(status)
+      return userModels
+    } catch (error: any) {
+      const message = error?.message || 'Failed to get user models'
+      setError(message)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   return {
     models,
     currentModel,
@@ -151,6 +168,7 @@ export function useMarketplace(): UseMarketplaceReturn {
     submitModelListing,
     purchaseModel,
     submitModelPurchase,
+    getUserModels,
     clearError,
   }
 }

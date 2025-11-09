@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Header from '@/components/ui/Header'
 import { useAuth, useWallet, useMarketplace, useSeal, useWalrus } from '@/hooks'
+import TEECompute from '@/components/tee/TEECompute'
 import type { ModelListing } from '@/lib/types'
 
 interface ModelPageProps {
@@ -204,6 +205,17 @@ export default function ModelPage({ params }: ModelPageProps) {
             <div className="col-span-7">
               <ModelHeader model={model} />
               <ModelTabs model={model} />
+              
+              {/* TEE Computation */}
+              <div className="mt-8">
+                <TEECompute 
+                  modelId={model.id} 
+                  modelTitle={model.title}
+                  onResult={(result) => {
+                    console.log('TEE computation result:', result)
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
