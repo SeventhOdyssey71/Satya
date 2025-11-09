@@ -58,6 +58,9 @@ export interface ModelListing {
     framework?: string
     size?: number
     accuracy?: number
+    originalFileName?: string
+    isEncrypted?: boolean
+    sealPolicyId?: string
   }
 }
 
