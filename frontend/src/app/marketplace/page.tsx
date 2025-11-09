@@ -1,10 +1,10 @@
-import Link from 'next/link'
+import Header from '@/components/ui/Header'
 
 export default function MarketplacePage() {
   return (
     <div className="min-h-screen bg-white overflow-hidden">
       {/* Header */}
-      <MarketplaceHeader />
+      <Header activeTab="marketplace" />
       
       {/* Main Content */}
       <main className="relative z-10 py-6">
@@ -27,29 +27,6 @@ export default function MarketplacePage() {
 }
 
 
-function MarketplaceHeader() {
-  return (
-    <header className="relative z-10 border-b border-neutral-100">
-      <div className="container max-w-7xl mx-auto px-6">
-        <div className="flex items-center justify-between py-4">
-          <div className="flex items-center gap-8">
-            <Link href="/">
-              <h1 className="text-3xl font-russo text-cyan-950 cursor-pointer hover:opacity-80 transition-opacity">Satya</h1>
-            </Link>
-            <div className="flex items-center gap-8">
-              <div className="text-base font-medium font-albert text-black cursor-pointer">Marketplace</div>
-              <div className="text-base font-medium font-albert text-gray-400 hover:text-gray-600 cursor-pointer">Dashboard</div>
-              <div className="text-base font-medium font-albert text-gray-400 hover:text-gray-600 cursor-pointer">Upload Model</div>
-            </div>
-          </div>
-          <button className="px-5 py-2.5 bg-white rounded-lg shadow-sm border border-neutral-300 text-sm font-medium font-albert text-black hover:shadow-md transition-shadow">
-            Connect Wallet
-          </button>
-        </div>
-      </div>
-    </header>
-  )
-}
 
 function CombinedNavigation() {
   return (
@@ -120,6 +97,7 @@ function ModelCard({ title, description, image }: {
   return (
     <div className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
       <div className="aspect-[4/4] overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
       </div>
       <div className="absolute bottom-0 left-0 right-0 p-4 text-white bg-gradient-to-t from-black/90 via-black/60 to-transparent">
