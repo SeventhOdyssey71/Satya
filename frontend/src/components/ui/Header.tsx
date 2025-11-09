@@ -3,14 +3,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit'
-import { useAuth, useWallet } from '@/hooks'
+import { useWallet } from '@/hooks'
 
 interface HeaderProps {
   activeTab: 'marketplace' | 'dashboard' | 'upload'
 }
 
 export default function Header({ activeTab }: HeaderProps) {
-  const { isAuthenticated, user, logout } = useAuth()
   const { isConnected, wallet, disconnect, getBalance } = useWallet()
   const currentAccount = useCurrentAccount()
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -26,7 +25,6 @@ export default function Header({ activeTab }: HeaderProps) {
   const handleDisconnect = async () => {
     try {
       await disconnect()
-      logout()
       setShowUserMenu(false)
     } catch (error) {
       console.error('Failed to disconnect wallet:', error)
@@ -68,7 +66,7 @@ export default function Header({ activeTab }: HeaderProps) {
               <Link href="/marketplace">
                 <div className={getTabClass('marketplace')}>Marketplace</div>
               </Link>
-              {isAuthenticated && (
+              {isConnected && (
                 <>
                   <Link href="/dashboard">
                     <div className={getTabClass('dashboard')}>Dashboard</div>
@@ -81,7 +79,7 @@ export default function Header({ activeTab }: HeaderProps) {
             </nav>
           </div>
           
-          {isConnected && isAuthenticated ? (
+          {isConnected ? (
             <div className="relative">
               <button 
                 onClick={() => setShowUserMenu(!showUserMenu)}
