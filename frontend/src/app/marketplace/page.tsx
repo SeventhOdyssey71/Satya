@@ -9,12 +9,9 @@ export default function MarketplacePage() {
       
       {/* Main Content */}
       <main className="relative z-10 py-6">
-        <div className="container max-w-6xl mx-auto px-6">
-          {/* Navigation Tabs */}
-          <MarketplaceNavigation />
-          
-          {/* Search Bar */}
-          <SearchBar />
+        <div className="container max-w-7xl mx-auto px-6">
+          {/* Combined Navigation, Categories and Search */}
+          <CombinedNavigation />
           
           {/* Model Grid */}
           <ModelGrid />
@@ -57,9 +54,16 @@ function BackgroundLines() {
 function MarketplaceHeader() {
   return (
     <header className="relative z-10 border-b border-neutral-100">
-      <div className="container max-w-6xl mx-auto px-6">
+      <div className="container max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between py-4">
-          <h1 className="text-3xl font-russo text-cyan-950">Satya</h1>
+          <div className="flex items-center gap-8">
+            <h1 className="text-3xl font-russo text-cyan-950">Satya</h1>
+            <div className="flex items-center gap-8">
+              <div className="text-lg font-medium font-albert text-black border-b-2 border-black pb-1">Marketplace</div>
+              <div className="text-lg font-medium font-albert text-zinc-500 hover:text-zinc-700 cursor-pointer pb-1">Dashboard</div>
+              <div className="text-lg font-medium font-albert text-zinc-500 hover:text-zinc-700 cursor-pointer pb-1">More</div>
+            </div>
+          </div>
           <button className="px-5 py-2.5 bg-white rounded-lg shadow-sm border border-neutral-300 text-sm font-medium font-albert text-black hover:shadow-md transition-shadow">
             Connect Wallet
           </button>
@@ -69,48 +73,39 @@ function MarketplaceHeader() {
   )
 }
 
-function MarketplaceNavigation() {
+function CombinedNavigation() {
   return (
-    <div className="flex items-center gap-8 mb-6 py-4">
-      <div className="text-lg font-medium font-albert text-black border-b-2 border-black pb-1">Marketplace</div>
-      <div className="text-lg font-medium font-albert text-zinc-500 hover:text-zinc-700 cursor-pointer pb-1">Dashboard</div>
-      <div className="text-lg font-medium font-albert text-zinc-500 hover:text-zinc-700 cursor-pointer pb-1">More</div>
-    </div>
-  )
-}
-
-function SearchBar() {
-  return (
-    <div className="mb-8 space-y-4">
-      {/* Category Tabs */}
-      <div className="bg-gray-50 rounded-xl border border-gray-200 p-1 inline-flex">
-        <div className="bg-white rounded-lg px-4 py-2 shadow-sm">
-          <span className="text-sm font-medium font-albert text-black">Designs</span>
+    <div className="mb-8">
+      {/* Categories and Search Bar in same row */}
+      <div className="flex items-center justify-between gap-6">
+        {/* Category Tabs */}
+        <div className="bg-gray-50 rounded-full border border-gray-200 p-1 flex">
+          <div className="bg-white rounded-full px-6 py-3 shadow-sm">
+            <span className="text-sm font-medium font-albert text-black">Designs</span>
+          </div>
+          <div className="px-6 py-3 hover:bg-white hover:rounded-full transition-colors cursor-pointer">
+            <span className="text-sm font-medium font-albert text-gray-600">Machine Learning</span>
+          </div>
+          <div className="px-6 py-3 hover:bg-white hover:rounded-full transition-colors cursor-pointer">
+            <span className="text-sm font-medium font-albert text-gray-600">HealthCare</span>
+          </div>
+          <div className="px-6 py-3 hover:bg-white hover:rounded-full transition-colors cursor-pointer">
+            <span className="text-sm font-medium font-albert text-gray-600">Education</span>
+          </div>
+          <div className="px-6 py-3 hover:bg-white hover:rounded-full transition-colors cursor-pointer">
+            <span className="text-sm font-medium font-albert text-gray-600">Others</span>
+          </div>
         </div>
-        <div className="px-4 py-2 hover:bg-white hover:rounded-lg transition-colors cursor-pointer">
-          <span className="text-sm font-medium font-albert text-gray-600">Machine Learning</span>
-        </div>
-        <div className="px-4 py-2 hover:bg-white hover:rounded-lg transition-colors cursor-pointer">
-          <span className="text-sm font-medium font-albert text-gray-600">HealthCare</span>
-        </div>
-        <div className="px-4 py-2 hover:bg-white hover:rounded-lg transition-colors cursor-pointer">
-          <span className="text-sm font-medium font-albert text-gray-600">Education</span>
-        </div>
-        <div className="px-4 py-2 hover:bg-white hover:rounded-lg transition-colors cursor-pointer">
-          <span className="text-sm font-medium font-albert text-gray-600">Others</span>
-        </div>
-      </div>
-      
-      {/* Search Input */}
-      <div className="flex items-center justify-between">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3 flex-1 max-w-md">
+        
+        {/* Search Input */}
+        <div className="bg-white rounded-full shadow-sm border border-gray-200 px-6 py-3 min-w-[400px]">
           <div className="flex items-center gap-3">
             <input 
               type="text" 
               placeholder="Type in your search here..."
               className="text-sm font-albert text-gray-600 bg-transparent outline-none flex-1 placeholder-gray-400"
             />
-            <button className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center hover:bg-gray-200 transition-colors">
+            <button className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors">
               <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
