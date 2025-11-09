@@ -77,75 +77,84 @@ export default function Home() {
             </div>
 
             {/* Model Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-16">
-              {/* AI Model x129 */}
-              <div className="relative bg-black rounded-3xl border border-stone-300 overflow-hidden h-[827px]">
-                <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="text-4xl font-russo mb-4">AI Model x129</h3>
-                  <p className="text-base font-albert text-white mb-6 max-w-72">
-                    Model with training data from top NHS inc. hospitals, works like magic.
-                  </p>
-                  <button className="w-40 h-10 bg-zinc-300 rounded-[30px] text-black text-base font-albert">
-                    Verify Model
-                  </button>
-                </div>
-              </div>
-
-              {/* Opus Model x229 */}
-              <div className="relative bg-gray-600 rounded-3xl border border-neutral-400 overflow-hidden h-[586px]">
-                <div className="w-full h-2/3 bg-gradient-to-br from-gray-400 to-gray-600"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="text-4xl font-russo mb-4">Opus Model x229</h3>
-                  <p className="text-base font-albert text-zinc-300 mb-6 max-w-72">
-                    Model with training data from top NHS inc. hospitals, works like magic.
-                  </p>
-                  <button className="w-40 h-10 bg-zinc-500 rounded-[30px] text-white text-base font-albert">
-                    Verify Model
-                  </button>
-                </div>
-              </div>
-
-              {/* Self Drive Model */}
-              <div className="relative bg-black rounded-3xl border border-stone-300 overflow-hidden h-[586px]">
-                <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="text-4xl font-russo mb-4">Self Drive Model</h3>
-                  <p className="text-base font-albert text-white mb-6 max-w-72">
-                    Model with training data from top NHS inc. hospitals, works like magic.
-                  </p>
-                  <button className="w-40 h-10 bg-zinc-300 rounded-[30px] text-black text-base font-albert">
-                    Verify Model
-                  </button>
-                </div>
-              </div>
-
-              {/* Self Drive Model (small) */}
-              <div className="relative bg-gray-500 rounded-3xl border border-neutral-400 overflow-hidden h-80">
-                <div className="w-full h-2/3 bg-gradient-to-br from-gray-400 to-gray-600"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-zinc-300">
-                  <h3 className="text-4xl font-russo mb-4">Self Drive Model</h3>
-                  <p className="text-base font-albert mb-6 max-w-72">
-                    Model with training data from top NHS inc. hospitals, works like magic.
-                  </p>
-                </div>
-              </div>
-
-              {/* Large Self Drive Model */}
-              <div className="relative bg-black rounded-3xl border border-stone-300 overflow-hidden h-[586px] col-span-2">
-                <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="text-4xl font-russo mb-4">Self Drive Model</h3>
-                  <p className="text-base font-albert text-white mb-6 max-w-72">
-                    Model with training data from top NHS inc. hospitals, works like magic.
-                  </p>
-                  <div className="flex gap-4">
-                    <button className="w-40 h-10 bg-zinc-500 rounded-[30px] text-white text-base font-albert">
+            <div className="max-w-[1100px] mx-auto mt-16 space-y-4">
+              {/* First Row */}
+              <div className="flex gap-4">
+                {/* AI Model x129 - Tall */}
+                <div className="relative bg-black rounded-3xl border border-stone-300 overflow-hidden w-[533px] h-[400px]">
+                  <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black"></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h3 className="text-2xl font-russo mb-3">AI Model x129</h3>
+                    <p className="text-sm font-albert text-white mb-4">
+                      Model with training data from top NHS inc. hospitals, works like magic.
+                    </p>
+                    <button className="w-32 h-8 bg-zinc-300 rounded-[20px] text-black text-sm font-albert">
                       Verify Model
                     </button>
-                    <button className="w-40 h-10 bg-zinc-300 rounded-[30px] text-black text-base font-albert">
+                  </div>
+                </div>
+
+                {/* Opus Model x229 */}
+                <div className="relative bg-gray-600 rounded-3xl border border-neutral-400 overflow-hidden w-[533px] h-[400px]">
+                  <div className="w-full h-2/3 bg-gradient-to-br from-gray-400 to-gray-600"></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h3 className="text-2xl font-russo mb-3">Opus Model x229</h3>
+                    <p className="text-sm font-albert text-zinc-300 mb-4">
+                      Model with training data from top NHS inc. hospitals, works like magic.
+                    </p>
+                    <button className="w-32 h-8 bg-zinc-500 rounded-[20px] text-white text-sm font-albert">
                       Verify Model
                     </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Second Row */}
+              <div className="flex gap-4">
+                {/* Self Drive Model */}
+                <div className="relative bg-black rounded-3xl border border-stone-300 overflow-hidden w-[533px] h-[400px]">
+                  <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black"></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h3 className="text-2xl font-russo mb-3">Self Drive Model</h3>
+                    <p className="text-sm font-albert text-white mb-4">
+                      Model with training data from top NHS inc. hospitals, works like magic.
+                    </p>
+                    <button className="w-32 h-8 bg-zinc-300 rounded-[20px] text-black text-sm font-albert">
+                      Verify Model
+                    </button>
+                  </div>
+                </div>
+
+                {/* Self Drive Model (small) */}
+                <div className="relative bg-gray-500 rounded-3xl border border-neutral-400 overflow-hidden w-[533px] h-[250px]">
+                  <div className="w-full h-2/3 bg-gradient-to-br from-gray-400 to-gray-600"></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-zinc-300">
+                    <h3 className="text-2xl font-russo mb-3">Self Drive Model</h3>
+                    <p className="text-sm font-albert mb-4">
+                      Model with training data from top NHS inc. hospitals, works like magic.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Third Row */}
+              <div className="flex justify-center">
+                {/* Large Self Drive Model */}
+                <div className="relative bg-black rounded-3xl border border-stone-300 overflow-hidden w-[1070px] h-[400px]">
+                  <div className="w-full h-2/3 bg-gradient-to-br from-gray-800 to-black"></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h3 className="text-2xl font-russo mb-3">Self Drive Model</h3>
+                    <p className="text-sm font-albert text-white mb-4">
+                      Model with training data from top NHS inc. hospitals, works like magic.
+                    </p>
+                    <div className="flex gap-4">
+                      <button className="w-32 h-8 bg-zinc-500 rounded-[20px] text-white text-sm font-albert">
+                        Verify Model
+                      </button>
+                      <button className="w-32 h-8 bg-zinc-300 rounded-[20px] text-black text-sm font-albert">
+                        Verify Model
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
