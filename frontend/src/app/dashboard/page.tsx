@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import Header from '@/components/ui/Header'
-import { useAuth, useMarketplace } from '@/hooks'
+import { useWallet, useMarketplace } from '@/hooks'
 import type { ModelListing, UserStats } from '@/lib/types'
 
 export default function DashboardPage() {
-  const { isAuthenticated } = useAuth()
+  const { isConnected } = useWallet()
 
-  if (!isAuthenticated) {
+  if (!isConnected) {
     return (
       <div className="min-h-screen bg-white overflow-hidden">
         <Header activeTab="dashboard" />

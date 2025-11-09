@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Header from '@/components/ui/Header'
 import { FormField, FormRow, FormInput, FormSelect, FormTextarea } from '@/components/ui/FormField'
-import { useAuth, useWallet, useMarketplace, useWalrus, useSeal, useSmartContract } from '@/hooks'
+import { useWallet, useMarketplace, useWalrus, useSeal, useSmartContract } from '@/hooks'
 import type { ModelUpload } from '@/lib/types'
 
 export default function UploadPage() {
@@ -25,7 +25,6 @@ export default function UploadPage() {
 
 
 function UploadForm() {
-  const { isAuthenticated } = useAuth()
   const { wallet, isConnected } = useWallet()
   const { uploadModel, isLoading: isUploading, error: marketplaceError } = useMarketplace()
   const { uploadFile, isUploading: isWalrusUploading, uploadProgress, error: walrusError } = useWalrus()
@@ -60,7 +59,7 @@ function UploadForm() {
   }
 
   const handleSubmit = async () => {
-    if (!isAuthenticated || !isConnected || !modelFile) {
+    if (!isConnected || !modelFile) {
       alert('Please connect your wallet and select a model file')
       return
     }
@@ -152,7 +151,7 @@ function UploadForm() {
     }
   }
 
-  if (!isAuthenticated) {
+  if (!isConnected) {
     return (
       <div className="max-w-6xl mx-auto text-center py-20">
         <h1 className="text-3xl font-russo text-black mb-8">Upload to Marketplace</h1>
