@@ -94,10 +94,10 @@ function TrustedMarketplacesSection() {
     <section className="relative z-10 py-24">
       <div className="container max-w-[1728px] mx-auto px-4">
         <div className="mb-12">
-          <h2 className="text-6xl font-russo text-black mb-6 max-w-[1013px]">
+          <h2 className="text-4xl font-russo text-black mb-4 max-w-[1013px]">
             Trusted Marketplaces
           </h2>
-          <p className="text-2xl font-light font-albert text-black max-w-[832px]">
+          <p className="text-lg font-light font-albert text-black max-w-[832px]">
             Eliminating the &ldquo;Trust me bro&rdquo; barrier with sensitive markets.
           </p>
         </div>
@@ -112,9 +112,11 @@ function TrustedMarketplacesSection() {
               <p className="text-base font-albert mb-6 w-72">
                 Model with training data from top NHS inc. hospitals, works like magic.
               </p>
-              <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert">
-                Verify Model
-              </button>
+              <Link href="/model/ai-model-x129">
+                <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert hover:bg-zinc-200 transition-colors">
+                  Verify Model
+                </button>
+              </Link>
             </div>
           </div>
 
@@ -126,9 +128,11 @@ function TrustedMarketplacesSection() {
               <p className="text-base font-albert text-zinc-300 mb-6 w-72">
                 Model with training data from top NHS inc. hospitals, works like magic.
               </p>
-              <button className="w-40 h-10 bg-zinc-500 rounded-[30px] flex items-center justify-center text-white text-base font-albert">
-                Verify Model
-              </button>
+              <Link href="/model/opus-model-x229">
+                <button className="w-40 h-10 bg-zinc-500 rounded-[30px] flex items-center justify-center text-white text-base font-albert hover:bg-zinc-400 transition-colors">
+                  Verify Model
+                </button>
+              </Link>
             </div>
           </div>
 
@@ -140,9 +144,11 @@ function TrustedMarketplacesSection() {
               <p className="text-base font-albert mb-6 w-72">
                 Model with training data from top NHS inc. hospitals, works like magic.
               </p>
-              <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert">
-                Verify Model
-              </button>
+              <Link href="/model/self-drive-model">
+                <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert hover:bg-zinc-200 transition-colors">
+                  Verify Model
+                </button>
+              </Link>
             </div>
           </div>
 
@@ -166,12 +172,16 @@ function TrustedMarketplacesSection() {
                 Model with training data from top NHS inc. hospitals, works like magic.
               </p>
               <div className="flex gap-4">
-                <button className="w-40 h-10 bg-zinc-500 rounded-[30px] flex items-center justify-center text-white text-base font-albert">
-                  Verify Model
-                </button>
-                <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert">
-                  Verify Model
-                </button>
+                <Link href="/model/self-drive-model">
+                  <button className="w-40 h-10 bg-zinc-500 rounded-[30px] flex items-center justify-center text-white text-base font-albert hover:bg-zinc-400 transition-colors">
+                    Verify Model
+                  </button>
+                </Link>
+                <Link href="/model/opus-model-x229">
+                  <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert hover:bg-zinc-200 transition-colors">
+                    Verify Model
+                  </button>
+                </Link>
               </div>
             </div>
           </div>

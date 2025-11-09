@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import Header from '@/components/ui/Header'
 
 export default function MarketplacePage() {
@@ -105,9 +106,11 @@ function ModelCard({ title, description, image }: {
         <p className="text-sm font-albert text-gray-200 mb-3 line-clamp-2 leading-relaxed">
           {description}
         </p>
-        <button className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-2 text-sm font-medium font-albert text-white hover:bg-white/30 transition-colors">
-          Verify Model
-        </button>
+        <Link href="/model/opus-model-x229">
+          <button className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-2 text-sm font-medium font-albert text-white hover:bg-white/30 transition-colors">
+            Verify Model
+          </button>
+        </Link>
       </div>
     </div>
   )
