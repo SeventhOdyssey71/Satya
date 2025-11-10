@@ -219,7 +219,7 @@ export default function ModelUploadWizard() {
       
       if (txResult.effects?.status?.status === 'success') {
         console.log('✅ Complete upload flow successful!', txResult)
-        alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Marketplace listing created ✓\n\nTransaction: ${txResult.digest}`)
+        alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Marketplace listing created ✓\n\nTransaction: ${txResult?.digest || 'completed'}`)
         setCurrentStep(steps.length) // Go to result step
       } else {
         console.error('❌ Blockchain transaction failed:', txResult)
