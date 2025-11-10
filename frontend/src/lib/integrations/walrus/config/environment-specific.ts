@@ -25,8 +25,7 @@ const ENVIRONMENT_CONFIGS: Record<string, EnvironmentConfig> = {
   development: {
     useProxy: false,
     corsHeaders: {
-      'Content-Type': 'application/octet-stream',
-      'Access-Control-Allow-Origin': '*'
+      'Content-Type': 'application/octet-stream'
     },
     timeoutAdjustments: {
       upload: 30000,   // 30s for dev

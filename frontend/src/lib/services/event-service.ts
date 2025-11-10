@@ -4,34 +4,32 @@ import { SUI_CONFIG, MARKETPLACE_CONFIG } from '../constants';
 import { logger } from '../integrations/core/logger';
 
 export interface ModelListedEvent {
-  type: 'ModelListed';
+  type: 'ListingCreated';
   listingId: string;
-  seller: string;
+  creator: string;
   title: string;
-  category: string;
-  price: string;
-  blobId?: string;
-  isEncrypted: boolean;
+  downloadPrice: string;
+  walrusBlobId: string;
   timestamp: number;
   transactionDigest: string;
 }
 
 export interface ModelPurchasedEvent {
-  type: 'ModelPurchased';
+  type: 'ListingPurchased';
   listingId: string;
   buyer: string;
-  seller: string;
-  price: string;
+  creator: string;
+  pricePaid: string;
+  purchaseKeyId: string;
   timestamp: number;
   transactionDigest: string;
 }
 
 export interface ModelUpdatedEvent {
-  type: 'ModelUpdated';
+  type: 'ListingUpdated';
   listingId: string;
-  seller: string;
-  newPrice?: string;
-  newStatus?: string;
+  creator: string;
+  newPrice: string;
   timestamp: number;
   transactionDigest: string;
 }
@@ -88,7 +86,7 @@ export class EventService {
       logger.info('Querying blockchain events', { filter });
 
       const query = {
-        MoveEventType: `${this.packageId}::marketplace::ModelListed`
+        MoveEventType: `${this.packageId}::marketplace_v2::ListingCreated`
       };
 
       const response = await this.client.queryEvents({
@@ -121,7 +119,7 @@ export class EventService {
    */
   async getModelListings(limit: number = 20, cursor?: string): Promise<EventQueryResult> {
     return this.queryEvents({
-      eventType: 'ModelListed',
+      eventType: 'ListingCreated',
       limit,
       cursor
     });
@@ -132,12 +130,12 @@ export class EventService {
    */
   async getUserPurchases(userAddress: string, limit: number = 20): Promise<ModelPurchasedEvent[]> {
     const result = await this.queryEvents({
-      eventType: 'ModelPurchased',
+      eventType: 'ListingPurchased',
       sender: userAddress,
       limit
     });
 
-    return result.events.filter(event => event.type === 'ModelPurchased') as ModelPurchasedEvent[];
+    return result.events.filter(event => event.type === 'ListingPurchased') as ModelPurchasedEvent[];
   }
 
   /**
@@ -229,21 +227,17 @@ export class EventService {
     const prices: number[] = [];
 
     for (const event of allEvents.events) {
-      if (event.type === 'ModelListed') {
+      if (event.type === 'ListingCreated') {
         stats.totalListings++;
-        stats.uniqueSellers.add(event.seller);
+        stats.uniqueSellers.add((event as ModelListedEvent).creator);
         
-        if (event.category) {
-          stats.categoryBreakdown.set(
-            event.category,
-            (stats.categoryBreakdown.get(event.category) || 0) + 1
-          );
-        }
-      } else if (event.type === 'ModelPurchased') {
+        // Category info would need to come from listing details, not event
+        // For now, we'll skip category breakdown
+      } else if (event.type === 'ListingPurchased') {
         stats.totalPurchases++;
-        stats.uniqueBuyers.add(event.buyer);
+        stats.uniqueBuyers.add((event as ModelPurchasedEvent).buyer);
         
-        const price = parseFloat(event.price);
+        const price = parseFloat((event as ModelPurchasedEvent).pricePaid);
         if (!isNaN(price)) {
           totalVolumeNum += price;
           prices.push(price);
@@ -278,38 +272,36 @@ export class EventService {
       const timestamp = parseInt(rawEvent.timestampMs) || Date.now();
 
       switch (eventType) {
-        case 'ModelListed':
+        case 'ListingCreated':
           return {
-            type: 'ModelListed',
+            type: 'ListingCreated',
             listingId: fields.listing_id || fields.listingId || '',
-            seller: fields.seller || '',
+            creator: fields.creator || '',
             title: fields.title || '',
-            category: fields.category || '',
-            price: fields.price?.toString() || '0',
-            blobId: fields.blob_id || fields.blobId,
-            isEncrypted: fields.is_encrypted || fields.isEncrypted || false,
+            downloadPrice: fields.download_price?.toString() || fields.downloadPrice?.toString() || '0',
+            walrusBlobId: fields.walrus_blob_id || fields.walrusBlobId || '',
             timestamp,
             transactionDigest: rawEvent.id.txDigest
           };
 
-        case 'ModelPurchased':
+        case 'ListingPurchased':
           return {
-            type: 'ModelPurchased',
+            type: 'ListingPurchased',
             listingId: fields.listing_id || fields.listingId || '',
             buyer: fields.buyer || '',
-            seller: fields.seller || '',
-            price: fields.price?.toString() || '0',
+            creator: fields.creator || '',
+            pricePaid: fields.price_paid?.toString() || fields.pricePaid?.toString() || '0',
+            purchaseKeyId: fields.purchase_key_id || fields.purchaseKeyId || '',
             timestamp,
             transactionDigest: rawEvent.id.txDigest
           };
 
-        case 'ModelUpdated':
+        case 'ListingUpdated':
           return {
-            type: 'ModelUpdated',
+            type: 'ListingUpdated',
             listingId: fields.listing_id || fields.listingId || '',
-            seller: fields.seller || '',
-            newPrice: fields.new_price?.toString() || fields.newPrice?.toString(),
-            newStatus: fields.new_status || fields.newStatus,
+            creator: fields.creator || '',
+            newPrice: fields.new_price?.toString() || fields.newPrice?.toString() || '0',
             timestamp,
             transactionDigest: rawEvent.id.txDigest
           };
@@ -333,7 +325,7 @@ export class EventService {
     }
 
     if (filter.sender) {
-      const eventSender = (event as any).seller || (event as any).buyer || '';
+      const eventSender = (event as any).creator || (event as any).buyer || '';
       if (eventSender !== filter.sender) {
         return false;
       }

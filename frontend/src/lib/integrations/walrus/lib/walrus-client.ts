@@ -38,23 +38,56 @@ export class WalrusClient {
         dataSize: data.length,
         epochs,
         url: uploadUrl,
-        timeout
+        timeout,
+        headers
       });
 
       let response: Response;
       
-      response = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer,
-        headers,
-        signal: AbortSignal.timeout(timeout),
-        mode: 'cors',
-        cache: 'no-cache',
-        redirect: 'follow'
-      });
+      try {
+        response = await fetch(uploadUrl, {
+          method: 'PUT',
+          body: data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer,
+          headers,
+          signal: AbortSignal.timeout(timeout),
+          mode: 'cors',
+          cache: 'no-cache',
+          redirect: 'follow'
+        });
+        
+        logger.debug('Walrus upload response received', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+      } catch (fetchError) {
+        logger.error('Walrus upload fetch failed', {
+          error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+          dataSize: data.length,
+          url: uploadUrl
+        });
+        throw fetchError;
+      }
       
       if (!response.ok) {
-        throw new WalrusError(`Upload failed: ${response.statusText}`, response.status);
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorText = await response.text();
+          if (errorText) {
+            try {
+              const errorJson = JSON.parse(errorText);
+              errorMessage = errorJson.error?.message || errorJson.message || errorText;
+            } catch {
+              errorMessage = errorText;
+            }
+          } else {
+            errorMessage = response.statusText || `HTTP ${response.status}`;
+          }
+        } catch {
+          errorMessage = response.statusText || `HTTP ${response.status}`;
+        }
+        throw new WalrusError(`Upload failed: ${errorMessage}`, response.status);
       }
       
       const result = await response.json() as any;
