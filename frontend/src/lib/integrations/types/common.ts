@@ -176,7 +176,17 @@ export enum ErrorCode {
   // Data integrity errors
   HASH_MISMATCH = 'HASH_MISMATCH',
   SIGNATURE_INVALID = 'SIGNATURE_INVALID',
-  ATTESTATION_FAILED = 'ATTESTATION_FAILED'
+  ATTESTATION_FAILED = 'ATTESTATION_FAILED',
+  
+  // Authentication errors
+  AUTHENTICATION_REQUIRED = 'AUTHENTICATION_REQUIRED',
+  
+  // Wallet errors
+  WALLET_CONNECTION_FAILED = 'WALLET_CONNECTION_FAILED',
+  NETWORK_SWITCH_FAILED = 'NETWORK_SWITCH_FAILED',
+  
+  // Profile errors
+  PROFILE_UPDATE_FAILED = 'PROFILE_UPDATE_FAILED'
 }
 
 export class MarketplaceError extends Error {
@@ -217,6 +227,34 @@ export class MarketplaceError extends Error {
       stack: this.stack
     };
   }
+}
+
+// =============================================================================
+// POLICY AND OPERATION TYPES
+// =============================================================================
+
+export enum PolicyType {
+  PAYMENT_GATED = 'PAYMENT_GATED',
+  TIME_BASED = 'TIME_BASED',
+  USAGE_BASED = 'USAGE_BASED',
+  WHITELIST = 'WHITELIST',
+  PUBLIC = 'PUBLIC'
+}
+
+export interface EncryptionResult {
+  success: boolean;
+  encryptedData: Uint8Array;
+  policyId: string;
+  keyId?: string;
+  error?: string;
+}
+
+export interface UploadResult {
+  success: boolean;
+  blobId: string;
+  size: number;
+  hash?: string;
+  error?: string;
 }
 
 // =============================================================================
