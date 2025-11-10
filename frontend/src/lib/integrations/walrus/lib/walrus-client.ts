@@ -1,6 +1,7 @@
 // Walrus Client Core Library
 
 import { WALRUS_CONFIG } from '../config/walrus.config';
+import { walrusEnvironment } from '../config/environment-specific';
 import { 
   UploadResult, 
   WalrusError,
@@ -8,6 +9,7 @@ import {
   DownloadError,
   NodeHealth
 } from '../types';
+import { logger } from '../../core/logger';
 
 export class WalrusClient {
   private config = WALRUS_CONFIG.testnet;
@@ -25,17 +27,26 @@ export class WalrusClient {
     epochs: number = WALRUS_CONFIG.agent.defaultEpochs
   ): Promise<UploadResult> {
     try {
-      const response = await fetch(
-        `${this.config.publisher}/v1/blobs?epochs=${epochs}`,
-        {
-          method: 'PUT',
-          body: data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer,
-          headers: { 
-            'Content-Type': 'application/octet-stream'
-          },
-          signal: AbortSignal.timeout(WALRUS_CONFIG.performance.requestTimeoutMs)
-        }
-      );
+      const uploadUrl = walrusEnvironment.getUploadUrl(`${this.config.publisher}/v1/blobs?epochs=${epochs}`);
+      const headers = {
+        ...walrusEnvironment.getRequestHeaders(),
+        'Content-Length': data.length.toString()
+      };
+      const timeout = walrusEnvironment.getTimeout('upload');
+
+      logger.debug('Starting Walrus upload', {
+        dataSize: data.length,
+        epochs,
+        url: uploadUrl,
+        timeout
+      });
+
+      const response = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer,
+        headers,
+        signal: AbortSignal.timeout(timeout)
+      });
       
       if (!response.ok) {
         throw new WalrusError(`Upload failed: ${response.statusText}`, response.status);
@@ -43,6 +54,12 @@ export class WalrusClient {
       
       const result = await response.json() as any;
       
+      logger.info('Walrus upload successful', {
+        blobId: result.blob_id || result.blobId,
+        dataSize: data.length,
+        epochs
+      });
+
       return {
         success: true,
         blobId: result.blob_id || result.blobId,
@@ -50,20 +67,38 @@ export class WalrusClient {
       };
       
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Walrus upload failed', {
+        error: errorMessage,
+        dataSize: data.length,
+        epochs
+      });
+
+      // Report connectivity issue
+      walrusEnvironment.reportConnectivityIssue('Publisher', errorMessage);
+
       if (error instanceof WalrusError) throw error;
-      throw new WalrusError(`Upload error: ${error instanceof Error ? error.message : String(error)}`);
+      throw new WalrusError(`Upload error: ${errorMessage}`);
     }
   }
   
   // Download blob from Walrus
   async downloadBlob(blobId: string): Promise<Uint8Array> {
     try {
-      const response = await fetch(
-        `${this.config.aggregator}/v1/blobs/${blobId}`,
-        {
-          signal: AbortSignal.timeout(WALRUS_CONFIG.performance.requestTimeoutMs)
-        }
-      );
+      const downloadUrl = walrusEnvironment.getDownloadUrl(`${this.config.aggregator}/v1/blobs/${blobId}`);
+      const headers = walrusEnvironment.getRequestHeaders();
+      const timeout = walrusEnvironment.getTimeout('download');
+
+      logger.debug('Starting Walrus download', {
+        blobId,
+        url: downloadUrl,
+        timeout
+      });
+
+      const response = await fetch(downloadUrl, {
+        headers,
+        signal: AbortSignal.timeout(timeout)
+      });
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -73,11 +108,27 @@ export class WalrusClient {
       }
       
       const arrayBuffer = await response.arrayBuffer();
-      return new Uint8Array(arrayBuffer);
+      const data = new Uint8Array(arrayBuffer);
+      
+      logger.info('Walrus download successful', {
+        blobId,
+        dataSize: data.length
+      });
+      
+      return data;
       
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Walrus download failed', {
+        blobId,
+        error: errorMessage
+      });
+
+      // Report connectivity issue
+      walrusEnvironment.reportConnectivityIssue('Aggregator', errorMessage);
+
       if (error instanceof WalrusError) throw error;
-      throw new DownloadError(`Download error: ${error instanceof Error ? error.message : String(error)}`);
+      throw new DownloadError(`Download error: ${errorMessage}`);
     }
   }
   
@@ -184,23 +235,43 @@ export class WalrusClient {
   
   // Try alternative nodes for download
   async downloadFromAlternativeNodes(blobId: string): Promise<Uint8Array> {
-    for (const node of this.config.storageNodes) {
+    const fallbackNodes = walrusEnvironment.getFallbackNodes();
+    
+    logger.info('Attempting download from alternative nodes', {
+      blobId,
+      nodeCount: fallbackNodes.length
+    });
+
+    for (const nodeUrl of fallbackNodes) {
       try {
-        const response = await fetch(
-          `${node.url}/v1/blobs/${blobId}`,
-          {
-            signal: AbortSignal.timeout(10000)
-          }
-        );
+        const downloadUrl = walrusEnvironment.getDownloadUrl(`${nodeUrl}/v1/blobs/${blobId}`);
+        const headers = walrusEnvironment.getRequestHeaders();
+        
+        const response = await fetch(downloadUrl, {
+          headers,
+          signal: AbortSignal.timeout(10000)
+        });
         
         if (response.ok) {
-          return new Uint8Array(await response.arrayBuffer());
+          const data = new Uint8Array(await response.arrayBuffer());
+          logger.info('Alternative node download successful', {
+            blobId,
+            nodeUrl,
+            dataSize: data.length
+          });
+          return data;
         }
-      } catch {
+      } catch (error) {
+        logger.warn('Alternative node failed', {
+          blobId,
+          nodeUrl,
+          error: error instanceof Error ? error.message : String(error)
+        });
         continue;
       }
     }
     
+    logger.error('All alternative nodes failed', { blobId });
     throw new BlobNotFoundError(blobId);
   }
 }

@@ -2,6 +2,8 @@
 
 import { WalrusClient } from '../lib/walrus-client';
 import { WALRUS_CONFIG } from '../config/walrus.config';
+import { walrusEnvironment } from '../config/environment-specific';
+import { walrusConnectivityMonitor } from '../monitoring/connectivity-monitor';
 import {
   BlobMetadata,
   UploadOptions,
@@ -14,6 +16,7 @@ import {
 import { ChunkingUtils } from '../utils/chunking-utils';
 import { CacheManager } from '../utils/cache-manager';
 import { RetryManager } from '../utils/retry-manager';
+import { logger } from '../../core/logger';
 
 export class WalrusStorageService {
   private client: WalrusClient;
@@ -25,11 +28,31 @@ export class WalrusStorageService {
   constructor() {
     this.client = new WalrusClient('testnet');
     this.cache = new CacheManager(WALRUS_CONFIG.agent.cacheSizeMB);
+    
+    // Use environment-specific retry configuration
+    const retryConfig = walrusEnvironment.getRetryConfig();
     this.retryManager = new RetryManager(
-      WALRUS_CONFIG.agent.maxRetries,
-      WALRUS_CONFIG.agent.retryDelayMs
+      retryConfig.maxRetries,
+      retryConfig.baseDelay
     );
     this.chunkingUtils = new ChunkingUtils(WALRUS_CONFIG.agent.chunkSize);
+
+    // Start connectivity monitoring if not already started
+    this.initializeMonitoring();
+  }
+
+  // Initialize connectivity monitoring
+  private async initializeMonitoring(): Promise<void> {
+    try {
+      if (!walrusConnectivityMonitor.getStatus().isMonitoring) {
+        await walrusConnectivityMonitor.startMonitoring();
+        logger.info('Walrus connectivity monitoring initialized');
+      }
+    } catch (error) {
+      logger.warn('Failed to initialize connectivity monitoring', {
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
   }
   
   // Intelligent file upload with automatic strategy selection
@@ -37,15 +60,52 @@ export class WalrusStorageService {
     file: File,
     options: UploadOptions = {}
   ): Promise<UploadResult> {
+    // Check connectivity before upload
+    const health = await this.checkConnectivity();
+    if (!health.canUpload) {
+      throw new WalrusError(`Upload blocked: ${health.reason}`);
+    }
+
     const strategy = this.determineStrategy(file, options);
     
-    switch (strategy) {
-      case StorageStrategy.CHUNKED:
-        return await this.uploadChunked(file, options);
-      case StorageStrategy.DIRECT:
-        return await this.uploadDirect(file, options);
-      default:
-        return await this.uploadDirect(file, options);
+    logger.info('Starting file upload', {
+      fileName: file.name,
+      fileSize: file.size,
+      strategy,
+      options
+    });
+
+    try {
+      let result: UploadResult;
+      
+      switch (strategy) {
+        case StorageStrategy.CHUNKED:
+          result = await this.uploadChunked(file, options);
+          break;
+        case StorageStrategy.DIRECT:
+          result = await this.uploadDirect(file, options);
+          break;
+        default:
+          result = await this.uploadDirect(file, options);
+      }
+
+      if (result.success) {
+        logger.info('File upload completed successfully', {
+          fileName: file.name,
+          blobId: result.blobId,
+          strategy
+        });
+      }
+
+      return result;
+    } catch (error) {
+      logger.error('File upload failed', {
+        fileName: file.name,
+        fileSize: file.size,
+        strategy,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
     }
   }
   
@@ -229,5 +289,94 @@ export class WalrusStorageService {
   private calculateExpiry(epochs: number): number {
     const EPOCH_DURATION_MS = 24 * 60 * 60 * 1000; // 1 day per epoch
     return Date.now() + (epochs * EPOCH_DURATION_MS);
+  }
+
+  // Check connectivity health before operations
+  private async checkConnectivity(): Promise<{
+    canUpload: boolean;
+    canDownload: boolean;
+    reason?: string;
+  }> {
+    try {
+      const status = walrusConnectivityMonitor.getStatus();
+      
+      if (!status.lastHealthCheck) {
+        // Force a health check if none exists
+        await walrusConnectivityMonitor.forceHealthCheck();
+      }
+
+      const health = status.lastHealthCheck;
+      
+      if (!health) {
+        return {
+          canUpload: false,
+          canDownload: false,
+          reason: 'Unable to determine network health'
+        };
+      }
+
+      const hasPublisher = health.components.some(c => 
+        c.component === 'Walrus Publisher' && c.status !== 'failed'
+      );
+      
+      const hasAggregator = health.components.some(c => 
+        c.component === 'Walrus Aggregator' && c.status !== 'failed'
+      );
+
+      return {
+        canUpload: hasPublisher,
+        canDownload: hasAggregator,
+        reason: !hasPublisher ? 'Publisher unavailable' : 
+                !hasAggregator ? 'Aggregator unavailable' : undefined
+      };
+    } catch (error) {
+      logger.warn('Connectivity check failed', {
+        error: error instanceof Error ? error.message : String(error)
+      });
+      
+      // Allow operations but log warning
+      return {
+        canUpload: true,
+        canDownload: true
+      };
+    }
+  }
+
+  // Get service health status
+  async getHealthStatus(): Promise<{
+    overall: 'healthy' | 'degraded' | 'failed';
+    services: Record<string, string>;
+    connectivity: any;
+    recommendations: string[];
+  }> {
+    const summary = await walrusConnectivityMonitor.getConnectivitySummary();
+    
+    return {
+      overall: summary.health.overall,
+      services: Object.fromEntries(
+        summary.health.components.map(c => [c.component, c.status])
+      ),
+      connectivity: summary.environmentInfo,
+      recommendations: summary.recommendations
+    };
+  }
+
+  // Force connectivity test
+  async testConnectivity(): Promise<boolean> {
+    try {
+      const results = await walrusConnectivityMonitor.forceConnectivityTests();
+      const criticalTests = ['Small File Upload Test', 'File Download Test', 'Aggregator Health Check', 'Publisher Health Check'];
+      
+      const criticalPassed = results
+        .filter(r => criticalTests.includes(r.testName))
+        .every(r => r.success);
+
+      return criticalPassed;
+    } catch (error) {
+      logger.error('Connectivity test failed', {
+        error: error instanceof Error ? error.message : String(error)
+      });
+      return false;
+    }
   }
 }
