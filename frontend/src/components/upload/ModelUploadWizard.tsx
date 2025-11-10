@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { CheckCircle, Clock, ArrowRight, ArrowLeft, Upload, Shield, DollarSign, Tag, AlertCircle, Wifi, WifiOff } from 'lucide-react'
+import { CheckCircle, Clock, ArrowRight, ArrowLeft, Upload, Shield, DollarSign, Tag, AlertCircle } from 'lucide-react'
 import { useCurrentAccount } from '@mysten/dapp-kit'
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import FileUploadZone from './FileUploadZone'
@@ -94,7 +94,6 @@ export default function ModelUploadWizard() {
   // Wallet state derived from Mysten dapp kit
   const isWalletConnected = !!currentAccount?.address
   const walletAddress = currentAccount?.address || ''
-  const formattedAddress = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : ''
 
 
   // Handle complete upload flow: SEAL + Walrus + Blockchain
@@ -190,7 +189,7 @@ export default function ModelUploadWizard() {
             ...phase,
             icon: phase.id === 'validation' ? Upload :
                   phase.id === 'encryption' ? Shield :
-                  phase.id === 'upload' ? Wifi :
+                  phase.id === 'upload' ? Upload :
                   phase.id === 'listing' ? CheckCircle : Upload
           }))}
           currentPhase={upload.currentPhase || undefined}
@@ -239,29 +238,6 @@ export default function ModelUploadWizard() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-black mb-2">Upload Model</h1>
         <p className="text-gray-500">Share your AI model with the Satya marketplace</p>
-        
-        {/* Wallet Connection Status */}
-        <div className="mt-4 flex items-center space-x-4">
-          <div className={`flex items-center space-x-2 px-3 py-1 border rounded text-sm ${
-            isWalletConnected 
-              ? 'border-gray-300 bg-white text-gray-700' 
-              : 'border-gray-400 bg-gray-50 text-gray-600'
-          }`}>
-            {isWalletConnected ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
-            <span>
-              {isWalletConnected 
-                ? `Connected: ${formattedAddress}` 
-                : 'Wallet Not Connected'
-              }
-            </span>
-          </div>
-          
-          {!isWalletConnected && (
-            <div className="text-sm text-gray-500">
-              Please connect your wallet in the header to continue
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Progress Indicator */}
@@ -727,7 +703,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onUp
         {!isWalletConnected && (
           <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
             <div className="flex items-start">
-              <WifiOff className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-red-800">Wallet Not Connected</p>
                 <p className="text-sm text-red-700 mt-1">Connect your wallet in the header to upload the model</p>
@@ -821,7 +797,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onUp
             </>
           ) : !isWalletConnected ? (
             <>
-              <WifiOff className="h-4 w-4 mr-2" />
+              <AlertCircle className="h-4 w-4 mr-2" />
               Connect Wallet First
             </>
           ) : validation?.hasErrors ? (
