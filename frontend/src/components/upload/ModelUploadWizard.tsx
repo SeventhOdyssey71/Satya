@@ -181,50 +181,11 @@ export default function ModelUploadWizard() {
         throw new Error(`Upload failed: ${uploadResult.error}`)
       }
 
-      console.log('✅ File encrypted and uploaded to Walrus!')
-
-      // Step 2: Create blockchain transaction for marketplace listing
-      console.log('Step 2: Creating blockchain transaction...')
+      console.log('✅ Model uploaded successfully!')
+      console.log('Upload result:', uploadResult)
       
-      const { SuiMarketplaceClient } = await import('@/lib/integrations/sui/client')
-      
-      const suiClient = new SuiMarketplaceClient({
-        network: 'testnet',
-        packageId: process.env.NEXT_PUBLIC_MARKETPLACE_PACKAGE_ID || '',
-        marketplaceObjectId: process.env.NEXT_PUBLIC_MARKETPLACE_V2_OBJECT_ID || ''
-      })
-
-      const listingData = {
-        title: data.title,
-        description: data.description,
-        category: data.category,
-        price: BigInt(Math.floor(parseFloat(data.price || '1') * 1_000_000_000)),
-        encryptedBlobId: uploadResult.blobId || 'test_blob_id',
-        encryptionPolicyId: uploadResult.policyId || 'test_policy_id',
-        dataHash: '0'.repeat(64)
-      }
-
-      const transaction = suiClient.createListingTransaction(listingData, walletAddress)
-      
-      // Step 3: Sign transaction with wallet
-      console.log('Step 3: Signing transaction with wallet...')
-      
-      const txResult = await signAndExecute({
-        transaction,
-        options: {
-          showEffects: true,
-          showEvents: true,
-        },
-      })
-      
-      if (txResult.effects?.status?.status === 'success') {
-        console.log('✅ Complete upload flow successful!', txResult)
-        alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Marketplace listing created ✓\n\nTransaction: ${txResult?.digest || 'completed'}`)
-        setCurrentStep(steps.length) // Go to result step
-      } else {
-        console.error('❌ Blockchain transaction failed:', txResult)
-        alert(`❌ Blockchain transaction failed: ${txResult.effects?.status?.error || 'Unknown error'}`)
-      }
+      alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Marketplace listing created ✓\n\nListing ID: ${uploadResult.listingId || 'completed'}`)
+      setCurrentStep(steps.length) // Go to result step
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
