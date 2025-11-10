@@ -263,7 +263,7 @@ predictions = outputs[0]`}
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-900">{review.author}</span>
                     {review.verified && (
-                      <CheckCircle className="w-4 h-4 text-green-500" title="Verified Purchase" />
+                      <CheckCircle className="w-4 h-4 text-green-500" />
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -329,7 +329,7 @@ predictions = outputs[0]`}
           
           {version.improvements.length > 0 && (
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">What's New</h4>
+              <h4 className="font-medium text-gray-900 mb-2">What&apos;s New</h4>
               <ul className="space-y-1">
                 {version.improvements.map((improvement, index) => (
                   <li key={index} className="flex items-start gap-2 text-sm text-gray-700">

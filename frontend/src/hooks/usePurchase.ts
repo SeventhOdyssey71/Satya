@@ -153,7 +153,7 @@ export function usePurchase() {
         error: errorMessage
       }
     }
-  }, [state.purchases])
+  }, [state.purchases, updateState])
 
   const retryPurchase = useCallback(async (purchaseId: string): Promise<PurchaseResult> => {
     const purchase = state.purchases.find(p => p.id === purchaseId)
@@ -248,7 +248,7 @@ export function usePurchase() {
 
       throw error
     }
-  }, [])
+  }, [updateState])
 
   const getPurchaseByModelId = useCallback((modelId: string): Purchase | null => {
     return state.purchases.find(purchase => 
@@ -291,7 +291,7 @@ export function usePurchase() {
 
   const clearError = useCallback(() => {
     updateState({ error: null })
-  }, [])
+  }, [updateState])
 
   const clearPurchases = useCallback(() => {
     updateState({ 
@@ -299,7 +299,7 @@ export function usePurchase() {
       lastPurchase: null, 
       error: null 
     })
-  }, [])
+  }, [updateState])
 
   return {
     ...state,

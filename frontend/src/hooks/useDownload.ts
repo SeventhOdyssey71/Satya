@@ -47,6 +47,10 @@ export function useDownload() {
   const abortController = useRef<AbortController>()
   const { incrementDownloadCount, getDownloadInfo } = usePurchase()
 
+  const updateState = useCallback((updates: Partial<DownloadState>) => {
+    setState(prevState => ({ ...prevState, ...updates }))
+  }, [])
+
   // Initialize services
   const initializeServices = useCallback(() => {
     if (!walrusService.current) {
@@ -55,10 +59,6 @@ export function useDownload() {
     if (!sealService.current) {
       sealService.current = new SealEncryptionService()
     }
-  }, [])
-
-  const updateState = useCallback((updates: Partial<DownloadState>) => {
-    setState(prevState => ({ ...prevState, ...updates }))
   }, [])
 
   const generateDownloadId = () => {
@@ -189,7 +189,7 @@ export function useDownload() {
 
       throw new Error(errorMessage)
     }
-  }, [state.downloadHistory, incrementDownloadCount, getDownloadInfo, initializeServices])
+  }, [state.downloadHistory, incrementDownloadCount, getDownloadInfo, initializeServices, updateState])
 
   const cancelDownload = useCallback(() => {
     if (abortController.current) {
@@ -222,13 +222,13 @@ export function useDownload() {
 
   const clearDownloadHistory = useCallback(() => {
     updateState({ downloadHistory: [] })
-  }, [])
+  }, [updateState])
 
   const removeDownloadRecord = useCallback((downloadId: string) => {
     updateState({
       downloadHistory: state.downloadHistory.filter(record => record.id !== downloadId)
     })
-  }, [state.downloadHistory])
+  }, [state.downloadHistory, updateState])
 
   const getDownloadRecord = useCallback((downloadId: string): DownloadRecord | null => {
     return state.downloadHistory.find(record => record.id === downloadId) || null
@@ -236,7 +236,7 @@ export function useDownload() {
 
   const clearError = useCallback(() => {
     updateState({ error: null })
-  }, [])
+  }, [updateState])
 
   return {
     ...state,
