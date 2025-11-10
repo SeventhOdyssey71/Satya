@@ -161,6 +161,7 @@ export default function ModelUploadWizard() {
     }
 
     try {
+      // Step 1: Upload file and encrypt with SEAL
       const result = await upload.uploadModel(data, walletObject)
       if (result.success) {
         setCurrentStep(steps.length) // Go to result step
@@ -169,8 +170,15 @@ export default function ModelUploadWizard() {
         alert(`Upload failed: ${result.error}`)
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error('Upload failed:', error)
-      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      
+      // Check if this is a wallet signing error
+      if (errorMessage.includes('Transaction ready for wallet signing')) {
+        alert(`Ready for wallet signing!\n\nThe file has been encrypted and uploaded to Walrus storage.\nNext step: You need to sign a transaction to create the marketplace listing.\n\nNote: This requires proper wallet integration to be implemented.`)
+      } else {
+        alert(`Upload failed: ${errorMessage}`)
+      }
     }
   }
 
