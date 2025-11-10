@@ -149,10 +149,19 @@ export class WalrusStorageService {
 
       return result;
     } catch (error) {
-      logger.error('SDK upload failed', {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.warn('SDK upload failed, trying legacy client fallback', {
         fileName: file.name,
-        error: error instanceof Error ? error.message : String(error)
+        error: errorMessage
       });
+
+      // If it's a network issue, fall back to legacy client
+      if (errorMessage.includes('Walrus network unavailable') || errorMessage.includes('nodes')) {
+        logger.info('Falling back to legacy Walrus client due to network issues');
+        
+        return await this.uploadDirect(file, options);
+      }
+      
       throw error;
     }
   }

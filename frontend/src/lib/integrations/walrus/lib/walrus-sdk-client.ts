@@ -78,66 +78,54 @@ export class WalrusSDKClient {
         }
       });
 
-      // Check if it's a dapp-kit signer or Ed25519Keypair
-      let results: any[];
+      // Try the Walrus SDK upload (works with Ed25519Keypair)
+      logger.debug('Attempting Walrus SDK upload');
       
-      if ('signAndExecuteTransaction' in signer && signer.signAndExecuteTransaction) {
-        // This is a dapp-kit wallet signer - we need to handle transaction differently
-        logger.debug('Using dapp-kit signer for upload');
-        
-        // For now, use writeFiles with a transaction flow for dapp-kit
-        // Note: This might require creating a custom transaction
-        try {
-          // Try the SDK method first - it might work with dapp-kit in some cases
-          results = await this.client.walrus.writeFiles({
-            files: [walrusFile],
-            epochs,
-            deletable,
-            signer: signer as any
-          });
-        } catch (sdkError) {
-          logger.warn('SDK writeFiles failed with dapp-kit signer, this is expected', {
-            error: sdkError instanceof Error ? sdkError.message : String(sdkError)
-          });
-          
-          // For now, throw an error that explains the limitation
-          throw new WalrusError('Dapp-kit wallet integration is not yet fully supported. Please use a keypair signer for now.');
-        }
-      } else {
-        // This is an Ed25519Keypair - use normal SDK flow
-        logger.debug('Using Ed25519Keypair for upload');
-        
-        results = await this.client.walrus.writeFiles({
+      try {
+        const results = await this.client.walrus.writeFiles({
           files: [walrusFile],
           epochs,
           deletable,
           signer: signer as Ed25519Keypair
         });
+
+        if (!results || results.length === 0) {
+          throw new WalrusError('Upload failed: No results returned from Walrus SDK');
+        }
+
+        const result = results[0];
+        
+        if (!result.blobId) {
+          throw new WalrusError('Upload failed: No blob ID returned');
+        }
+
+        logger.info('Walrus SDK upload successful', {
+          fileName: file.name,
+          blobId: result.blobId,
+          objectId: result.id,
+          epochs
+        });
+
+        return {
+          success: true,
+          blobId: result.blobId,
+          objectId: result.id,
+          certificate: result.blobObject ? 'certified' : 'pending'
+        };
+
+      } catch (sdkError) {
+        const sdkErrorMessage = sdkError instanceof Error ? sdkError.message : String(sdkError);
+        logger.warn('Walrus SDK upload failed, this may be due to network issues', {
+          error: sdkErrorMessage
+        });
+        
+        // Instead of failing completely, throw the network error so the storage service can handle it
+        if (sdkErrorMessage.includes('Too many failures while writing blob') || sdkErrorMessage.includes('nodes')) {
+          throw new WalrusError('Walrus network unavailable. Storage nodes are experiencing issues. Please try again later.');
+        }
+        
+        throw new WalrusError(`Walrus upload failed: ${sdkErrorMessage}`);
       }
-
-      if (!results || results.length === 0) {
-        throw new WalrusError('Upload failed: No results returned from Walrus SDK');
-      }
-
-      const result = results[0];
-      
-      if (!result.blobId) {
-        throw new WalrusError('Upload failed: No blob ID returned');
-      }
-
-      logger.info('Walrus SDK upload successful', {
-        fileName: file.name,
-        blobId: result.blobId,
-        objectId: result.id,
-        epochs
-      });
-
-      return {
-        success: true,
-        blobId: result.blobId,
-        objectId: result.id,
-        certificate: result.blobObject ? 'certified' : 'pending'
-      };
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
