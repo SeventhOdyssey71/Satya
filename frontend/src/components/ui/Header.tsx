@@ -1,10 +1,17 @@
+'use client'
+
+import React from 'react'
 import Link from 'next/link'
+import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit'
 
 interface HeaderProps {
   activeTab: 'marketplace' | 'dashboard' | 'upload'
 }
 
 export default function Header({ activeTab }: HeaderProps) {
+  const currentAccount = useCurrentAccount()
+  const isConnected = !!currentAccount?.address
+
   const getTabClass = (tab: string) => 
     `text-base font-medium font-albert cursor-pointer transition-colors ${
       activeTab === tab
@@ -14,7 +21,7 @@ export default function Header({ activeTab }: HeaderProps) {
 
   return (
     <header className="relative z-10 border-b border-neutral-100">
-      <div className="container max-w-7xl mx-auto px-6">
+      <div className="container max-w-7xl mx-auto px-6 overflow-visible">
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-8">
             <Link href="/">
@@ -26,17 +33,22 @@ export default function Header({ activeTab }: HeaderProps) {
               <Link href="/marketplace">
                 <div className={getTabClass('marketplace')}>Marketplace</div>
               </Link>
-              <Link href="/dashboard">
-                <div className={getTabClass('dashboard')}>Dashboard</div>
-              </Link>
-              <Link href="/upload">
-                <div className={getTabClass('upload')}>Upload Model</div>
-              </Link>
+              {isConnected && (
+                <>
+                  <Link href="/dashboard">
+                    <div className={getTabClass('dashboard')}>Dashboard</div>
+                  </Link>
+                  <Link href="/upload">
+                    <div className={getTabClass('upload')}>Upload Model</div>
+                  </Link>
+                </>
+              )}
             </nav>
           </div>
-          <button className="px-5 py-2.5 bg-white rounded-lg shadow-sm border border-neutral-300 text-sm font-medium font-albert text-black hover:shadow-md transition-shadow">
-            Connect Wallet
-          </button>
+          
+          <ConnectButton 
+            connectText="Connect Wallet"
+          />
         </div>
       </div>
     </header>

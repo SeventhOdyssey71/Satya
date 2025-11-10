@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen bg-white overflow-hidden">
+    <div className="relative min-h-screen bg-white">
       {/* Header */}
       <Header />
       
@@ -75,11 +75,19 @@ function HeroSection() {
           <div className="text-center mt-8">
             <p className="text-2xl font-albert text-neutral-500 mb-4">Built on the Sui Stack</p>
             <div className="flex items-center justify-center gap-8">
-              <div className="w-28 h-6 bg-gray-200 rounded flex items-center justify-center">
-                <span className="text-xs font-albert text-gray-600">SEAL</span>
+              <div className="flex items-center justify-center">
+                <img 
+                  src="/images/Seal.svg" 
+                  alt="SEAL"
+                  className="h-8"
+                />
               </div>
-              <div className="w-28 h-8 bg-gray-200 rounded flex items-center justify-center">
-                <span className="text-xs font-albert text-gray-600">WALRUS</span>
+              <div className="flex items-center justify-center">
+                <img 
+                  src="/images/Walrus.png" 
+                  alt="WALRUS"
+                  className="h-6"
+                />
               </div>
             </div>
           </div>
@@ -94,10 +102,10 @@ function TrustedMarketplacesSection() {
     <section className="relative z-10 py-24">
       <div className="container max-w-[1728px] mx-auto px-4">
         <div className="mb-12">
-          <h2 className="text-6xl font-russo text-black mb-6 max-w-[1013px]">
+          <h2 className="text-4xl font-russo text-black mb-4 max-w-[1013px]">
             Trusted Marketplaces
           </h2>
-          <p className="text-2xl font-light font-albert text-black max-w-[832px]">
+          <p className="text-lg font-light font-albert text-black max-w-[832px]">
             Eliminating the &ldquo;Trust me bro&rdquo; barrier with sensitive markets.
           </p>
         </div>
@@ -112,9 +120,11 @@ function TrustedMarketplacesSection() {
               <p className="text-base font-albert mb-6 w-72">
                 Model with training data from top NHS inc. hospitals, works like magic.
               </p>
-              <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert">
-                Verify Model
-              </button>
+              <Link href="/model/ai-model-x129">
+                <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert hover:bg-zinc-200 transition-colors">
+                  Verify Model
+                </button>
+              </Link>
             </div>
           </div>
 
@@ -126,9 +136,11 @@ function TrustedMarketplacesSection() {
               <p className="text-base font-albert text-zinc-300 mb-6 w-72">
                 Model with training data from top NHS inc. hospitals, works like magic.
               </p>
-              <button className="w-40 h-10 bg-zinc-500 rounded-[30px] flex items-center justify-center text-white text-base font-albert">
-                Verify Model
-              </button>
+              <Link href="/model/opus-model-x229">
+                <button className="w-40 h-10 bg-zinc-500 rounded-[30px] flex items-center justify-center text-white text-base font-albert hover:bg-zinc-400 transition-colors">
+                  Verify Model
+                </button>
+              </Link>
             </div>
           </div>
 
@@ -140,9 +152,11 @@ function TrustedMarketplacesSection() {
               <p className="text-base font-albert mb-6 w-72">
                 Model with training data from top NHS inc. hospitals, works like magic.
               </p>
-              <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert">
-                Verify Model
-              </button>
+              <Link href="/model/self-drive-model">
+                <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert hover:bg-zinc-200 transition-colors">
+                  Verify Model
+                </button>
+              </Link>
             </div>
           </div>
 
@@ -166,12 +180,16 @@ function TrustedMarketplacesSection() {
                 Model with training data from top NHS inc. hospitals, works like magic.
               </p>
               <div className="flex gap-4">
-                <button className="w-40 h-10 bg-zinc-500 rounded-[30px] flex items-center justify-center text-white text-base font-albert">
-                  Verify Model
-                </button>
-                <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert">
-                  Verify Model
-                </button>
+                <Link href="/model/self-drive-model">
+                  <button className="w-40 h-10 bg-zinc-500 rounded-[30px] flex items-center justify-center text-white text-base font-albert hover:bg-zinc-400 transition-colors">
+                    Verify Model
+                  </button>
+                </Link>
+                <Link href="/model/opus-model-x229">
+                  <button className="w-40 h-10 bg-zinc-300 rounded-[30px] flex items-center justify-center text-black text-base font-albert hover:bg-zinc-200 transition-colors">
+                    Verify Model
+                  </button>
+                </Link>
               </div>
             </div>
           </div>
