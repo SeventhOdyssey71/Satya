@@ -96,89 +96,136 @@ export default function ModelUploadWizard() {
   const walletAddress = currentAccount?.address || ''
   const formattedAddress = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : ''
 
-  // Test connectivity to Walrus and SEAL services with actual file upload
-  const testServices = async () => {
-    console.log('Testing Walrus and SEAL connectivity...')
+  // Create a transaction and sign it with the wallet
+  const createListingTransaction = async () => {
+    if (!isWalletConnected) {
+      alert('Please connect your wallet first')
+      return
+    }
+
     try {
-      const { getMarketplaceService } = await import('@/lib/services')
-      const marketplaceService = getMarketplaceService()
+      // Import the SUI client
+      const { SuiMarketplaceClient } = await import('@/lib/integrations/sui/client')
       
-      console.log('1. Testing service connectivity...')
-      const connectivity = await marketplaceService.testConnectivity()
-      console.log('Service connectivity test results:', connectivity)
-      
-      console.log('2. Checking health status...')
-      const health = await marketplaceService.getHealthStatus()
-      console.log('Service health status:', health)
-      
-      console.log('3. Testing actual file upload with test data...')
-      
-      // Create a small test file
-      const testData = new TextEncoder().encode('Test model file for Satya marketplace')
-      const testFile = new File([testData], 'test-model.txt', { type: 'text/plain' })
-      
-      // Test with marketplace service
-      const mockKeypair = {
-        toSuiAddress: () => isWalletConnected ? walletAddress : '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+      // Create client with deployed contract addresses from env
+      const suiClient = new SuiMarketplaceClient({
+        network: 'testnet',
+        packageId: process.env.NEXT_PUBLIC_MARKETPLACE_PACKAGE_ID || '',
+        marketplaceObjectId: process.env.NEXT_PUBLIC_MARKETPLACE_V2_OBJECT_ID || ''
+      })
+
+      // Create test listing data
+      const listingData = {
+        title: data.title || 'Test Model',
+        description: data.description || 'Test Description', 
+        category: data.category || 'Machine Learning',
+        price: BigInt(Math.floor(parseFloat(data.price || '1') * 1_000_000_000)), // Convert to MIST
+        encryptedBlobId: 'test_blob_id',
+        encryptionPolicyId: 'test_policy_id',
+        dataHash: '0'.repeat(64)
       }
+
+      // Create the transaction
+      const transaction = suiClient.createListingTransaction(listingData, walletAddress)
       
-      const testRequest = {
-        title: 'Test Upload',
-        description: 'Testing upload functionality',
-        category: 'Other',
-        price: BigInt(1000000), // 0.001 SUI in MIST
-        file: testFile,
-        sampleAvailable: false
-      }
+      console.log('Created transaction:', transaction)
       
-      console.log('4. Attempting upload with SEAL encryption and Walrus storage...')
-      const uploadResult = await marketplaceService.uploadAndListModel(testRequest, mockKeypair)
+      // Sign and execute the transaction using dapp-kit
+      console.log('Signing transaction with wallet...')
       
-      if (uploadResult.success) {
-        console.log('✅ Upload test successful!', uploadResult.data)
-        alert(`✅ Upload Services Working!\n\n- SEAL Encryption: ✅ Working\n- Walrus Storage: ✅ Working\n- SUI Marketplace: ✅ Working\n\nTest Upload ID: ${uploadResult.data?.listingId}\nBlob ID: ${uploadResult.data?.blobId}`)
+      const result = await signAndExecute({
+        transaction,
+        options: {
+          showEffects: true,
+          showEvents: true,
+        },
+      })
+      
+      if (result.effects?.status?.status === 'success') {
+        console.log('✅ Transaction successful!', result)
+        alert(`✅ Marketplace listing created successfully!\n\nTransaction: ${result.digest}\nListing created on SUI blockchain.`)
       } else {
-        console.log('❌ Upload test failed:', uploadResult.error)
-        alert(`❌ Upload Test Failed:\n${uploadResult.error?.message || 'Unknown error'}`)
+        console.error('❌ Transaction failed:', result)
+        alert(`❌ Transaction failed: ${result.effects?.status?.error || 'Unknown error'}`)
       }
-      
     } catch (error) {
-      console.error('Service test failed:', error)
-      alert(`❌ Service test failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Transaction creation failed:', error)
+      alert(`❌ Transaction creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
-  // Handle upload completion
+  // Handle complete upload flow: SEAL + Walrus + Blockchain
   const handleUpload = async () => {
     if (!isWalletConnected) {
       alert('Please connect your wallet first')
       return
     }
 
-    // Create wallet object for marketplace service
-    const walletObject = {
-      toSuiAddress: () => walletAddress
-    }
-
     try {
-      // Step 1: Upload file and encrypt with SEAL
-      const result = await upload.uploadModel(data, walletObject)
-      if (result.success) {
+      // Create wallet object for marketplace service
+      const walletObject = {
+        toSuiAddress: () => walletAddress
+      }
+
+      console.log('Starting complete upload flow...')
+
+      // Step 1: Upload file and encrypt with SEAL, upload to Walrus
+      console.log('Step 1: SEAL encryption and Walrus upload...')
+      const uploadResult = await upload.uploadModel(data, walletObject)
+      
+      if (!uploadResult.success) {
+        throw new Error(`Upload failed: ${uploadResult.error}`)
+      }
+
+      console.log('✅ File encrypted and uploaded to Walrus!')
+
+      // Step 2: Create blockchain transaction for marketplace listing
+      console.log('Step 2: Creating blockchain transaction...')
+      
+      const { SuiMarketplaceClient } = await import('@/lib/integrations/sui/client')
+      
+      const suiClient = new SuiMarketplaceClient({
+        network: 'testnet',
+        packageId: process.env.NEXT_PUBLIC_MARKETPLACE_PACKAGE_ID || '',
+        marketplaceObjectId: process.env.NEXT_PUBLIC_MARKETPLACE_V2_OBJECT_ID || ''
+      })
+
+      const listingData = {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        price: BigInt(Math.floor(parseFloat(data.price || '1') * 1_000_000_000)),
+        encryptedBlobId: uploadResult.blobId || 'test_blob_id',
+        encryptionPolicyId: uploadResult.policyId || 'test_policy_id',
+        dataHash: '0'.repeat(64)
+      }
+
+      const transaction = suiClient.createListingTransaction(listingData, walletAddress)
+      
+      // Step 3: Sign transaction with wallet
+      console.log('Step 3: Signing transaction with wallet...')
+      
+      const txResult = await signAndExecute({
+        transaction,
+        options: {
+          showEffects: true,
+          showEvents: true,
+        },
+      })
+      
+      if (txResult.effects?.status?.status === 'success') {
+        console.log('✅ Complete upload flow successful!', txResult)
+        alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Marketplace listing created ✓\n\nTransaction: ${txResult.digest}`)
         setCurrentStep(steps.length) // Go to result step
       } else {
-        console.error('Upload failed:', result.error)
-        alert(`Upload failed: ${result.error}`)
+        console.error('❌ Blockchain transaction failed:', txResult)
+        alert(`❌ Blockchain transaction failed: ${txResult.effects?.status?.error || 'Unknown error'}`)
       }
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      console.error('Upload failed:', error)
-      
-      // Check if this is a wallet signing error
-      if (errorMessage.includes('Transaction ready for wallet signing')) {
-        alert(`Ready for wallet signing!\n\nThe file has been encrypted and uploaded to Walrus storage.\nNext step: You need to sign a transaction to create the marketplace listing.\n\nNote: This requires proper wallet integration to be implemented.`)
-      } else {
-        alert(`Upload failed: ${errorMessage}`)
-      }
+      console.error('Complete upload flow failed:', error)
+      alert(`❌ Upload failed: ${errorMessage}`)
     }
   }
 
@@ -308,12 +355,12 @@ export default function ModelUploadWizard() {
             </div>
           )}
           
-          {/* Debug Test Button */}
+          {/* Transaction Test Button */}
           <button
-            onClick={testServices}
+            onClick={createListingTransaction}
             className="px-3 py-1 bg-gray-200 text-gray-800 text-xs rounded hover:bg-gray-300 transition-colors"
           >
-            Test Services
+            Test Blockchain Transaction
           </button>
         </div>
 

@@ -27,19 +27,27 @@ export class SuiMarketplaceClient {
   ): Transaction {
     const tx = new Transaction();
     
-    tx.moveCall({
-      target: `${this.config.packageId}::marketplace::create_listing`,
+    // First, create a test CreatorCap for the user
+    const creatorCap = tx.moveCall({
+      target: `${this.config.packageId}::marketplace_v2::create_test_creator_cap`,
       arguments: [
-        tx.object(this.config.marketplaceObjectId),
+        tx.pure.address(sellerAddress)
+      ]
+    });
+    
+    // Then use the CreatorCap to create a listing
+    tx.moveCall({
+      target: `${this.config.packageId}::marketplace_v2::create_listing`,
+      arguments: [
+        tx.object(this.config.marketplaceObjectId), // marketplace
+        creatorCap, // creator_cap from the first call
         tx.pure.string(listing.title),
         tx.pure.string(listing.description),
         tx.pure.string(listing.category),
-        tx.pure.u64(listing.price.toString()),
-        tx.pure.string(listing.encryptedBlobId),
-        tx.pure.string(listing.encryptionPolicyId),
-        tx.pure.vector('u8', Array.from(Buffer.from(listing.dataHash, 'hex'))),
-        tx.pure.u32(listing.maxDownloads || 100),
-        tx.pure.u32(30), // expiry days
+        tx.pure.string(listing.encryptedBlobId), // encrypted_walrus_blob_id
+        tx.pure.vector('u8', Array.from(new TextEncoder().encode(listing.encryptionPolicyId))), // encryption_key_ciphertext
+        tx.pure.vector('u8', Array.from(new TextEncoder().encode('default_namespace'))), // seal_namespace
+        tx.pure.u64(listing.price.toString()), // download_price
         tx.object('0x6') // clock object
       ]
     });
