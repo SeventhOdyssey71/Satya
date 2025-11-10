@@ -10,3 +10,6 @@ export { useSmartContract } from './useSmartContract'
 export { useUpload } from './useUpload'
 export { useWalletUpload } from './useWalletUpload'
 export { useUploadValidation } from './useUploadValidation'
+
+// Event-specific hooks
+export { useEvents, useModelListings, useMarketplaceStats, useRecentActivity } from './useEvents'

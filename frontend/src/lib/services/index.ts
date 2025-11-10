@@ -4,12 +4,14 @@ import { MarketplaceService } from './marketplace-service';
 import { UploadService } from './upload-service';
 import { DownloadService } from './download-service';
 import { UserService } from './user-service';
+import { EventService } from './event-service';
 
 // Re-export service classes
 export { MarketplaceService } from './marketplace-service';
 export { UploadService } from './upload-service';
 export { DownloadService } from './download-service';
 export { UserService } from './user-service';
+export { EventService } from './event-service';
 
 // Service types
 export type {
@@ -17,6 +19,15 @@ export type {
   ModelListing,
   ModelPurchase
 } from './marketplace-service';
+
+export type {
+  MarketplaceEvent,
+  ModelListedEvent,
+  ModelPurchasedEvent,
+  ModelUpdatedEvent,
+  EventFilter,
+  EventQueryResult
+} from './event-service';
 
 export type { 
   FileUploadRequest as UploadRequest,
@@ -44,6 +55,7 @@ let marketplaceService: MarketplaceService | null = null;
 let uploadService: UploadService | null = null;
 let downloadService: DownloadService | null = null;
 let userService: UserService | null = null;
+let eventService: EventService | null = null;
 
 // Singleton factory functions with runtime checks
 export function getMarketplaceService(): MarketplaceService {
@@ -91,6 +103,17 @@ export function getUserService(): UserService {
   return userService;
 }
 
+export function getEventService(): EventService {
+  if (typeof window === 'undefined') {
+    return {} as EventService;
+  }
+  
+  if (!eventService) {
+    eventService = new EventService();
+  }
+  return eventService;
+}
+
 // Convenience exports for common operations
 export const services = {
   get marketplace() {
@@ -104,6 +127,9 @@ export const services = {
   },
   get user() {
     return getUserService();
+  },
+  get events() {
+    return getEventService();
   }
 };
 
