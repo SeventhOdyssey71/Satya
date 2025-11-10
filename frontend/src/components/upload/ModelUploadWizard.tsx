@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { CheckCircle, Clock, ArrowRight, ArrowLeft, Upload, Shield, DollarSign, Tag, AlertCircle, Wifi, WifiOff } from 'lucide-react'
-import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import { useCurrentAccount } from '@mysten/dapp-kit'
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import FileUploadZone from './FileUploadZone'
 import ProgressIndicator from './ProgressIndicator'
@@ -85,7 +85,6 @@ export default function ModelUploadWizard() {
   // Hooks for business logic
   const upload = useUpload()
   const currentAccount = useCurrentAccount()
-  const { mutate: signAndExecute } = useSignAndExecuteTransaction()
   const validation = useUploadValidation(data)
 
   const updateData = (updates: Partial<ModelUploadData>) => {
