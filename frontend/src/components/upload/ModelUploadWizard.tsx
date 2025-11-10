@@ -221,17 +221,17 @@ export default function ModelUploadWizard() {
   const CurrentStepComponent = steps[currentStep].component
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Upload Model</h1>
-        <p className="text-gray-600">Share your AI model with the Satya marketplace</p>
+        <h1 className="text-3xl font-bold text-black mb-2">Upload Model</h1>
+        <p className="text-gray-500">Share your AI model with the Satya marketplace</p>
         
         {/* Wallet Connection Status */}
         <div className="mt-4 flex items-center space-x-4">
-          <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
+          <div className={`flex items-center space-x-2 px-3 py-1 border rounded text-sm ${
             wallet.isConnected 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
+              ? 'border-gray-300 bg-white text-gray-700' 
+              : 'border-gray-400 bg-gray-50 text-gray-600'
           }`}>
             {wallet.isConnected ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
             <span>
@@ -243,7 +243,7 @@ export default function ModelUploadWizard() {
           </div>
           
           {wallet.isConnected && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-500">
               Balance: {wallet.formattedBalance}
             </div>
           )}
@@ -252,7 +252,7 @@ export default function ModelUploadWizard() {
             <button
               onClick={wallet.connectWallet}
               disabled={wallet.isConnecting}
-              className="px-4 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-1 bg-black text-white text-sm rounded hover:bg-gray-800 disabled:opacity-50 transition-colors"
             >
               {wallet.isConnecting ? 'Connecting...' : 'Connect Wallet'}
             </button>
@@ -261,12 +261,12 @@ export default function ModelUploadWizard() {
 
         {/* Validation Summary */}
         {(validation.hasErrors || validation.hasWarnings) && (
-          <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+          <div className="mt-4 p-4 bg-gray-50 border border-gray-300">
             <div className="flex items-start">
-              <AlertCircle className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="h-5 w-5 text-gray-600 mr-2 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-yellow-800">Form Validation</p>
-                <div className="text-sm text-yellow-700 mt-1">
+                <p className="text-sm font-medium text-black">Form Validation</p>
+                <div className="text-sm text-gray-600 mt-1">
                   {validation.hasErrors && <p>• {validation.overallValidation.errorCount} errors need to be fixed</p>}
                   {validation.hasWarnings && <p>• {validation.overallValidation.warningCount} warnings to review</p>}
                 </div>
