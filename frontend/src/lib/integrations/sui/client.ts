@@ -31,12 +31,20 @@ export class SuiMarketplaceClient {
     tx.setGasBudget(1_000_000_000); // 1 SUI gas budget
     tx.setSender(sellerAddress); // Set the sender address
     
-    // Try with just marketplace and blob ID
+    // Try with complete function signature based on typical marketplace patterns
     tx.moveCall({
       target: `${this.config.packageId}::marketplace_v2::create_listing`,
       arguments: [
-        tx.object(this.config.marketplaceObjectId), // marketplace object
+        tx.object(this.config.marketplaceObjectId), // marketplace
+        tx.pure.string(listing.title), // title
+        tx.pure.string(listing.description), // description
+        tx.pure.string(listing.category), // category
+        tx.pure.u64(listing.price.toString()), // price
+        tx.pure.u64(listing.size.toString()), // file_size
         tx.pure.string(listing.encryptedBlobId), // walrus_blob_id
+        tx.pure.bool(listing.sampleAvailable || false), // sample_available
+        tx.pure.u64((listing.maxDownloads || 0).toString()), // max_downloads
+        tx.object('0x6') // clock
       ]
     });
 
