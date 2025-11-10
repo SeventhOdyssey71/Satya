@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react'
 import { CheckCircle, Clock, ArrowRight, ArrowLeft, Upload, Shield, DollarSign, Tag, AlertCircle, Wifi, WifiOff } from 'lucide-react'
+import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import FileUploadZone from './FileUploadZone'
 import ProgressIndicator from './ProgressIndicator'
 import UploadProgress from './UploadProgress'
 import UploadStatus from './UploadStatus'
-import { useUpload, useWalletUpload, useUploadValidation } from '@/hooks'
+import { useUpload, useUploadValidation } from '@/hooks'
 
 interface ModelUploadData {
   // Basic Info
@@ -45,7 +46,7 @@ interface StepProps {
   isLast: boolean
   isValid: boolean
   validation?: any
-  wallet?: any
+  isWalletConnected?: boolean
   onUpload?: () => Promise<void>
 }
 
@@ -82,34 +83,81 @@ export default function ModelUploadWizard() {
 
   // Hooks for business logic
   const upload = useUpload()
-  const wallet = useWalletUpload()
+  const currentAccount = useCurrentAccount()
+  const { mutate: signAndExecute } = useSignAndExecuteTransaction()
   const validation = useUploadValidation(data)
 
   const updateData = (updates: Partial<ModelUploadData>) => {
     setData(prev => ({ ...prev, ...updates }))
   }
 
-  // Check wallet connection on mount
-  useEffect(() => {
-    wallet.checkWalletConnection()
-  }, [wallet])
+  // Wallet state derived from Mysten dapp kit
+  const isWalletConnected = !!currentAccount?.address
+  const walletAddress = currentAccount?.address || ''
+  const formattedAddress = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : ''
+
+  // Test connectivity to Walrus and SEAL services with actual file upload
+  const testServices = async () => {
+    console.log('Testing Walrus and SEAL connectivity...')
+    try {
+      const { getMarketplaceService } = await import('@/lib/services')
+      const marketplaceService = getMarketplaceService()
+      
+      console.log('1. Testing service connectivity...')
+      const connectivity = await marketplaceService.testConnectivity()
+      console.log('Service connectivity test results:', connectivity)
+      
+      console.log('2. Checking health status...')
+      const health = await marketplaceService.getHealthStatus()
+      console.log('Service health status:', health)
+      
+      console.log('3. Testing actual file upload with test data...')
+      
+      // Create a small test file
+      const testData = new TextEncoder().encode('Test model file for Satya marketplace')
+      const testFile = new File([testData], 'test-model.txt', { type: 'text/plain' })
+      
+      // Test with marketplace service
+      const mockKeypair = {
+        toSuiAddress: () => isWalletConnected ? walletAddress : '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+      }
+      
+      const testRequest = {
+        title: 'Test Upload',
+        description: 'Testing upload functionality',
+        category: 'Other',
+        price: BigInt(1000000), // 0.001 SUI in MIST
+        file: testFile,
+        sampleAvailable: false
+      }
+      
+      console.log('4. Attempting upload with SEAL encryption and Walrus storage...')
+      const uploadResult = await marketplaceService.uploadAndListModel(testRequest, mockKeypair)
+      
+      if (uploadResult.success) {
+        console.log('✅ Upload test successful!', uploadResult.data)
+        alert(`✅ Upload Services Working!\n\n- SEAL Encryption: ✅ Working\n- Walrus Storage: ✅ Working\n- SUI Marketplace: ✅ Working\n\nTest Upload ID: ${uploadResult.data?.listingId}\nBlob ID: ${uploadResult.data?.blobId}`)
+      } else {
+        console.log('❌ Upload test failed:', uploadResult.error)
+        alert(`❌ Upload Test Failed:\n${uploadResult.error?.message || 'Unknown error'}`)
+      }
+      
+    } catch (error) {
+      console.error('Service test failed:', error)
+      alert(`❌ Service test failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
 
   // Handle upload completion
   const handleUpload = async () => {
-    if (!wallet.isConnected) {
-      await wallet.connectWallet()
+    if (!isWalletConnected) {
+      alert('Please connect your wallet first')
       return
     }
 
-    const walletValidation = wallet.validateUploadRequirements()
-    if (!walletValidation.canUpload) {
-      alert(`Cannot upload: ${walletValidation.issues.join(', ')}`)
-      return
-    }
-
-    // Create mock keypair for demo (in real app, this would come from wallet)
+    // Create mock keypair using current account (in production this would use real wallet signing)
     const mockKeypair = {
-      toSuiAddress: () => wallet.walletAddress || '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+      toSuiAddress: () => walletAddress
     }
 
     try {
@@ -229,34 +277,32 @@ export default function ModelUploadWizard() {
         {/* Wallet Connection Status */}
         <div className="mt-4 flex items-center space-x-4">
           <div className={`flex items-center space-x-2 px-3 py-1 border rounded text-sm ${
-            wallet.isConnected 
+            isWalletConnected 
               ? 'border-gray-300 bg-white text-gray-700' 
               : 'border-gray-400 bg-gray-50 text-gray-600'
           }`}>
-            {wallet.isConnected ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
+            {isWalletConnected ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
             <span>
-              {wallet.isConnected 
-                ? `Connected: ${wallet.formattedAddress}` 
+              {isWalletConnected 
+                ? `Connected: ${formattedAddress}` 
                 : 'Wallet Not Connected'
               }
             </span>
           </div>
           
-          {wallet.isConnected && (
+          {!isWalletConnected && (
             <div className="text-sm text-gray-500">
-              Balance: {wallet.formattedBalance}
+              Please connect your wallet in the header to continue
             </div>
           )}
-
-          {!wallet.isConnected && (
-            <button
-              onClick={wallet.connectWallet}
-              disabled={wallet.isConnecting}
-              className="px-4 py-1 bg-black text-white text-sm rounded hover:bg-gray-800 disabled:opacity-50 transition-colors"
-            >
-              {wallet.isConnecting ? 'Connecting...' : 'Connect Wallet'}
-            </button>
-          )}
+          
+          {/* Debug Test Button */}
+          <button
+            onClick={testServices}
+            className="px-3 py-1 bg-gray-200 text-gray-800 text-xs rounded hover:bg-gray-300 transition-colors"
+          >
+            Test Services
+          </button>
         </div>
 
         {/* Validation Summary */}
@@ -296,7 +342,7 @@ export default function ModelUploadWizard() {
           isLast={currentStep === steps.length - 1}
           isValid={steps[currentStep].validate()}
           validation={validation}
-          wallet={wallet}
+          isWalletConnected={isWalletConnected}
           onUpload={handleUpload}
         />
       </div>
@@ -686,7 +732,7 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Step
   )
 }
 
-function ReviewStep({ data, onPrev, isFirst, validation, wallet, onUpload }: StepProps) {
+function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onUpload }: StepProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async () => {
@@ -736,13 +782,13 @@ function ReviewStep({ data, onPrev, isFirst, validation, wallet, onUpload }: Ste
         )}
 
         {/* Wallet Connection Check */}
-        {wallet && !wallet.isConnected && (
+        {!isWalletConnected && (
           <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
             <div className="flex items-start">
               <WifiOff className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-red-800">Wallet Not Connected</p>
-                <p className="text-sm text-red-700 mt-1">Connect your wallet to upload the model</p>
+                <p className="text-sm text-red-700 mt-1">Connect your wallet in the header to upload the model</p>
               </div>
             </div>
           </div>
@@ -823,7 +869,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, wallet, onUpload }: Ste
         </button>
         <button
           onClick={handleSubmit}
-          disabled={isSubmitting || (validation?.hasErrors) || (wallet && !wallet.isConnected)}
+          disabled={isSubmitting || (validation?.hasErrors) || !isWalletConnected}
           className="flex items-center px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isSubmitting ? (
@@ -831,7 +877,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, wallet, onUpload }: Ste
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
               Uploading...
             </>
-          ) : wallet && !wallet.isConnected ? (
+          ) : !isWalletConnected ? (
             <>
               <WifiOff className="h-4 w-4 mr-2" />
               Connect Wallet First

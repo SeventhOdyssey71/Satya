@@ -105,6 +105,7 @@ export function useUpload() {
     )
 
     setPhases(defaultPhases)
+    return defaultPhases // Return phases synchronously
   }, [])
 
   const calculateOverallProgress = useCallback((phases: UploadPhase[]) => {
@@ -115,8 +116,9 @@ export function useUpload() {
     return ((completedPhases + currentPhaseProgress / 100) / totalPhases) * 100
   }, [])
 
-  const updatePhase = useCallback((phaseId: string, updates: Partial<UploadPhase>, taskId?: string) => {
-    const updatedPhases = phases.map(phase => 
+  const updatePhase = useCallback((phaseId: string, updates: Partial<UploadPhase>, taskId?: string, currentPhases?: UploadPhase[]) => {
+    const phasesToUpdate = currentPhases || phases
+    const updatedPhases = phasesToUpdate.map(phase => 
       phase.id === phaseId ? { ...phase, ...updates } : phase
     )
     setPhases(updatedPhases)
@@ -125,7 +127,10 @@ export function useUpload() {
     if (taskId) {
       const overallProgress = calculateOverallProgress(updatedPhases)
       updateGlobalProgress(taskId, overallProgress, updatedPhases)
+      setUploadProgress(overallProgress)
     }
+    
+    return updatedPhases
   }, [phases, calculateOverallProgress, updateGlobalProgress])
 
   const uploadFile = useCallback(async (
@@ -183,8 +188,8 @@ export function useUpload() {
       setResult(null)
       setUploadProgress(0)
       
-      // Initialize phases
-      initializePhases(data.enableEncryption)
+      // Initialize phases and get them synchronously
+      const currentPhases = initializePhases(data.enableEncryption)
       
       // Add task to global upload context
       taskId = addUploadTask({
@@ -193,7 +198,7 @@ export function useUpload() {
         fileSize: data.modelFile.size,
         status: 'uploading',
         progress: 0,
-        phases: phases
+        phases: currentPhases
       })
       
       // Create abort controller for cancellation
@@ -201,7 +206,7 @@ export function useUpload() {
 
       // Phase 1: Validation
       setCurrentPhase('validation')
-      updatePhase('validation', { status: 'in-progress', progress: 50 }, taskId)
+      let updatedPhases = updatePhase('validation', { status: 'in-progress', progress: 50 }, taskId, currentPhases)
 
       // Validate inputs
       if (!data.title?.trim()) throw new Error('Title is required')
@@ -209,7 +214,7 @@ export function useUpload() {
       if (!data.category?.trim()) throw new Error('Category is required')
       if (!data.price || parseFloat(data.price) <= 0) throw new Error('Valid price is required')
 
-      updatePhase('validation', { status: 'completed', progress: 100 }, taskId)
+      updatedPhases = updatePhase('validation', { status: 'completed', progress: 100 }, taskId, updatedPhases)
 
       // Prepare marketplace request
       const marketplaceRequest: ModelUploadRequest = {
@@ -224,6 +229,18 @@ export function useUpload() {
         expiryDays: data.expiryDays
       }
 
+      // Phase 2: Encryption (if enabled)
+      if (data.enableEncryption) {
+        setCurrentPhase('encryption')
+        updatedPhases = updatePhase('encryption', { status: 'in-progress', progress: 30 }, taskId, updatedPhases)
+        // Encryption happens inside marketplace service
+        updatedPhases = updatePhase('encryption', { status: 'completed', progress: 100 }, taskId, updatedPhases)
+      }
+
+      // Phase 3: Upload to Walrus
+      setCurrentPhase('upload')
+      updatedPhases = updatePhase('upload', { status: 'in-progress', progress: 25 }, taskId, updatedPhases)
+
       // Upload and list model using marketplace service
       const uploadResult = await marketplaceService.uploadAndListModel(
         marketplaceRequest,
@@ -234,10 +251,13 @@ export function useUpload() {
         throw new Error(uploadResult.error?.message || 'Upload failed')
       }
 
-      // Update final phase
+      // Update upload phase as complete
+      updatedPhases = updatePhase('upload', { status: 'completed', progress: 100 }, taskId, updatedPhases)
+
+      // Phase 4: Final listing
       setCurrentPhase('listing')
-      updatePhase('listing', { status: 'completed', progress: 100 }, taskId)
-      setUploadProgress(100)
+      updatedPhases = updatePhase('listing', { status: 'in-progress', progress: 80 }, taskId, updatedPhases)
+      updatedPhases = updatePhase('listing', { status: 'completed', progress: 100 }, taskId, updatedPhases)
 
       // Prepare success result
       const successResult: UploadResult = {
