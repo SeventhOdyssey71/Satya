@@ -26,7 +26,6 @@ export class WalrusConnectivityTester {
 
   private getStorageService(): WalrusStorageService {
     // Lazy load to avoid circular dependency during initial module loading
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { WalrusStorageService: StorageServiceClass } = require('../services/storage-service');
     if (!this.storageService) {
       this.storageService = new StorageServiceClass();
