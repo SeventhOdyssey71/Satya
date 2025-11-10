@@ -31,21 +31,21 @@ export class SuiMarketplaceClient {
     tx.setGasBudget(1_000_000_000); // 1 SUI gas budget
     tx.setSender(sellerAddress); // Set the sender address
     
-    // Complete function call with existing CreatorCap
-    const creatorCapId = '0x2cd914768c5c2fe550a368760a6a7deab72aba80ed26fed6b0e1d35d182630d6';
+    // Complete function call with correct CreatorCap (from matching package)
+    const creatorCapId = '0x035a6457718b4989c6e96ef14ae6e30885c3c508a7e1afc404fca598096d2e84';
     
     tx.moveCall({
       target: `${this.config.packageId}::marketplace_v2::create_listing`,
       arguments: [
         tx.object(this.config.marketplaceObjectId), // marketplace
         tx.object(creatorCapId), // creator_cap (existing owned object)
-        tx.pure(listing.title || 'Model', 'string'), // title
-        tx.pure(listing.description || 'AI Model', 'string'), // description
-        tx.pure(listing.category || 'AI', 'string'), // category
-        tx.pure(listing.encryptedBlobId || '', 'string'), // encrypted_walrus_blob_id
-        tx.pure([1, 2, 3], 'vector<u8>'), // encryption_key_ciphertext
-        tx.pure([4, 5, 6], 'vector<u8>'), // seal_namespace
-        tx.pure(listing.price?.toString() || '1000000000', 'u64'), // download_price
+        tx.pure.string(listing.title || 'Model'), // title
+        tx.pure.string(listing.description || 'AI Model'), // description
+        tx.pure.string(listing.category || 'AI'), // category
+        tx.pure.string(listing.encryptedBlobId || ''), // encrypted_walrus_blob_id
+        tx.pure.vector('u8', [1, 2, 3]), // encryption_key_ciphertext
+        tx.pure.vector('u8', [4, 5, 6]), // seal_namespace
+        tx.pure.u64(listing.price?.toString() || '1000000000'), // download_price
         tx.object('0x6'), // clock
       ]
     });
