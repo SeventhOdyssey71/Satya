@@ -37,7 +37,7 @@ export default function Header({ activeTab }: HeaderProps) {
 
   return (
     <header className="relative z-10 border-b border-neutral-100">
-      <div className="container max-w-7xl mx-auto px-6">
+      <div className="container max-w-7xl mx-auto px-6 overflow-visible">
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-8">
             <Link href="/">

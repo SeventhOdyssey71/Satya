@@ -10,7 +10,7 @@ export default function DashboardPage() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-white overflow-hidden">
+      <div className="min-h-screen bg-white">
         <Header activeTab="dashboard" />
         <main className="relative z-10 py-6">
           <div className="container max-w-7xl mx-auto px-6">
@@ -25,7 +25,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <Header activeTab="dashboard" />
       

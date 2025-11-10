@@ -8,7 +8,7 @@ import type { ModelUpload } from '@/lib/types'
 
 export default function UploadPage() {
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <Header activeTab="upload" />
       
