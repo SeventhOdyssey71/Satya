@@ -25,6 +25,12 @@ export class SuiMarketplaceClient {
     keypair: Ed25519Keypair
   ): Promise<string> {
     try {
+      // In development, return mock listing ID if SUI network is not available
+      if (process.env.NODE_ENV === 'development' && (!this.config.packageId || !this.config.marketplaceObjectId)) {
+        const mockListingId = `dev_listing_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+        console.warn('SUI Marketplace: Using development mock listing ID', { mockListingId });
+        return mockListingId;
+      }
       const tx = new Transaction();
       
       tx.moveCall({
