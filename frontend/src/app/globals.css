@@ -20,16 +20,3 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Custom styling for Mysten dApp Kit ConnectButton */
-.custom-connect-button button {
-  @apply px-5 py-2.5 bg-white rounded-lg shadow-sm border border-neutral-300 text-sm font-medium text-black hover:shadow-md transition-shadow !important;
-  font-family: var(--font-albert) !important;
-}
-
-.custom-connect-button button:hover {
-  @apply shadow-md !important;
-}
-
-.custom-connect-button button:disabled {
-  @apply opacity-50 cursor-not-allowed !important;
-}

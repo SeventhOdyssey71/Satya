@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Russo_One, Albert_Sans } from 'next/font/google'
 import { WalletProviders } from '@/providers/WalletProvider'
+import '@mysten/dapp-kit/dist/index.css'
 import './globals.css'
 
 const russo = Russo_One({
