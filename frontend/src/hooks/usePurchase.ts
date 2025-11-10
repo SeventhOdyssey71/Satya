@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { SuiService } from '@/lib/services/sui-service'
+import { getMarketplaceService } from '@/lib/services'
 import { logger } from '@/lib/integrations/core/logger'
 
 export interface PurchaseState {
@@ -54,16 +54,8 @@ export function usePurchase() {
     isLoading: false
   })
 
-  const suiService = useRef<SuiService>()
+  const marketplaceService = getMarketplaceService()
   const abortController = useRef<AbortController>()
-
-  // Initialize service
-  useEffect(() => {
-    suiService.current = new SuiService()
-    return () => {
-      abortController.current?.abort()
-    }
-  }, [])
 
   const updateState = useCallback((updates: Partial<PurchaseState>) => {
     setState(prevState => ({ ...prevState, ...updates }))
@@ -74,9 +66,7 @@ export function usePurchase() {
   }
 
   const createPurchase = useCallback(async (request: PurchaseRequest): Promise<PurchaseResult> => {
-    if (!suiService.current) {
-      throw new Error('Purchase service not initialized')
-    }
+    // Marketplace service is available through singleton
 
     // Cancel any ongoing purchase
     abortController.current?.abort()
@@ -189,9 +179,7 @@ export function usePurchase() {
   }, [state.purchases, createPurchase])
 
   const loadPurchaseHistory = useCallback(async (userAddress: string): Promise<void> => {
-    if (!suiService.current) {
-      throw new Error('Purchase service not initialized')
-    }
+    // Marketplace service is available through singleton
 
     try {
       updateState({ isLoading: true, error: null })

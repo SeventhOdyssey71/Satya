@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { WalrusService } from '@/lib/services/walrus-service'
-import { SealService } from '@/lib/services/seal-service'
+import { WalrusStorageService } from '@/lib/integrations/walrus/services/storage-service'
+import { SealEncryptionService } from '@/lib/integrations/seal/services/encryption-service'
 import { logger } from '@/lib/integrations/core/logger'
 import { usePurchase } from './usePurchase'
 
@@ -42,18 +42,18 @@ export function useDownload() {
     downloadHistory: []
   })
 
-  const walrusService = useRef<WalrusService>()
-  const sealService = useRef<SealService>()
+  const walrusService = useRef<WalrusStorageService>()
+  const sealService = useRef<SealEncryptionService>()
   const abortController = useRef<AbortController>()
   const { incrementDownloadCount, getDownloadInfo } = usePurchase()
 
   // Initialize services
   const initializeServices = useCallback(() => {
     if (!walrusService.current) {
-      walrusService.current = new WalrusService()
+      walrusService.current = new WalrusStorageService()
     }
     if (!sealService.current) {
-      sealService.current = new SealService()
+      sealService.current = new SealEncryptionService()
     }
   }, [])
 
