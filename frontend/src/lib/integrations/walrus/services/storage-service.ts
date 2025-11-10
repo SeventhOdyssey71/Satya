@@ -1,5 +1,6 @@
 // Walrus Storage Service - High-level storage operations
 
+import { WalrusSDKClient } from '../lib/walrus-sdk-client';
 import { WalrusClient } from '../lib/walrus-client';
 import { WALRUS_CONFIG } from '../config/walrus.config';
 import { walrusEnvironment } from '../config/environment-specific';
@@ -19,14 +20,16 @@ import { RetryManager } from '../utils/retry-manager';
 import { logger } from '../../core/logger';
 
 export class WalrusStorageService {
-  private client: WalrusClient;
+  private sdkClient: WalrusSDKClient;
+  private legacyClient: WalrusClient;
   private cache: CacheManager;
   private retryManager: RetryManager;
   private chunkingUtils: ChunkingUtils;
   private blobRegistry: Map<string, BlobMetadata> = new Map();
   
   constructor() {
-    this.client = new WalrusClient('testnet');
+    this.sdkClient = new WalrusSDKClient('testnet');
+    this.legacyClient = new WalrusClient('testnet');
     this.cache = new CacheManager(WALRUS_CONFIG.agent.cacheSizeMB);
     
     // Use environment-specific retry configuration
@@ -57,7 +60,7 @@ export class WalrusStorageService {
   // Intelligent file upload with automatic strategy selection
   async uploadFile(
     file: File,
-    options: UploadOptions = {}
+    options: UploadOptions & { signer?: any } = {}
   ): Promise<UploadResult> {
     // Check connectivity before upload
     const health = await this.checkConnectivity();
@@ -77,15 +80,26 @@ export class WalrusStorageService {
     try {
       let result: UploadResult;
       
-      switch (strategy) {
-        case StorageStrategy.CHUNKED:
-          result = await this.uploadChunked(file, options);
-          break;
-        case StorageStrategy.DIRECT:
-          result = await this.uploadDirect(file, options);
-          break;
-        default:
-          result = await this.uploadDirect(file, options);
+      // Use SDK client if signer is provided (wallet integration)
+      if (options.signer) {
+        logger.info('Using Walrus SDK for wallet-integrated upload', {
+          fileName: file.name,
+          signerAddress: options.signer.toSuiAddress()
+        });
+        
+        result = await this.uploadWithSDK(file, options);
+      } else {
+        // Fallback to legacy strategy-based upload
+        switch (strategy) {
+          case StorageStrategy.CHUNKED:
+            result = await this.uploadChunked(file, options);
+            break;
+          case StorageStrategy.DIRECT:
+            result = await this.uploadDirect(file, options);
+            break;
+          default:
+            result = await this.uploadDirect(file, options);
+        }
       }
 
       if (result.success) {
@@ -108,7 +122,42 @@ export class WalrusStorageService {
     }
   }
   
-  // Direct upload for small files
+  // Upload using Walrus SDK with wallet integration
+  private async uploadWithSDK(
+    file: File,
+    options: UploadOptions & { signer: any }
+  ): Promise<UploadResult> {
+    try {
+      const result = await this.sdkClient.uploadFile(file, options.signer, {
+        epochs: options.epochs || WALRUS_CONFIG.agent.defaultEpochs,
+        deletable: true,
+        onProgress: options.onProgress
+      });
+
+      if (result.success && result.blobId) {
+        // Store in registry
+        this.blobRegistry.set(result.blobId, {
+          blobId: result.blobId,
+          size: file.size,
+          name: file.name,
+          uploadedAt: Date.now(),
+          expiresAt: this.calculateExpiry(options.epochs || WALRUS_CONFIG.agent.defaultEpochs),
+          epochs: options.epochs || WALRUS_CONFIG.agent.defaultEpochs,
+          certificate: result.certificate
+        });
+      }
+
+      return result;
+    } catch (error) {
+      logger.error('SDK upload failed', {
+        fileName: file.name,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
+    }
+  }
+
+  // Direct upload for small files (legacy)
   private async uploadDirect(
     file: File,
     options: UploadOptions
@@ -117,7 +166,7 @@ export class WalrusStorageService {
     const epochs = options.epochs || WALRUS_CONFIG.agent.defaultEpochs;
     
     return await this.retryManager.executeWithRetry(async () => {
-      const result = await this.client.uploadBlob(data, epochs);
+      const result = await this.legacyClient.uploadBlob(data, epochs);
       
       if (result.success && result.blobId) {
         // Store in registry
@@ -148,7 +197,7 @@ export class WalrusStorageService {
     // Upload each chunk
     for (let i = 0; i < chunks.length; i++) {
       const chunkResult = await this.retryManager.executeWithRetry(async () => {
-        return await this.client.uploadBlob(chunks[i], epochs);
+        return await this.legacyClient.uploadBlob(chunks[i], epochs);
       });
       
       if (!chunkResult.success) {
@@ -175,7 +224,7 @@ export class WalrusStorageService {
     // Upload manifest
     const manifestBlob = new TextEncoder().encode(JSON.stringify(manifest));
     const manifestResult = await this.retryManager.executeWithRetry(async () => {
-      return await this.client.uploadBlob(manifestBlob, epochs);
+      return await this.legacyClient.uploadBlob(manifestBlob, epochs);
     });
     
     if (manifestResult.success && manifestResult.blobId) {
@@ -213,10 +262,20 @@ export class WalrusStorageService {
     }
     
     try {
-      // Try primary download
-      const data = await this.retryManager.executeWithRetry(async () => {
-        return await this.client.downloadBlob(blobId);
-      });
+      // Try SDK download first, fallback to legacy
+      let data: Uint8Array;
+      try {
+        data = await this.sdkClient.downloadBlob(blobId);
+      } catch (sdkError) {
+        logger.warn('SDK download failed, trying legacy client', {
+          blobId,
+          error: sdkError instanceof Error ? sdkError.message : String(sdkError)
+        });
+        
+        data = await this.retryManager.executeWithRetry(async () => {
+          return await this.legacyClient.downloadBlob(blobId);
+        });
+      }
       
       // Cache for future use
       this.cache.set(blobId, data);
@@ -224,9 +283,9 @@ export class WalrusStorageService {
       return data;
       
     } catch (error) {
-      // Try alternative nodes
+      // Try alternative nodes using legacy client
       console.log(`Primary download failed, trying alternative nodes...`);
-      const data = await this.client.downloadFromAlternativeNodes(blobId);
+      const data = await this.legacyClient.downloadFromAlternativeNodes(blobId);
       
       // Cache successful alternative download
       this.cache.set(blobId, data);
@@ -256,7 +315,53 @@ export class WalrusStorageService {
   
   // Stream download for large files
   async *streamDownload(blobId: string): AsyncGenerator<Uint8Array> {
-    yield* this.client.streamDownload(blobId);
+    yield* this.legacyClient.streamDownload(blobId);
+  }
+
+  // Check upload capability with wallet
+  async checkUploadCapability(address: string): Promise<{
+    canUpload: boolean;
+    hasWAL: boolean;
+    hasSUI: boolean;
+    reason?: string;
+  }> {
+    try {
+      return await this.sdkClient.canUpload(address);
+    } catch (error) {
+      logger.error('Failed to check upload capability', {
+        address,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      
+      return {
+        canUpload: false,
+        hasWAL: false,
+        hasSUI: false,
+        reason: 'Failed to check wallet balances'
+      };
+    }
+  }
+
+  // Estimate storage cost
+  async estimateStorageCost(fileSize: number, epochs?: number): Promise<{
+    walCost: string;
+    suiCost: string;
+  }> {
+    try {
+      return await this.sdkClient.estimateStorageCost(fileSize, epochs);
+    } catch (error) {
+      logger.error('Failed to estimate storage cost', {
+        fileSize,
+        epochs,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      
+      // Return fallback estimates
+      return {
+        walCost: '1000000', // 1 WAL
+        suiCost: '100000000' // 0.1 SUI
+      };
+    }
   }
   
   // Get blob metadata

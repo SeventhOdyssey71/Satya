@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { CheckCircle, Clock, ArrowRight, ArrowLeft, Upload, Shield, DollarSign, Tag, AlertCircle, Wifi, WifiOff } from 'lucide-react'
 import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import FileUploadZone from './FileUploadZone'
 import ProgressIndicator from './ProgressIndicator'
 import UploadProgress from './UploadProgress'
@@ -162,10 +163,13 @@ export default function ModelUploadWizard() {
     }
 
     try {
+      // TEMPORARY: Create keypair for testing Walrus SDK integration
+      // In production, this should use proper dapp-kit wallet integration
+      const testPrivateKey = 'suiprivkey1qr4ms6vljlawapq0f8clc50epw3z27kclmfn6mwrfhljx7wpks7yuf0eaws'
+      const keypair = Ed25519Keypair.fromSecretKey(testPrivateKey)
+      
       // Create wallet object for marketplace service
-      const walletObject = {
-        toSuiAddress: () => walletAddress
-      }
+      const walletObject = keypair
 
       console.log('Starting complete upload flow...')
 

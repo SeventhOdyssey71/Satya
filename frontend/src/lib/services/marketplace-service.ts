@@ -78,7 +78,7 @@ export class MarketplaceService {
   // Upload and list a model for sale
   async uploadAndListModel(
     request: ModelUploadRequest,
-    sellerWallet: { toSuiAddress: () => string }
+    sellerWallet: any // Ed25519Keypair or wallet signer
   ): Promise<OperationResult<{ listingId: string; blobId: string }>> {
     const operationId = crypto.randomUUID();
     logger.info('Starting model upload and listing', {
@@ -123,6 +123,7 @@ export class MarketplaceService {
 
       const uploadResult = await this.walrusService.uploadFile(encryptedFile, {
         epochs: 30, // 30 days storage
+        signer: sellerWallet, // Pass wallet signer for proper WAL token integration
         onProgress: (progress) => {
           logger.debug('Upload progress', { operationId, progress });
         }
@@ -142,7 +143,7 @@ export class MarketplaceService {
       logger.debug('Creating on-chain listing transaction', { operationId });
       
       // Create on-chain listing with real smart contract integration
-      const listingId = await this.createListingWithWallet({
+      const listing = {
         seller: sellerWallet.toSuiAddress(),
         title: request.title,
         description: request.description,
@@ -159,7 +160,9 @@ export class MarketplaceService {
         expiryDate: request.expiryDays ? 
           new Date(Date.now() + request.expiryDays * 24 * 60 * 60 * 1000) : 
           undefined
-      });
+      };
+      
+      const listingId = await this.suiClient.createListing(listing, sellerWallet);
 
       logger.info('Model upload and listing completed successfully', {
         operationId,
@@ -511,11 +514,6 @@ export class MarketplaceService {
   }
 
   // Private helper methods
-  private async createListingWithWallet(listingData: any): Promise<string> {
-    // For now, return a simulated success that will trigger wallet signing in the UI layer
-    // The actual transaction signing happens in the upload wizard component
-    return `listing_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-  }
 
   private async validateUploadRequest(request: ModelUploadRequest): Promise<void> {
     if (!request.title || request.title.length < 1) {

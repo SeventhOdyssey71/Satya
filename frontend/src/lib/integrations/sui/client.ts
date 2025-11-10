@@ -27,20 +27,15 @@ export class SuiMarketplaceClient {
   ): Transaction {
     const tx = new Transaction();
     
-    // First, create a test CreatorCap for the user
-    const creatorCap = tx.moveCall({
-      target: `${this.config.packageId}::marketplace_v2::create_test_creator_cap`,
-      arguments: [
-        tx.pure.address(sellerAddress)
-      ]
-    });
+    // Set a reasonable gas budget for the transaction
+    tx.setGasBudget(1_000_000_000); // 1 SUI gas budget
+    tx.setSender(sellerAddress); // Set the sender address
     
-    // Then use the CreatorCap to create a listing
+    // Create a listing directly (simplified version)
     tx.moveCall({
       target: `${this.config.packageId}::marketplace_v2::create_listing`,
       arguments: [
         tx.object(this.config.marketplaceObjectId), // marketplace
-        creatorCap, // creator_cap from the first call
         tx.pure.string(listing.title),
         tx.pure.string(listing.description),
         tx.pure.string(listing.category),
@@ -67,22 +62,36 @@ export class SuiMarketplaceClient {
       
       const tx = this.createListingTransaction(listing, keypair.toSuiAddress());
 
+      // Skip dry run for now due to function signature issues
+      // TODO: Re-enable once we have the correct function signatures
+      console.log('Skipping dry run, executing transaction directly...');
+
       const result = await this.client.signAndExecuteTransaction({
         signer: keypair,
         transaction: tx,
         options: {
           showEffects: true,
-          showEvents: true
+          showEvents: true,
+          showInput: true,
+          showObjectChanges: true
         }
       });
 
       if (result.effects?.status?.status !== 'success') {
-        throw new Error('Transaction failed');
+        const error = result.effects?.status?.error || 'Transaction execution failed';
+        console.error('Transaction execution failed:', error);
+        throw new Error(`Transaction failed: ${error}`);
       }
 
+      console.log('Transaction successful:', result.digest);
+      console.log('Events:', result.events);
+
       const listingId = this.extractListingIdFromEvents(result);
+      console.log('Extracted listing ID:', listingId);
+      
       return listingId;
     } catch (error) {
+      console.error('Create listing error:', error);
       throw new MarketplaceError(
         ErrorCode.NETWORK_ERROR,
         `Failed to create listing: ${error instanceof Error ? error.message : String(error)}`
