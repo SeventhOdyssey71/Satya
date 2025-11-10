@@ -97,63 +97,6 @@ export default function ModelUploadWizard() {
   const walletAddress = currentAccount?.address || ''
   const formattedAddress = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : ''
 
-  // Create a transaction and sign it with the wallet
-  const createListingTransaction = async () => {
-    if (!isWalletConnected) {
-      alert('Please connect your wallet first')
-      return
-    }
-
-    try {
-      // Import the SUI client
-      const { SuiMarketplaceClient } = await import('@/lib/integrations/sui/client')
-      
-      // Create client with deployed contract addresses from env
-      const suiClient = new SuiMarketplaceClient({
-        network: 'testnet',
-        packageId: process.env.NEXT_PUBLIC_MARKETPLACE_PACKAGE_ID || '',
-        marketplaceObjectId: process.env.NEXT_PUBLIC_MARKETPLACE_V2_OBJECT_ID || ''
-      })
-
-      // Create test listing data
-      const listingData = {
-        title: data.title || 'Test Model',
-        description: data.description || 'Test Description', 
-        category: data.category || 'Machine Learning',
-        price: BigInt(Math.floor(parseFloat(data.price || '1') * 1_000_000_000)), // Convert to MIST
-        encryptedBlobId: 'test_blob_id',
-        encryptionPolicyId: 'test_policy_id',
-        dataHash: '0'.repeat(64)
-      }
-
-      // Create the transaction
-      const transaction = suiClient.createListingTransaction(listingData, walletAddress)
-      
-      console.log('Created transaction:', transaction)
-      
-      // Sign and execute the transaction using dapp-kit
-      console.log('Signing transaction with wallet...')
-      
-      const result = await signAndExecute({
-        transaction,
-        options: {
-          showEffects: true,
-          showEvents: true,
-        },
-      })
-      
-      if (result.effects?.status?.status === 'success') {
-        console.log('✅ Transaction successful!', result)
-        alert(`✅ Marketplace listing created successfully!\n\nTransaction: ${result.digest}\nListing created on SUI blockchain.`)
-      } else {
-        console.error('❌ Transaction failed:', result)
-        alert(`❌ Transaction failed: ${result.effects?.status?.error || 'Unknown error'}`)
-      }
-    } catch (error) {
-      console.error('Transaction creation failed:', error)
-      alert(`❌ Transaction creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    }
-  }
 
   // Handle complete upload flow: SEAL + Walrus + Blockchain
   const handleUpload = async () => {
@@ -319,31 +262,7 @@ export default function ModelUploadWizard() {
               Please connect your wallet in the header to continue
             </div>
           )}
-          
-          {/* Transaction Test Button */}
-          <button
-            onClick={createListingTransaction}
-            className="px-3 py-1 bg-gray-200 text-gray-800 text-xs rounded hover:bg-gray-300 transition-colors"
-          >
-            Test Blockchain Transaction
-          </button>
         </div>
-
-        {/* Validation Summary */}
-        {(validation.hasErrors || validation.hasWarnings) && (
-          <div className="mt-4 p-4 bg-gray-50 border border-gray-300">
-            <div className="flex items-start">
-              <AlertCircle className="h-5 w-5 text-gray-600 mr-2 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-black">Form Validation</p>
-                <div className="text-sm text-gray-600 mt-1">
-                  {validation.hasErrors && <p>• {validation.overallValidation.errorCount} errors need to be fixed</p>}
-                  {validation.hasWarnings && <p>• {validation.overallValidation.warningCount} warnings to review</p>}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Progress Indicator */}
