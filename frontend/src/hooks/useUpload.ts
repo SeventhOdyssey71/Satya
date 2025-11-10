@@ -9,6 +9,7 @@ import {
   ModelUploadRequest
 } from '@/lib/services'
 import { PolicyType } from '@/lib/integrations/seal/types'
+import { useUploadActions } from '@/contexts/UploadContext'
 
 interface UploadPhase {
   id: string
@@ -59,6 +60,15 @@ export function useUpload() {
   const uploadService = getUploadService()
   const marketplaceService = getMarketplaceService()
   const abortController = useRef<AbortController | null>(null)
+  
+  // Upload context actions for global state management
+  const { 
+    addUploadTask, 
+    updateUploadProgress: updateGlobalProgress,
+    completeUploadTask,
+    failUploadTask,
+    cancelUploadTask
+  } = useUploadActions()
 
   const initializePhases = useCallback((includeEncryption: boolean = true) => {
     const defaultPhases: UploadPhase[] = [
@@ -97,12 +107,6 @@ export function useUpload() {
     setPhases(defaultPhases)
   }, [])
 
-  const updatePhase = useCallback((phaseId: string, updates: Partial<UploadPhase>) => {
-    setPhases(prev => prev.map(phase => 
-      phase.id === phaseId ? { ...phase, ...updates } : phase
-    ))
-  }, [])
-
   const calculateOverallProgress = useCallback((phases: UploadPhase[]) => {
     const totalPhases = phases.length
     const completedPhases = phases.filter(p => p.status === 'completed').length
@@ -110,6 +114,19 @@ export function useUpload() {
     
     return ((completedPhases + currentPhaseProgress / 100) / totalPhases) * 100
   }, [])
+
+  const updatePhase = useCallback((phaseId: string, updates: Partial<UploadPhase>, taskId?: string) => {
+    const updatedPhases = phases.map(phase => 
+      phase.id === phaseId ? { ...phase, ...updates } : phase
+    )
+    setPhases(updatedPhases)
+    
+    // Update global context if taskId is provided
+    if (taskId) {
+      const overallProgress = calculateOverallProgress(updatedPhases)
+      updateGlobalProgress(taskId, overallProgress, updatedPhases)
+    }
+  }, [phases, calculateOverallProgress, updateGlobalProgress])
 
   const uploadFile = useCallback(async (
     file: File,
@@ -158,6 +175,8 @@ export function useUpload() {
       throw new Error('Model file is required')
     }
 
+    let taskId: string | null = null
+
     try {
       setIsUploading(true)
       setError(null)
@@ -167,12 +186,22 @@ export function useUpload() {
       // Initialize phases
       initializePhases(data.enableEncryption)
       
+      // Add task to global upload context
+      taskId = addUploadTask({
+        title: data.title,
+        fileName: data.modelFile.name,
+        fileSize: data.modelFile.size,
+        status: 'uploading',
+        progress: 0,
+        phases: phases
+      })
+      
       // Create abort controller for cancellation
       abortController.current = new AbortController()
 
       // Phase 1: Validation
       setCurrentPhase('validation')
-      updatePhase('validation', { status: 'in-progress', progress: 50 })
+      updatePhase('validation', { status: 'in-progress', progress: 50 }, taskId)
 
       // Validate inputs
       if (!data.title?.trim()) throw new Error('Title is required')
@@ -180,7 +209,7 @@ export function useUpload() {
       if (!data.category?.trim()) throw new Error('Category is required')
       if (!data.price || parseFloat(data.price) <= 0) throw new Error('Valid price is required')
 
-      updatePhase('validation', { status: 'completed', progress: 100 })
+      updatePhase('validation', { status: 'completed', progress: 100 }, taskId)
 
       // Prepare marketplace request
       const marketplaceRequest: ModelUploadRequest = {
@@ -207,7 +236,7 @@ export function useUpload() {
 
       // Update final phase
       setCurrentPhase('listing')
-      updatePhase('listing', { status: 'completed', progress: 100 })
+      updatePhase('listing', { status: 'completed', progress: 100 }, taskId)
       setUploadProgress(100)
 
       // Prepare success result
@@ -233,6 +262,12 @@ export function useUpload() {
       }
 
       setResult(successResult)
+      
+      // Complete task in global context
+      if (taskId) {
+        completeUploadTask(taskId, successResult)
+      }
+      
       return successResult
 
     } catch (error) {
@@ -241,7 +276,7 @@ export function useUpload() {
       
       // Update current phase with error
       if (currentPhase) {
-        updatePhase(currentPhase, { status: 'error', error: errorMessage })
+        updatePhase(currentPhase, { status: 'error', error: errorMessage }, taskId || undefined)
       }
 
       const errorResult: UploadResult = {
@@ -250,6 +285,12 @@ export function useUpload() {
       }
 
       setResult(errorResult)
+      
+      // Fail task in global context
+      if (taskId) {
+        failUploadTask(taskId, errorMessage)
+      }
+      
       return errorResult
 
     } finally {
@@ -260,7 +301,11 @@ export function useUpload() {
     initializePhases,
     updatePhase, 
     currentPhase,
-    marketplaceService
+    marketplaceService,
+    addUploadTask,
+    completeUploadTask,
+    failUploadTask,
+    phases
   ])
 
   const cancelUpload = useCallback(() => {
