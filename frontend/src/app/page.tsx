@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Home() {
   return (
@@ -76,16 +77,20 @@ function HeroSection() {
             <p className="text-2xl font-albert text-neutral-500 mb-4">Built on the Sui Stack</p>
             <div className="flex items-center justify-center gap-8">
               <div className="flex items-center justify-center">
-                <img 
+                <Image 
                   src="/images/Seal.svg" 
                   alt="SEAL"
+                  width={32}
+                  height={32}
                   className="h-8"
                 />
               </div>
               <div className="flex items-center justify-center">
-                <img 
+                <Image 
                   src="/images/Walrus.png" 
                   alt="WALRUS"
+                  width={24}
+                  height={24}
                   className="h-6"
                 />
               </div>

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Russo_One, Albert_Sans } from 'next/font/google'
 import { WalletProviders } from '@/providers/WalletProvider'
+import { UploadProvider } from '@/contexts/UploadContext'
+import GlobalUploadProgress from '@/components/upload/GlobalUploadProgress'
 import '@mysten/dapp-kit/dist/index.css'
 import './globals.css'
 
@@ -30,7 +32,10 @@ export default function RootLayout({
     <html lang="en" className={`${russo.variable} ${albert.variable}`}>
       <body className="antialiased font-albert">
         <WalletProviders>
-          {children}
+          <UploadProvider>
+            {children}
+            <GlobalUploadProgress />
+          </UploadProvider>
         </WalletProviders>
       </body>
     </html>

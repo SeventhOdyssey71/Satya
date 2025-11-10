@@ -1,6 +1,100 @@
-// API Configuration Constants
+// Satya Marketplace Configuration Constants
+// All configurations loaded from environment variables
+
+// ============================================
+// SUI BLOCKCHAIN CONFIGURATION
+// ============================================
+
+export const SUI_CONFIG = {
+  NETWORK: process.env.NEXT_PUBLIC_SUI_NETWORK as 'testnet' | 'mainnet' | 'devnet' || 'testnet',
+  RPC_URL: process.env.NEXT_PUBLIC_SUI_RPC_URL || 'https://fullnode.testnet.sui.io:443',
+  WEBSOCKET_URL: process.env.NEXT_PUBLIC_SUI_WEBSOCKET_URL || 'wss://fullnode.testnet.sui.io:9001',
+} as const
+
+// ============================================
+// MARKETPLACE CONTRACT CONFIGURATION
+// ============================================
+
+export const MARKETPLACE_CONFIG = {
+  PACKAGE_ID: process.env.NEXT_PUBLIC_MARKETPLACE_PACKAGE_ID || '',
+  OBJECT_ID: process.env.NEXT_PUBLIC_MARKETPLACE_V2_OBJECT_ID || '',
+  ADMIN_CAP: process.env.NEXT_PUBLIC_MARKETPLACE_V2_ADMIN_CAP || '',
+  TREASURY_ADDRESS: process.env.NEXT_PUBLIC_TREASURY_ADDRESS || '',
+  
+  // Platform Settings
+  PLATFORM_FEE_PERCENTAGE: parseInt(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE || '250', 10),
+  FEE_DENOMINATOR: parseInt(process.env.NEXT_PUBLIC_FEE_DENOMINATOR || '10000', 10),
+  
+  // Gas Configuration
+  DEFAULT_GAS_BUDGET: parseInt(process.env.NEXT_PUBLIC_DEFAULT_GAS_BUDGET || '100000000', 10),
+  MAX_GAS_BUDGET: parseInt(process.env.NEXT_PUBLIC_MAX_GAS_BUDGET || '1000000000', 10),
+} as const
+
+// ============================================
+// SEAL ENCRYPTION CONFIGURATION
+// ============================================
+
+export const SEAL_CONFIG = {
+  PACKAGE_ID: process.env.NEXT_PUBLIC_SEAL_PACKAGE_ID || '',
+  UPGRADE_CAP_ID: process.env.NEXT_PUBLIC_SEAL_UPGRADE_CAP_ID || '',
+  
+  // Key Servers
+  KEY_SERVERS: [
+    {
+      OBJECT_ID: process.env.NEXT_PUBLIC_SEAL_KEY_SERVER_1_OBJECT_ID || '',
+      URL: process.env.NEXT_PUBLIC_SEAL_KEY_SERVER_1_URL || '',
+    },
+    {
+      OBJECT_ID: process.env.NEXT_PUBLIC_SEAL_KEY_SERVER_2_OBJECT_ID || '',
+      URL: process.env.NEXT_PUBLIC_SEAL_KEY_SERVER_2_URL || '',
+    },
+  ],
+  
+  // Agent Configuration
+  agent: {
+    threshold: parseInt(process.env.NEXT_PUBLIC_SEAL_THRESHOLD || '2', 10),
+    defaultEpochs: parseInt(process.env.NEXT_PUBLIC_SEAL_DEFAULT_EPOCHS || '200', 10),
+    sessionTtlMinutes: parseInt(process.env.NEXT_PUBLIC_SEAL_SESSION_TTL_MINUTES || '30', 10),
+    cacheSize: parseInt(process.env.NEXT_PUBLIC_SEAL_CACHE_SIZE || '100', 10),
+    maxRetries: parseInt(process.env.NEXT_PUBLIC_SEAL_MAX_RETRIES || '3', 10),
+  },
+} as const
+
+// ============================================
+// WALRUS STORAGE CONFIGURATION
+// ============================================
+
+export const WALRUS_CONFIG = {
+  AGGREGATOR_URL: process.env.NEXT_PUBLIC_WALRUS_AGGREGATOR || 'https://aggregator-devnet.walrus.space',
+  PUBLISHER_URL: process.env.NEXT_PUBLIC_WALRUS_PUBLISHER || 'https://publisher-devnet.walrus.space',
+  SYSTEM_OBJECT: process.env.NEXT_PUBLIC_WALRUS_SYSTEM_OBJECT || '',
+  
+  // Storage Nodes
+  STORAGE_NODES: [
+    process.env.NEXT_PUBLIC_WALRUS_STORAGE_NODE_1 || '',
+    process.env.NEXT_PUBLIC_WALRUS_STORAGE_NODE_2 || '',
+    process.env.NEXT_PUBLIC_WALRUS_STORAGE_NODE_3 || '',
+    process.env.NEXT_PUBLIC_WALRUS_STORAGE_NODE_4 || '',
+    process.env.NEXT_PUBLIC_WALRUS_STORAGE_NODE_5 || '',
+  ].filter(Boolean),
+  
+  // Agent Configuration
+  agent: {
+    defaultEpochs: parseInt(process.env.NEXT_PUBLIC_WALRUS_DEFAULT_EPOCHS || '5', 10),
+    maxFileSize: parseInt(process.env.NEXT_PUBLIC_WALRUS_MAX_FILE_SIZE || '1073741824', 10), // 1GB
+    chunkSize: parseInt(process.env.NEXT_PUBLIC_WALRUS_CHUNK_SIZE || '10485760', 10), // 10MB
+    maxRetries: parseInt(process.env.NEXT_PUBLIC_WALRUS_MAX_RETRIES || '3', 10),
+    cacheSizeMB: parseInt(process.env.NEXT_PUBLIC_WALRUS_CACHE_SIZE_MB || '100', 10),
+    retryDelayMs: 1000, // Base retry delay
+  },
+} as const
+
+// ============================================
+// API CONFIGURATION (for backward compatibility)
+// ============================================
+
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+  BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001',
   ENDPOINTS: {
     // Authentication
     AUTH: {
@@ -39,32 +133,27 @@ export const API_CONFIG = {
   },
 } as const
 
-// Sui Configuration
-export const SUI_CONFIG = {
-  NETWORK: process.env.NEXT_PUBLIC_SUI_NETWORK as 'testnet' | 'mainnet' | 'devnet',
-  RPC_URL: process.env.NEXT_PUBLIC_SUI_RPC_URL || 'https://fullnode.testnet.sui.io',
-} as const
+// ============================================
+// APPLICATION CONFIGURATION
+// ============================================
 
-// Walrus Configuration
-export const WALRUS_CONFIG = {
-  PUBLISHER_URL: process.env.NEXT_PUBLIC_WALRUS_PUBLISHER || 'https://walrus-testnet-publisher.nodes.guru',
-  AGGREGATOR_URL: process.env.NEXT_PUBLIC_WALRUS_AGGREGATOR || 'https://walrus-testnet-aggregator.nodes.guru',
-} as const
-
-// Application Configuration
 export const APP_CONFIG = {
   NAME: 'Satya Data Marketplace',
   VERSION: '1.0.0',
-  ENVIRONMENT: process.env.NEXT_PUBLIC_APP_ENV || 'development',
+  ENVIRONMENT: process.env.NEXT_PUBLIC_NODE_ENV || 'development',
   
   // File Upload Limits
-  MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
+  MAX_FILE_SIZE: parseInt(process.env.NEXT_PUBLIC_WALRUS_MAX_FILE_SIZE || (100 * 1024 * 1024).toString(), 10),
   ALLOWED_FILE_TYPES: [
     'application/json',
     'application/octet-stream',
     'text/csv',
     'application/zip',
     'application/x-tar',
+    'application/x-gzip',
+    'application/x-compressed',
+    'model/onnx', // ONNX model files
+    'application/x-pickle', // Pickle files
   ],
   
   // UI Configuration
@@ -72,4 +161,77 @@ export const APP_CONFIG = {
     DEFAULT_PAGE_SIZE: 12,
     MAX_PAGE_SIZE: 50,
   },
+  
+  // Performance Settings
+  PARALLEL_UPLOADS: parseInt(process.env.NEXT_PUBLIC_PARALLEL_UPLOADS || '3', 10),
+  PARALLEL_DOWNLOADS: parseInt(process.env.NEXT_PUBLIC_PARALLEL_DOWNLOADS || '5', 10),
+  PARALLEL_VERIFICATIONS: parseInt(process.env.NEXT_PUBLIC_PARALLEL_VERIFICATIONS || '2', 10),
+  
+  // Cache Settings
+  CACHE_TTL_SECONDS: parseInt(process.env.NEXT_PUBLIC_CACHE_TTL_SECONDS || '1800', 10),
+  CACHE_MAX_SIZE: parseInt(process.env.NEXT_PUBLIC_CACHE_MAX_SIZE || '1000', 10),
+  
+  // Development Settings
+  DEBUG_MODE: process.env.NEXT_PUBLIC_DEBUG_MODE === 'true',
+  VERBOSE_LOGGING: process.env.NEXT_PUBLIC_VERBOSE_LOGGING === 'true',
+  
+  // Mock Services
+  MOCK_WALRUS: process.env.NEXT_PUBLIC_MOCK_WALRUS === 'true',
+  MOCK_SEAL: process.env.NEXT_PUBLIC_MOCK_SEAL === 'true',
+  MOCK_SUI: process.env.NEXT_PUBLIC_MOCK_SUI === 'true',
 } as const
+
+// ============================================
+// NAUTILUS TEE CONFIGURATION
+// ============================================
+
+export const NAUTILUS_CONFIG = {
+  // For local development
+  LOCAL_ENCLAVE_URL: 'http://localhost:8080',
+  
+  // Attestation settings
+  ATTESTATION_VALIDITY_MS: parseInt(process.env.NEXT_PUBLIC_ATTESTATION_VALIDITY_MS || '86400000', 10), // 24 hours
+  DEFAULT_ACCESS_DURATION_MS: parseInt(process.env.NEXT_PUBLIC_DEFAULT_ACCESS_DURATION_MS || '2592000000', 10), // 30 days
+} as const
+
+// ============================================
+// VALIDATION UTILITIES
+// ============================================
+
+export const validateConfiguration = () => {
+  const requiredConfigs = [
+    { key: 'MARKETPLACE_PACKAGE_ID', value: MARKETPLACE_CONFIG.PACKAGE_ID },
+    { key: 'SEAL_PACKAGE_ID', value: SEAL_CONFIG.PACKAGE_ID },
+    { key: 'WALRUS_AGGREGATOR_URL', value: WALRUS_CONFIG.AGGREGATOR_URL },
+    { key: 'WALRUS_PUBLISHER_URL', value: WALRUS_CONFIG.PUBLISHER_URL },
+  ]
+  
+  const missingConfigs = requiredConfigs.filter(config => !config.value)
+  
+  if (missingConfigs.length > 0) {
+    console.warn('Missing required configurations:', missingConfigs.map(c => c.key))
+    if (APP_CONFIG.ENVIRONMENT === 'production') {
+      throw new Error(`Missing required configurations: ${missingConfigs.map(c => c.key).join(', ')}`)
+    }
+  }
+  
+  return {
+    valid: missingConfigs.length === 0,
+    missing: missingConfigs.map(c => c.key)
+  }
+}
+
+// ============================================
+// TYPE EXPORTS
+// ============================================
+
+export type NetworkType = typeof SUI_CONFIG.NETWORK
+export type EnvironmentType = typeof APP_CONFIG.ENVIRONMENT
+
+// Validate configuration on module load (non-production only)
+if (typeof window !== 'undefined' && APP_CONFIG.ENVIRONMENT !== 'production') {
+  const validation = validateConfiguration()
+  if (!validation.valid) {
+    console.log('Configuration validation:', validation)
+  }
+}
