@@ -20,6 +20,33 @@ export class SuiMarketplaceClient {
     });
   }
 
+  // Create a transaction for wallet signing (dapp-kit compatible)
+  createListingTransaction(
+    listing: Omit<DataListing, 'id' | 'createdAt' | 'isActive'>,
+    sellerAddress: string
+  ): Transaction {
+    const tx = new Transaction();
+    
+    tx.moveCall({
+      target: `${this.config.packageId}::marketplace::create_listing`,
+      arguments: [
+        tx.object(this.config.marketplaceObjectId),
+        tx.pure.string(listing.title),
+        tx.pure.string(listing.description),
+        tx.pure.string(listing.category),
+        tx.pure.u64(listing.price.toString()),
+        tx.pure.string(listing.encryptedBlobId),
+        tx.pure.string(listing.encryptionPolicyId),
+        tx.pure.vector('u8', Array.from(Buffer.from(listing.dataHash, 'hex'))),
+        tx.pure.u32(listing.maxDownloads || 100),
+        tx.pure.u32(30), // expiry days
+        tx.object('0x6') // clock object
+      ]
+    });
+
+    return tx;
+  }
+
   async createListing(
     listing: Omit<DataListing, 'id' | 'createdAt' | 'isActive'>,
     keypair: Ed25519Keypair
@@ -31,24 +58,8 @@ export class SuiMarketplaceClient {
         console.warn('SUI Marketplace: Using development mock listing ID', { mockListingId });
         return mockListingId;
       }
-      const tx = new Transaction();
       
-      tx.moveCall({
-        target: `${this.config.packageId}::data_marketplace::create_listing`,
-        arguments: [
-          tx.object(this.config.marketplaceObjectId),
-          tx.pure.string(listing.title),
-          tx.pure.string(listing.description),
-          tx.pure.string(listing.category),
-          tx.pure.u64(listing.price.toString()),
-          tx.pure.string(listing.encryptedBlobId),
-          tx.pure.string(listing.encryptionPolicyId),
-          tx.pure.vector('u8', Array.from(Buffer.from(listing.dataHash, 'hex'))),
-          tx.pure.u32(listing.maxDownloads || 100),
-          tx.pure.u32(30), // expiry days
-          tx.object('0x6') // clock object
-        ]
-      });
+      const tx = this.createListingTransaction(listing, keypair.toSuiAddress());
 
       const result = await this.client.signAndExecuteTransaction({
         signer: keypair,

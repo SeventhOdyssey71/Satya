@@ -155,18 +155,22 @@ export default function ModelUploadWizard() {
       return
     }
 
-    // Create mock keypair using current account (in production this would use real wallet signing)
-    const mockKeypair = {
+    // Create wallet object for marketplace service
+    const walletObject = {
       toSuiAddress: () => walletAddress
     }
 
     try {
-      const result = await upload.uploadModel(data, mockKeypair)
+      const result = await upload.uploadModel(data, walletObject)
       if (result.success) {
         setCurrentStep(steps.length) // Go to result step
+      } else {
+        console.error('Upload failed:', result.error)
+        alert(`Upload failed: ${result.error}`)
       }
     } catch (error) {
       console.error('Upload failed:', error)
+      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 

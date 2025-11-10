@@ -78,7 +78,7 @@ export class MarketplaceService {
   // Upload and list a model for sale
   async uploadAndListModel(
     request: ModelUploadRequest,
-    sellerKeypair: any
+    sellerWallet: { toSuiAddress: () => string }
   ): Promise<OperationResult<{ listingId: string; blobId: string }>> {
     const operationId = crypto.randomUUID();
     logger.info('Starting model upload and listing', {
@@ -101,7 +101,7 @@ export class MarketplaceService {
         PolicyType.PAYMENT_GATED,
         {
           price: Number(request.price),
-          seller: sellerKeypair.toSuiAddress(),
+          seller: sellerWallet.toSuiAddress(),
           assetId: `model_${operationId}`
         }
       );
@@ -138,26 +138,30 @@ export class MarketplaceService {
       // Step 4: Calculate data hash for integrity
       const dataHash = await this.calculateFileHash(fileData);
 
-      // Step 5: Create on-chain listing
-      logger.debug('Creating on-chain listing', { operationId });
-      const listingId = await this.suiClient.createListing({
-        seller: sellerKeypair.toSuiAddress(),
-        title: request.title,
-        description: request.description,
-        category: request.category,
-        price: request.price,
-        size: request.file.size,
-        sampleAvailable: request.sampleAvailable || false,
-        encryptedBlobId: uploadResult.blobId,
-        encryptionPolicyId: encryptionResult.policyId,
-        dataHash,
-        attestationId: undefined,
-        maxDownloads: request.maxDownloads,
-        allowedBuyers: request.allowedBuyers,
-        expiryDate: request.expiryDays ? 
-          new Date(Date.now() + request.expiryDays * 24 * 60 * 60 * 1000) : 
-          undefined
-      }, sellerKeypair);
+      // Step 5: Return transaction for wallet signing (in production this needs wallet integration)
+      logger.debug('Creating on-chain listing transaction', { operationId });
+      
+      // For development, create a mock listing ID
+      const listingId = process.env.NODE_ENV === 'development' 
+        ? `dev_listing_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+        : await this.createListingWithWallet({
+            seller: sellerWallet.toSuiAddress(),
+            title: request.title,
+            description: request.description,
+            category: request.category,
+            price: request.price,
+            size: request.file.size,
+            sampleAvailable: request.sampleAvailable || false,
+            encryptedBlobId: uploadResult.blobId,
+            encryptionPolicyId: encryptionResult.policyId,
+            dataHash,
+            attestationId: undefined,
+            maxDownloads: request.maxDownloads,
+            allowedBuyers: request.allowedBuyers,
+            expiryDate: request.expiryDays ? 
+              new Date(Date.now() + request.expiryDays * 24 * 60 * 60 * 1000) : 
+              undefined
+          });
 
       logger.info('Model upload and listing completed successfully', {
         operationId,
@@ -509,6 +513,12 @@ export class MarketplaceService {
   }
 
   // Private helper methods
+  private async createListingWithWallet(listingData: any): Promise<string> {
+    // This method would integrate with the dapp-kit wallet for transaction signing
+    // For now, return a placeholder that indicates wallet integration is needed
+    throw new Error('Wallet transaction signing integration needed');
+  }
+
   private async validateUploadRequest(request: ModelUploadRequest): Promise<void> {
     if (!request.title || request.title.length < 1) {
       throw new MarketplaceError(ErrorCode.INVALID_INPUT, 'Title is required');
