@@ -31,19 +31,15 @@ export class SuiMarketplaceClient {
     tx.setGasBudget(1_000_000_000); // 1 SUI gas budget
     tx.setSender(sellerAddress); // Set the sender address
     
-    // Create a listing with the correct function signature
+    // Create a listing with simplified parameters
     tx.moveCall({
       target: `${this.config.packageId}::marketplace_v2::create_listing`,
       arguments: [
         tx.object(this.config.marketplaceObjectId), // marketplace object
         tx.pure.string(listing.title), // title
         tx.pure.string(listing.description), // description
-        tx.pure.string(listing.category), // category
         tx.pure.u64(listing.price.toString()), // price
-        tx.pure.u64(listing.size.toString()), // size
         tx.pure.string(listing.encryptedBlobId), // walrus_blob_id
-        tx.pure.bool(listing.sampleAvailable), // sample_available
-        tx.object('0x6') // clock object
       ]
     });
 
