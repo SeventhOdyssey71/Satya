@@ -1,9 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
-import { CheckCircle, Clock, ArrowRight, ArrowLeft, Upload, Shield, DollarSign, Tag } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { CheckCircle, Clock, ArrowRight, ArrowLeft, Upload, Shield, DollarSign, Tag, AlertCircle, Wifi, WifiOff } from 'lucide-react'
 import FileUploadZone from './FileUploadZone'
 import ProgressIndicator from './ProgressIndicator'
+import UploadProgress from './UploadProgress'
+import UploadStatus from './UploadStatus'
+import { useUpload, useWalletUpload, useUploadValidation } from '@/hooks'
 
 interface ModelUploadData {
   // Basic Info
@@ -41,6 +44,9 @@ interface StepProps {
   isFirst: boolean
   isLast: boolean
   isValid: boolean
+  validation?: any
+  wallet?: any
+  onUpload?: () => Promise<void>
 }
 
 const CATEGORIES = [
@@ -74,8 +80,46 @@ export default function ModelUploadWizard() {
     isPrivate: false
   })
 
+  // Hooks for business logic
+  const upload = useUpload()
+  const wallet = useWalletUpload()
+  const validation = useUploadValidation(data)
+
   const updateData = (updates: Partial<ModelUploadData>) => {
     setData(prev => ({ ...prev, ...updates }))
+  }
+
+  // Check wallet connection on mount
+  useEffect(() => {
+    wallet.checkWalletConnection()
+  }, [wallet])
+
+  // Handle upload completion
+  const handleUpload = async () => {
+    if (!wallet.isConnected) {
+      await wallet.connectWallet()
+      return
+    }
+
+    const walletValidation = wallet.validateUploadRequirements()
+    if (!walletValidation.canUpload) {
+      alert(`Cannot upload: ${walletValidation.issues.join(', ')}`)
+      return
+    }
+
+    // Create mock keypair for demo (in real app, this would come from wallet)
+    const mockKeypair = {
+      toSuiAddress: () => wallet.walletAddress || '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+    }
+
+    try {
+      const result = await upload.uploadModel(data, mockKeypair)
+      if (result.success) {
+        setCurrentStep(steps.length) // Go to result step
+      }
+    } catch (error) {
+      console.error('Upload failed:', error)
+    }
   }
 
   const steps = [
@@ -83,32 +127,31 @@ export default function ModelUploadWizard() {
       title: 'Basic Information',
       description: 'Enter model details and metadata',
       component: BasicInfoStep,
-      validate: (data: ModelUploadData) => 
-        !!(data.title && data.description && data.category)
+      validate: () => validation.isStepValid('basicInfo')
     },
     {
       title: 'File Upload',
       description: 'Upload your model and optional files',
       component: FileUploadStep,
-      validate: (data: ModelUploadData) => !!data.modelFile
+      validate: () => validation.isStepValid('files')
     },
     {
       title: 'Pricing & Access',
       description: 'Set pricing and access controls',
       component: PricingStep,
-      validate: (data: ModelUploadData) => !!data.price
+      validate: () => validation.isStepValid('pricing')
     },
     {
       title: 'Security & Privacy',
       description: 'Configure encryption and privacy settings',
       component: SecurityStep,
-      validate: () => true
+      validate: () => validation.isStepValid('security')
     },
     {
       title: 'Review & Submit',
       description: 'Review your model and submit to marketplace',
       component: ReviewStep,
-      validate: () => true
+      validate: () => validation.isValid
     }
   ]
 
@@ -124,6 +167,57 @@ export default function ModelUploadWizard() {
     }
   }
 
+  // Check if we're in upload progress or result mode
+  if (upload.isUploading) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <UploadProgress
+          phases={upload.phases.map(phase => ({
+            ...phase,
+            icon: phase.id === 'validation' ? Upload :
+                  phase.id === 'encryption' ? Shield :
+                  phase.id === 'upload' ? Wifi :
+                  phase.id === 'listing' ? CheckCircle : Upload
+          }))}
+          currentPhase={upload.currentPhase || undefined}
+          overallProgress={upload.uploadProgress}
+          onCancel={upload.cancelUpload}
+          className="mt-8"
+        />
+      </div>
+    )
+  }
+
+  if (upload.result || currentStep >= steps.length) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <UploadStatus
+          result={upload.result || { success: false, error: 'Unknown error' }}
+          onReset={() => {
+            upload.reset()
+            setCurrentStep(0)
+            setData({
+              title: '',
+              description: '',
+              category: '',
+              tags: [],
+              price: '',
+              enableSample: false,
+              enableEncryption: true,
+              policyType: 'payment-gated',
+              accessDuration: 30,
+              isPrivate: false
+            })
+          }}
+          onViewListing={(listingId) => {
+            window.location.href = `/model/${listingId}`
+          }}
+          className="mt-8"
+        />
+      </div>
+    )
+  }
+
   const CurrentStepComponent = steps[currentStep].component
 
   return (
@@ -131,6 +225,55 @@ export default function ModelUploadWizard() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Upload Model</h1>
         <p className="text-gray-600">Share your AI model with the Satya marketplace</p>
+        
+        {/* Wallet Connection Status */}
+        <div className="mt-4 flex items-center space-x-4">
+          <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
+            wallet.isConnected 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {wallet.isConnected ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
+            <span>
+              {wallet.isConnected 
+                ? `Connected: ${wallet.formattedAddress}` 
+                : 'Wallet Not Connected'
+              }
+            </span>
+          </div>
+          
+          {wallet.isConnected && (
+            <div className="text-sm text-gray-600">
+              Balance: {wallet.formattedBalance}
+            </div>
+          )}
+
+          {!wallet.isConnected && (
+            <button
+              onClick={wallet.connectWallet}
+              disabled={wallet.isConnecting}
+              className="px-4 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {wallet.isConnecting ? 'Connecting...' : 'Connect Wallet'}
+            </button>
+          )}
+        </div>
+
+        {/* Validation Summary */}
+        {(validation.hasErrors || validation.hasWarnings) && (
+          <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <div className="flex items-start">
+              <AlertCircle className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-yellow-800">Form Validation</p>
+                <div className="text-sm text-yellow-700 mt-1">
+                  {validation.hasErrors && <p>• {validation.overallValidation.errorCount} errors need to be fixed</p>}
+                  {validation.hasWarnings && <p>• {validation.overallValidation.warningCount} warnings to review</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Progress Indicator */}
@@ -138,7 +281,7 @@ export default function ModelUploadWizard() {
         steps={steps.map(step => ({ title: step.title, description: step.description }))}
         currentStep={currentStep}
         completedSteps={steps.slice(0, currentStep).map((_, index) => 
-          steps[index].validate(data) ? index : -1
+          steps[index].validate() ? index : -1
         ).filter(index => index !== -1)}
       />
 
@@ -151,7 +294,10 @@ export default function ModelUploadWizard() {
           onPrev={prevStep}
           isFirst={currentStep === 0}
           isLast={currentStep === steps.length - 1}
-          isValid={steps[currentStep].validate(data)}
+          isValid={steps[currentStep].validate()}
+          validation={validation}
+          wallet={wallet}
+          onUpload={handleUpload}
         />
       </div>
     </div>
@@ -540,15 +686,20 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Step
   )
 }
 
-function ReviewStep({ data, onChange, onNext, onPrev, isFirst }: StepProps) {
+function ReviewStep({ data, onPrev, isFirst, validation, wallet, onUpload }: StepProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async () => {
+    if (!onUpload) return
+    
     setIsSubmitting(true)
-    // TODO: Implement actual upload logic
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setIsSubmitting(false)
-    alert('Model uploaded successfully!')
+    try {
+      await onUpload()
+    } catch (error) {
+      console.error('Upload failed:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -556,19 +707,60 @@ function ReviewStep({ data, onChange, onNext, onPrev, isFirst }: StepProps) {
       <div className="bg-white rounded-lg border p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Review Your Model</h3>
         
+        {/* Validation Summary */}
+        {validation && (validation.hasErrors || validation.hasWarnings) && (
+          <div className={`mb-4 p-4 rounded-lg border ${
+            validation.hasErrors 
+              ? 'bg-red-50 border-red-200' 
+              : 'bg-yellow-50 border-yellow-200'
+          }`}>
+            <div className="flex items-start">
+              <AlertCircle className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${
+                validation.hasErrors ? 'text-red-500' : 'text-yellow-500'
+              }`} />
+              <div>
+                <p className={`text-sm font-medium ${
+                  validation.hasErrors ? 'text-red-800' : 'text-yellow-800'
+                }`}>
+                  {validation.hasErrors ? 'Fix Required Issues' : 'Review Warnings'}
+                </p>
+                <div className={`text-sm mt-1 ${
+                  validation.hasErrors ? 'text-red-700' : 'text-yellow-700'
+                }`}>
+                  {validation.hasErrors && <p>• {validation.overallValidation.errorCount} errors must be fixed</p>}
+                  {validation.hasWarnings && <p>• {validation.overallValidation.warningCount} warnings to review</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Wallet Connection Check */}
+        {wallet && !wallet.isConnected && (
+          <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
+            <div className="flex items-start">
+              <WifiOff className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-red-800">Wallet Not Connected</p>
+                <p className="text-sm text-red-700 mt-1">Connect your wallet to upload the model</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium text-gray-500">Title</p>
-              <p className="text-sm text-gray-900">{data.title}</p>
+              <p className="text-sm text-gray-900">{data.title || 'Not specified'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Category</p>
-              <p className="text-sm text-gray-900">{data.category}</p>
+              <p className="text-sm text-gray-900">{data.category || 'Not specified'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Price</p>
-              <p className="text-sm text-gray-900">{data.price} SUI</p>
+              <p className="text-sm text-gray-900">{data.price ? `${data.price} SUI` : 'Not specified'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Encryption</p>
@@ -578,17 +770,46 @@ function ReviewStep({ data, onChange, onNext, onPrev, isFirst }: StepProps) {
           
           <div>
             <p className="text-sm font-medium text-gray-500">Description</p>
-            <p className="text-sm text-gray-900">{data.description}</p>
+            <p className="text-sm text-gray-900">{data.description || 'Not specified'}</p>
           </div>
+
+          {data.tags.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-500">Tags</p>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {data.tags.map(tag => (
+                  <span key={tag} className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div>
             <p className="text-sm font-medium text-gray-500">Files</p>
             <div className="text-sm text-gray-900 space-y-1">
-              {data.modelFile && <p>• Model: {data.modelFile.name}</p>}
+              {data.modelFile ? (
+                <p>• Model: {data.modelFile.name} ({(data.modelFile.size / 1024 / 1024).toFixed(1)} MB)</p>
+              ) : (
+                <p className="text-red-600">• Model file: Not selected</p>
+              )}
               {data.thumbnailFile && <p>• Thumbnail: {data.thumbnailFile.name}</p>}
               {data.sampleFile && <p>• Sample: {data.sampleFile.name}</p>}
             </div>
           </div>
+
+          {(data.maxDownloads || data.accessDuration || data.expiryDays) && (
+            <div>
+              <p className="text-sm font-medium text-gray-500">Access Settings</p>
+              <div className="text-sm text-gray-900 space-y-1">
+                {data.maxDownloads && <p>• Max downloads: {data.maxDownloads}</p>}
+                {data.accessDuration && <p>• Access duration: {data.accessDuration} days</p>}
+                {data.expiryDays && <p>• Expires in: {data.expiryDays} days</p>}
+                {data.isPrivate && <p>• Private listing</p>}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -602,13 +823,23 @@ function ReviewStep({ data, onChange, onNext, onPrev, isFirst }: StepProps) {
         </button>
         <button
           onClick={handleSubmit}
-          disabled={isSubmitting}
+          disabled={isSubmitting || (validation?.hasErrors) || (wallet && !wallet.isConnected)}
           className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isSubmitting ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
               Uploading...
+            </>
+          ) : wallet && !wallet.isConnected ? (
+            <>
+              <WifiOff className="h-4 w-4 mr-2" />
+              Connect Wallet First
+            </>
+          ) : validation?.hasErrors ? (
+            <>
+              <AlertCircle className="h-4 w-4 mr-2" />
+              Fix Errors First
             </>
           ) : (
             <>

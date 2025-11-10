@@ -45,8 +45,13 @@ let uploadService: UploadService | null = null;
 let downloadService: DownloadService | null = null;
 let userService: UserService | null = null;
 
-// Singleton factory functions
+// Singleton factory functions with runtime checks
 export function getMarketplaceService(): MarketplaceService {
+  if (typeof window === 'undefined') {
+    // During SSR/build time, return a mock or minimal service
+    return {} as MarketplaceService;
+  }
+  
   if (!marketplaceService) {
     marketplaceService = new MarketplaceService();
   }
@@ -54,6 +59,10 @@ export function getMarketplaceService(): MarketplaceService {
 }
 
 export function getUploadService(): UploadService {
+  if (typeof window === 'undefined') {
+    return {} as UploadService;
+  }
+  
   if (!uploadService) {
     uploadService = new UploadService();
   }
@@ -61,6 +70,10 @@ export function getUploadService(): UploadService {
 }
 
 export function getDownloadService(): DownloadService {
+  if (typeof window === 'undefined') {
+    return {} as DownloadService;
+  }
+  
   if (!downloadService) {
     downloadService = new DownloadService();
   }
@@ -68,6 +81,10 @@ export function getDownloadService(): DownloadService {
 }
 
 export function getUserService(): UserService {
+  if (typeof window === 'undefined') {
+    return {} as UserService;
+  }
+  
   if (!userService) {
     userService = new UserService();
   }

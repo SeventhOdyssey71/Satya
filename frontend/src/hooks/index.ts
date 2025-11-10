@@ -5,3 +5,8 @@ export { useWalrus } from './useWalrus'
 export { useSeal } from './useSeal'
 export { useNautilus } from './useNautilus'
 export { useSmartContract } from './useSmartContract'
+
+// Upload-specific hooks
+export { useUpload } from './useUpload'
+export { useWalletUpload } from './useWalletUpload'
+export { useUploadValidation } from './useUploadValidation'
