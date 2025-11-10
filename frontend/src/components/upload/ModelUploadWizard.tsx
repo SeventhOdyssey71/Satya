@@ -322,7 +322,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
     <div className="space-y-6">
       <div className="bg-white rounded-lg border p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <Tag className="h-5 w-5 mr-2 text-blue-600" />
+          <Tag className="h-5 w-5 mr-2 text-gray-600" />
           Model Information
         </h3>
         
@@ -335,7 +335,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
               type="text"
               value={data.title}
               onChange={(e) => onChange({ title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
               placeholder="Enter a descriptive title for your model"
             />
           </div>
@@ -348,7 +348,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
               value={data.description}
               onChange={(e) => onChange({ description: e.target.value })}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
               placeholder="Describe what your model does, its accuracy, use cases, etc."
             />
           </div>
@@ -361,7 +361,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
               <select
                 value={data.category}
                 onChange={(e) => onChange({ category: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
                 <option value="">Select a category</option>
                 {CATEGORIES.map(category => (
@@ -380,12 +380,12 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-gray-500"
                   placeholder="Add a tag"
                 />
                 <button
                   onClick={addTag}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-black text-white rounded-r-md hover:bg-gray-800 transition-colors"
                 >
                   Add
                 </button>
@@ -400,12 +400,12 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
                 {data.tags.map(tag => (
                   <span
                     key={tag}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
                   >
                     {tag}
                     <button
                       onClick={() => removeTag(tag)}
-                      className="ml-2 text-blue-600 hover:text-blue-800"
+                      className="ml-2 text-gray-600 hover:text-gray-800"
                     >
                       ×
                     </button>
@@ -451,7 +451,7 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid }: St
     <div className="space-y-6">
       <div className="bg-white rounded-lg border p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <Upload className="h-5 w-5 mr-2 text-blue-600" />
+          <Upload className="h-5 w-5 mr-2 text-gray-600" />
           Upload Files
         </h3>
         
@@ -500,7 +500,7 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid }: St
                 type="checkbox"
                 checked={data.enableSample}
                 onChange={(e) => onChange({ enableSample: e.target.checked })}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
               />
               <span className="text-sm font-medium text-gray-700">
                 Include Sample File
@@ -537,7 +537,7 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepP
     <div className="space-y-6">
       <div className="bg-white rounded-lg border p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <DollarSign className="h-5 w-5 mr-2 text-blue-600" />
+          <DollarSign className="h-5 w-5 mr-2 text-gray-600" />
           Pricing & Access
         </h3>
         
@@ -552,7 +552,7 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepP
               onChange={(e) => onChange({ price: e.target.value })}
               min="0"
               step="0.001"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
               placeholder="0.001"
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -570,7 +570,7 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepP
                 value={data.maxDownloads || ''}
                 onChange={(e) => onChange({ maxDownloads: e.target.value ? parseInt(e.target.value) : undefined })}
                 min="1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder="Unlimited"
               />
             </div>
@@ -585,7 +585,7 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepP
                 onChange={(e) => onChange({ accessDuration: parseInt(e.target.value) })}
                 min="1"
                 max="365"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
               />
             </div>
           </div>
@@ -608,7 +608,7 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Step
     <div className="space-y-6">
       <div className="bg-white rounded-lg border p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <Shield className="h-5 w-5 mr-2 text-blue-600" />
+          <Shield className="h-5 w-5 mr-2 text-gray-600" />
           Security & Privacy
         </h3>
         
@@ -619,7 +619,7 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Step
                 type="checkbox"
                 checked={data.enableEncryption}
                 onChange={(e) => onChange({ enableEncryption: e.target.checked })}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
               />
               <span className="text-sm font-medium text-gray-700">
                 Enable SEAL Encryption
@@ -644,7 +644,7 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Step
                       value={policy.value}
                       checked={data.policyType === policy.value}
                       onChange={(e) => onChange({ policyType: e.target.value })}
-                      className="mt-1 border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="mt-1 border-gray-300 text-gray-600 focus:ring-gray-500"
                     />
                     <div>
                       <div className="text-sm font-medium text-gray-900">{policy.label}</div>
@@ -662,7 +662,7 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Step
                 type="checkbox"
                 checked={data.isPrivate}
                 onChange={(e) => onChange({ isPrivate: e.target.checked })}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
               />
               <span className="text-sm font-medium text-gray-700">
                 Private Listing
@@ -778,7 +778,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, wallet, onUpload }: Ste
               <p className="text-sm font-medium text-gray-500">Tags</p>
               <div className="flex flex-wrap gap-1 mt-1">
                 {data.tags.map(tag => (
-                  <span key={tag} className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                  <span key={tag} className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">
                     {tag}
                   </span>
                 ))}
@@ -824,7 +824,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, wallet, onUpload }: Ste
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || (validation?.hasErrors) || (wallet && !wallet.isConnected)}
-          className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isSubmitting ? (
             <>
@@ -879,7 +879,7 @@ function StepNavigation({
       <button
         onClick={onNext}
         disabled={!isValid}
-        className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="flex items-center px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {nextLabel}
         <ArrowRight className="h-4 w-4 ml-2" />
