@@ -405,7 +405,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
               type="text"
               value={data.title}
               onChange={(e) => onChange({ title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
               placeholder="Enter a descriptive title for your model"
             />
           </div>
@@ -418,7 +418,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
               value={data.description}
               onChange={(e) => onChange({ description: e.target.value })}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
               placeholder="Describe what your model does, its accuracy, use cases, etc."
             />
           </div>
@@ -431,7 +431,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
               <select
                 value={data.category}
                 onChange={(e) => onChange({ category: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
               >
                 <option value="">Select a category</option>
                 {CATEGORIES.map(category => (
@@ -450,7 +450,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
                   placeholder="Add a tag"
                 />
                 <button
@@ -622,7 +622,7 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepP
               onChange={(e) => onChange({ price: e.target.value })}
               min="0"
               step="0.001"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
               placeholder="0.001"
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -640,7 +640,7 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepP
                 value={data.maxDownloads || ''}
                 onChange={(e) => onChange({ maxDownloads: e.target.value ? parseInt(e.target.value) : undefined })}
                 min="1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
                 placeholder="Unlimited"
               />
             </div>
@@ -655,7 +655,7 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepP
                 onChange={(e) => onChange({ accessDuration: parseInt(e.target.value) })}
                 min="1"
                 max="365"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
               />
             </div>
           </div>
