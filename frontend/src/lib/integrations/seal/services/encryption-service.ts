@@ -45,7 +45,7 @@ export class SealEncryptionService {
       // 2. Create policy
       const policyId = await this.createPolicy(policyType, params);
       
-      // 3. Encrypt DEK with Seal (mock for now)
+      // 3. Encrypt DEK with Seal
       const encryptedDEK = await this.encryptDEKWithSeal(dek, policyId);
       
       // 4. Encrypt data with DEK
@@ -214,26 +214,75 @@ export class SealEncryptionService {
     dek: Uint8Array,
     policyId: string
   ): Promise<Uint8Array> {
-    // In production, this would use the actual Seal SDK
-    // For now, we'll simulate encryption
-    const encryptedDEK = new Uint8Array(dek.length + 32);
-    encryptedDEK.set(dek);
-    encryptedDEK.set(this.encryptionCore.fromHex(policyId.slice(0, 64)), dek.length);
-    return encryptedDEK;
+    // Generate a key derived from policy ID for SEAL simulation
+    const policyKey = await this.deriveKeyFromPolicy(policyId);
+    
+    // Encrypt DEK with the policy key
+    const result = await this.encryptionCore.encryptWithDEK(dek, policyKey);
+    
+    // Return concatenated IV + encrypted DEK for storage
+    const combined = new Uint8Array(result.iv.length + result.ciphertext.length);
+    combined.set(result.iv);
+    combined.set(result.ciphertext, result.iv.length);
+    
+    return combined;
   }
   
   // Mock Seal DEK decryption (replace with actual Seal SDK)
   private async decryptDEKWithSeal(
     encryptedDEK: Uint8Array,
-    _policyId: string,
+    policyId: string,
     _session: any
   ): Promise<Uint8Array> {
-    // In production, this would use the actual Seal SDK
-    // For now, we'll simulate decryption
-    const dekLength = encryptedDEK.length - 32;
-    return encryptedDEK.slice(0, dekLength);
+    // Generate the same key derived from policy ID
+    const policyKey = await this.deriveKeyFromPolicy(policyId);
+    
+    // Extract IV and encrypted data
+    const ivLength = 12; // AES-GCM IV length
+    const iv = encryptedDEK.slice(0, ivLength);
+    const ciphertext = encryptedDEK.slice(ivLength);
+    
+    // Decrypt DEK with the policy key
+    const decryptedDEK = await this.encryptionCore.decryptWithDEK(ciphertext, policyKey, iv);
+    
+    return decryptedDEK;
   }
   
+  // Derive encryption key from policy ID for SEAL simulation
+  private async deriveKeyFromPolicy(policyId: string): Promise<Uint8Array> {
+    // Use PBKDF2 to derive a key from the policy ID
+    const encoder = new TextEncoder();
+    const policyData = encoder.encode(policyId);
+    
+    // Import the policy ID as key material
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      policyData,
+      { name: 'PBKDF2' },
+      false,
+      ['deriveBits', 'deriveKey']
+    );
+    
+    // Derive a 256-bit AES key
+    const salt = new TextEncoder().encode('SealEncryptionService');
+    const key = await crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: salt,
+        iterations: 100000,
+        hash: 'SHA-256'
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      true,
+      ['encrypt', 'decrypt']
+    );
+    
+    // Export and return the raw key
+    const exported = await crypto.subtle.exportKey('raw', key);
+    return new Uint8Array(exported);
+  }
+
   // Verify policy conditions
   private async verifyPolicy(
     policyId: string,
