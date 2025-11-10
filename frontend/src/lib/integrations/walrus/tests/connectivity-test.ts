@@ -15,12 +15,23 @@ export interface ConnectivityTestResult {
 
 export class WalrusConnectivityTester {
   private client: WalrusClient;
-  private storageService: WalrusStorageService;
+  private storageService?: WalrusStorageService;
   private results: ConnectivityTestResult[] = [];
 
   constructor() {
     this.client = new WalrusClient('testnet');
-    this.storageService = new WalrusStorageService();
+    // Don't instantiate storage service here to avoid circular dependency
+    // It will be created lazily when needed
+  }
+
+  private getStorageService(): WalrusStorageService {
+    // Lazy load to avoid circular dependency during initial module loading
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { WalrusStorageService: StorageServiceClass } = require('../services/storage-service');
+    if (!this.storageService) {
+      this.storageService = new StorageServiceClass();
+    }
+    return this.storageService!;
   }
 
   // Run all connectivity tests
@@ -265,7 +276,7 @@ export class WalrusConnectivityTester {
       const blob = new Blob([testData], { type: 'application/octet-stream' });
       const file = new File([blob], 'test-large-file.bin');
       
-      const result = await this.storageService.uploadFile(file, {
+      const result = await this.getStorageService().uploadFile(file, {
         forceChunked: true,
         epochs: 1
       });
