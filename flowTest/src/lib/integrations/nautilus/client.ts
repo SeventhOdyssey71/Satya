@@ -1,4 +1,4 @@
-import { PublicKey } from '@mysten/sui.js/keypairs/ed25519';
+import { Ed25519PublicKey } from '@mysten/sui/keypairs/ed25519';
 
 export interface NautilusConfig {
   enclaveUrl: string;
@@ -246,7 +246,7 @@ export class NautilusClient {
   private async verifyAttestationSignature(attestation: AttestationDocument): Promise<boolean> {
     try {
       // Extract the public key from the certificate
-      const publicKey = new PublicKey(attestation.public_key);
+      const publicKey = new Ed25519PublicKey(attestation.public_key);
       
       // Create message to verify (combination of PCRs, user_data, nonce, timestamp)
       const message = `${attestation.pcr0}${attestation.pcr1}${attestation.pcr2}${attestation.user_data}${attestation.nonce}${attestation.timestamp}`;

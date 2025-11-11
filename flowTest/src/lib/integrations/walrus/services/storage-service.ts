@@ -87,7 +87,7 @@ export class WalrusStorageService {
           signerAddress: options.signer.toSuiAddress()
         });
         
-        result = await this.uploadWithSDK(file, options);
+        result = await this.uploadWithSDK(file, { ...options, signer: options.signer });
       } else {
         // Fallback to legacy strategy-based upload
         switch (strategy) {

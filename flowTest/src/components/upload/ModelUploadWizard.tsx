@@ -48,6 +48,7 @@ interface StepProps {
   isValid: boolean
   validation?: any
   isWalletConnected?: boolean
+  onCancel?: () => void
   onUpload?: () => Promise<void>
 }
 
@@ -67,7 +68,12 @@ const POLICY_TYPES = [
   { value: 'allowlist', label: 'Allowlist', description: 'Access for specific addresses' }
 ]
 
-export default function ModelUploadWizard() {
+interface ModelUploadWizardProps {
+  onUploadComplete?: (result: any) => void
+  onCancel?: () => void
+}
+
+export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelUploadWizardProps = {}) {
   const [currentStep, setCurrentStep] = useState(0)
   const [data, setData] = useState<ModelUploadData>({
     title: '',
@@ -127,6 +133,11 @@ export default function ModelUploadWizard() {
       
       alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Marketplace listing created ✓\n\nListing ID: ${uploadResult.listingId || 'completed'}`)
       setCurrentStep(steps.length) // Go to result step
+      
+      // Call the callback if provided
+      if (onUploadComplete) {
+        onUploadComplete(uploadResult)
+      }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -262,13 +273,14 @@ export default function ModelUploadWizard() {
           validation={validation}
           isWalletConnected={isWalletConnected}
           onUpload={handleUpload}
+          onCancel={onCancel}
         />
       </div>
     </div>
   )
 }
 
-function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepProps) {
+function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
   const [newTag, setNewTag] = useState('')
 
   const addTag = () => {
@@ -387,12 +399,13 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
         isFirst={isFirst}
         isValid={isValid}
         nextLabel="Continue to File Upload"
+        onCancel={onCancel}
       />
     </div>
   )
 }
 
-function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepProps) {
+function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
   const handleModelFileSelect = (files: File[]) => {
     if (files.length > 0) {
       onChange({ modelFile: files[0] })
@@ -491,12 +504,13 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid }: St
         isFirst={isFirst}
         isValid={isValid}
         nextLabel="Continue to Pricing"
+        onCancel={onCancel}
       />
     </div>
   )
 }
 
-function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepProps) {
+function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg border p-6">
@@ -562,12 +576,13 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepP
         isFirst={isFirst}
         isValid={isValid}
         nextLabel="Continue to Security"
+        onCancel={onCancel}
       />
     </div>
   )
 }
 
-function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepProps) {
+function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg border p-6">
@@ -645,6 +660,7 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Step
         isFirst={isFirst}
         isValid={isValid}
         nextLabel="Review & Submit"
+        onCancel={onCancel}
       />
     </div>
   )
@@ -822,24 +838,36 @@ function StepNavigation({
   onPrev, 
   isFirst, 
   isValid, 
-  nextLabel = "Continue" 
+  nextLabel = "Continue",
+  onCancel 
 }: {
   onNext: () => void
   onPrev: () => void
   isFirst: boolean
   isValid: boolean
   nextLabel?: string
+  onCancel?: () => void
 }) {
   return (
     <div className="flex justify-between">
-      <button
-        onClick={onPrev}
-        disabled={isFirst}
-        className="flex items-center px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back
-      </button>
+      <div className="flex space-x-3">
+        <button
+          onClick={onPrev}
+          disabled={isFirst}
+          className="flex items-center px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </button>
+        {onCancel && (
+          <button
+            onClick={onCancel}
+            className="px-6 py-2 border border-red-300 rounded-md text-red-700 hover:bg-red-50 transition-colors"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
       <button
         onClick={onNext}
         disabled={!isValid}

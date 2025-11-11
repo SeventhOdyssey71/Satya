@@ -21,31 +21,31 @@ interface ActivityItemProps {
 function ActivityItem({ event }: ActivityItemProps) {
   const getEventDetails = () => {
     switch (event.type) {
-      case 'ModelListed':
+      case 'ListingCreated':
         return {
           icon: <Package className="w-5 h-5 text-blue-600" />,
           title: 'Model Listed',
-          description: `${event.title || 'Untitled Model'} listed by ${event.seller.slice(0, 6)}...${event.seller.slice(-4)}`,
-          price: event.price,
+          description: `${event.title || 'Untitled Model'} listed by ${event.creator.slice(0, 6)}...${event.creator.slice(-4)}`,
+          price: event.downloadPrice,
           bgColor: 'bg-blue-50',
           borderColor: 'border-blue-200'
         }
       
-      case 'ModelPurchased':
+      case 'ListingPurchased':
         return {
           icon: <ShoppingCart className="w-5 h-5 text-green-600" />,
           title: 'Model Purchased',
-          description: `Purchase by ${event.buyer.slice(0, 6)}...${event.buyer.slice(-4)} from ${event.seller.slice(0, 6)}...${event.seller.slice(-4)}`,
-          price: event.price,
+          description: `Purchase by ${event.buyer.slice(0, 6)}...${event.buyer.slice(-4)} from ${event.creator.slice(0, 6)}...${event.creator.slice(-4)}`,
+          price: event.pricePaid,
           bgColor: 'bg-green-50',
           borderColor: 'border-green-200'
         }
       
-      case 'ModelUpdated':
+      case 'ListingUpdated':
         return {
           icon: <Edit className="w-5 h-5 text-orange-600" />,
           title: 'Model Updated',
-          description: `Model updated by ${event.seller.slice(0, 6)}...${event.seller.slice(-4)}`,
+          description: `Model updated by ${event.creator.slice(0, 6)}...${event.creator.slice(-4)}`,
           price: event.newPrice,
           bgColor: 'bg-orange-50',
           borderColor: 'border-orange-200'

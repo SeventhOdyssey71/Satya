@@ -109,7 +109,6 @@ export class WalrusSDKClient {
         return {
           success: true,
           blobId: result.blobId,
-          objectId: result.id,
           certificate: result.blobObject ? 'certified' : 'pending'
         };
 
@@ -132,7 +131,7 @@ export class WalrusSDKClient {
       logger.error('Walrus SDK upload failed', {
         fileName: file.name,
         fileSize: file.size,
-        signerAddress: signer.toSuiAddress(),
+        signerAddress: signer.toSuiAddress ? signer.toSuiAddress() : 'unknown',
         error: errorMessage
       });
 
@@ -204,10 +203,9 @@ export class WalrusSDKClient {
         throw new WalrusError(`Batch upload failed: Expected ${files.length} results, got ${results?.length || 0}`);
       }
 
-      const uploadResults: UploadResult[] = results.map((result, index) => ({
+      const uploadResults: UploadResult[] = results.map((result: any, index: number) => ({
         success: true,
         blobId: result.blobId,
-        objectId: result.id,
         certificate: result.blobObject ? 'certified' : 'pending',
         fileName: files[index].name
       }));
@@ -342,11 +340,11 @@ export class WalrusSDKClient {
       const hasSUI = suiCoins.data && suiCoins.data.length > 0;
       
       const walBalance = hasWAL ? 
-        walCoins.data.reduce((sum: bigint, coin: any) => sum + BigInt(coin.balance), 0n).toString() : 
+        walCoins.data.reduce((sum: bigint, coin: any) => sum + BigInt(coin.balance), BigInt(0)).toString() : 
         '0';
       
       const suiBalance = hasSUI ? 
-        suiCoins.data.reduce((sum: bigint, coin: any) => sum + BigInt(coin.balance), 0n).toString() : 
+        suiCoins.data.reduce((sum: bigint, coin: any) => sum + BigInt(coin.balance), BigInt(0)).toString() : 
         '0';
 
       const canUpload = hasWAL && hasSUI;
