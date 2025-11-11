@@ -26,21 +26,33 @@ export class SuiMarketplaceClient {
     listing: Omit<DataListing, 'id' | 'createdAt' | 'isActive'>,
     sellerAddress: string
   ): Transaction {
+    // This method is deprecated - use createListingTransactionWithCreatorCap instead
+    throw new Error('Use createListingTransactionWithCreatorCap instead');
+  }
+
+  // Create a transaction with dynamic CreatorCap lookup
+  createListingTransactionWithCreatorCap(
+    listing: Omit<DataListing, 'id' | 'createdAt' | 'isActive'>,
+    sellerAddress: string,
+    creatorCapId: string
+  ): Transaction {
     const tx = new Transaction();
     
     // Set a reasonable gas budget for the transaction
     tx.setGasBudget(MARKETPLACE_CONFIG.DEFAULT_GAS_BUDGET); // 0.1 SUI gas budget
     tx.setSender(sellerAddress); // Set the sender address
     
-    // Use the correct CreatorCap object (not AdminCap)
-    // This should be owned by the user calling the function
-    const creatorCapId = '0x2cd914768c5c2fe550a368760a6a7deab72aba80ed26fed6b0e1d35d182630d6';
+    console.log('Creating marketplace listing transaction with:');
+    console.log('- Package ID:', this.config.packageId);
+    console.log('- Marketplace Object:', this.config.marketplaceObjectId);
+    console.log('- Creator Cap:', creatorCapId);
+    console.log('- Seller Address:', sellerAddress);
     
     tx.moveCall({
       target: `${this.config.packageId}::marketplace_v2::create_listing`,
       arguments: [
         tx.object(this.config.marketplaceObjectId), // marketplace
-        tx.object(creatorCapId), // creator_cap (existing owned object)
+        tx.object(creatorCapId), // creator_cap (user's owned object)
         tx.pure.string(listing.title || 'Model'), // title
         tx.pure.string(listing.description || 'AI Model'), // description
         tx.pure.string(listing.category || 'AI'), // category
@@ -72,8 +84,29 @@ export class SuiMarketplaceClient {
       if (!userAddress) {
         throw new Error('Unable to get user address from wallet');
       }
+
+      // Find user's CreatorCap for this marketplace
+      console.log('Looking for CreatorCap owned by user:', userAddress);
+      const ownedObjects = await this.client.getOwnedObjects({
+        owner: userAddress,
+        filter: {
+          StructType: `${this.config.packageId}::marketplace_v2::CreatorCap`
+        },
+        options: { showContent: true }
+      });
+
+      if (!ownedObjects.data || ownedObjects.data.length === 0) {
+        throw new Error(`No CreatorCap found for user ${userAddress}. User needs to create/mint a CreatorCap first.`);
+      }
+
+      const creatorCapId = ownedObjects.data[0].data?.objectId;
+      if (!creatorCapId) {
+        throw new Error('Invalid CreatorCap object found');
+      }
+
+      console.log('Found CreatorCap:', creatorCapId);
       
-      const tx = this.createListingTransaction(listing, userAddress);
+      const tx = this.createListingTransactionWithCreatorCap(listing, userAddress, creatorCapId);
 
       console.log('Prompting user to sign marketplace listing transaction...');
 
@@ -107,6 +140,8 @@ export class SuiMarketplaceClient {
       if (result.effects?.status?.status !== 'success') {
         const error = result.effects?.status?.error || 'Transaction execution failed';
         console.error('Transaction execution failed:', error);
+        console.error('Full transaction result:', JSON.stringify(result, null, 2));
+        console.error('Transaction effects:', JSON.stringify(result.effects, null, 2));
         throw new Error(`Transaction failed: ${error}`);
       }
 
