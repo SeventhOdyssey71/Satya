@@ -86,12 +86,10 @@ function HeroSection() {
                 />
               </div>
               <div className="flex items-center justify-center">
-                <Image 
+                <img 
                   src="/images/Walrus.png" 
                   alt="WALRUS"
-                  width={100}
-                  height={100}
-                  className="h-16"
+                  className="h-20 w-auto max-w-[120px] object-contain"
                 />
               </div>
             </div>
