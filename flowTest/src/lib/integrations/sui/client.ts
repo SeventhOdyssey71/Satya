@@ -2,6 +2,7 @@ import { SuiClient, SuiTransactionBlockResponse } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { DataListing, PurchaseRequest, MarketplaceError, ErrorCode } from '../types';
+import { MARKETPLACE_CONFIG } from '../../constants';
 
 export interface SuiMarketplaceConfig {
   network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
@@ -28,7 +29,7 @@ export class SuiMarketplaceClient {
     const tx = new Transaction();
     
     // Set a reasonable gas budget for the transaction
-    tx.setGasBudget(1_000_000_000); // 1 SUI gas budget
+    tx.setGasBudget(MARKETPLACE_CONFIG.DEFAULT_GAS_BUDGET); // 0.1 SUI gas budget
     tx.setSender(sellerAddress); // Set the sender address
     
     // Complete function call with correct CreatorCap from environment config
