@@ -6,6 +6,9 @@ import { DatasetVerificationResult } from '@/lib/integrations/nautilus/client';
 import { ArrowLeft, Shield, Database, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
+// Disable static generation to avoid Walrus WASM loading issues during build
+export const dynamic = 'force-dynamic'
+
 export default function DatasetVerificationFlowPage() {
   const [showWizard, setShowWizard] = useState(false);
   const [completedVerifications, setCompletedVerifications] = useState<DatasetVerificationResult[]>([]);

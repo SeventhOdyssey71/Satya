@@ -184,55 +184,52 @@ function ModelCard({ model, onPurchase }: { model: ModelListedEvent, onPurchase:
   const mockDownloads = Math.floor(Math.random() * 100) + 1;
 
   return (
-    <div className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
-      <div className="aspect-[4/4] overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img 
-          src={imageUrl} 
-          alt={model.title} 
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-          onError={(e) => {
-            // Fallback to placeholder if image fails to load
-            const target = e.target as HTMLImageElement;
-            target.src = '/images/Claude.png';
-          }}
-        />
-      </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent"></div>
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40"></div>
-      <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30"></div>
-      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="text-xl font-russo leading-tight flex-1">{model.title}</h3>
-          <div className="ml-2 flex-shrink-0">
-            <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-          </div>
+    <Link href={`/model/${model.listingId}`} className="block">
+      <div className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
+        <div className="aspect-[4/4] overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src={imageUrl} 
+            alt={model.title} 
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            onError={(e) => {
+              // Fallback to placeholder if image fails to load
+              const target = e.target as HTMLImageElement;
+              target.src = '/images/Claude.png';
+            }}
+          />
         </div>
-        <p className="text-sm font-albert text-gray-200 mb-3 line-clamp-2 leading-relaxed">
-          {mockDescription}
-        </p>
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-medium text-white">
-            {formatPrice(model.downloadPrice)}
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="text-xs text-gray-300 flex items-center">
-              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+        {/* Simple overlay for text */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+          <div className="flex items-start justify-between mb-2">
+            <h3 className="text-xl font-russo leading-tight flex-1 drop-shadow-sm">{model.title}</h3>
+            <div className="ml-2 flex-shrink-0">
+              <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              {mockDownloads}
             </div>
-            <button 
-              onClick={() => onPurchase(model.listingId)}
-              className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-2 text-sm font-medium font-albert text-white hover:bg-white/30 transition-colors"
-            >
-              Purchase
-            </button>
+          </div>
+          <p className="text-sm font-albert text-white/95 mb-3 line-clamp-2 leading-relaxed drop-shadow-sm">
+            {mockDescription}
+          </p>
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium text-white drop-shadow-sm">
+              {formatPrice(model.downloadPrice)}
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-white/90 flex items-center drop-shadow-sm">
+                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                </svg>
+                {mockDownloads}
+              </div>
+              <div className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-sm font-medium font-albert text-white hover:bg-white/30 transition-colors">
+                View Details
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

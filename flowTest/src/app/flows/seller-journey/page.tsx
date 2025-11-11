@@ -7,6 +7,9 @@ import { ModelUploadWizard } from '@/components/upload';
 import { DatasetVerificationResult } from '@/lib/integrations/nautilus/client';
 import Link from 'next/link';
 
+// Disable static generation to avoid Walrus WASM loading issues during build
+export const dynamic = 'force-dynamic'
+
 type SellerJourneyStep = 'prepare' | 'upload' | 'processing' | 'verification' | 'listing' | 'monitoring';
 
 interface UploadedModel {

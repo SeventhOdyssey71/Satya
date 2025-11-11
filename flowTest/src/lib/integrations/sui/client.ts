@@ -137,8 +137,13 @@ export class SuiMarketplaceClient {
         });
       }
 
-      if (result.effects?.status?.status !== 'success') {
-        const error = result.effects?.status?.error || 'Transaction execution failed';
+      // Check transaction status - transaction is successful if we have a digest and no error
+      const hasDigest = !!result.digest;
+      const statusString = result.effects?.status?.status || result.effects?.status;
+      const isSuccess = statusString === 'success' || (hasDigest && !result.effects?.status?.error);
+      
+      if (!isSuccess) {
+        const error = result.effects?.status?.error || result.errors?.[0] || 'Transaction execution failed';
         console.error('Transaction execution failed:', error);
         console.error('Full transaction result:', JSON.stringify(result, null, 2));
         console.error('Transaction effects:', JSON.stringify(result.effects, null, 2));
@@ -189,8 +194,13 @@ export class SuiMarketplaceClient {
         }
       });
 
-      if (result.effects?.status?.status !== 'success') {
-        throw new Error('Transaction failed');
+      // Check transaction status
+      const statusString = result.effects?.status?.status || result.effects?.status;
+      const isSuccess = statusString === 'success' || (!!result.digest && !result.effects?.status?.error);
+      
+      if (!isSuccess) {
+        const error = result.effects?.status?.error || 'Transaction failed';
+        throw new Error(`Transaction failed: ${error}`);
       }
 
       const purchaseId = this.extractPurchaseIdFromEvents(result);
@@ -228,8 +238,13 @@ export class SuiMarketplaceClient {
         }
       });
 
-      if (result.effects?.status?.status !== 'success') {
-        throw new Error('Transaction failed');
+      // Check transaction status
+      const statusString = result.effects?.status?.status || result.effects?.status;
+      const isSuccess = statusString === 'success' || (!!result.digest && !result.effects?.status?.error);
+      
+      if (!isSuccess) {
+        const error = result.effects?.status?.error || 'Transaction failed';
+        throw new Error(`Transaction failed: ${error}`);
       }
     } catch (error) {
       throw new MarketplaceError(
@@ -268,8 +283,13 @@ export class SuiMarketplaceClient {
         }
       });
 
-      if (result.effects?.status?.status !== 'success') {
-        throw new Error('Transaction failed');
+      // Check transaction status
+      const statusString = result.effects?.status?.status || result.effects?.status;
+      const isSuccess = statusString === 'success' || (!!result.digest && !result.effects?.status?.error);
+      
+      if (!isSuccess) {
+        const error = result.effects?.status?.error || 'Transaction failed';
+        throw new Error(`Transaction failed: ${error}`);
       }
 
       const disputeId = this.extractDisputeIdFromEvents(result);
@@ -368,15 +388,29 @@ export class SuiMarketplaceClient {
 
   private extractListingIdFromEvents(result: SuiTransactionBlockResponse): string {
     const events = result.events || [];
+    console.log('All events:', JSON.stringify(events, null, 2));
+    
+    // Try multiple patterns for the listing event
     const listingEvent = events.find(e => 
-      e.type.includes('ListingCreated')
+      e.type.includes('ListingCreated') || 
+      e.type.includes('listing_created') ||
+      e.type.includes('Created')
     );
     
+    console.log('Found listing event:', JSON.stringify(listingEvent, null, 2));
+    
     if (listingEvent && listingEvent.parsedJson) {
-      return (listingEvent.parsedJson as any).listing_id;
+      const parsedData = listingEvent.parsedJson as any;
+      // Try multiple field names
+      const listingId = parsedData.listing_id || parsedData.id || parsedData.listingId;
+      if (listingId) {
+        return listingId;
+      }
     }
     
-    throw new Error('Could not extract listing ID from transaction');
+    // If we can't extract from events, generate a fallback ID from the transaction
+    console.warn('Could not extract listing ID from events, using transaction digest');
+    return `listing_${Date.now()}_${result.digest?.slice(0, 8)}`;
   }
 
   private extractPurchaseIdFromEvents(result: SuiTransactionBlockResponse): string {

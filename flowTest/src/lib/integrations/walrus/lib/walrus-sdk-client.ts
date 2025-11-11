@@ -84,7 +84,7 @@ export class WalrusSDKClient {
       try {
         // Check if signer is an Ed25519Keypair or need to create one
         let actualSigner: Ed25519Keypair;
-        if (signer && typeof signer.toSuiPrivateKey === 'function') {
+        if (signer && 'toSuiPrivateKey' in signer && typeof signer.toSuiPrivateKey === 'function') {
           // It's already an Ed25519Keypair
           actualSigner = signer as Ed25519Keypair;
         } else {
@@ -143,7 +143,7 @@ export class WalrusSDKClient {
       logger.error('Walrus SDK upload failed', {
         fileName: file.name,
         fileSize: file.size,
-        signerAddress: signer.toSuiAddress ? signer.toSuiAddress() : 'unknown',
+        signerAddress: (signer && 'toSuiAddress' in signer && signer.toSuiAddress) ? signer.toSuiAddress() : 'unknown',
         error: errorMessage
       });
 

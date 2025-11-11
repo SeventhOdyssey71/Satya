@@ -183,8 +183,33 @@ function ModelCardComponent({ model, viewMode, isSelected, onClick }: ModelCardC
                 onError={() => setImageError(true)}
               />
             ) : (
-              <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-                <TagIcon className="w-8 h-8 text-gray-400" />
+              <div className="w-full h-full bg-gradient-to-br from-amber-700 via-orange-800 to-amber-900 rounded-lg flex items-center justify-center relative overflow-hidden">
+                {/* Background blur elements */}
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-700/90 via-orange-800/90 to-amber-900/90 rounded-lg"></div>
+                
+                {/* Radiating pattern background */}
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-16 h-16">
+                      {/* Radiating lines */}
+                      {[...Array(12)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute w-8 h-0.5 bg-gray-300 origin-left"
+                          style={{
+                            transform: `rotate(${i * 30}deg)`,
+                            top: '50%',
+                            left: '50%',
+                            transformOrigin: '0 50%'
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Icon */}
+                <TagIcon className="w-8 h-8 text-gray-300 relative z-10" />
               </div>
             )}
             
@@ -282,8 +307,33 @@ function ModelCardComponent({ model, viewMode, isSelected, onClick }: ModelCardC
             onError={() => setImageError(true)}
           />
         ) : (
-          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-            <TagIcon className="w-16 h-16 text-gray-400" />
+          <div className="w-full h-full bg-gradient-to-br from-amber-700 via-orange-800 to-amber-900 flex items-center justify-center relative overflow-hidden">
+            {/* Background blur elements */}
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-700/90 via-orange-800/90 to-amber-900/90"></div>
+            
+            {/* Radiating pattern background */}
+            <div className="absolute inset-0 opacity-30">
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="w-32 h-32">
+                  {/* Radiating lines */}
+                  {[...Array(16)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute w-16 h-1 bg-gray-300 origin-left"
+                      style={{
+                        transform: `rotate(${i * 22.5}deg)`,
+                        top: '50%',
+                        left: '50%',
+                        transformOrigin: '0 50%'
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Icon */}
+            <TagIcon className="w-16 h-16 text-gray-300 relative z-10" />
           </div>
         )}
         
@@ -315,25 +365,31 @@ function ModelCardComponent({ model, viewMode, isSelected, onClick }: ModelCardC
           )}
         </div>
 
-        {/* Price overlay */}
-        <div className="absolute bottom-3 right-3 bg-black/70 text-white rounded-lg px-2 py-1">
-          <span className="text-sm font-semibold">{formatPrice(model.price)}</span>
+        {/* Content overlay at bottom - glass morphism blur effect */}
+        <div className="absolute bottom-0 left-0 right-0 backdrop-blur-lg bg-white/15 p-4 border-t border-white/30">
+          <div className="flex items-start justify-between mb-2">
+            <h3 className="font-semibold text-white truncate flex-1 pr-2 drop-shadow-sm">
+              {model.title}
+            </h3>
+            <div className="flex items-center gap-1 text-sm text-white/90 flex-shrink-0">
+              <Download className="w-4 h-4" />
+              <span>{model.downloads}</span>
+            </div>
+          </div>
+
+          <p className="text-sm text-white/95 mb-2 drop-shadow-sm">Encrypted AI model secured by SEAL technology. Listed by {model.author} on {formatDate(model.updatedAt)}.</p>
+          
+          <div className="flex items-center justify-between">
+            <div className="text-white font-semibold text-lg drop-shadow-sm">{formatPrice(model.price)}</div>
+            <button className="bg-white/25 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/35 transition-all duration-200 drop-shadow-sm">
+              View Details
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="font-semibold text-gray-900 truncate flex-1 pr-2">
-            {model.title}
-          </h3>
-          <div className="flex items-center gap-1 text-sm text-gray-500 flex-shrink-0">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span>{model.rating}</span>
-          </div>
-        </div>
-
-        <p className="text-sm text-gray-600 mb-2">by {model.author}</p>
+      {/* Bottom white content section - simplified */}
+      <div className="p-4 bg-white">
         <p className="text-gray-700 text-sm line-clamp-2 mb-3">{model.description}</p>
 
         <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
