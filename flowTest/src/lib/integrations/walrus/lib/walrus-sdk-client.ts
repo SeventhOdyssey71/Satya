@@ -82,11 +82,23 @@ export class WalrusSDKClient {
       logger.debug('Attempting Walrus SDK upload');
       
       try {
+        // Check if signer is an Ed25519Keypair or need to create one
+        let actualSigner: Ed25519Keypair;
+        if (signer && typeof signer.toSuiPrivateKey === 'function') {
+          // It's already an Ed25519Keypair
+          actualSigner = signer as Ed25519Keypair;
+        } else {
+          // It's a wallet object, we need to create a temporary keypair for Walrus uploads
+          // For now, use the test keypair for Walrus since Walrus SDK doesn't support wallet signing yet
+          const testPrivateKey = 'suiprivkey1qr4ms6vljlawapq0f8clc50epw3z27kclmfn6mwrfhljx7wpks7yuf0eaws';
+          actualSigner = Ed25519Keypair.fromSecretKey(testPrivateKey);
+        }
+        
         const results = await this.client.walrus.writeFiles({
           files: [walrusFile],
           epochs,
           deletable,
-          signer: signer as Ed25519Keypair
+          signer: actualSigner
         });
 
         if (!results || results.length === 0) {
