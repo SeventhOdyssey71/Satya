@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { CheckCircle, Clock, ArrowRight, ArrowLeft, Upload, Shield, DollarSign, Tag, AlertCircle } from 'lucide-react'
-import { useCurrentAccount } from '@mysten/dapp-kit'
+import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import FileUploadZone from './FileUploadZone'
 import ProgressIndicator from './ProgressIndicator'
@@ -91,6 +91,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
   // Hooks for business logic
   const upload = useUpload()
   const currentAccount = useCurrentAccount()
+  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
   const validation = useUploadValidation(data)
 
   const updateData = (updates: Partial<ModelUploadData>) => {
@@ -111,12 +112,17 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
 
     try {
       // TEMPORARY: Create keypair for testing Walrus SDK integration
-      // In production, this should use proper dapp-kit wallet integration
-      const testPrivateKey = 'suiprivkey1qr4ms6vljlawapq0f8clc50epw3z27kclmfn6mwrfhljx7wpks7yuf0eaws'
-      const keypair = Ed25519Keypair.fromSecretKey(testPrivateKey)
+      // Use connected wallet for transaction signing
+      if (!currentAccount?.address) {
+        throw new Error('Wallet not connected')
+      }
       
-      // Create wallet object for marketplace service
-      const walletObject = keypair
+      // Create wallet object that can sign transactions
+      const walletObject = {
+        address: currentAccount.address,
+        signAndExecuteTransaction,
+        toSuiAddress: () => currentAccount.address
+      }
 
       console.log('Starting complete upload flow...')
 

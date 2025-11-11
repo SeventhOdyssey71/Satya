@@ -59,7 +59,7 @@ export class SuiMarketplaceClient {
 
   async createListing(
     listing: Omit<DataListing, 'id' | 'createdAt' | 'isActive'>,
-    keypair: Ed25519Keypair
+    walletSigner: any // dapp-kit wallet signer
   ): Promise<string> {
     try {
       // Validate configuration
@@ -67,22 +67,44 @@ export class SuiMarketplaceClient {
         throw new Error('SUI marketplace configuration missing: packageId and marketplaceObjectId required');
       }
       
-      const tx = this.createListingTransaction(listing, keypair.toSuiAddress());
+      // Get user address from wallet
+      const userAddress = walletSigner.toSuiAddress ? walletSigner.toSuiAddress() : 
+                          (walletSigner.address || walletSigner.getAddress?.());
+      
+      if (!userAddress) {
+        throw new Error('Unable to get user address from wallet');
+      }
+      
+      const tx = this.createListingTransaction(listing, userAddress);
 
-      // Skip dry run for now due to function signature issues
-      // TODO: Re-enable once we have the correct function signatures
-      console.log('Skipping dry run, executing transaction directly...');
+      console.log('Prompting user to sign marketplace listing transaction...');
 
-      const result = await this.client.signAndExecuteTransaction({
-        signer: keypair,
-        transaction: tx,
-        options: {
-          showEffects: true,
-          showEvents: true,
-          showInput: true,
-          showObjectChanges: true
-        }
-      });
+      // Use wallet signer to prompt user for transaction signing
+      let result;
+      if (walletSigner.signAndExecuteTransaction) {
+        // Use dapp-kit wallet signing
+        result = await walletSigner.signAndExecuteTransaction({
+          transaction: tx,
+          options: {
+            showEffects: true,
+            showEvents: true,
+            showInput: true,
+            showObjectChanges: true
+          }
+        });
+      } else {
+        // Fallback to direct client signing (for Ed25519Keypair)
+        result = await this.client.signAndExecuteTransaction({
+          signer: walletSigner,
+          transaction: tx,
+          options: {
+            showEffects: true,
+            showEvents: true,
+            showInput: true,
+            showObjectChanges: true
+          }
+        });
+      }
 
       if (result.effects?.status?.status !== 'success') {
         const error = result.effects?.status?.error || 'Transaction execution failed';
