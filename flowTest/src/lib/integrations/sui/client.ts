@@ -32,12 +32,9 @@ export class SuiMarketplaceClient {
     tx.setGasBudget(MARKETPLACE_CONFIG.DEFAULT_GAS_BUDGET); // 0.1 SUI gas budget
     tx.setSender(sellerAddress); // Set the sender address
     
-    // Complete function call with correct CreatorCap from environment config
-    const creatorCapId = process.env.NEXT_PUBLIC_MARKETPLACE_V2_ADMIN_CAP;
-    
-    if (!creatorCapId) {
-      throw new Error('MARKETPLACE_V2_ADMIN_CAP not configured in environment');
-    }
+    // Use the correct CreatorCap object (not AdminCap)
+    // This should be owned by the user calling the function
+    const creatorCapId = '0x2cd914768c5c2fe550a368760a6a7deab72aba80ed26fed6b0e1d35d182630d6';
     
     tx.moveCall({
       target: `${this.config.packageId}::marketplace_v2::create_listing`,
