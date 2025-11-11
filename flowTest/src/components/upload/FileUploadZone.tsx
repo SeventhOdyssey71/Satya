@@ -2,7 +2,9 @@
 
 import React, { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, X, File, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { HiCloudArrowUp, HiXMark, HiDocumentArrowUp } from 'react-icons/hi2'
+import { RiCheckboxCircleFill, RiErrorWarningFill, RiLoader4Line } from 'react-icons/ri'
+import { TbFileUpload, TbCloudUpload } from 'react-icons/tb'
 
 interface FileUploadZoneProps {
   accept?: Record<string, string[]>
@@ -90,7 +92,7 @@ export default function FileUploadZone({
         <div className="space-y-4">
           {uploadProgress !== undefined ? (
             <div className="space-y-3">
-              <Loader2 className="h-12 w-12 mx-auto text-blue-500 animate-spin" />
+              <RiLoader4Line className="h-12 w-12 mx-auto text-black animate-spin" />
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-900">Uploading...</p>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -104,7 +106,7 @@ export default function FileUploadZone({
             </div>
           ) : (
             <>
-              <Upload className="h-12 w-12 mx-auto text-gray-400" />
+              <TbCloudUpload className="h-12 w-12 mx-auto text-gray-400" />
               <div>
                 <p className="text-lg font-medium text-gray-900 mb-1">
                   {placeholder}
@@ -121,7 +123,7 @@ export default function FileUploadZone({
       {/* Error Messages */}
       {error && (
         <div className="flex items-center space-x-2 text-sm text-red-600 bg-red-50 p-3 rounded-md">
-          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <RiErrorWarningFill className="h-4 w-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -131,7 +133,7 @@ export default function FileUploadZone({
         <div className="space-y-2">
           {fileRejections.map(({ file, errors }, index) => (
             <div key={index} className="flex items-center space-x-2 text-sm text-red-600 bg-red-50 p-3 rounded-md">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <RiErrorWarningFill className="h-4 w-4 flex-shrink-0" />
               <div>
                 <p className="font-medium">{file.name}</p>
                 <ul className="text-xs space-y-1">
@@ -162,14 +164,14 @@ export default function FileUploadZone({
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <RiCheckboxCircleFill className="h-4 w-4 text-green-500" />
                   {onFileRemove && (
                     <button
                       onClick={() => onFileRemove(index)}
                       className="p-1 hover:bg-gray-200 rounded transition-colors"
                       disabled={disabled}
                     >
-                      <X className="h-4 w-4 text-gray-400" />
+                      <HiXMark className="h-4 w-4 text-gray-400" />
                     </button>
                   )}
                 </div>

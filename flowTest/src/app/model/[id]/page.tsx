@@ -38,7 +38,7 @@ function createModelDetailsFromEvent(event: ModelListedEvent, modelId: string): 
   return {
     id: modelId,
     title: event.title,
-    description: `AI model created by ${event.creator.slice(0, 8)}...${event.creator.slice(-8)}`,
+    description: `Encrypted AI model secured by SEAL technology. Listed by ${event.creator.slice(0, 10)}...${event.creator.slice(-8)} on ${new Date(event.timestamp).toLocaleDateString()}.`,
     longDescription: `This AI model has been uploaded to the marketplace and secured with SEAL encryption. The model is stored on Walrus distributed storage (Blob ID: ${event.walrusBlobId}) and can be accessed after purchase verification through our TEE-based attestation system.`,
     author: `${event.creator.slice(0, 8)}...${event.creator.slice(-8)}`,
     authorAvatar: '/images/Claude.png',
@@ -211,29 +211,15 @@ export default function ModelPage({ params }: ModelPageProps) {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-black flex flex-col items-center justify-center">
-                    {/* Background pattern based on model ID */}
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                        <div className="w-32 h-32">
-                          {[...Array(12)].map((_, i) => (
-                            <div
-                              key={i}
-                              className="absolute w-16 h-1 bg-gray-300 origin-left"
-                              style={{
-                                transform: `rotate(${i * 30}deg)`,
-                                top: '50%',
-                                left: '50%',
-                                transformOrigin: '0 50%'
-                              }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="text-center text-gray-300 relative z-10">
-                    </div>
+                  <div className="absolute inset-0">
+                    {/* Claude.png image occupying full space */}
+                    <img
+                      src="/images/Claude.png"
+                      alt="Claude AI Model"
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Optional dark overlay for better text contrast if needed */}
+                    <div className="absolute inset-0 bg-black/20"></div>
                   </div>
                 )}
                 
@@ -311,10 +297,6 @@ export default function ModelPage({ params }: ModelPageProps) {
                     <Calendar className="w-4 h-4" />
                     <span>Updated {model.updatedAt}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Download className="w-4 h-4" />
-                    <span>{model.downloads.toLocaleString()} downloads</span>
-                  </div>
                 </div>
 
                 {/* Security Badges */}
@@ -345,18 +327,6 @@ export default function ModelPage({ params }: ModelPageProps) {
                   </p>
                 </div>
 
-                {/* Features */}
-                <div>
-                  <h3 className="text-lg font-semibold text-black mb-3">Key Features</h3>
-                  <div className="space-y-2">
-                    {model.features.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-3 text-sm text-gray-600">
-                        <div className="w-1.5 h-1.5 bg-black rounded-full"></div>
-                        <span>{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
                 {/* Model Tags */}
                 <div>

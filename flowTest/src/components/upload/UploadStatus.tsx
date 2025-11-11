@@ -1,7 +1,10 @@
 'use client'
 
 import React from 'react'
-import { CheckCircle, XCircle, AlertTriangle, ExternalLink, Copy, Eye } from 'lucide-react'
+import { HiCheckBadge, HiXCircle } from 'react-icons/hi2'
+import { RiErrorWarningFill, RiExternalLinkLine, RiFileCopyLine } from 'react-icons/ri'
+import { FiEye } from 'react-icons/fi'
+import { IoSparkles } from 'react-icons/io5'
 
 interface UploadResult {
   success: boolean
@@ -38,7 +41,7 @@ export default function UploadStatus({
         {/* Success Header */}
         <div className="p-6 border-b">
           <div className="flex items-center">
-            <CheckCircle className="h-8 w-8 text-green-500 mr-3" />
+            <HiCheckBadge className="h-8 w-8 text-green-500 mr-3" />
             <div>
               <h3 className="text-lg font-medium text-gray-900">
                 Model Uploaded Successfully!
@@ -62,7 +65,7 @@ export default function UploadStatus({
                 onClick={() => copyToClipboard(result.modelId!, 'Model ID')}
                 className="p-2 hover:bg-gray-200 rounded transition-colors"
               >
-                <Copy className="h-4 w-4 text-gray-500" />
+                <RiFileCopyLine className="h-4 w-4 text-gray-500" />
               </button>
             </div>
           )}
@@ -78,14 +81,14 @@ export default function UploadStatus({
                   onClick={() => copyToClipboard(result.listingId!, 'Listing ID')}
                   className="p-2 hover:bg-green-100 rounded transition-colors"
                 >
-                  <Copy className="h-4 w-4 text-gray-500" />
+                  <RiFileCopyLine className="h-4 w-4 text-gray-500" />
                 </button>
                 {onViewListing && (
                   <button
                     onClick={() => onViewListing(result.listingId!)}
                     className="p-2 hover:bg-green-100 rounded transition-colors"
                   >
-                    <Eye className="h-4 w-4 text-gray-500" />
+                    <FiEye className="h-4 w-4 text-gray-500" />
                   </button>
                 )}
               </div>
@@ -102,7 +105,7 @@ export default function UploadStatus({
                 onClick={() => copyToClipboard(result.blobId!, 'Blob ID')}
                 className="p-2 hover:bg-blue-100 rounded transition-colors"
               >
-                <Copy className="h-4 w-4 text-gray-500" />
+                <RiFileCopyLine className="h-4 w-4 text-gray-500" />
               </button>
             </div>
           )}
@@ -118,7 +121,7 @@ export default function UploadStatus({
                   onClick={() => copyToClipboard(result.transactionHash!, 'Transaction Hash')}
                   className="p-2 hover:bg-purple-100 rounded transition-colors"
                 >
-                  <Copy className="h-4 w-4 text-gray-500" />
+                  <RiFileCopyLine className="h-4 w-4 text-gray-500" />
                 </button>
                 <a
                   href={`https://suiscan.xyz/transaction/${result.transactionHash}`}
@@ -126,7 +129,7 @@ export default function UploadStatus({
                   rel="noopener noreferrer"
                   className="p-2 hover:bg-purple-100 rounded transition-colors"
                 >
-                  <ExternalLink className="h-4 w-4 text-gray-500" />
+                  <RiExternalLinkLine className="h-4 w-4 text-gray-500" />
                 </a>
               </div>
             </div>
@@ -136,7 +139,7 @@ export default function UploadStatus({
           {result.warnings && result.warnings.length > 0 && (
             <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
               <div className="flex items-start">
-                <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
+                <RiErrorWarningFill className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-yellow-800">Warnings</p>
                   <ul className="text-sm text-yellow-700 mt-1 space-y-1">
@@ -172,7 +175,7 @@ export default function UploadStatus({
             )}
             <button
               onClick={() => window.location.href = '/marketplace'}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
             >
               Browse Marketplace
             </button>
@@ -188,7 +191,7 @@ export default function UploadStatus({
       {/* Error Header */}
       <div className="p-6 border-b">
         <div className="flex items-center">
-          <XCircle className="h-8 w-8 text-red-500 mr-3" />
+          <HiXCircle className="h-8 w-8 text-red-500 mr-3" />
           <div>
             <h3 className="text-lg font-medium text-gray-900">
               Upload Failed
@@ -212,7 +215,7 @@ export default function UploadStatus({
         {onReset && (
           <button
             onClick={onReset}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
           >
             Try Again
           </button>

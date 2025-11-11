@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react'
-import { CheckCircle, Circle } from 'lucide-react'
+import { FaCheckCircle, FaRegCircle } from 'react-icons/fa'
+import { RiCheckboxCircleFill } from 'react-icons/ri'
 
 interface Step {
   title: string
@@ -39,12 +40,12 @@ export default function ProgressIndicator({
                   ${isCompleted 
                     ? 'bg-green-500 border-green-500 text-white' 
                     : isCurrent 
-                      ? 'bg-blue-500 border-blue-500 text-white'
+                      ? 'bg-black border-black text-white'
                       : 'bg-white border-gray-300 text-gray-500'
                   }
                 `}>
                   {isCompleted ? (
-                    <CheckCircle className="w-6 h-6" />
+                    <RiCheckboxCircleFill className="w-6 h-6" />
                   ) : (
                     <span className="text-sm font-medium">{index + 1}</span>
                   )}
@@ -71,7 +72,7 @@ export default function ProgressIndicator({
                     ${isCompleted || (completedSteps.includes(index + 1)) 
                       ? 'bg-green-500' 
                       : index < currentStep
-                        ? 'bg-blue-500'
+                        ? 'bg-black'
                         : 'bg-gray-300'
                     }
                   `} />
@@ -89,7 +90,7 @@ export default function ProgressIndicator({
           <div className="flex items-center mb-4">
             <div className={`
               flex items-center justify-center w-8 h-8 rounded-full border-2 
-              bg-blue-500 border-blue-500 text-white text-sm font-medium
+              bg-black border-black text-white text-sm font-medium
             `}>
               {currentStep + 1}
             </div>
@@ -106,7 +107,7 @@ export default function ProgressIndicator({
           {/* Progress Bar */}
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-black h-2 rounded-full transition-all duration-300"
               style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
             />
           </div>
@@ -128,7 +129,7 @@ export default function ProgressIndicator({
               <div key={index} className={`
                 flex items-center p-3 rounded-lg border transition-all
                 ${isCurrent 
-                  ? 'border-blue-200 bg-blue-50' 
+                  ? 'border-gray-300 bg-gray-100' 
                   : isCompleted 
                     ? 'border-green-200 bg-green-50'
                     : 'border-gray-200 bg-gray-50'
@@ -139,24 +140,24 @@ export default function ProgressIndicator({
                   ${isCompleted 
                     ? 'bg-green-500 text-white' 
                     : isCurrent 
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-black text-white'
                       : 'bg-gray-300 text-gray-600'
                   }
                 `}>
                   {isCompleted ? (
-                    <CheckCircle className="w-4 h-4" />
+                    <RiCheckboxCircleFill className="w-4 h-4" />
                   ) : (
                     index + 1
                   )}
                 </div>
                 <div className="ml-3">
                   <div className={`text-sm font-medium
-                    ${isCurrent ? 'text-blue-900' : isCompleted ? 'text-green-900' : 'text-gray-600'}
+                    ${isCurrent ? 'text-gray-900' : isCompleted ? 'text-green-900' : 'text-gray-600'}
                   `}>
                     {step.title}
                   </div>
                   <div className={`text-xs
-                    ${isCurrent ? 'text-blue-700' : isCompleted ? 'text-green-700' : 'text-gray-500'}
+                    ${isCurrent ? 'text-gray-700' : isCompleted ? 'text-green-700' : 'text-gray-500'}
                   `}>
                     {step.description}
                   </div>
