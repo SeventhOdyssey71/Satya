@@ -1,8 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { CheckCircle, Clock, ArrowRight, ArrowLeft, Upload, Shield, DollarSign, Tag, AlertCircle } from 'lucide-react'
-import { useCurrentAccount } from '@mysten/dapp-kit'
+import { RiCheckboxCircleFill, RiTimeLine, RiArrowRightLine, RiArrowLeftLine } from 'react-icons/ri'
+import { TbUpload, TbShield, TbCoin, TbTag } from 'react-icons/tb'
+import { IoWarning, IoSparkles, IoRocket } from 'react-icons/io5'
+import { HiCurrencyDollar } from 'react-icons/hi2'
+import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import FileUploadZone from './FileUploadZone'
 import ProgressIndicator from './ProgressIndicator'
@@ -48,7 +51,8 @@ interface StepProps {
   isValid: boolean
   validation?: any
   isWalletConnected?: boolean
-  onUpload?: () => Promise<void>
+  onCancel?: () => void
+  onTbUpload?: () => Promise<void>
 }
 
 const CATEGORIES = [
@@ -67,7 +71,12 @@ const POLICY_TYPES = [
   { value: 'allowlist', label: 'Allowlist', description: 'Access for specific addresses' }
 ]
 
-export default function ModelUploadWizard() {
+interface ModelUploadWizardProps {
+  onUploadComplete?: (result: any) => void
+  onCancel?: () => void
+}
+
+export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelUploadWizardProps = {}) {
   const [currentStep, setCurrentStep] = useState(0)
   const [data, setData] = useState<ModelUploadData>({
     title: '',
@@ -85,6 +94,7 @@ export default function ModelUploadWizard() {
   // Hooks for business logic
   const upload = useUpload()
   const currentAccount = useCurrentAccount()
+  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
   const validation = useUploadValidation(data)
 
   const updateData = (updates: Partial<ModelUploadData>) => {
@@ -105,33 +115,43 @@ export default function ModelUploadWizard() {
 
     try {
       // TEMPORARY: Create keypair for testing Walrus SDK integration
-      // In production, this should use proper dapp-kit wallet integration
-      const testPrivateKey = 'suiprivkey1qr4ms6vljlawapq0f8clc50epw3z27kclmfn6mwrfhljx7wpks7yuf0eaws'
-      const keypair = Ed25519Keypair.fromSecretKey(testPrivateKey)
+      // Use connected wallet for transaction signing
+      if (!currentAccount?.address) {
+        throw new Error('Wallet not connected')
+      }
       
-      // Create wallet object for marketplace service
-      const walletObject = keypair
+      // Create wallet object that can sign transactions
+      const walletObject = {
+        address: currentAccount.address,
+        signAndExecuteTransaction,
+        toSuiAddress: () => currentAccount.address
+      }
 
       console.log('Starting complete upload flow...')
 
-      // Step 1: Upload file and encrypt with SEAL, upload to Walrus
+      // Step 1: TbUpload file and encrypt with SEAL, upload to Walrus
       console.log('Step 1: SEAL encryption and Walrus upload...')
       const uploadResult = await upload.uploadModel(data, walletObject)
       
       if (!uploadResult.success) {
-        throw new Error(`Upload failed: ${uploadResult.error}`)
+        throw new Error(`TbUpload failed: ${uploadResult.error}`)
       }
 
       console.log('✅ Model uploaded successfully!')
-      console.log('Upload result:', uploadResult)
+      console.log('TbUpload result:', uploadResult)
       
-      alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Marketplace listing created ✓\n\nListing ID: ${uploadResult.listingId || 'completed'}`)
+      alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• TbUploaded to Walrus storage ✓\n• Marketplace listing created ✓\n\nListing ID: ${uploadResult.listingId || 'completed'}`)
       setCurrentStep(steps.length) // Go to result step
+      
+      // Call the callback if provided
+      if (onUploadComplete) {
+        onUploadComplete(uploadResult)
+      }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error('Complete upload flow failed:', error)
-      alert(`❌ Upload failed: ${errorMessage}`)
+      alert(`❌ TbUpload failed: ${errorMessage}`)
     }
   }
 
@@ -143,8 +163,8 @@ export default function ModelUploadWizard() {
       validate: () => validation.isStepValid('basicInfo')
     },
     {
-      title: 'File Upload',
-      description: 'Upload your model and optional files',
+      title: 'File TbUpload',
+      description: 'TbUpload your model and optional files',
       component: FileUploadStep,
       validate: () => validation.isStepValid('files')
     },
@@ -187,10 +207,10 @@ export default function ModelUploadWizard() {
         <UploadProgress
           phases={upload.phases.map(phase => ({
             ...phase,
-            icon: phase.id === 'validation' ? Upload :
-                  phase.id === 'encryption' ? Shield :
-                  phase.id === 'upload' ? Upload :
-                  phase.id === 'listing' ? CheckCircle : Upload
+            icon: phase.id === 'validation' ? TbUpload :
+                  phase.id === 'encryption' ? TbShield :
+                  phase.id === 'upload' ? TbUpload :
+                  phase.id === 'listing' ? RiCheckboxCircleFill : TbUpload
           }))}
           currentPhase={upload.currentPhase || undefined}
           overallProgress={upload.uploadProgress}
@@ -261,24 +281,25 @@ export default function ModelUploadWizard() {
           isValid={steps[currentStep].validate()}
           validation={validation}
           isWalletConnected={isWalletConnected}
-          onUpload={handleUpload}
+          onTbUpload={handleUpload}
+          onCancel={onCancel}
         />
       </div>
     </div>
   )
 }
 
-function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepProps) {
-  const [newTag, setNewTag] = useState('')
+function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
+  const [newTbTag, setNewTbTag] = useState('')
 
-  const addTag = () => {
-    if (newTag.trim() && !data.tags.includes(newTag.trim())) {
-      onChange({ tags: [...data.tags, newTag.trim()] })
-      setNewTag('')
+  const addTbTag = () => {
+    if (newTbTag.trim() && !data.tags.includes(newTbTag.trim())) {
+      onChange({ tags: [...data.tags, newTbTag.trim()] })
+      setNewTbTag('')
     }
   }
 
-  const removeTag = (tagToRemove: string) => {
+  const removeTbTag = (tagToRemove: string) => {
     onChange({ tags: data.tags.filter(tag => tag !== tagToRemove) })
   }
 
@@ -286,7 +307,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
     <div className="space-y-6">
       <div className="bg-white rounded-lg border p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <Tag className="h-5 w-5 mr-2 text-gray-600" />
+          <TbTag className="h-5 w-5 mr-2 text-gray-600" />
           Model Information
         </h3>
         
@@ -336,19 +357,19 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Add Tags
+                Add TbTags
               </label>
               <div className="flex">
                 <input
                   type="text"
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                  value={newTbTag}
+                  onChange={(e) => setNewTbTag(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTbTag())}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
                   placeholder="Add a tag"
                 />
                 <button
-                  onClick={addTag}
+                  onClick={addTbTag}
                   className="px-4 py-2 bg-black text-white rounded-r-md hover:bg-gray-800 transition-colors"
                 >
                   Add
@@ -359,7 +380,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
 
           {data.tags.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">TbTags</label>
               <div className="flex flex-wrap gap-2">
                 {data.tags.map(tag => (
                   <span
@@ -368,7 +389,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
                   >
                     {tag}
                     <button
-                      onClick={() => removeTag(tag)}
+                      onClick={() => removeTbTag(tag)}
                       className="ml-2 text-gray-600 hover:text-gray-800"
                     >
                       ×
@@ -386,13 +407,14 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Ste
         onPrev={onPrev}
         isFirst={isFirst}
         isValid={isValid}
-        nextLabel="Continue to File Upload"
+        nextLabel="Continue to File TbUpload"
+        onCancel={onCancel}
       />
     </div>
   )
 }
 
-function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepProps) {
+function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
   const handleModelFileSelect = (files: File[]) => {
     if (files.length > 0) {
       onChange({ modelFile: files[0] })
@@ -415,7 +437,7 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid }: St
     <div className="space-y-6">
       <div className="bg-white rounded-lg border p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <Upload className="h-5 w-5 mr-2 text-gray-600" />
+          <TbUpload className="h-5 w-5 mr-2 text-gray-600" />
           Upload Files
         </h3>
         
@@ -491,17 +513,18 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid }: St
         isFirst={isFirst}
         isValid={isValid}
         nextLabel="Continue to Pricing"
+        onCancel={onCancel}
       />
     </div>
   )
 }
 
-function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepProps) {
+function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg border p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <DollarSign className="h-5 w-5 mr-2 text-gray-600" />
+          <HiCurrencyDollar className="h-5 w-5 mr-2 text-gray-600" />
           Pricing & Access
         </h3>
         
@@ -562,17 +585,18 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepP
         isFirst={isFirst}
         isValid={isValid}
         nextLabel="Continue to Security"
+        onCancel={onCancel}
       />
     </div>
   )
 }
 
-function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid }: StepProps) {
+function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg border p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <Shield className="h-5 w-5 mr-2 text-gray-600" />
+          <TbShield className="h-5 w-5 mr-2 text-gray-600" />
           Security & Privacy
         </h3>
         
@@ -645,22 +669,23 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid }: Step
         isFirst={isFirst}
         isValid={isValid}
         nextLabel="Review & Submit"
+        onCancel={onCancel}
       />
     </div>
   )
 }
 
-function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onUpload }: StepProps) {
+function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTbUpload }: StepProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async () => {
-    if (!onUpload) return
+    if (!onTbUpload) return
     
     setIsSubmitting(true)
     try {
-      await onUpload()
+      await onTbUpload()
     } catch (error) {
-      console.error('Upload failed:', error)
+      console.error('TbUpload failed:', error)
     } finally {
       setIsSubmitting(false)
     }
@@ -679,7 +704,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onUp
               : 'bg-yellow-50 border-yellow-200'
           }`}>
             <div className="flex items-start">
-              <AlertCircle className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${
+              <IoWarning className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${
                 validation.hasErrors ? 'text-red-500' : 'text-yellow-500'
               }`} />
               <div>
@@ -703,7 +728,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onUp
         {!isWalletConnected && (
           <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
             <div className="flex items-start">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+              <IoWarning className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-red-800">Wallet Not Connected</p>
                 <p className="text-sm text-red-700 mt-1">Connect your wallet in the header to upload the model</p>
@@ -739,7 +764,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onUp
 
           {data.tags.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-gray-500">Tags</p>
+              <p className="text-sm font-medium text-gray-500">TbTags</p>
               <div className="flex flex-wrap gap-1 mt-1">
                 {data.tags.map(tag => (
                   <span key={tag} className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">
@@ -782,7 +807,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onUp
           onClick={onPrev}
           className="flex items-center px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <RiArrowLeftLine className="h-4 w-4 mr-2" />
           Back
         </button>
         <button
@@ -797,18 +822,18 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onUp
             </>
           ) : !isWalletConnected ? (
             <>
-              <AlertCircle className="h-4 w-4 mr-2" />
+              <IoWarning className="h-4 w-4 mr-2" />
               Connect Wallet First
             </>
           ) : validation?.hasErrors ? (
             <>
-              <AlertCircle className="h-4 w-4 mr-2" />
+              <IoWarning className="h-4 w-4 mr-2" />
               Fix Errors First
             </>
           ) : (
             <>
               Upload Model
-              <ArrowRight className="h-4 w-4 ml-2" />
+              <RiArrowRightLine className="h-4 w-4 ml-2" />
             </>
           )}
         </button>
@@ -822,31 +847,43 @@ function StepNavigation({
   onPrev, 
   isFirst, 
   isValid, 
-  nextLabel = "Continue" 
+  nextLabel = "Continue",
+  onCancel 
 }: {
   onNext: () => void
   onPrev: () => void
   isFirst: boolean
   isValid: boolean
   nextLabel?: string
+  onCancel?: () => void
 }) {
   return (
     <div className="flex justify-between">
-      <button
-        onClick={onPrev}
-        disabled={isFirst}
-        className="flex items-center px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back
-      </button>
+      <div className="flex space-x-3">
+        <button
+          onClick={onPrev}
+          disabled={isFirst}
+          className="flex items-center px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <RiArrowLeftLine className="h-4 w-4 mr-2" />
+          Back
+        </button>
+        {onCancel && (
+          <button
+            onClick={onCancel}
+            className="px-6 py-2 border border-red-300 rounded-md text-red-700 hover:bg-red-50 transition-colors"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
       <button
         onClick={onNext}
         disabled={!isValid}
         className="flex items-center px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {nextLabel}
-        <ArrowRight className="h-4 w-4 ml-2" />
+        <RiArrowRightLine className="h-4 w-4 ml-2" />
       </button>
     </div>
   )

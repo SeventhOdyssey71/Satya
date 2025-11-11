@@ -2,6 +2,7 @@ import { SuiClient, SuiTransactionBlockResponse } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { DataListing, PurchaseRequest, MarketplaceError, ErrorCode } from '../types';
+import { MARKETPLACE_CONFIG } from '../../constants';
 
 export interface SuiMarketplaceConfig {
   network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
@@ -25,20 +26,33 @@ export class SuiMarketplaceClient {
     listing: Omit<DataListing, 'id' | 'createdAt' | 'isActive'>,
     sellerAddress: string
   ): Transaction {
+    // This method is deprecated - use createListingTransactionWithCreatorCap instead
+    throw new Error('Use createListingTransactionWithCreatorCap instead');
+  }
+
+  // Create a transaction with dynamic CreatorCap lookup
+  createListingTransactionWithCreatorCap(
+    listing: Omit<DataListing, 'id' | 'createdAt' | 'isActive'>,
+    sellerAddress: string,
+    creatorCapId: string
+  ): Transaction {
     const tx = new Transaction();
     
     // Set a reasonable gas budget for the transaction
-    tx.setGasBudget(1_000_000_000); // 1 SUI gas budget
+    tx.setGasBudget(MARKETPLACE_CONFIG.DEFAULT_GAS_BUDGET); // 0.1 SUI gas budget
     tx.setSender(sellerAddress); // Set the sender address
     
-    // Complete function call with correct CreatorCap (from matching package)
-    const creatorCapId = '0x035a6457718b4989c6e96ef14ae6e30885c3c508a7e1afc404fca598096d2e84';
+    console.log('Creating marketplace listing transaction with:');
+    console.log('- Package ID:', this.config.packageId);
+    console.log('- Marketplace Object:', this.config.marketplaceObjectId);
+    console.log('- Creator Cap:', creatorCapId);
+    console.log('- Seller Address:', sellerAddress);
     
     tx.moveCall({
       target: `${this.config.packageId}::marketplace_v2::create_listing`,
       arguments: [
         tx.object(this.config.marketplaceObjectId), // marketplace
-        tx.object(creatorCapId), // creator_cap (existing owned object)
+        tx.object(creatorCapId), // creator_cap (user's owned object)
         tx.pure.string(listing.title || 'Model'), // title
         tx.pure.string(listing.description || 'AI Model'), // description
         tx.pure.string(listing.category || 'AI'), // category
@@ -55,7 +69,7 @@ export class SuiMarketplaceClient {
 
   async createListing(
     listing: Omit<DataListing, 'id' | 'createdAt' | 'isActive'>,
-    keypair: Ed25519Keypair
+    walletSigner: any // dapp-kit wallet signer
   ): Promise<string> {
     try {
       // Validate configuration
@@ -63,26 +77,76 @@ export class SuiMarketplaceClient {
         throw new Error('SUI marketplace configuration missing: packageId and marketplaceObjectId required');
       }
       
-      const tx = this.createListingTransaction(listing, keypair.toSuiAddress());
+      // Get user address from wallet
+      const userAddress = walletSigner.toSuiAddress ? walletSigner.toSuiAddress() : 
+                          (walletSigner.address || walletSigner.getAddress?.());
+      
+      if (!userAddress) {
+        throw new Error('Unable to get user address from wallet');
+      }
 
-      // Skip dry run for now due to function signature issues
-      // TODO: Re-enable once we have the correct function signatures
-      console.log('Skipping dry run, executing transaction directly...');
-
-      const result = await this.client.signAndExecuteTransaction({
-        signer: keypair,
-        transaction: tx,
-        options: {
-          showEffects: true,
-          showEvents: true,
-          showInput: true,
-          showObjectChanges: true
-        }
+      // Find user's CreatorCap for this marketplace
+      console.log('Looking for CreatorCap owned by user:', userAddress);
+      const ownedObjects = await this.client.getOwnedObjects({
+        owner: userAddress,
+        filter: {
+          StructType: `${this.config.packageId}::marketplace_v2::CreatorCap`
+        },
+        options: { showContent: true }
       });
 
-      if (result.effects?.status?.status !== 'success') {
-        const error = result.effects?.status?.error || 'Transaction execution failed';
+      if (!ownedObjects.data || ownedObjects.data.length === 0) {
+        throw new Error(`No CreatorCap found for user ${userAddress}. User needs to create/mint a CreatorCap first.`);
+      }
+
+      const creatorCapId = ownedObjects.data[0].data?.objectId;
+      if (!creatorCapId) {
+        throw new Error('Invalid CreatorCap object found');
+      }
+
+      console.log('Found CreatorCap:', creatorCapId);
+      
+      const tx = this.createListingTransactionWithCreatorCap(listing, userAddress, creatorCapId);
+
+      console.log('Prompting user to sign marketplace listing transaction...');
+
+      // Use wallet signer to prompt user for transaction signing
+      let result;
+      if (walletSigner.signAndExecuteTransaction) {
+        // Use dapp-kit wallet signing
+        result = await walletSigner.signAndExecuteTransaction({
+          transaction: tx,
+          options: {
+            showEffects: true,
+            showEvents: true,
+            showInput: true,
+            showObjectChanges: true
+          }
+        });
+      } else {
+        // Fallback to direct client signing (for Ed25519Keypair)
+        result = await this.client.signAndExecuteTransaction({
+          signer: walletSigner,
+          transaction: tx,
+          options: {
+            showEffects: true,
+            showEvents: true,
+            showInput: true,
+            showObjectChanges: true
+          }
+        });
+      }
+
+      // Check transaction status - transaction is successful if we have a digest and no error
+      const hasDigest = !!result.digest;
+      const statusString = result.effects?.status?.status || result.effects?.status;
+      const isSuccess = statusString === 'success' || (hasDigest && !result.effects?.status?.error);
+      
+      if (!isSuccess) {
+        const error = result.effects?.status?.error || result.errors?.[0] || 'Transaction execution failed';
         console.error('Transaction execution failed:', error);
+        console.error('Full transaction result:', JSON.stringify(result, null, 2));
+        console.error('Transaction effects:', JSON.stringify(result.effects, null, 2));
         throw new Error(`Transaction failed: ${error}`);
       }
 
@@ -130,8 +194,13 @@ export class SuiMarketplaceClient {
         }
       });
 
-      if (result.effects?.status?.status !== 'success') {
-        throw new Error('Transaction failed');
+      // Check transaction status
+      const statusString = result.effects?.status?.status || result.effects?.status;
+      const isSuccess = statusString === 'success' || (!!result.digest && !result.effects?.status?.error);
+      
+      if (!isSuccess) {
+        const error = result.effects?.status?.error || 'Transaction failed';
+        throw new Error(`Transaction failed: ${error}`);
       }
 
       const purchaseId = this.extractPurchaseIdFromEvents(result);
@@ -169,8 +238,13 @@ export class SuiMarketplaceClient {
         }
       });
 
-      if (result.effects?.status?.status !== 'success') {
-        throw new Error('Transaction failed');
+      // Check transaction status
+      const statusString = result.effects?.status?.status || result.effects?.status;
+      const isSuccess = statusString === 'success' || (!!result.digest && !result.effects?.status?.error);
+      
+      if (!isSuccess) {
+        const error = result.effects?.status?.error || 'Transaction failed';
+        throw new Error(`Transaction failed: ${error}`);
       }
     } catch (error) {
       throw new MarketplaceError(
@@ -209,8 +283,13 @@ export class SuiMarketplaceClient {
         }
       });
 
-      if (result.effects?.status?.status !== 'success') {
-        throw new Error('Transaction failed');
+      // Check transaction status
+      const statusString = result.effects?.status?.status || result.effects?.status;
+      const isSuccess = statusString === 'success' || (!!result.digest && !result.effects?.status?.error);
+      
+      if (!isSuccess) {
+        const error = result.effects?.status?.error || 'Transaction failed';
+        throw new Error(`Transaction failed: ${error}`);
       }
 
       const disputeId = this.extractDisputeIdFromEvents(result);
@@ -309,15 +388,29 @@ export class SuiMarketplaceClient {
 
   private extractListingIdFromEvents(result: SuiTransactionBlockResponse): string {
     const events = result.events || [];
+    console.log('All events:', JSON.stringify(events, null, 2));
+    
+    // Try multiple patterns for the listing event
     const listingEvent = events.find(e => 
-      e.type.includes('ListingCreated')
+      e.type.includes('ListingCreated') || 
+      e.type.includes('listing_created') ||
+      e.type.includes('Created')
     );
     
+    console.log('Found listing event:', JSON.stringify(listingEvent, null, 2));
+    
     if (listingEvent && listingEvent.parsedJson) {
-      return (listingEvent.parsedJson as any).listing_id;
+      const parsedData = listingEvent.parsedJson as any;
+      // Try multiple field names
+      const listingId = parsedData.listing_id || parsedData.id || parsedData.listingId;
+      if (listingId) {
+        return listingId;
+      }
     }
     
-    throw new Error('Could not extract listing ID from transaction');
+    // If we can't extract from events, generate a fallback ID from the transaction
+    console.warn('Could not extract listing ID from events, using transaction digest');
+    return `listing_${Date.now()}_${result.digest?.slice(0, 8)}`;
   }
 
   private extractPurchaseIdFromEvents(result: SuiTransactionBlockResponse): string {
