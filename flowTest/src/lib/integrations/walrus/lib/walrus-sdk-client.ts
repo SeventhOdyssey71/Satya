@@ -31,9 +31,15 @@ export class WalrusSDKClient {
       url: getFullnodeUrl(network)
     });
     
-    // Configure Walrus with network
+    // Configure Walrus with network and upload relay to avoid direct storage node connections
     this.client = suiClient.$extend(walrus({
-      network: network as 'testnet' | 'mainnet'
+      network: network as 'testnet' | 'mainnet',
+      uploadRelay: {
+        host: 'https://upload-relay.testnet.walrus.space',
+        sendTip: {
+          max: 1000 // Maximum tip in MIST
+        }
+      }
     }));
     
     logger.info('Walrus SDK client initialized', {
