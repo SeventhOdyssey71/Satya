@@ -317,16 +317,6 @@ export default function ModelPage({ params }: ModelPageProps) {
                 <div className="max-w-none">
                   <h3 className="text-xl font-semibold text-black mb-4">About this Model</h3>
                   <p className="text-gray-700 mb-8 leading-relaxed">{model.longDescription}</p>
-                  
-                  <h4 className="text-lg font-semibold text-black mb-4">Features</h4>
-                  <ul className="space-y-3">
-                    {model.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-3 text-gray-700">
-                        <CheckCircle className="w-5 h-5 text-black mt-0.5 flex-shrink-0" />
-                        <span className="leading-relaxed">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </div>
             </div>
@@ -404,47 +394,6 @@ export default function ModelPage({ params }: ModelPageProps) {
                   )}
                 </div>
 
-                {/* Creator Info */}
-                <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-xl font-semibold text-black mb-4">Creator</h3>
-                  <div className="flex items-center gap-3">
-                    <img 
-                      src={model.authorAvatar}
-                      alt={model.author}
-                      className="w-12 h-12 rounded-full"
-                    />
-                    <div>
-                      <p className="font-semibold text-black">{model.author}</p>
-                      <p className="text-sm text-gray-700">{model.downloads} downloads</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Security Info */}
-                <div className="bg-gray-50 border border-gray-300 rounded-lg p-6 shadow-sm">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Lock className="w-5 h-5 text-black" />
-                    <span className="font-semibold text-black">Security Features</span>
-                  </div>
-                  <ul className="text-gray-700 space-y-2">
-                    <li className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
-                      TEE-verified model integrity
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
-                      SEAL end-to-end encryption
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
-                      Blockchain attestation proof
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
-                      Secure access control
-                    </li>
-                  </ul>
-                </div>
               </div>
             </div>
           </div>
