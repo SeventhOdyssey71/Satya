@@ -213,17 +213,12 @@ export default function ModelPage({ params }: ModelPageProps) {
             {/* Left Column - Model Preview */}
             <div className="lg:col-span-2">
               {/* Model Preview */}
-              <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl overflow-hidden mb-8 h-96">
-                <div className="absolute inset-0 opacity-20">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.3),transparent_50%)]" />
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.1),transparent_50%)]" />
-                </div>
-                
+              <div className="relative bg-gray-100 rounded-lg overflow-hidden mb-8 h-80">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img 
                     src="/images/Claude.png" 
                     alt={model.title}
-                    className="w-32 h-32 object-cover rounded-full border-4 border-white/20"
+                    className="w-full h-full object-contain p-8"
                   />
                 </div>
               </div>
@@ -231,7 +226,7 @@ export default function ModelPage({ params }: ModelPageProps) {
               {/* Model Information */}
               <div className="space-y-6">
                 <div>
-                  <h1 className="text-3xl font-russo text-black mb-4">{model.title}</h1>
+                  <h1 className="text-3xl font-bold text-black mb-6">{model.title}</h1>
                   
                   {/* Progress Steps */}
                   <div className="flex items-center gap-4 mb-6">
@@ -275,10 +270,10 @@ export default function ModelPage({ params }: ModelPageProps) {
                     </div>
                   </div>
 
-                  <p className="text-gray-600 mb-4">{model.description}</p>
+                  <p className="text-gray-700 mb-8 leading-relaxed">{model.description}</p>
                   
                   {/* File Size Information */}
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
                     <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                       <Database className="w-5 h-5 text-blue-600" />
                       Upload Information & File Sizes
@@ -309,9 +304,9 @@ export default function ModelPage({ params }: ModelPageProps) {
                   </div>
 
                   {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-6">
+                  <div className="flex flex-wrap gap-3 mb-8">
                     {model.tags.map((tag) => (
-                      <span key={tag} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                      <span key={tag} className="px-4 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm font-medium">
                         {tag}
                       </span>
                     ))}
@@ -319,16 +314,16 @@ export default function ModelPage({ params }: ModelPageProps) {
                 </div>
 
                 {/* Long Description */}
-                <div className="prose prose-gray max-w-none">
-                  <h3 className="text-lg font-medium text-gray-900 mb-3">About this Model</h3>
-                  <p className="text-gray-600">{model.longDescription}</p>
+                <div className="max-w-none">
+                  <h3 className="text-xl font-semibold text-black mb-4">About this Model</h3>
+                  <p className="text-gray-700 mb-8 leading-relaxed">{model.longDescription}</p>
                   
-                  <h4 className="text-md font-medium text-gray-900 mt-6 mb-3">Features</h4>
-                  <ul className="space-y-2">
+                  <h4 className="text-lg font-semibold text-black mb-4">Features</h4>
+                  <ul className="space-y-3">
                     {model.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-2 text-gray-600">
-                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        {feature}
+                      <li key={index} className="flex items-start gap-3 text-gray-700">
+                        <CheckCircle className="w-5 h-5 text-black mt-0.5 flex-shrink-0" />
+                        <span className="leading-relaxed">{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -340,25 +335,25 @@ export default function ModelPage({ params }: ModelPageProps) {
             <div className="lg:col-span-1">
               <div className="sticky top-6 space-y-6">
                 {/* Pricing Card */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Pricing Breakdown</h3>
+                <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-xl font-semibold text-black mb-6">Pricing Breakdown</h3>
                   
-                  <div className="space-y-3 mb-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Verification (TEE)</span>
-                      <span className="font-medium">{model.attestationPrice} SUI</span>
+                  <div className="space-y-4 mb-6">
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-700">Verification (TEE)</span>
+                      <span className="font-semibold text-black">{model.attestationPrice} SUI</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Model Access</span>
-                      <span className="font-medium">{model.price} SUI</span>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-700">Model Access</span>
+                      <span className="font-semibold text-black">{model.price} SUI</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Platform Fee</span>
-                      <span className="font-medium">0.05 SUI</span>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-700">Platform Fee</span>
+                      <span className="font-semibold text-black">0.05 SUI</span>
                     </div>
-                    <div className="border-t pt-3 flex justify-between items-center">
-                      <span className="font-bold text-gray-900">Total</span>
-                      <span className="font-bold text-xl text-blue-600">{model.totalPrice} SUI</span>
+                    <div className="border-t border-gray-200 pt-4 flex justify-between items-center">
+                      <span className="font-bold text-black text-lg">Total</span>
+                      <span className="font-bold text-2xl text-black">{model.totalPrice} SUI</span>
                     </div>
                   </div>
 
@@ -366,7 +361,7 @@ export default function ModelPage({ params }: ModelPageProps) {
                   {purchaseStep === 'details' && (
                     <button
                       onClick={() => setPurchaseStep('verification')}
-                      className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                      className="w-full bg-black text-white px-6 py-4 rounded-lg hover:bg-gray-800 transition-colors font-semibold text-lg"
                     >
                       Start Verification ({model.attestationPrice} SUI)
                     </button>
@@ -410,8 +405,8 @@ export default function ModelPage({ params }: ModelPageProps) {
                 </div>
 
                 {/* Creator Info */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Creator</h3>
+                <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-xl font-semibold text-black mb-4">Creator</h3>
                   <div className="flex items-center gap-3">
                     <img 
                       src={model.authorAvatar}
@@ -419,23 +414,35 @@ export default function ModelPage({ params }: ModelPageProps) {
                       className="w-12 h-12 rounded-full"
                     />
                     <div>
-                      <p className="font-medium text-gray-900">{model.author}</p>
-                      <p className="text-sm text-gray-600">{model.downloads} downloads</p>
+                      <p className="font-semibold text-black">{model.author}</p>
+                      <p className="text-sm text-gray-700">{model.downloads} downloads</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Security Info */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Lock className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-900">Security Features</span>
+                <div className="bg-gray-50 border border-gray-300 rounded-lg p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Lock className="w-5 h-5 text-black" />
+                    <span className="font-semibold text-black">Security Features</span>
                   </div>
-                  <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• TEE-verified model integrity</li>
-                    <li>• SEAL end-to-end encryption</li>
-                    <li>• Blockchain attestation proof</li>
-                    <li>• Secure access control</li>
+                  <ul className="text-gray-700 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
+                      TEE-verified model integrity
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
+                      SEAL end-to-end encryption
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
+                      Blockchain attestation proof
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-black rounded-full"></span>
+                      Secure access control
+                    </li>
                   </ul>
                 </div>
               </div>
