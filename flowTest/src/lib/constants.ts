@@ -179,6 +179,9 @@ export const APP_CONFIG = {
   MOCK_WALRUS: process.env.NEXT_PUBLIC_MOCK_WALRUS === 'true',
   MOCK_SEAL: process.env.NEXT_PUBLIC_MOCK_SEAL === 'true',
   MOCK_SUI: process.env.NEXT_PUBLIC_MOCK_SUI === 'true',
+  
+  // Feature Flags
+  ENABLE_WALRUS_SDK_UPLOADS: process.env.NEXT_PUBLIC_ENABLE_WALRUS_SDK_UPLOADS === 'true',
 } as const
 
 // ============================================
