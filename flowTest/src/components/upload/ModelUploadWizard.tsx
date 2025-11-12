@@ -256,7 +256,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-black mb-2">Upload Model</h1>
+        <h1 className="text-3xl font-russo text-black mb-2">Upload Model</h1>
         <p className="text-gray-500">Share your AI model with the Satya marketplace</p>
       </div>
 
