@@ -34,10 +34,10 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold text-black">Pending</h3>
-              <p className="text-4xl font-bold text-gray-600 mt-3">{statusCounts.pending}</p>
+              <p className="text-4xl font-bold text-yellow-600 mt-3">{statusCounts.pending}</p>
               <p className="text-gray-700 mt-2">Processing uploads</p>
             </div>
-            <IoTime className="w-10 h-10 text-gray-600" />
+            <IoTime className="w-10 h-10 text-yellow-600" />
           </div>
         </div>
 
@@ -46,10 +46,10 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold text-black">Completed</h3>
-              <p className="text-4xl font-bold text-gray-600 mt-3">{statusCounts.completed}</p>
+              <p className="text-4xl font-bold text-green-600 mt-3">{statusCounts.completed}</p>
               <p className="text-gray-700 mt-2">Available in marketplace</p>
             </div>
-            <IoCheckmarkCircle className="w-10 h-10 text-gray-600" />
+            <IoCheckmarkCircle className="w-10 h-10 text-green-600" />
           </div>
         </div>
 
@@ -58,10 +58,10 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold text-black">Failed</h3>
-              <p className="text-4xl font-bold text-gray-600 mt-3">{statusCounts.failed}</p>
+              <p className="text-4xl font-bold text-red-600 mt-3">{statusCounts.failed}</p>
               <p className="text-gray-700 mt-2">Requires attention</p>
             </div>
-            <IoCloseCircle className="w-10 h-10 text-gray-600" />
+            <IoCloseCircle className="w-10 h-10 text-red-600" />
           </div>
         </div>
       </div>
@@ -153,28 +153,28 @@ function formatFileSize(bytes: number): string {
 function getStatusColor(status: string): string {
   switch (status) {
     case 'completed':
-      return 'bg-black'
+      return 'bg-green-500'
     case 'pending':
     case 'uploading':
-      return 'bg-gray-500'
+      return 'bg-yellow-500'
     case 'failed':
     case 'error':
-      return 'bg-gray-400'
+      return 'bg-red-500'
     default:
-      return 'bg-gray-300'
+      return 'bg-gray-500'
   }
 }
 
 function getStatusBadge(status: string): string {
   switch (status) {
     case 'completed':
-      return 'bg-black text-white'
+      return 'bg-green-100 text-green-800'
     case 'pending':
     case 'uploading':
-      return 'bg-gray-200 text-gray-800'
+      return 'bg-yellow-100 text-yellow-800'
     case 'failed':
     case 'error':
-      return 'bg-gray-300 text-gray-800'
+      return 'bg-red-100 text-red-800'
     default:
       return 'bg-gray-100 text-gray-700'
   }
