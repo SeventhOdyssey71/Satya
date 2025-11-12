@@ -230,41 +230,41 @@ export default function ModelPage({ params }: ModelPageProps) {
                   
                   {/* Progress Steps */}
                   <div className="flex items-center gap-4 mb-6">
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                    <div className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium ${
                       purchaseStep === 'details' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-gray-100 text-gray-600'
+                        ? 'bg-black text-white' 
+                        : 'bg-gray-200 text-gray-700'
                     }`}>
-                      <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">1</span>
+                      <span className="w-6 h-6 bg-white text-black rounded-full flex items-center justify-center text-sm font-bold">1</span>
                       View Details
                     </div>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                    <ArrowRight className="w-5 h-5 text-gray-600" />
+                    <div className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium ${
                       purchaseStep === 'verification' 
-                        ? 'bg-purple-100 text-purple-800' 
+                        ? 'bg-black text-white' 
                         : isVerified 
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-600'
+                          ? 'bg-gray-800 text-white'
+                          : 'bg-gray-200 text-gray-700'
                     }`}>
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                        isVerified ? 'bg-green-600 text-white' : 'bg-purple-600 text-white'
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
+                        isVerified ? 'bg-white text-black' : 'bg-white text-black'
                       }`}>
-                        {isVerified ? <CheckCircle className="w-3 h-3" /> : '2'}
+                        {isVerified ? <CheckCircle className="w-4 h-4" /> : '2'}
                       </span>
                       Pay for Verification
                     </div>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                    <ArrowRight className="w-5 h-5 text-gray-600" />
+                    <div className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium ${
                       purchaseStep === 'purchase' 
-                        ? 'bg-green-100 text-green-800' 
+                        ? 'bg-black text-white' 
                         : isPurchased
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-600'
+                          ? 'bg-gray-800 text-white'
+                          : 'bg-gray-200 text-gray-700'
                     }`}>
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                        isPurchased ? 'bg-green-600 text-white' : 'bg-green-600 text-white'
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
+                        isPurchased ? 'bg-white text-black' : 'bg-white text-black'
                       }`}>
-                        {isPurchased ? <CheckCircle className="w-3 h-3" /> : '3'}
+                        {isPurchased ? <CheckCircle className="w-4 h-4" /> : '3'}
                       </span>
                       Purchase Model
                     </div>
@@ -273,23 +273,23 @@ export default function ModelPage({ params }: ModelPageProps) {
                   <p className="text-gray-700 mb-8 leading-relaxed">{model.description}</p>
                   
                   {/* File Size Information */}
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
-                    <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      <Database className="w-5 h-5 text-blue-600" />
+                  <div className="bg-white border border-gray-300 rounded-lg p-6 mb-8">
+                    <h3 className="font-semibold text-black mb-4 flex items-center gap-3">
+                      <Database className="w-5 h-5 text-black" />
                       Upload Information & File Sizes
                     </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       <div>
-                        <span className="text-gray-500">Model Size:</span>
-                        <p className="font-medium">{model.fileSize ? formatFileSize(model.fileSize) : '--'}</p>
+                        <span className="text-gray-700 font-medium">Model Size:</span>
+                        <p className="font-semibold text-black">{model.fileSize ? formatFileSize(model.fileSize) : '--'}</p>
                       </div>
                       <div>
-                        <span className="text-gray-500">Dataset Size:</span>
-                        <p className="font-medium">{model.datasetSize ? formatFileSize(model.datasetSize) : '--'}</p>
+                        <span className="text-gray-700 font-medium">Dataset Size:</span>
+                        <p className="font-semibold text-black">{model.datasetSize ? formatFileSize(model.datasetSize) : '--'}</p>
                       </div>
                       <div>
-                        <span className="text-gray-500">Total Size:</span>
-                        <p className="font-medium">
+                        <span className="text-gray-700 font-medium">Total Size:</span>
+                        <p className="font-semibold text-black">
                           {(model.fileSize && model.datasetSize) 
                             ? formatFileSize(model.fileSize + model.datasetSize) 
                             : '--'
@@ -297,8 +297,8 @@ export default function ModelPage({ params }: ModelPageProps) {
                         </p>
                       </div>
                       <div>
-                        <span className="text-gray-500">Created:</span>
-                        <p className="font-medium">{new Date(model.createdAt).toLocaleDateString()}</p>
+                        <span className="text-gray-700 font-medium">Created:</span>
+                        <p className="font-semibold text-black">{new Date(model.createdAt).toLocaleDateString()}</p>
                       </div>
                     </div>
                   </div>
