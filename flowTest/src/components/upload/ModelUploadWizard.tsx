@@ -254,7 +254,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
   const CurrentStepComponent = steps[currentStep].component
 
   return (
-    <div className="max-w-4xl mx-auto px-6">
+    <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-black mb-2">Upload Model</h1>
         <p className="text-gray-500">Share your AI model with the Satya marketplace</p>
