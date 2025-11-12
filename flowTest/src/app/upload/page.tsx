@@ -12,9 +12,11 @@ export default function UploadPage() {
     <div className="min-h-screen bg-white">
       <Header activeTab="upload" />
       <main className="py-8">
-        <UploadProvider>
-          <ModelUploadWizard />
-        </UploadProvider>
+        <div className="container mx-auto px-6">
+          <UploadProvider>
+            <ModelUploadWizard />
+          </UploadProvider>
+        </div>
       </main>
     </div>
   )
