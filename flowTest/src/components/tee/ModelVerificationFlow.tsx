@@ -34,8 +34,8 @@ export function ModelVerificationFlow({
     setError(null);
 
     try {
-      // Step 1: Run ML inference (simulated for blob-based models)
-      const mlResponse = await fetch('http://localhost:8001/inference/tiny_lr', {
+      // Step 1: Run ML inference with real models
+      const mlResponse = await fetch('http://localhost:5001/inference/tiny_lr', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -46,13 +46,13 @@ export function ModelVerificationFlow({
       });
 
       if (!mlResponse.ok) {
-        throw new Error('ML inference failed');
+        throw new Error('ML inference failed - ensure tiny models server is running on port 5001');
       }
 
       const mlResult = await mlResponse.json();
 
       // Step 2: Generate real TEE attestation
-      const teeResponse = await fetch('http://localhost:8000/complete_verification', {
+      const teeResponse = await fetch('http://localhost:5000/complete_verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -171,26 +171,60 @@ export function ModelVerificationFlow({
             )}
           </div>
 
-          <button
-            onClick={generateTEEAttestation}
-            disabled={isGeneratingAttestation || !!attestationData}
-            className={`w-full px-4 py-2 rounded-lg font-medium text-white transition-colors ${
-              isGeneratingAttestation || !!attestationData
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-purple-600 hover:bg-purple-700'
-            }`}
-          >
-            {isGeneratingAttestation ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Generating TEE Attestation...</span>
-              </div>
-            ) : attestationData ? (
-              '✅ TEE Attestation Generated'
-            ) : (
-              '🔒 Generate TEE Attestation'
+          <div className="space-y-3">
+            <button
+              onClick={generateTEEAttestation}
+              disabled={isGeneratingAttestation || !!attestationData}
+              className={`w-full px-4 py-3 rounded-lg font-medium text-white transition-colors ${
+                isGeneratingAttestation || !!attestationData
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-purple-600 hover:bg-purple-700'
+              }`}
+            >
+              {isGeneratingAttestation ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Processing in TEE...</span>
+                </div>
+              ) : attestationData ? (
+                '✅ TEE Processing Complete'
+              ) : (
+                '🧠 Process in TEE'
+              )}
+            </button>
+
+            {attestationData && !verificationResult && (
+              <button
+                onClick={verifyOnChain}
+                disabled={isVerifyingOnChain || !account}
+                className={`w-full px-4 py-3 rounded-lg font-medium text-white transition-colors ${
+                  isVerifyingOnChain || !account
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {isVerifyingOnChain ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Verifying on SUI Blockchain...</span>
+                  </div>
+                ) : !account ? (
+                  '🔒 Connect Wallet to Verify'
+                ) : (
+                  '🔗 Verify on SUI Blockchain'
+                )}
+              </button>
             )}
-          </button>
+
+            {verificationResult && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-green-800">
+                  <span className="text-green-600">✅</span>
+                  <span className="font-medium">Blockchain Verification Complete!</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
