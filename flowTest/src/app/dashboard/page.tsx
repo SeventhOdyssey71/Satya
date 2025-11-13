@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/ui/Header'
 import DashboardOverview from '@/components/dashboard/DashboardOverview'
+import DashboardPending from '@/components/dashboard/DashboardPending'
 import DashboardHistory from '@/components/dashboard/DashboardHistory'
 import DashboardDownloads from '@/components/dashboard/DashboardDownloads'
 
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic'
 
 export default function DashboardPage() {
   const [isConnected] = useState(true) // Simplified for now
-  const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'downloads'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'pending' | 'history' | 'downloads'>('overview')
   const router = useRouter()
 
   if (!isConnected) {
@@ -59,6 +60,16 @@ export default function DashboardPage() {
                 Overview
               </button>
               <button
+                onClick={() => setActiveTab('pending')}
+                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'pending'
+                    ? 'border-black text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Pending Verification
+              </button>
+              <button
                 onClick={() => setActiveTab('history')}
                 className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'history'
@@ -83,6 +94,7 @@ export default function DashboardPage() {
 
           {/* Tab Content */}
           {activeTab === 'overview' && <DashboardOverview onNewUpload={() => router.push('/upload')} />}
+          {activeTab === 'pending' && <DashboardPending />}
           {activeTab === 'history' && <DashboardHistory />}
           {activeTab === 'downloads' && <DashboardDownloads />}
         </div>

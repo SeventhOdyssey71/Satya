@@ -15,6 +15,11 @@ export interface UploadTask {
   error?: string
   createdAt: Date
   updatedAt: Date
+  // TEE Verification fields
+  verificationStatus?: 'pending' | 'verified' | 'failed'
+  teeAttestation?: any
+  blockchainTxDigest?: string
+  blobId?: string
 }
 
 export interface UploadPhase {
