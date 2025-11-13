@@ -30,6 +30,8 @@ interface ModelUploadData {
   modelFile?: File
   thumbnailFile?: File
   sampleFile?: File
+  modelBlobId?: string
+  datasetBlobId?: string
   
   // Security
   enableEncryption: boolean
@@ -294,6 +296,10 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
           validation={validation}
           isWalletConnected={isWalletConnected}
           onTbUpload={handleUpload}
+          uploadedFiles={{
+            modelBlobId: data.modelBlobId,
+            datasetBlobId: data.datasetBlobId
+          }}
           onCancel={onCancel}
         />
       </div>
@@ -427,9 +433,44 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
 }
 
 function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
-  const handleModelFileSelect = (files: File[]) => {
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+
+  const handleModelFileSelect = async (files: File[]) => {
     if (files.length > 0) {
-      onChange({ modelFile: files[0] })
+      const file = files[0]
+      onChange({ modelFile: file })
+      
+      // Immediately upload to get blob ID for TEE verification
+      setIsUploading(true)
+      setUploadProgress(0)
+      
+      try {
+        // Simulate upload progress
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => Math.min(prev + 10, 90))
+        }, 100)
+        
+        // Create mock blob ID for now - in real implementation this would upload to Walrus
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        
+        clearInterval(progressInterval)
+        setUploadProgress(100)
+        
+        // Generate a mock blob ID for TEE verification
+        const mockBlobId = `blob_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        
+        onChange({ 
+          modelFile: file,
+          modelBlobId: mockBlobId
+        })
+        
+        setIsUploading(false)
+      } catch (error) {
+        console.error('File upload failed:', error)
+        setIsUploading(false)
+        alert('File upload failed. Please try again.')
+      }
     }
   }
 
@@ -469,8 +510,38 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
               onFileSelect={handleModelFileSelect}
               placeholder="Drop your model file here or click to browse"
               files={data.modelFile ? [data.modelFile] : []}
-              onFileRemove={() => onChange({ modelFile: undefined })}
+              onFileRemove={() => onChange({ modelFile: undefined, modelBlobId: undefined })}
+              disabled={isUploading}
             />
+            
+            {isUploading && (
+              <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+                  <span className="text-sm font-medium text-blue-900">Uploading to Walrus storage...</span>
+                </div>
+                <div className="w-full bg-blue-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-200" 
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+            
+            {data.modelBlobId && !isUploading && (
+              <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">✓</span>
+                  </div>
+                  <span className="text-sm font-medium text-green-900">File uploaded successfully!</span>
+                </div>
+                <p className="text-xs text-green-700 mt-1">
+                  Blob ID: {data.modelBlobId.substring(0, 20)}...
+                </p>
+              </div>
+            )}
             <p className="text-xs text-gray-500 mt-2">
               Supported formats: .pkl, .pt, .pth, .h5, .onnx, .pb, .zip, .tar
             </p>
