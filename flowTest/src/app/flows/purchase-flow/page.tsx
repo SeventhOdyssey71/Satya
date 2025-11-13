@@ -5,6 +5,9 @@ import { PurchaseWizard } from '@/components/purchase';
 import { ArrowLeft, ShoppingCart, Search, Filter, CheckCircle, Star } from 'lucide-react';
 import Link from 'next/link';
 
+// Disable static generation to avoid Walrus WASM loading issues during build
+export const dynamic = 'force-dynamic'
+
 interface ModelData {
   id: string;
   name: string;

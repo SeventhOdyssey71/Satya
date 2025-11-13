@@ -11,6 +11,7 @@ import FileUploadZone from './FileUploadZone'
 import ProgressIndicator from './ProgressIndicator'
 import UploadProgress from './UploadProgress'
 import UploadStatus from './UploadStatus'
+import { TEEVerificationStep } from './TEEVerificationStep'
 import { useUpload, useUploadValidation } from '@/hooks'
 
 interface ModelUploadData {
@@ -34,6 +35,11 @@ interface ModelUploadData {
   enableEncryption: boolean
   policyType: string
   accessDuration?: number
+  
+  // TEE Verification
+  teeAttestation?: any
+  blockchainTxDigest?: string
+  verificationStatus?: 'pending' | 'verified' | 'failed'
   
   // Advanced
   isPrivate: boolean
@@ -179,6 +185,12 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
       description: 'Configure encryption and privacy settings',
       component: SecurityStep,
       validate: () => validation.isStepValid('security')
+    },
+    {
+      title: 'TEE Verification',
+      description: 'Verify model integrity with trusted execution environment',
+      component: TEEVerificationStep,
+      validate: () => data.verificationStatus === 'verified'
     },
     {
       title: 'Review & Submit',

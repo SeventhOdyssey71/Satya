@@ -108,13 +108,6 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
         
         {allTasks.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-32 h-32 mx-auto mb-6">
-              <img 
-                src="/images/Claude.png" 
-                alt="Claude AI"
-                className="w-full h-full object-contain"
-              />
-            </div>
             <p className="text-gray-700 text-lg leading-relaxed">No uploads yet. Start by uploading your first model!</p>
           </div>
         ) : (
