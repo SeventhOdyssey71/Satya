@@ -57,7 +57,7 @@ export default function MLProcessingSection({
 
   const fetchRealModels = async () => {
     try {
-      const response = await fetch('http://localhost:5001/models');
+      const response = await fetch('http://localhost:8001/models');
       if (response.ok) {
         const data = await response.json();
         setAvailableModels(data.models);
@@ -85,7 +85,7 @@ export default function MLProcessingSection({
 
     try {
       // First get the ML result from tiny models server
-      const mlResponse = await fetch(`http://localhost:5001/inference/${selectedModel}`, {
+      const mlResponse = await fetch(`http://localhost:8001/inference/${selectedModel}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

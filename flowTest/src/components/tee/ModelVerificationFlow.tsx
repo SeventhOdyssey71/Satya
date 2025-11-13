@@ -35,7 +35,7 @@ export function ModelVerificationFlow({
 
     try {
       // Step 1: Run ML inference with real models
-      const mlResponse = await fetch('http://localhost:5001/inference/tiny_lr', {
+      const mlResponse = await fetch('http://localhost:8001/inference/tiny_lr', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -46,7 +46,7 @@ export function ModelVerificationFlow({
       });
 
       if (!mlResponse.ok) {
-        throw new Error('ML inference failed - ensure tiny models server is running on port 5001');
+        throw new Error('ML inference failed - ensure tiny models server is running on port 8001');
       }
 
       const mlResult = await mlResponse.json();
