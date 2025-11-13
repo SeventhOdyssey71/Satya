@@ -1,6 +1,9 @@
 'use client'
 
 import React, { useState } from 'react';
+
+// Disable static generation to avoid Walrus WASM loading issues during build
+export const dynamic = 'force-dynamic'
 import { ArrowLeft, User, Search, Eye, Shield, ShoppingCart, Download, CheckCircle, Star, Filter } from 'lucide-react';
 import { ModelVerificationPanel } from '@/components/verification';
 import { PurchaseWizard } from '@/components/purchase';

@@ -155,8 +155,24 @@ export class WalrusStorageService {
         error: errorMessage
       });
 
+      const normalizedMessage = errorMessage.toLowerCase();
+      const fallbackTriggers = [
+        'walrus network unavailable',
+        'nodes',
+        'failed to fetch',
+        'net::err',
+        'certificate',
+        'ssl',
+        'cors',
+        'bad request',
+        'not registered',
+        'storage node',
+        'status code',
+        'connection'
+      ];
+
       // If it's a network issue, fall back to legacy client
-      if (errorMessage.includes('Walrus network unavailable') || errorMessage.includes('nodes')) {
+      if (fallbackTriggers.some(trigger => normalizedMessage.includes(trigger))) {
         logger.info('Falling back to legacy Walrus client due to network issues');
         
         return await this.uploadDirect(file, options);

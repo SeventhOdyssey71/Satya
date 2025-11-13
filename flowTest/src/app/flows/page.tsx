@@ -4,6 +4,9 @@ import React from 'react';
 import Link from 'next/link';
 import { Shield, Database, ShoppingCart, User, UserCheck, ArrowRight, CheckCircle } from 'lucide-react';
 
+// Disable static generation to avoid Walrus WASM loading issues during build
+export const dynamic = 'force-dynamic'
+
 export default function FlowsIndexPage() {
   const flows = [
     {

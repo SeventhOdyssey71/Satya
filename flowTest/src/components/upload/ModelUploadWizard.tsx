@@ -11,7 +11,9 @@ import FileUploadZone from './FileUploadZone'
 import ProgressIndicator from './ProgressIndicator'
 import UploadProgress from './UploadProgress'
 import UploadStatus from './UploadStatus'
+import { TEEVerificationStep } from './TEEVerificationStep'
 import { useUpload, useUploadValidation } from '@/hooks'
+import { PolicyType } from '@/lib/integrations/seal/types'
 
 interface ModelUploadData {
   // Basic Info
@@ -27,13 +29,21 @@ interface ModelUploadData {
   
   // Files
   modelFile?: File
+  datasetFile?: File
   thumbnailFile?: File
   sampleFile?: File
+  modelBlobId?: string
+  datasetBlobId?: string
   
   // Security
   enableEncryption: boolean
   policyType: string
   accessDuration?: number
+  
+  // TEE Verification
+  teeAttestation?: any
+  blockchainTxDigest?: string
+  verificationStatus?: 'pending' | 'verified' | 'failed'
   
   // Advanced
   isPrivate: boolean
@@ -181,6 +191,12 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
       validate: () => validation.isStepValid('security')
     },
     {
+      title: 'TEE Verification',
+      description: 'Verify model integrity with trusted execution environment',
+      component: TEEVerificationStep,
+      validate: () => data.verificationStatus === 'verified'
+    },
+    {
       title: 'Review & Submit',
       description: 'Review your model and submit to marketplace',
       component: ReviewStep,
@@ -254,9 +270,9 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
   const CurrentStepComponent = steps[currentStep].component
 
   return (
-    <div className="max-w-4xl mx-auto px-6">
+    <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-black mb-2">Upload Model</h1>
+        <h1 className="text-3xl font-russo text-black mb-2">Upload Model</h1>
         <p className="text-gray-500">Share your AI model with the Satya marketplace</p>
       </div>
 
@@ -282,6 +298,10 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
           validation={validation}
           isWalletConnected={isWalletConnected}
           onTbUpload={handleUpload}
+          uploadedFiles={{
+            modelBlobId: data.modelBlobId,
+            datasetBlobId: data.datasetBlobId
+          }}
           onCancel={onCancel}
         />
       </div>
@@ -415,15 +435,102 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
 }
 
 function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
-  const handleModelFileSelect = (files: File[]) => {
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+
+  const handleModelFileSelect = async (files: File[]) => {
     if (files.length > 0) {
-      onChange({ modelFile: files[0] })
+      const file = files[0]
+      onChange({ modelFile: file })
+      
+      // Upload to Walrus with Seal encryption
+      setIsUploading(true)
+      setUploadProgress(0)
+      
+      try {
+        const uploadService = await import('@/lib/services').then(m => m.getUploadService())
+        
+        const uploadResult = await uploadService.uploadFile(
+          {
+            file,
+            encrypt: true,
+            policyType: PolicyType.PAYMENT_GATED,
+            policyParams: {},
+            storageOptions: {
+              epochs: 5
+            }
+          },
+          (progress) => {
+            setUploadProgress(progress.progress)
+          }
+        )
+        
+        if (uploadResult.success) {
+          onChange({ 
+            modelFile: file,
+            modelBlobId: uploadResult.blobId
+          })
+        } else {
+          throw new Error(uploadResult.error || 'Upload failed')
+        }
+        
+        setIsUploading(false)
+      } catch (error) {
+        console.error('Model file upload failed:', error)
+        setIsUploading(false)
+        alert(`Model file upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
     }
   }
 
   const handleThumbnailSelect = (files: File[]) => {
     if (files.length > 0) {
       onChange({ thumbnailFile: files[0] })
+    }
+  }
+
+  const handleDatasetFileSelect = async (files: File[]) => {
+    if (files.length > 0) {
+      const file = files[0]
+      onChange({ datasetFile: file })
+      
+      // Upload to Walrus with Seal encryption
+      setIsUploading(true)
+      setUploadProgress(0)
+      
+      try {
+        const uploadService = await import('@/lib/services').then(m => m.getUploadService())
+        
+        const uploadResult = await uploadService.uploadFile(
+          {
+            file,
+            encrypt: true,
+            policyType: PolicyType.PAYMENT_GATED,
+            policyParams: {},
+            storageOptions: {
+              epochs: 5
+            }
+          },
+          (progress) => {
+            setUploadProgress(progress.progress)
+          }
+        )
+        
+        if (uploadResult.success) {
+          onChange({ 
+            datasetFile: file,
+            datasetBlobId: uploadResult.blobId
+          })
+        } else {
+          throw new Error(uploadResult.error || 'Upload failed')
+        }
+        
+        setIsUploading(false)
+      } catch (error) {
+        console.error('Dataset file upload failed:', error)
+        setIsUploading(false)
+        alert(`Dataset file upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
     }
   }
 
@@ -457,10 +564,79 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
               onFileSelect={handleModelFileSelect}
               placeholder="Drop your model file here or click to browse"
               files={data.modelFile ? [data.modelFile] : []}
-              onFileRemove={() => onChange({ modelFile: undefined })}
+              onFileRemove={() => onChange({ modelFile: undefined, modelBlobId: undefined })}
+              disabled={isUploading}
             />
+            
+            {isUploading && (
+              <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+                  <span className="text-sm font-medium text-blue-900">Uploading to Walrus storage...</span>
+                </div>
+                <div className="w-full bg-blue-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-200" 
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+            
+            {data.modelBlobId && !isUploading && (
+              <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">✓</span>
+                  </div>
+                  <span className="text-sm font-medium text-green-900">File uploaded successfully!</span>
+                </div>
+                <p className="text-xs text-green-700 mt-1">
+                  Blob ID: {data.modelBlobId.substring(0, 20)}...
+                </p>
+              </div>
+            )}
             <p className="text-xs text-gray-500 mt-2">
               Supported formats: .pkl, .pt, .pth, .h5, .onnx, .pb, .zip, .tar
+            </p>
+          </div>
+
+          {/* Dataset File */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Dataset File * (Required)
+            </label>
+            <FileUploadZone
+              accept={{
+                'application/octet-stream': ['.csv', '.json', '.parquet', '.pkl'],
+                'text/csv': ['.csv'],
+                'application/json': ['.json'],
+                'application/zip': ['.zip'],
+                'application/x-tar': ['.tar', '.tar.gz']
+              }}
+              maxSize={1024 * 1024 * 1024} // 1GB
+              onFileSelect={handleDatasetFileSelect}
+              placeholder="Drop your dataset file here or click to browse"
+              files={data.datasetFile ? [data.datasetFile] : []}
+              onFileRemove={() => onChange({ datasetFile: undefined, datasetBlobId: undefined })}
+              disabled={isUploading}
+            />
+            
+            {data.datasetBlobId && !isUploading && (
+              <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">✓</span>
+                  </div>
+                  <span className="text-sm font-medium text-green-900">Dataset uploaded successfully!</span>
+                </div>
+                <p className="text-xs text-green-700 mt-1">
+                  Blob ID: {data.datasetBlobId.substring(0, 20)}...
+                </p>
+              </div>
+            )}
+            <p className="text-xs text-gray-500 mt-2">
+              Supported formats: .csv, .json, .parquet, .pkl, .zip, .tar
             </p>
           </div>
 

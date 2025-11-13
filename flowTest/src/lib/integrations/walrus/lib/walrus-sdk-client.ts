@@ -31,9 +31,15 @@ export class WalrusSDKClient {
       url: getFullnodeUrl(network)
     });
     
-    // Configure Walrus with network
+    // Configure Walrus with network and upload relay to avoid direct storage node connections
     this.client = suiClient.$extend(walrus({
-      network: network as 'testnet' | 'mainnet'
+      network: network as 'testnet' | 'mainnet',
+      uploadRelay: {
+        host: 'https://upload-relay.testnet.walrus.space',
+        sendTip: {
+          max: 1000 // Maximum tip in MIST
+        }
+      }
     }));
     
     logger.info('Walrus SDK client initialized', {
@@ -126,12 +132,30 @@ export class WalrusSDKClient {
 
       } catch (sdkError) {
         const sdkErrorMessage = sdkError instanceof Error ? sdkError.message : String(sdkError);
+        const normalizedMessage = sdkErrorMessage.toLowerCase();
         logger.warn('Walrus SDK upload failed, this may be due to network issues', {
           error: sdkErrorMessage
         });
+
+        const networkFailurePatterns = [
+          'failed to fetch',
+          'net::err',
+          'certificate',
+          'ssl',
+          'storage node',
+          'bad request',
+          'not registered',
+          'status code',
+          'cors',
+          'connection'
+        ];
         
         // Instead of failing completely, throw the network error so the storage service can handle it
-        if (sdkErrorMessage.includes('Too many failures while writing blob') || sdkErrorMessage.includes('nodes')) {
+        if (
+          sdkErrorMessage.includes('Too many failures while writing blob') ||
+          sdkErrorMessage.includes('nodes') ||
+          networkFailurePatterns.some(pattern => normalizedMessage.includes(pattern))
+        ) {
           throw new WalrusError('Walrus network unavailable. Storage nodes are experiencing issues. Please try again later.');
         }
         

@@ -4,16 +4,22 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/ui/Header'
 import { 
-  Shield, 
   Lock, 
   Download, 
   User,
   Calendar,
   Tag,
-  ArrowRight
+  ArrowRight,
+  CheckCircle,
+  Clock,
+  FileText,
+  Database
 } from 'lucide-react'
 import { ModelCard } from '@/components/marketplace/ModelGrid'
 import { EventService, ModelListedEvent } from '@/lib/services/event-service'
+import AttestationVerificationFlow from '@/components/marketplace/AttestationVerificationFlow'
+import ModelPurchaseFlow from '@/components/marketplace/ModelPurchaseFlow'
+import DecryptionModal from '@/components/marketplace/DecryptionModal'
 
 // Disable static generation to avoid service initialization issues during build
 export const dynamic = 'force-dynamic'
@@ -25,12 +31,21 @@ interface ModelPageProps {
 interface ModelDetails extends ModelCard {
   longDescription: string
   features: string[]
+  fileSize?: number
+  datasetSize?: number
+  attestationPrice?: string
+  totalPrice?: string
 }
 
 // Helper function to convert blockchain event to ModelDetails
 function createModelDetailsFromEvent(event: ModelListedEvent, modelId: string): ModelDetails {
   // Parse price from wei/mist to SUI (remove trailing zeros and decimal if whole number)
   const priceInSui = (parseFloat(event.downloadPrice) / 1e9).toString().replace(/\.?0+$/, '')
+  
+  // Calculate estimated attestation price based on file size (mock calculation)
+  const estimatedSize = Math.random() * 2.5 + 0.5 // Random size between 0.5GB - 3GB
+  const attestationPrice = (0.1 + Math.ceil(estimatedSize) * 0.01).toFixed(3)
+  const totalPrice = (parseFloat(priceInSui) + parseFloat(attestationPrice) + 0.05).toFixed(3)
   
   // Format date
   const createdDate = new Date(event.timestamp).toISOString().split('T')[0]
@@ -39,29 +54,34 @@ function createModelDetailsFromEvent(event: ModelListedEvent, modelId: string): 
     id: modelId,
     title: event.title,
     description: `Encrypted AI model secured by SEAL technology. Listed by ${event.creator.slice(0, 10)}...${event.creator.slice(-8)} on ${new Date(event.timestamp).toLocaleDateString()}.`,
-    longDescription: `This AI model has been uploaded to the marketplace and secured with SEAL encryption. The model is stored on Walrus distributed storage (Blob ID: ${event.walrusBlobId}) and can be accessed after purchase verification through our TEE-based attestation system.`,
+    longDescription: `This AI model has been uploaded to the marketplace and secured with SEAL encryption. The model is stored on Walrus distributed storage (Blob ID: ${event.walrusBlobId}) and can be accessed after purchase verification through our TEE-based attestation system. The model includes comprehensive training data and has been verified through our secure attestation process.`,
     author: `${event.creator.slice(0, 8)}...${event.creator.slice(-8)}`,
     authorAvatar: '/images/Claude.png',
     price: priceInSui,
+    attestationPrice,
+    totalPrice,
     category: 'Machine Learning',
     isVerified: true,
     isEncrypted: true,
-    downloads: Math.floor(Math.random() * 100) + 1, // Simulated downloads
-    rating: 4.5 + Math.random() * 0.5, // Simulated rating
-    reviewCount: Math.floor(Math.random() * 50) + 5, // Simulated reviews
-    thumbnailUrl: undefined, // No thumbnail available yet - will show dynamic preview
+    downloads: Math.floor(Math.random() * 100) + 1,
+    rating: 4.5 + Math.random() * 0.5,
+    reviewCount: Math.floor(Math.random() * 50) + 5,
+    thumbnailUrl: undefined,
     tags: ['AI', 'SEAL Encrypted', 'Blockchain', 'Decentralized'],
     createdAt: createdDate,
     updatedAt: createdDate,
     trending: false,
-    isNew: Date.now() - event.timestamp < 7 * 24 * 60 * 60 * 1000, // New if less than 7 days old
+    isNew: Date.now() - event.timestamp < 7 * 24 * 60 * 60 * 1000,
     sampleAvailable: true,
+    fileSize: estimatedSize * 1024 * 1024 * 1024, // Convert to bytes
+    datasetSize: (estimatedSize * 0.3) * 1024 * 1024 * 1024, // Dataset is ~30% of model size
     features: [
       'SEAL encrypted for secure access',
       'Stored on Walrus distributed storage',
       'TEE-based attestation verification',
       'Blockchain-verified authenticity',
-      'Decentralized model hosting'
+      'Decentralized model hosting',
+      'AWS Nitro Enclaves computation'
     ]
   }
 }
@@ -70,6 +90,10 @@ export default function ModelPage({ params }: ModelPageProps) {
   const [id, setId] = useState<string>('')
   const [model, setModel] = useState<ModelDetails | null>(null)
   const [loading, setLoading] = useState(true)
+  const [purchaseStep, setPurchaseStep] = useState<'details' | 'verification' | 'purchase' | 'access'>('details')
+  const [isVerified, setIsVerified] = useState(false)
+  const [isPurchased, setIsPurchased] = useState(false)
+  const [showDecryption, setShowDecryption] = useState(false)
   const router = useRouter()
   
   useEffect(() => {
@@ -116,8 +140,22 @@ export default function ModelPage({ params }: ModelPageProps) {
     }
   }
 
-  const handlePurchase = () => {
-    router.push(`/model/${id}/purchase`)
+  const handleVerificationComplete = (attestationId: string) => {
+    setIsVerified(true)
+    setPurchaseStep('purchase')
+  }
+
+  const handlePurchaseComplete = () => {
+    setIsPurchased(true)
+    setPurchaseStep('access')
+  }
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
   }
 
   if (loading) {
@@ -127,7 +165,7 @@ export default function ModelPage({ params }: ModelPageProps) {
         <main className="relative z-10 py-6">
           <div className="container max-w-7xl mx-auto px-6">
             <div className="text-center py-20">
-              <div className="w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin mx-auto mb-4" />
               <p className="text-gray-600">Loading model details...</p>
             </div>
           </div>
@@ -143,11 +181,10 @@ export default function ModelPage({ params }: ModelPageProps) {
         <main className="relative z-10 py-6">
           <div className="container max-w-7xl mx-auto px-6">
             <div className="text-center py-20">
-              <h1 className="text-2xl font-semibold text-gray-900 mb-2">Model Not Found</h1>
-              <p className="text-gray-600 mb-4">The requested model could not be found.</p>
-              <button
+              <p className="text-gray-600">Model not found</p>
+              <button 
                 onClick={() => router.push('/marketplace')}
-                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+                className="mt-4 text-blue-600 hover:text-blue-700"
               >
                 Back to Marketplace
               </button>
@@ -160,253 +197,216 @@ export default function ModelPage({ params }: ModelPageProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Main Satya Navigation */}
       <Header activeTab="marketplace" />
       
-      {/* Navigation Bar */}
-      <div className="bg-white py-4">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between">
-            {/* Back Button */}
-            <button
-              onClick={() => router.back()}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back
-            </button>
-            
-            {/* Search Bar */}
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Type in your search here..."
-                  className="w-96 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 text-sm"
-                />
-                <button className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <main className="relative z-10 py-6">
+        <div className="container max-w-7xl mx-auto px-6">
+          {/* Back Button */}
+          <button 
+            onClick={() => router.push('/marketplace')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          >
+            ← Back to Marketplace
+          </button>
 
-      <main className="py-8">
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Left Side - Model Preview */}
-            <div className="relative">
-              <div className="aspect-[4/3] bg-gray-900 rounded-xl overflow-hidden relative">
-                {model.thumbnailUrl && model.thumbnailUrl !== '/images/Claude.png' && model.thumbnailUrl !== null ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Model Preview */}
+            <div className="lg:col-span-2">
+              {/* Model Preview */}
+              <div className="relative bg-gray-100 rounded-lg overflow-hidden mb-8 h-80">
+                <div className="absolute inset-0 flex items-center justify-center">
                   <img 
-                    src={model.thumbnailUrl} 
+                    src="/images/Claude.png" 
                     alt={model.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain p-8"
                   />
-                ) : (
-                  <div className="absolute inset-0">
-                    {/* Claude.png image occupying full space */}
-                    <img
-                      src="/images/Claude.png"
-                      alt="Claude AI Model"
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Optional dark overlay for better text contrast if needed */}
-                    <div className="absolute inset-0 bg-black/20"></div>
-                  </div>
-                )}
-                
+                </div>
               </div>
-            </div>
 
-            {/* Right Side - Purchase Flow */}
-            <div className="space-y-8">
-              {/* Header with Title and Menu */}
-              <div className="flex items-start justify-between">
+              {/* Model Information */}
+              <div className="space-y-6">
                 <div>
-                  <h1 className="text-4xl font-russo text-black mb-2">{model.title}</h1>
-                  <p className="text-gray-600">{model.description}</p>
-                </div>
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Step Indicators */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-medium">
-                    1
+                  <h1 className="text-3xl font-bold text-black mb-6">{model.title}</h1>
+                  
+                  {/* Progress Steps */}
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium ${
+                      purchaseStep === 'details' 
+                        ? 'bg-black text-white' 
+                        : 'bg-gray-200 text-gray-700'
+                    }`}>
+                      <span className="w-6 h-6 bg-white text-black rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                      View Details
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-600" />
+                    <div className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium ${
+                      purchaseStep === 'verification' 
+                        ? 'bg-black text-white' 
+                        : isVerified 
+                          ? 'bg-gray-800 text-white'
+                          : 'bg-gray-200 text-gray-700'
+                    }`}>
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
+                        isVerified ? 'bg-white text-black' : 'bg-white text-black'
+                      }`}>
+                        {isVerified ? <CheckCircle className="w-4 h-4" /> : '2'}
+                      </span>
+                      Pay for Verification
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-600" />
+                    <div className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium ${
+                      purchaseStep === 'purchase' 
+                        ? 'bg-black text-white' 
+                        : isPurchased
+                          ? 'bg-gray-800 text-white'
+                          : 'bg-gray-200 text-gray-700'
+                    }`}>
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
+                        isPurchased ? 'bg-white text-black' : 'bg-white text-black'
+                      }`}>
+                        {isPurchased ? <CheckCircle className="w-4 h-4" /> : '3'}
+                      </span>
+                      Purchase Model
+                    </div>
                   </div>
-                  <span className="font-medium text-black">Verify model (get attestation)</span>
-                </div>
-                <div className="flex items-center gap-3 opacity-50">
-                  <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">
-                    2
-                  </div>
-                  <span className="text-gray-500">Run model</span>
-                </div>
-              </div>
 
-              {/* Verification Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-russo text-black">Verify Model</h3>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-black">{model.price} SUI</div>
-                  </div>
-                </div>
-                
-                <p className="text-gray-600 text-sm">
-                  Start the verification process to ensure model integrity
-                </p>
-
-                <button
-                  onClick={handlePurchase}
-                  className="w-full bg-black text-white px-6 py-4 rounded-lg hover:bg-gray-800 transition-colors font-medium flex items-center justify-center gap-2"
-                >
-                  Verify Model ({model.price} SUI)
-                </button>
-              </div>
-
-              {/* Model Details Section */}
-              <div className="space-y-6 pt-6">
-                {/* Author and Metadata */}
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    <span>{model.author}</span>
-                    {model.isVerified && (
-                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                        </svg>
+                  <p className="text-gray-700 mb-8 leading-relaxed">{model.description}</p>
+                  
+                  {/* File Size Information */}
+                  <div className="bg-white border border-gray-300 rounded-lg p-6 mb-8">
+                    <h3 className="font-semibold text-black mb-4 flex items-center gap-3">
+                      <Database className="w-5 h-5 text-black" />
+                      Upload Information & File Sizes
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                      <div>
+                        <span className="text-gray-700 font-medium">Model Size:</span>
+                        <p className="font-semibold text-black">{model.fileSize ? formatFileSize(model.fileSize) : '--'}</p>
                       </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>Updated {model.updatedAt}</span>
-                  </div>
-                </div>
-
-                {/* Security Badges */}
-                <div className="flex gap-2">
-                  {model.isVerified && (
-                    <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-                      <Shield className="w-3 h-3" />
-                      <span>Verified</span>
+                      <div>
+                        <span className="text-gray-700 font-medium">Dataset Size:</span>
+                        <p className="font-semibold text-black">{model.datasetSize ? formatFileSize(model.datasetSize) : '--'}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-700 font-medium">Total Size:</span>
+                        <p className="font-semibold text-black">
+                          {(model.fileSize && model.datasetSize) 
+                            ? formatFileSize(model.fileSize + model.datasetSize) 
+                            : '--'
+                          }
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-700 font-medium">Created:</span>
+                        <p className="font-semibold text-black">{new Date(model.createdAt).toLocaleDateString()}</p>
+                      </div>
                     </div>
-                  )}
-                  {model.isEncrypted && (
-                    <div className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
-                      <Lock className="w-3 h-3" />
-                      <span>TEE Encrypted</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
-                    <Tag className="w-3 h-3" />
-                    <span>{model.category}</span>
                   </div>
-                </div>
 
-                {/* Description */}
-                <div>
-                  <h3 className="text-lg font-semibold text-black mb-2">Description</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    {model.longDescription}
-                  </p>
-                </div>
-
-
-                {/* Model Tags */}
-                <div>
-                  <h3 className="text-lg font-semibold text-black mb-3">Model Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {model.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full border"
-                      >
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-3 mb-8">
+                    {model.tags.map((tag) => (
+                      <span key={tag} className="px-4 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-sm font-medium">
                         {tag}
                       </span>
                     ))}
                   </div>
                 </div>
 
-                {/* Technical Specifications */}
-                <div>
-                  <h3 className="text-lg font-semibold text-black mb-3">Technical Specifications</h3>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex justify-between">
-                      <span>Model Size:</span>
-                      <span>2.1 GB</span>
+                {/* Long Description */}
+                <div className="max-w-none">
+                  <h3 className="text-xl font-semibold text-black mb-4">About this Model</h3>
+                  <p className="text-gray-700 mb-8 leading-relaxed">{model.longDescription}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Purchase Flow */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-6 space-y-6">
+                {/* Pricing Card */}
+                <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-xl font-semibold text-black mb-6">Pricing Breakdown</h3>
+                  
+                  <div className="space-y-4 mb-6">
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-700">Verification (TEE)</span>
+                      <span className="font-semibold text-black">{model.attestationPrice} SUI</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Framework:</span>
-                      <span>TensorFlow 2.8</span>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-700">Model Access</span>
+                      <span className="font-semibold text-black">{model.price} SUI</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Input Format:</span>
-                      <span>Camera RGB (640x480)</span>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-700">Platform Fee</span>
+                      <span className="font-semibold text-black">0.05 SUI</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Output Format:</span>
-                      <span>Control Commands</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Hardware:</span>
-                      <span>NVIDIA GPU Required</span>
+                    <div className="border-t border-gray-200 pt-4 flex justify-between items-center">
+                      <span className="font-bold text-black text-lg">Total</span>
+                      <span className="font-bold text-2xl text-black">{model.totalPrice} SUI</span>
                     </div>
                   </div>
-                </div>
 
-                {/* Upload Information */}
-                <div>
-                  <h3 className="text-lg font-semibold text-black mb-3">Upload Information</h3>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex justify-between">
-                      <span>Walrus Blob ID:</span>
-                      <span className="font-mono text-xs">0x2ef473cf583...</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Encryption:</span>
-                      <span>SEAL Homomorphic</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Attestation Status:</span>
-                      <span className="text-green-600">Verified</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>TEE Environment:</span>
-                      <span>AWS Nitro Enclave</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sample Download */}
-                {model.sampleAvailable && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-black mb-3">Sample Data</h3>
-                    <button className="w-full px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-                      Download Sample Dataset (10 MB)
+                  {/* Purchase Flow */}
+                  {purchaseStep === 'details' && (
+                    <button
+                      onClick={() => setPurchaseStep('verification')}
+                      className="w-full bg-black text-white px-6 py-4 rounded-lg hover:bg-gray-800 transition-colors font-semibold text-lg"
+                    >
+                      Start Verification ({model.attestationPrice} SUI)
                     </button>
-                  </div>
-                )}
+                  )}
+
+                  {purchaseStep === 'verification' && !isVerified && (
+                    <AttestationVerificationFlow 
+                      model={model}
+                      onComplete={handleVerificationComplete}
+                    />
+                  )}
+
+                  {(purchaseStep === 'purchase' || isVerified) && !isPurchased && (
+                    <ModelPurchaseFlow 
+                      model={model}
+                      onComplete={handlePurchaseComplete}
+                    />
+                  )}
+
+                  {(purchaseStep === 'access' || isPurchased) && (
+                    <div className="space-y-3">
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-green-800">
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="text-sm font-medium">Purchase Complete!</span>
+                        </div>
+                        <p className="text-sm text-green-700 mt-1">
+                          You now have access to this model
+                        </p>
+                      </div>
+                      
+                      <button
+                        onClick={() => setShowDecryption(true)}
+                        className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
+                      >
+                        <Download className="w-4 h-4" />
+                        Access & Decrypt Model
+                      </button>
+                    </div>
+                  )}
+                </div>
+
               </div>
             </div>
           </div>
         </div>
       </main>
+
+      {/* Decryption Modal */}
+      {showDecryption && (
+        <DecryptionModal 
+          model={model}
+          onClose={() => setShowDecryption(false)}
+        />
+      )}
     </div>
   )
 }

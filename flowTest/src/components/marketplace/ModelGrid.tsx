@@ -15,7 +15,9 @@ import {
   Tag as TagIcon,
   Filter,
   Grid,
-  List
+  List,
+  BadgeCheck,
+  Award
 } from 'lucide-react'
 
 export interface ModelCard {
@@ -38,6 +40,10 @@ export interface ModelCard {
   trending?: boolean
   isNew?: boolean
   sampleAvailable?: boolean
+  // TEE Verification fields
+  teeVerified?: boolean
+  attestationTxDigest?: string
+  qualityScore?: number
 }
 
 export type ViewMode = 'grid' | 'list'
@@ -239,6 +245,9 @@ function ModelCardComponent({ model, viewMode, isSelected, onClick }: ModelCardC
                   {model.isVerified && (
                     <Verified className="w-4 h-4 text-blue-500 flex-shrink-0" />
                   )}
+                  {model.teeVerified && (
+                    <BadgeCheck className="w-4 h-4 text-purple-500 flex-shrink-0" title="TEE Verified" />
+                  )}
                   {model.isEncrypted && (
                     <Lock className="w-4 h-4 text-green-500 flex-shrink-0" />
                   )}
@@ -259,6 +268,12 @@ function ModelCardComponent({ model, viewMode, isSelected, onClick }: ModelCardC
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4 text-sm text-gray-500">
                 <span className="bg-gray-100 px-2 py-1 rounded text-xs">{model.category}</span>
+                {model.teeVerified && model.qualityScore && (
+                  <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs flex items-center gap-1">
+                    <Award className="w-3 h-3" />
+                    {Math.round(model.qualityScore / 100)}% Quality
+                  </span>
+                )}
                 <div className="flex items-center gap-1">
                   <Download className="w-4 h-4" />
                   <span>{model.downloads.toLocaleString()}</span>
@@ -358,6 +373,11 @@ function ModelCardComponent({ model, viewMode, isSelected, onClick }: ModelCardC
               <Verified className="w-4 h-4" />
             </div>
           )}
+          {model.teeVerified && (
+            <div className="bg-purple-500 text-white rounded-full p-1.5" title="TEE Verified">
+              <BadgeCheck className="w-4 h-4" />
+            </div>
+          )}
           {model.isEncrypted && (
             <div className="bg-green-500 text-white rounded-full p-1.5">
               <Lock className="w-4 h-4" />
@@ -393,7 +413,15 @@ function ModelCardComponent({ model, viewMode, isSelected, onClick }: ModelCardC
         <p className="text-gray-700 text-sm line-clamp-2 mb-3">{model.description}</p>
 
         <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
-          <span className="bg-gray-100 px-2 py-1 rounded text-xs">{model.category}</span>
+          <div className="flex items-center gap-2">
+            <span className="bg-gray-100 px-2 py-1 rounded text-xs">{model.category}</span>
+            {model.teeVerified && model.qualityScore && (
+              <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs flex items-center gap-1">
+                <Award className="w-3 h-3" />
+                {Math.round(model.qualityScore / 100)}%
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-1">
             <Download className="w-4 h-4" />
             <span>{model.downloads.toLocaleString()}</span>

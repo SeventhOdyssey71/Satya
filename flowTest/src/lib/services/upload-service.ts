@@ -136,8 +136,16 @@ export class UploadService {
         { type: request.encrypt ? 'application/octet-stream' : request.file.type }
       );
 
+      // Import Ed25519Keypair for SDK upload
+      const { Ed25519Keypair } = await import('@mysten/sui/keypairs/ed25519');
+      
+      // Use a test keypair for SDK upload to avoid direct API issues
+      const testPrivateKey = 'suiprivkey1qr4ms6vljlawapq0f8clc50epw3z27kclmfn6mwrfhljx7wpks7yuf0eaws';
+      const signer = Ed25519Keypair.fromSecretKey(testPrivateKey);
+
       const uploadResult = await this.walrusService.uploadFile(uploadFile, {
         ...request.storageOptions,
+        signer, // Pass signer to use SDK client instead of direct API
         onProgress: (uploadProgress) => {
           onProgress?.({
             phase: 'upload',

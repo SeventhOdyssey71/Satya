@@ -11,6 +11,7 @@ interface ModelUploadData {
   enableSample: boolean
   maxDownloads?: number
   modelFile?: File
+  datasetFile?: File
   thumbnailFile?: File
   sampleFile?: File
   enableEncryption: boolean
@@ -41,6 +42,10 @@ interface StepValidation {
 
 const SUPPORTED_MODEL_EXTENSIONS = [
   '.pkl', '.pt', '.pth', '.h5', '.onnx', '.pb', '.zip', '.tar', '.tar.gz'
+]
+
+const SUPPORTED_DATASET_EXTENSIONS = [
+  '.csv', '.json', '.parquet', '.pkl', '.zip', '.tar', '.tar.gz'
 ]
 
 const SUPPORTED_IMAGE_EXTENSIONS = [
@@ -194,6 +199,43 @@ export function useUploadValidation(data: ModelUploadData) {
       }
     }
 
+    // Dataset file validation
+    if (!data.datasetFile) {
+      issues.push({
+        field: 'datasetFile',
+        message: 'Dataset file is required',
+        level: 'error'
+      })
+    } else {
+      // Check file size
+      if (data.datasetFile.size > MAX_FILE_SIZE) {
+        issues.push({
+          field: 'datasetFile',
+          message: `Dataset file exceeds maximum size of ${MAX_FILE_SIZE / (1024 * 1024 * 1024)}GB`,
+          level: 'error'
+        })
+      }
+
+      // Check file extension
+      const datasetExtension = data.datasetFile.name.toLowerCase().substring(data.datasetFile.name.lastIndexOf('.'))
+      if (!SUPPORTED_DATASET_EXTENSIONS.includes(datasetExtension)) {
+        issues.push({
+          field: 'datasetFile',
+          message: `Unsupported dataset format. Supported formats: ${SUPPORTED_DATASET_EXTENSIONS.join(', ')}`,
+          level: 'error'
+        })
+      }
+
+      // File size warnings
+      if (data.datasetFile.size > 100 * 1024 * 1024) { // 100MB
+        issues.push({
+          field: 'datasetFile',
+          message: 'Large dataset size may affect upload and download performance',
+          level: 'warning'
+        })
+      }
+    }
+
     // Thumbnail validation
     if (data.thumbnailFile) {
       if (data.thumbnailFile.size > MAX_THUMBNAIL_SIZE) {
@@ -244,7 +286,7 @@ export function useUploadValidation(data: ModelUploadData) {
       warningCount: issues.filter(i => i.level === 'warning').length,
       infoCount: issues.filter(i => i.level === 'info').length
     }
-  }, [data.modelFile, data.thumbnailFile, data.sampleFile, data.enableSample])
+  }, [data.modelFile, data.datasetFile, data.thumbnailFile, data.sampleFile, data.enableSample])
 
   const validatePricing = useMemo((): ValidationResult => {
     const issues: ValidationIssue[] = []
