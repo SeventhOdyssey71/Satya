@@ -412,4 +412,4 @@ if __name__ == "__main__":
     for pcr, value in EXPECTED_PCRS.items():
         print(f"  {pcr}: {value}")
     
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=5001, log_level="info")

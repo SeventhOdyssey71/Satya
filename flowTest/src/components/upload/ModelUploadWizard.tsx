@@ -13,6 +13,7 @@ import UploadProgress from './UploadProgress'
 import UploadStatus from './UploadStatus'
 import { TEEVerificationStep } from './TEEVerificationStep'
 import { useUpload, useUploadValidation } from '@/hooks'
+import { PolicyType } from '@/lib/integrations/seal/types'
 
 interface ModelUploadData {
   // Basic Info
@@ -28,6 +29,7 @@ interface ModelUploadData {
   
   // Files
   modelFile?: File
+  datasetFile?: File
   thumbnailFile?: File
   sampleFile?: File
   modelBlobId?: string
@@ -441,35 +443,42 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
       const file = files[0]
       onChange({ modelFile: file })
       
-      // Immediately upload to get blob ID for TEE verification
+      // Upload to Walrus with Seal encryption
       setIsUploading(true)
       setUploadProgress(0)
       
       try {
-        // Simulate upload progress
-        const progressInterval = setInterval(() => {
-          setUploadProgress(prev => Math.min(prev + 10, 90))
-        }, 100)
+        const uploadService = await import('@/lib/services').then(m => m.getUploadService())
         
-        // Create mock blob ID for now - in real implementation this would upload to Walrus
-        await new Promise(resolve => setTimeout(resolve, 1500))
+        const uploadResult = await uploadService.uploadFile(
+          {
+            file,
+            encrypt: true,
+            policyType: PolicyType.PAYMENT_GATED,
+            policyParams: {},
+            storageOptions: {
+              epochs: 5
+            }
+          },
+          (progress) => {
+            setUploadProgress(progress.progress)
+          }
+        )
         
-        clearInterval(progressInterval)
-        setUploadProgress(100)
-        
-        // Generate a mock blob ID for TEE verification
-        const mockBlobId = `blob_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-        
-        onChange({ 
-          modelFile: file,
-          modelBlobId: mockBlobId
-        })
+        if (uploadResult.success) {
+          onChange({ 
+            modelFile: file,
+            modelBlobId: uploadResult.blobId
+          })
+        } else {
+          throw new Error(uploadResult.error || 'Upload failed')
+        }
         
         setIsUploading(false)
       } catch (error) {
-        console.error('File upload failed:', error)
+        console.error('Model file upload failed:', error)
         setIsUploading(false)
-        alert('File upload failed. Please try again.')
+        alert(`Model file upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
   }
@@ -477,6 +486,51 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
   const handleThumbnailSelect = (files: File[]) => {
     if (files.length > 0) {
       onChange({ thumbnailFile: files[0] })
+    }
+  }
+
+  const handleDatasetFileSelect = async (files: File[]) => {
+    if (files.length > 0) {
+      const file = files[0]
+      onChange({ datasetFile: file })
+      
+      // Upload to Walrus with Seal encryption
+      setIsUploading(true)
+      setUploadProgress(0)
+      
+      try {
+        const uploadService = await import('@/lib/services').then(m => m.getUploadService())
+        
+        const uploadResult = await uploadService.uploadFile(
+          {
+            file,
+            encrypt: true,
+            policyType: PolicyType.PAYMENT_GATED,
+            policyParams: {},
+            storageOptions: {
+              epochs: 5
+            }
+          },
+          (progress) => {
+            setUploadProgress(progress.progress)
+          }
+        )
+        
+        if (uploadResult.success) {
+          onChange({ 
+            datasetFile: file,
+            datasetBlobId: uploadResult.blobId
+          })
+        } else {
+          throw new Error(uploadResult.error || 'Upload failed')
+        }
+        
+        setIsUploading(false)
+      } catch (error) {
+        console.error('Dataset file upload failed:', error)
+        setIsUploading(false)
+        alert(`Dataset file upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
     }
   }
 
@@ -544,6 +598,45 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
             )}
             <p className="text-xs text-gray-500 mt-2">
               Supported formats: .pkl, .pt, .pth, .h5, .onnx, .pb, .zip, .tar
+            </p>
+          </div>
+
+          {/* Dataset File */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Dataset File * (Required)
+            </label>
+            <FileUploadZone
+              accept={{
+                'application/octet-stream': ['.csv', '.json', '.parquet', '.pkl'],
+                'text/csv': ['.csv'],
+                'application/json': ['.json'],
+                'application/zip': ['.zip'],
+                'application/x-tar': ['.tar', '.tar.gz']
+              }}
+              maxSize={1024 * 1024 * 1024} // 1GB
+              onFileSelect={handleDatasetFileSelect}
+              placeholder="Drop your dataset file here or click to browse"
+              files={data.datasetFile ? [data.datasetFile] : []}
+              onFileRemove={() => onChange({ datasetFile: undefined, datasetBlobId: undefined })}
+              disabled={isUploading}
+            />
+            
+            {data.datasetBlobId && !isUploading && (
+              <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">✓</span>
+                  </div>
+                  <span className="text-sm font-medium text-green-900">Dataset uploaded successfully!</span>
+                </div>
+                <p className="text-xs text-green-700 mt-1">
+                  Blob ID: {data.datasetBlobId.substring(0, 20)}...
+                </p>
+              </div>
+            )}
+            <p className="text-xs text-gray-500 mt-2">
+              Supported formats: .csv, .json, .parquet, .pkl, .zip, .tar
             </p>
           </div>
 

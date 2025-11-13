@@ -11,6 +11,7 @@ interface ModelUploadData {
   enableSample: boolean
   maxDownloads?: number
   modelFile?: File
+  datasetFile?: File
   thumbnailFile?: File
   sampleFile?: File
   enableEncryption: boolean

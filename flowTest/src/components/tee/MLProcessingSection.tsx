@@ -107,7 +107,7 @@ export default function MLProcessingSection({
       setResult(mlResult);
       
       // Now get the full TEE verification data including attestation
-      const teeResponse = await fetch('http://localhost:5000/complete_verification', {
+      const teeResponse = await fetch('http://localhost:5001/complete_verification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

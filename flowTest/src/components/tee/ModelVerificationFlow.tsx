@@ -52,7 +52,7 @@ export function ModelVerificationFlow({
       const mlResult = await mlResponse.json();
 
       // Step 2: Generate real TEE attestation
-      const teeResponse = await fetch('http://localhost:5000/complete_verification', {
+      const teeResponse = await fetch('http://localhost:5001/complete_verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
