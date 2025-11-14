@@ -11,7 +11,6 @@ import FileUploadZone from './FileUploadZone'
 import ProgressIndicator from './ProgressIndicator'
 import UploadProgress from './UploadProgress'
 import UploadStatus from './UploadStatus'
-import { TEEVerificationStep } from './TEEVerificationStep'
 import { useUpload, useUploadValidation } from '@/hooks'
 import { PolicyType } from '@/lib/integrations/seal/types'
 
@@ -40,10 +39,10 @@ interface ModelUploadData {
   policyType: string
   accessDuration?: number
   
-  // TEE Verification
+  // TEE Verification (handled in Dashboard)
   teeAttestation?: any
   blockchainTxDigest?: string
-  verificationStatus?: 'pending' | 'verified' | 'failed'
+  verificationStatus: 'pending' | 'verified' | 'failed'
   
   // Advanced
   isPrivate: boolean
@@ -98,7 +97,8 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     enableEncryption: true,
     policyType: 'payment-gated',
     accessDuration: 30,
-    isPrivate: false
+    isPrivate: false,
+    verificationStatus: 'pending' // Default to pending - verification happens in Dashboard
   })
 
   // Hooks for business logic
@@ -189,12 +189,6 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
       description: 'Configure encryption and privacy settings',
       component: SecurityStep,
       validate: () => validation.isStepValid('security')
-    },
-    {
-      title: 'TEE Verification',
-      description: 'Verify model integrity with trusted execution environment',
-      component: TEEVerificationStep,
-      validate: () => data.verificationStatus === 'verified'
     },
     {
       title: 'Review & Submit',
@@ -956,30 +950,21 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
             </div>
           )}
 
-          {/* TEE Attestation Data */}
-          {data.teeAttestation && (
-            <div>
-              <p className="text-sm font-medium text-gray-500">TEE Attestation Data</p>
-              <div className="text-sm text-gray-900 space-y-1">
-                <p>• Request ID: <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.teeAttestation.request_id}</span></p>
-                <p>• Enclave ID: <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.teeAttestation.verification_metadata?.enclave_id}</span></p>
-                <p>• Model Hash: <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.teeAttestation.ml_processing_result?.model_hash}</span></p>
-                <p>• Quality Score: <span className="font-semibold">{(data.teeAttestation.ml_processing_result?.quality_score * 100).toFixed(2)}%</span></p>
-                <p>• Attestation Type: <span className="text-green-600">{data.teeAttestation.verification_metadata?.attestation_type || 'Real Cryptographic Proof'}</span></p>
+          {/* Verification Status */}
+          <div>
+            <p className="text-sm font-medium text-gray-500">Verification Status</p>
+            <div className="text-sm text-gray-900">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-600">⏳</span>
+                  <span className="font-medium text-yellow-900">Pending Verification</span>
+                </div>
+                <p className="text-xs text-yellow-700 mt-1">
+                  Model will be pending until you verify it in your Dashboard using TEE attestation.
+                </p>
               </div>
             </div>
-          )}
-
-          {/* Blockchain Transaction */}
-          {data.blockchainTxDigest && (
-            <div>
-              <p className="text-sm font-medium text-gray-500">Blockchain Verification</p>
-              <div className="text-sm text-gray-900 space-y-1">
-                <p>• Transaction Hash: <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.blockchainTxDigest}</span></p>
-                <p>• Verification Status: <span className="text-green-600 font-semibold">{data.verificationStatus === 'verified' ? '✅ Verified on SUI Blockchain' : '⏳ Pending Verification'}</span></p>
-              </div>
-            </div>
-          )}
+          </div>
 
           {(data.maxDownloads || data.accessDuration || data.expiryDays) && (
             <div>
