@@ -488,7 +488,7 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
       const file = files[0]
       onChange({ datasetFile: file })
       
-      // Upload to Walrus with Seal encryption
+      // Upload to Walrus WITHOUT encryption (dataset is not encrypted)
       setIsUploading(true)
       setUploadProgress(0)
       
@@ -498,9 +498,7 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
         const uploadResult = await uploadService.uploadFile(
           {
             file,
-            encrypt: true,
-            policyType: PolicyType.PAYMENT_GATED,
-            policyParams: {},
+            encrypt: false, // Dataset is NOT encrypted
             storageOptions: {
               epochs: 5
             }
@@ -884,25 +882,12 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
           
           <div>
             <p className="text-sm font-medium text-gray-500">Description</p>
-            <div className="text-sm text-gray-900 space-y-2">
-              <p>{data.description || 'Not specified'}</p>
-              {data.teeAttestation && (
-                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="font-medium text-blue-900 text-xs">🔒 TEE Verification Details:</p>
-                  <p className="text-xs text-blue-800 mt-1">
-                    This model has been verified in a Trusted Execution Environment (TEE) with cryptographic attestation. 
-                    Quality Score: {(data.teeAttestation.ml_processing_result?.quality_score * 100).toFixed(2)}%. 
-                    Enclave ID: {data.teeAttestation.verification_metadata?.enclave_id}. 
-                    {data.blockchainTxDigest && `Blockchain verified on SUI (Tx: ${data.blockchainTxDigest.slice(0, 16)}...).`}
-                  </p>
-                </div>
-              )}
-            </div>
+            <p className="text-sm text-gray-900">{data.description || 'Not specified'}</p>
           </div>
 
           {data.tags.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-gray-500">TbTags</p>
+              <p className="text-sm font-medium text-gray-500">Tags</p>
               <div className="flex flex-wrap gap-1 mt-1">
                 {data.tags.map(tag => (
                   <span key={tag} className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">
@@ -913,32 +898,59 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
             </div>
           )}
 
-          <div>
-            <p className="text-sm font-medium text-gray-500">Files</p>
-            <div className="text-sm text-gray-900 space-y-1">
-              {data.modelFile ? (
-                <p>• Model: {data.modelFile.name} ({(data.modelFile.size / 1024 / 1024).toFixed(1)} MB)</p>
-              ) : (
-                <p className="text-red-600">• Model file: Not selected</p>
-              )}
-              {data.datasetFile ? (
-                <p>• Dataset: {data.datasetFile.name} ({(data.datasetFile.size / 1024 / 1024).toFixed(1)} MB)</p>
-              ) : (
-                <p className="text-red-600">• Dataset file: Not selected</p>
-              )}
+          {/* Upload Information & File Sizes */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center mb-3">
+              <span className="text-lg">💾</span>
+              <h4 className="text-sm font-medium text-gray-900 ml-2">Upload Information & File Sizes</h4>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Model Size:</div>
+                <div className="text-sm font-bold text-gray-900">
+                  {data.modelFile ? `${(data.modelFile.size / 1024 / 1024).toFixed(2)} MB` : 'N/A'}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Dataset Size:</div>
+                <div className="text-sm font-bold text-gray-900">
+                  {data.datasetFile ? `${(data.datasetFile.size / 1024 / 1024).toFixed(2)} MB` : 'N/A'}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Total Size:</div>
+                <div className="text-sm font-bold text-gray-900">
+                  {(data.modelFile && data.datasetFile) ? 
+                    `${((data.modelFile.size + data.datasetFile.size) / 1024 / 1024).toFixed(2)} MB` : 'N/A'}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Created:</div>
+                <div className="text-sm font-bold text-gray-900">
+                  {new Date().toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mt-4">
+              <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">AI</span>
+              <span className="inline-block px-2 py-1 text-xs bg-green-100 text-green-800 rounded">SEAL Encrypted</span>
+              <span className="inline-block px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">Blockchain</span>
+              <span className="inline-block px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded">Decentralized</span>
             </div>
           </div>
 
-          {/* Encrypted Blob IDs */}
+          {/* Blob Info */}
           {(data.modelBlobId || data.datasetBlobId) && (
             <div>
-              <p className="text-sm font-medium text-gray-500">Encrypted Blob IDs (Walrus Storage)</p>
+              <p className="text-sm font-medium text-gray-500">Blob Info</p>
               <div className="text-sm text-gray-900 space-y-1">
                 {data.modelBlobId && (
-                  <p>• Model Blob ID: <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.modelBlobId}</span></p>
+                  <p>• Model Blob ID (Encrypted): <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.modelBlobId}</span></p>
                 )}
                 {data.datasetBlobId && (
-                  <p>• Dataset Blob ID: <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.datasetBlobId}</span></p>
+                  <p>• Dataset Blob ID (Unencrypted): <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.datasetBlobId}</span></p>
                 )}
               </div>
             </div>

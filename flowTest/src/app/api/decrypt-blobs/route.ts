@@ -27,16 +27,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Step 2: Decrypt the files using Seal
+    // Step 2: Decrypt only the model file (dataset is unencrypted)
     const modelDecryption = await sealService.decryptData(
       modelResult.data!,
       'payment-gated' // Use the policy type used during encryption
     )
 
-    const datasetDecryption = await sealService.decryptData(
-      datasetResult.data!,
-      'payment-gated' // Use the policy type used during encryption
-    )
+    // Dataset is unencrypted, so use it directly
+    const datasetDecryption = {
+      success: true,
+      data: datasetResult.data!
+    }
 
     if (!modelDecryption.success || !datasetDecryption.success) {
       return NextResponse.json(
