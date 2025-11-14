@@ -265,9 +265,9 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-russo text-black mb-2">Upload Model</h1>
-        <p className="text-gray-500">Share your AI model with the Satya marketplace</p>
+      <div className="mb-12">
+        <h1 className="text-5xl font-russo text-secondary-900 mb-3">Upload Model</h1>
+        <p className="text-xl font-albert text-secondary-600">Share your AI model with the Satya marketplace</p>
       </div>
 
       {/* Progress Indicator */}
@@ -318,49 +318,51 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <TbTag className="h-5 w-5 mr-2 text-gray-600" />
+    <div className="space-y-8">
+      <div className="form-section">
+        <h3 className="text-xl font-albert font-semibold text-secondary-900 mb-6 flex items-center">
+          <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+            <TbTag className="h-5 w-5 text-primary-600" />
+          </div>
           Model Information
         </h3>
         
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-6">
+          <div className="form-group">
+            <label className="form-label">
               Model Title *
             </label>
             <input
               type="text"
               value={data.title}
               onChange={(e) => onChange({ title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+              className="input"
               placeholder="Enter a descriptive title for your model"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="form-group">
+            <label className="form-label">
               Description *
             </label>
             <textarea
               value={data.description}
               onChange={(e) => onChange({ description: e.target.value })}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+              className="input min-h-[120px] resize-none"
               placeholder="Describe what your model does, its accuracy, use cases, etc."
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="form-group">
+              <label className="form-label">
                 Category *
               </label>
               <select
                 value={data.category}
                 onChange={(e) => onChange({ category: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+                className="input"
               >
                 <option value="">Select a category</option>
                 {CATEGORIES.map(category => (
@@ -369,9 +371,9 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Add TbTags
+            <div className="form-group">
+              <label className="form-label">
+                Add Tags
               </label>
               <div className="flex">
                 <input
@@ -379,12 +381,12 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
                   value={newTbTag}
                   onChange={(e) => setNewTbTag(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTbTag())}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+                  className="flex-1 input rounded-r-none border-r-0"
                   placeholder="Add a tag"
                 />
                 <button
                   onClick={addTbTag}
-                  className="px-4 py-2 bg-black text-white rounded-r-md hover:bg-gray-800 transition-colors"
+                  className="btn btn-primary px-6 rounded-l-none"
                 >
                   Add
                 </button>
@@ -393,18 +395,18 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
           </div>
 
           {data.tags.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">TbTags</label>
-              <div className="flex flex-wrap gap-2">
+            <div className="form-group">
+              <label className="form-label">Tags</label>
+              <div className="flex flex-wrap gap-3">
                 {data.tags.map(tag => (
                   <span
                     key={tag}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                    className="badge bg-primary-100 text-primary-800 flex items-center gap-2"
                   >
                     {tag}
                     <button
                       onClick={() => removeTbTag(tag)}
-                      className="ml-2 text-gray-600 hover:text-gray-800"
+                      className="text-primary-600 hover:text-primary-800 font-bold"
                     >
                       ×
                     </button>
@@ -522,17 +524,19 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
 
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <TbUpload className="h-5 w-5 mr-2 text-gray-600" />
+    <div className="space-y-8">
+      <div className="form-section">
+        <h3 className="text-xl font-albert font-semibold text-secondary-900 mb-6 flex items-center">
+          <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+            <TbUpload className="h-5 w-5 text-primary-600" />
+          </div>
           Upload Files
         </h3>
         
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Model File */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="form-group">
+            <label className="form-label">
               Model File * (Required)
             </label>
             <FileUploadZone
@@ -550,14 +554,14 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
             />
             
             {isUploading && (
-              <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
-                  <span className="text-sm font-medium text-blue-900">Uploading to Walrus storage...</span>
+              <div className="mt-4 bg-primary-50 border border-primary-200 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-500 border-t-transparent"></div>
+                  <span className="font-albert font-medium text-primary-900">Uploading to Walrus storage...</span>
                 </div>
-                <div className="w-full bg-blue-200 rounded-full h-2">
+                <div className="w-full bg-primary-200 rounded-full h-3">
                   <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-200" 
+                    className="bg-primary-600 h-3 rounded-full transition-all duration-200" 
                     style={{ width: `${uploadProgress}%` }}
                   ></div>
                 </div>
@@ -565,26 +569,26 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
             )}
             
             {data.modelBlobId && !isUploading && (
-              <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs">✓</span>
+              <div className="mt-4 bg-success-50 border border-success-200 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">✓</span>
                   </div>
-                  <span className="text-sm font-medium text-green-900">File uploaded successfully!</span>
+                  <span className="font-albert font-medium text-success-900">File uploaded successfully!</span>
                 </div>
-                <p className="text-xs text-green-700 mt-1">
+                <code className="text-xs bg-success-200 px-2 py-1 rounded text-success-700 font-mono mt-2 inline-block">
                   Blob ID: {data.modelBlobId.substring(0, 20)}...
-                </p>
+                </code>
               </div>
             )}
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="form-help mt-3">
               Supported formats: .pkl, .pt, .pth, .h5, .onnx, .pb, .zip, .tar
             </p>
           </div>
 
           {/* Dataset File */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="form-group">
+            <label className="form-label">
               Dataset File * (Required)
             </label>
             <FileUploadZone
@@ -604,19 +608,19 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
             />
             
             {data.datasetBlobId && !isUploading && (
-              <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs">✓</span>
+              <div className="mt-4 bg-success-50 border border-success-200 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">✓</span>
                   </div>
-                  <span className="text-sm font-medium text-green-900">Dataset uploaded successfully!</span>
+                  <span className="font-albert font-medium text-success-900">Dataset uploaded successfully!</span>
                 </div>
-                <p className="text-xs text-green-700 mt-1">
+                <code className="text-xs bg-success-200 px-2 py-1 rounded text-success-700 font-mono mt-2 inline-block">
                   Blob ID: {data.datasetBlobId.substring(0, 20)}...
-                </p>
+                </code>
               </div>
             )}
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="form-help mt-3">
               Supported formats: .csv, .json, .parquet, .pkl, .zip, .tar
             </p>
           </div>
@@ -638,16 +642,18 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
 
 function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <HiCurrencyDollar className="h-5 w-5 mr-2 text-gray-600" />
+    <div className="space-y-8">
+      <div className="form-section">
+        <h3 className="text-xl font-albert font-semibold text-secondary-900 mb-6 flex items-center">
+          <div className="w-8 h-8 bg-accent-100 rounded-lg flex items-center justify-center mr-3">
+            <HiCurrencyDollar className="h-5 w-5 text-accent-600" />
+          </div>
           Pricing & Access
         </h3>
         
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-6">
+          <div className="form-group">
+            <label className="form-label">
               Price (SUI) *
             </label>
             <input
@@ -656,17 +662,17 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCance
               onChange={(e) => onChange({ price: e.target.value })}
               min="0"
               step="0.001"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+              className="input"
               placeholder="0.001"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="form-help mt-2">
               Minimum price: 0.001 SUI
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="form-group">
+              <label className="form-label">
                 Maximum Downloads (Optional)
               </label>
               <input
@@ -674,13 +680,13 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCance
                 value={data.maxDownloads || ''}
                 onChange={(e) => onChange({ maxDownloads: e.target.value ? parseInt(e.target.value) : undefined })}
                 min="1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+                className="input"
                 placeholder="Unlimited"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="form-group">
+              <label className="form-label">
                 Access Duration (Days)
               </label>
               <input
@@ -689,7 +695,7 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCance
                 onChange={(e) => onChange({ accessDuration: parseInt(e.target.value) })}
                 min="1"
                 max="365"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+                className="input"
               />
             </div>
           </div>
@@ -710,50 +716,52 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCance
 
 function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <TbShield className="h-5 w-5 mr-2 text-gray-600" />
+    <div className="space-y-8">
+      <div className="form-section">
+        <h3 className="text-xl font-albert font-semibold text-secondary-900 mb-6 flex items-center">
+          <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+            <TbShield className="h-5 w-5 text-primary-600" />
+          </div>
           Security & Privacy
         </h3>
         
-        <div className="space-y-6">
-          <div>
-            <label className="flex items-center space-x-2">
+        <div className="space-y-8">
+          <div className="form-group">
+            <label className="flex items-center space-x-3">
               <input
                 type="checkbox"
                 checked={data.enableEncryption}
                 onChange={(e) => onChange({ enableEncryption: e.target.checked })}
-                className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
+                className="w-5 h-5 rounded border-border text-primary-600 focus:ring-primary-500/20"
               />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="form-label mb-0">
                 Enable SEAL Encryption
               </span>
             </label>
-            <p className="text-xs text-gray-500 mt-1 ml-6">
+            <p className="form-help mt-2 ml-8">
               Recommended: Encrypts your model with policy-based access control
             </p>
           </div>
 
           {data.enableEncryption && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="form-group">
+              <label className="form-label">
                 Access Policy
               </label>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {POLICY_TYPES.map(policy => (
-                  <label key={policy.value} className="flex items-start space-x-3">
+                  <label key={policy.value} className="flex items-start space-x-4 p-4 border border-border rounded-xl hover:bg-surface-100 transition-colors cursor-pointer">
                     <input
                       type="radio"
                       name="policyType"
                       value={policy.value}
                       checked={data.policyType === policy.value}
                       onChange={(e) => onChange({ policyType: e.target.value })}
-                      className="mt-1 border-gray-300 text-gray-600 focus:ring-gray-500"
+                      className="mt-1 w-5 h-5 border-border text-primary-600 focus:ring-primary-500/20"
                     />
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{policy.label}</div>
-                      <div className="text-xs text-gray-500">{policy.description}</div>
+                      <div className="font-albert font-medium text-secondary-900">{policy.label}</div>
+                      <div className="form-help">{policy.description}</div>
                     </div>
                   </label>
                 ))}
@@ -761,19 +769,19 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCanc
             </div>
           )}
 
-          <div className="border-t pt-4">
-            <label className="flex items-center space-x-2">
+          <div className="form-group border-t border-border pt-6">
+            <label className="flex items-center space-x-3">
               <input
                 type="checkbox"
                 checked={data.isPrivate}
                 onChange={(e) => onChange({ isPrivate: e.target.checked })}
-                className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
+                className="w-5 h-5 rounded border-border text-primary-600 focus:ring-primary-500/20"
               />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="form-label mb-0">
                 Private Listing
               </span>
             </label>
-            <p className="text-xs text-gray-500 mt-1 ml-6">
+            <p className="form-help mt-2 ml-8">
               Only visible to specified addresses or through direct link
             </p>
           </div>
@@ -809,29 +817,31 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Review Your Model</h3>
+    <div className="space-y-8">
+      <div className="form-section">
+        <h3 className="text-2xl font-russo text-secondary-900 mb-6">Review Your Model</h3>
         
         {/* Validation Summary */}
         {validation && (validation.hasErrors || validation.hasWarnings) && (
-          <div className={`mb-4 p-4 rounded-lg border ${
+          <div className={`mb-6 p-6 rounded-xl border ${
             validation.hasErrors 
-              ? 'bg-red-50 border-red-200' 
-              : 'bg-yellow-50 border-yellow-200'
+              ? 'bg-danger-50 border-danger-200' 
+              : 'bg-warning-50 border-warning-200'
           }`}>
             <div className="flex items-start">
-              <IoWarning className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${
-                validation.hasErrors ? 'text-red-500' : 'text-yellow-500'
-              }`} />
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 ${
+                validation.hasErrors ? 'bg-danger-500' : 'bg-warning-500'
+              }`}>
+                <IoWarning className="h-4 w-4 text-white" />
+              </div>
               <div>
-                <p className={`text-sm font-medium ${
-                  validation.hasErrors ? 'text-red-800' : 'text-yellow-800'
+                <p className={`font-albert font-semibold ${
+                  validation.hasErrors ? 'text-danger-800' : 'text-warning-800'
                 }`}>
                   {validation.hasErrors ? 'Fix Required Issues' : 'Review Warnings'}
                 </p>
-                <div className={`text-sm mt-1 ${
-                  validation.hasErrors ? 'text-red-700' : 'text-yellow-700'
+                <div className={`font-albert mt-2 ${
+                  validation.hasErrors ? 'text-danger-700' : 'text-warning-700'
                 }`}>
                   {validation.hasErrors && <p>• {validation.overallValidation.errorCount} errors must be fixed</p>}
                   {validation.hasWarnings && <p>• {validation.overallValidation.warningCount} warnings to review</p>}
@@ -843,48 +853,50 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
 
         {/* Wallet Connection Check */}
         {!isWalletConnected && (
-          <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
+          <div className="mb-6 p-6 bg-danger-50 rounded-xl border border-danger-200">
             <div className="flex items-start">
-              <IoWarning className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+              <div className="w-6 h-6 bg-danger-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 mr-3">
+                <IoWarning className="h-4 w-4 text-white" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-red-800">Wallet Not Connected</p>
-                <p className="text-sm text-red-700 mt-1">Connect your wallet in the header to upload the model</p>
+                <p className="font-albert font-semibold text-danger-800">Wallet Not Connected</p>
+                <p className="font-albert text-danger-700 mt-1">Connect your wallet in the header to upload the model</p>
               </div>
             </div>
           </div>
         )}
         
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-6">
             <div>
-              <p className="text-sm font-medium text-gray-500">Title</p>
-              <p className="text-sm text-gray-900">{data.title || 'Not specified'}</p>
+              <p className="form-label">Title</p>
+              <p className="font-albert text-secondary-800">{data.title || 'Not specified'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Category</p>
-              <p className="text-sm text-gray-900">{data.category || 'Not specified'}</p>
+              <p className="form-label">Category</p>
+              <p className="font-albert text-secondary-800">{data.category || 'Not specified'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Price</p>
-              <p className="text-sm text-gray-900">{data.price ? `${data.price} SUI` : 'Not specified'}</p>
+              <p className="form-label">Price</p>
+              <p className="font-albert text-secondary-800">{data.price ? `${data.price} SUI` : 'Not specified'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Encryption</p>
-              <p className="text-sm text-gray-900">{data.enableEncryption ? 'Enabled' : 'Disabled'}</p>
+              <p className="form-label">Encryption</p>
+              <p className="font-albert text-secondary-800">{data.enableEncryption ? 'Enabled' : 'Disabled'}</p>
             </div>
           </div>
           
           <div>
-            <p className="text-sm font-medium text-gray-500">Description</p>
-            <p className="text-sm text-gray-900">{data.description || 'Not specified'}</p>
+            <p className="form-label">Description</p>
+            <p className="font-albert text-secondary-800 leading-relaxed">{data.description || 'Not specified'}</p>
           </div>
 
           {data.tags.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-gray-500">Tags</p>
-              <div className="flex flex-wrap gap-1 mt-1">
+              <p className="form-label">Tags</p>
+              <div className="flex flex-wrap gap-2 mt-3">
                 {data.tags.map(tag => (
-                  <span key={tag} className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">
+                  <span key={tag} className="badge bg-primary-100 text-primary-800">
                     {tag}
                   </span>
                 ))}
@@ -893,58 +905,60 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
           )}
 
           {/* Upload Information & File Sizes */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center mb-3">
-              <span className="text-lg">💾</span>
-              <h4 className="text-sm font-medium text-gray-900 ml-2">Upload Information & File Sizes</h4>
+          <div className="bg-surface-100 border border-border rounded-2xl p-6">
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 bg-secondary-100 rounded-lg flex items-center justify-center mr-3">
+                <span className="text-lg">💾</span>
+              </div>
+              <h4 className="font-albert font-semibold text-secondary-900">Upload Information & File Sizes</h4>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               <div>
-                <div className="text-xs text-gray-600 mb-1">Model Size:</div>
-                <div className="text-sm font-bold text-gray-900">
+                <div className="form-help mb-2">Model Size:</div>
+                <div className="font-albert font-semibold text-secondary-900">
                   {data.modelFile ? `${(data.modelFile.size / 1024 / 1024).toFixed(2)} MB` : 'N/A'}
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-600 mb-1">Dataset Size:</div>
-                <div className="text-sm font-bold text-gray-900">
+                <div className="form-help mb-2">Dataset Size:</div>
+                <div className="font-albert font-semibold text-secondary-900">
                   {data.datasetFile ? `${(data.datasetFile.size / 1024 / 1024).toFixed(2)} MB` : 'N/A'}
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-600 mb-1">Total Size:</div>
-                <div className="text-sm font-bold text-gray-900">
+                <div className="form-help mb-2">Total Size:</div>
+                <div className="font-albert font-semibold text-secondary-900">
                   {(data.modelFile && data.datasetFile) ? 
                     `${((data.modelFile.size + data.datasetFile.size) / 1024 / 1024).toFixed(2)} MB` : 'N/A'}
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-600 mb-1">Created:</div>
-                <div className="text-sm font-bold text-gray-900">
+                <div className="form-help mb-2">Created:</div>
+                <div className="font-albert font-semibold text-secondary-900">
                   {new Date().toLocaleDateString()}
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 mt-4">
-              <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">AI</span>
-              <span className="inline-block px-2 py-1 text-xs bg-green-100 text-green-800 rounded">SEAL Encrypted</span>
-              <span className="inline-block px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">Blockchain</span>
-              <span className="inline-block px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded">Decentralized</span>
+            <div className="flex flex-wrap gap-3 mt-6">
+              <span className="badge bg-primary-100 text-primary-800">🤖 AI</span>
+              <span className="badge bg-success-100 text-success-800">🔒 SEAL Encrypted</span>
+              <span className="badge bg-accent-100 text-accent-800">⛓️ Blockchain</span>
+              <span className="badge bg-warning-100 text-warning-800">🌍 Decentralized</span>
             </div>
           </div>
 
           {/* Blob Info */}
           {(data.modelBlobId || data.datasetBlobId) && (
             <div>
-              <p className="text-sm font-medium text-gray-500">Blob Info</p>
-              <div className="text-sm text-gray-900 space-y-1">
+              <p className="form-label">Blob Info</p>
+              <div className="font-albert text-secondary-800 space-y-2 mt-3">
                 {data.modelBlobId && (
-                  <p>• Model Blob ID (Encrypted): <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.modelBlobId}</span></p>
+                  <p>• Model Blob ID (Encrypted): <code className="bg-secondary-100 px-2 py-1 rounded text-secondary-700 font-mono text-xs">{data.modelBlobId}</code></p>
                 )}
                 {data.datasetBlobId && (
-                  <p>• Dataset Blob ID (Unencrypted): <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.datasetBlobId}</span></p>
+                  <p>• Dataset Blob ID (Unencrypted): <code className="bg-secondary-100 px-2 py-1 rounded text-secondary-700 font-mono text-xs">{data.datasetBlobId}</code></p>
                 )}
               </div>
             </div>
@@ -952,14 +966,16 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
 
           {/* Verification Status */}
           <div>
-            <p className="text-sm font-medium text-gray-500">Verification Status</p>
-            <div className="text-sm text-gray-900">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-yellow-600">⏳</span>
-                  <span className="font-medium text-yellow-900">Pending Verification</span>
+            <p className="form-label">Verification Status</p>
+            <div className="mt-3">
+              <div className="bg-warning-50 border border-warning-200 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-warning-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm">⏳</span>
+                  </div>
+                  <span className="font-albert font-semibold text-warning-900">Pending Verification</span>
                 </div>
-                <p className="text-xs text-yellow-700 mt-1">
+                <p className="font-albert text-warning-700 mt-2">
                   Model will be pending until you verify it in your Dashboard using TEE attestation.
                 </p>
               </div>
@@ -968,8 +984,8 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
 
           {(data.maxDownloads || data.accessDuration || data.expiryDays) && (
             <div>
-              <p className="text-sm font-medium text-gray-500">Access Settings</p>
-              <div className="text-sm text-gray-900 space-y-1">
+              <p className="form-label">Access Settings</p>
+              <div className="font-albert text-secondary-800 space-y-2 mt-3">
                 {data.maxDownloads && <p>• Max downloads: {data.maxDownloads}</p>}
                 {data.accessDuration && <p>• Access duration: {data.accessDuration} days</p>}
                 {data.expiryDays && <p>• Expires in: {data.expiryDays} days</p>}
@@ -980,38 +996,42 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
         </div>
       </div>
 
-      <div className="flex justify-between">
+      <div className="flex justify-between pt-8">
         <button
           onClick={onPrev}
-          className="flex items-center px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+          className="btn btn-secondary"
         >
-          <RiArrowLeftLine className="h-4 w-4 mr-2" />
+          <RiArrowLeftLine className="h-5 w-5 mr-2" />
           Back
         </button>
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || (validation?.hasErrors) || !isWalletConnected}
-          className="flex items-center px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className={`btn btn-lg ${
+            isSubmitting || validation?.hasErrors || !isWalletConnected
+              ? 'opacity-50 cursor-not-allowed bg-secondary-400'
+              : 'btn-primary'
+          }`}
         >
           {isSubmitting ? (
             <>
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-              Uploading...
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3" />
+              <span className="font-albert font-medium">Uploading...</span>
             </>
           ) : !isWalletConnected ? (
             <>
-              <IoWarning className="h-4 w-4 mr-2" />
-              Connect Wallet First
+              <IoWarning className="h-5 w-5 mr-3" />
+              <span className="font-albert font-medium">Connect Wallet First</span>
             </>
           ) : validation?.hasErrors ? (
             <>
-              <IoWarning className="h-4 w-4 mr-2" />
-              Fix Errors First
+              <IoWarning className="h-5 w-5 mr-3" />
+              <span className="font-albert font-medium">Fix Errors First</span>
             </>
           ) : (
             <>
-              Upload Model
-              <RiArrowRightLine className="h-4 w-4 ml-2" />
+              <span className="font-albert font-medium">🚀 Upload Model</span>
+              <RiArrowRightLine className="h-5 w-5 ml-3" />
             </>
           )}
         </button>
@@ -1036,20 +1056,20 @@ function StepNavigation({
   onCancel?: () => void
 }) {
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between pt-8">
       <div className="flex space-x-3">
         <button
           onClick={onPrev}
           disabled={isFirst}
-          className="flex items-center px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <RiArrowLeftLine className="h-4 w-4 mr-2" />
+          <RiArrowLeftLine className="h-5 w-5 mr-2" />
           Back
         </button>
         {onCancel && (
           <button
             onClick={onCancel}
-            className="px-6 py-2 border border-red-300 rounded-md text-red-700 hover:bg-red-50 transition-colors"
+            className="btn btn-ghost text-danger-600 hover:bg-danger-50 border-danger-300"
           >
             Cancel
           </button>
@@ -1058,10 +1078,10 @@ function StepNavigation({
       <button
         onClick={onNext}
         disabled={!isValid}
-        className="flex items-center px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="btn btn-primary btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {nextLabel}
-        <RiArrowRightLine className="h-4 w-4 ml-2" />
+        <span className="font-albert font-medium">{nextLabel}</span>
+        <RiArrowRightLine className="h-5 w-5 ml-2" />
       </button>
     </div>
   )

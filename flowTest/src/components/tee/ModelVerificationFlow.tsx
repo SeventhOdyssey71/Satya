@@ -203,47 +203,53 @@ export function ModelVerificationFlow({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Model Verification</h2>
+    <div className="space-y-8">
+      <div className="card p-8">
+        <h2 className="text-2xl font-russo text-secondary-900 mb-6">Model Verification</h2>
         
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-gray-700">Model:</span>
-              <span className="ml-2 text-gray-600">{modelName}</span>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-surface-100 rounded-xl border border-border">
+            <div className="flex flex-col space-y-1">
+              <span className="form-label">Model Name</span>
+              <span className="text-secondary-800 font-albert font-medium">{modelName}</span>
             </div>
-            <div>
-              <span className="font-medium text-gray-700">Model Blob ID:</span>
-              <span className="ml-2 font-mono text-gray-600 break-all">{modelBlobId.substring(0, 16)}...</span>
+            <div className="flex flex-col space-y-1">
+              <span className="form-label">Model Blob ID</span>
+              <div className="flex items-center space-x-2">
+                <code className="text-xs bg-secondary-100 px-2 py-1 rounded-lg text-secondary-700 font-mono">
+                  {modelBlobId.substring(0, 16)}...
+                </code>
+              </div>
             </div>
             {datasetBlobId && (
-              <div className="md:col-span-2">
-                <span className="font-medium text-gray-700">Dataset Blob ID:</span>
-                <span className="ml-2 font-mono text-gray-600 break-all">{datasetBlobId.substring(0, 16)}...</span>
+              <div className="md:col-span-2 flex flex-col space-y-1">
+                <span className="form-label">Dataset Blob ID</span>
+                <code className="text-xs bg-secondary-100 px-2 py-1 rounded-lg text-secondary-700 font-mono w-fit">
+                  {datasetBlobId.substring(0, 16)}...
+                </code>
               </div>
             )}
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <button
               onClick={generateTEEAttestation}
               disabled={isGeneratingAttestation || !!attestationData}
-              className={`w-full px-4 py-3 rounded-lg font-medium text-white transition-colors ${
+              className={`w-full btn btn-lg ${
                 isGeneratingAttestation || !!attestationData
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-black hover:bg-gray-800'
+                  ? 'opacity-50 cursor-not-allowed bg-secondary-400'
+                  : 'btn-primary'
               }`}
             >
               {isGeneratingAttestation ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Processing in TEE...</span>
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span className="font-albert font-medium">Processing in TEE...</span>
                 </div>
               ) : attestationData ? (
-                'TEE Processing Complete'
+                <span className="font-albert font-medium">TEE Processing Complete</span>
               ) : (
-                'Process in TEE'
+                <span className="font-albert font-medium">Process in TEE</span>
               )}
             </button>
 
@@ -251,29 +257,32 @@ export function ModelVerificationFlow({
               <button
                 onClick={verifyOnChain}
                 disabled={isVerifyingOnChain || !account}
-                className={`w-full px-4 py-3 rounded-lg font-medium transition-colors ${
+                className={`w-full btn btn-lg ${
                   isVerifyingOnChain || !account
-                    ? 'bg-gray-400 cursor-not-allowed text-gray-600'
-                    : 'bg-white border border-gray-300 text-black hover:bg-gray-50'
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'btn-secondary'
                 }`}
               >
                 {isVerifyingOnChain ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Verifying on SUI Blockchain...</span>
+                  <div className="flex items-center justify-center space-x-3">
+                    <div className="w-5 h-5 border-2 border-secondary-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="font-albert font-medium">Verifying on SUI Blockchain...</span>
                   </div>
                 ) : !account ? (
-                  'Connect Wallet to Verify'
+                  <span className="font-albert font-medium">Connect Wallet to Verify</span>
                 ) : (
-                  'Verify on SUI Blockchain'
+                  <span className="font-albert font-medium">Verify on SUI Blockchain</span>
                 )}
               </button>
             )}
 
             {verificationResult && (
-              <div className="bg-gray-50 border border-gray-300 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-gray-900">
-                  <span className="font-medium">Blockchain Verification Complete</span>
+              <div className="bg-success-50 border border-success-200 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">✓</span>
+                  </div>
+                  <span className="font-albert font-semibold text-success-800">Blockchain Verification Complete</span>
                 </div>
               </div>
             )}
@@ -282,8 +291,16 @@ export function ModelVerificationFlow({
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="bg-danger-50 border border-danger-200 rounded-xl p-6">
+          <div className="flex items-start gap-3">
+            <div className="w-6 h-6 bg-danger-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-white text-sm font-bold">!</span>
+            </div>
+            <div>
+              <h4 className="font-albert font-semibold text-danger-800 mb-1">Error Occurred</h4>
+              <p className="font-albert text-danger-700">{error}</p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -295,19 +312,29 @@ export function ModelVerificationFlow({
       />
 
       {verificationResult && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h4 className="text-sm font-semibold text-green-800 mb-2">✅ Blockchain Verification Complete!</h4>
-          <div className="text-xs text-green-700 space-y-1">
-            <div>Transaction Digest: {verificationResult.digest}</div>
-            <div>
-              <a 
-                href={`https://explorer.sui.io/txblock/${verificationResult.digest}?network=testnet`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline"
-              >
-                View on SUI Explorer
-              </a>
+        <div className="bg-success-50 border border-success-200 rounded-2xl p-6">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 bg-success-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-lg font-bold">✓</span>
+            </div>
+            <div className="flex-1">
+              <h4 className="font-russo text-lg text-success-800 mb-3">Blockchain Verification Complete!</h4>
+              <div className="space-y-3">
+                <div className="bg-surface-50 rounded-xl p-4">
+                  <div className="text-sm font-albert text-secondary-600 mb-1">Transaction Digest</div>
+                  <code className="text-xs font-mono bg-secondary-100 px-2 py-1 rounded text-secondary-700">
+                    {verificationResult.digest}
+                  </code>
+                </div>
+                <a 
+                  href={`https://explorer.sui.io/txblock/${verificationResult.digest}?network=testnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-secondary btn-sm"
+                >
+                  View on SUI Explorer
+                </a>
+              </div>
             </div>
           </div>
         </div>

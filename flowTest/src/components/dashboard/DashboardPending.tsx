@@ -60,82 +60,98 @@ export default function DashboardPending() {
     <div className="space-y-8">
       {/* Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+        <div className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Awaiting Verification</h3>
-              <p className="text-3xl font-bold text-black mt-2">{pendingVerification.length}</p>
+              <h3 className="font-albert font-semibold text-lg text-secondary-700">Awaiting Verification</h3>
+              <p className="text-4xl font-russo font-bold text-warning-600 mt-3">{pendingVerification.length}</p>
             </div>
-            <TbClockHour4 className="w-8 h-8 text-gray-600" />
+            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
+              <TbClockHour4 className="w-6 h-6 text-warning-600" />
+            </div>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-300 rounded-lg p-6">
+        <div className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">In Verification</h3>
-              <p className="text-3xl font-bold text-black mt-2">{inVerification.length}</p>
+              <h3 className="font-albert font-semibold text-lg text-secondary-700">In Verification</h3>
+              <p className="text-4xl font-russo font-bold text-primary-600 mt-3">{inVerification.length}</p>
             </div>
-            <TbShieldX className="w-8 h-8 text-gray-600" />
+            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+              <TbShieldX className="w-6 h-6 text-primary-600" />
+            </div>
           </div>
         </div>
 
-        <div className="bg-black border border-black rounded-lg p-6">
+        <div className="card p-6 bg-gradient-to-br from-success-50 to-success-100 border-success-200">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">Verified</h3>
-              <p className="text-3xl font-bold text-white mt-2">{verified.length}</p>
+              <h3 className="font-albert font-semibold text-lg text-success-800">Verified</h3>
+              <p className="text-4xl font-russo font-bold text-success-600 mt-3">{verified.length}</p>
             </div>
-            <TbShieldCheck className="w-8 h-8 text-white" />
+            <div className="w-12 h-12 bg-success-500 rounded-xl flex items-center justify-center">
+              <TbShieldCheck className="w-6 h-6 text-white" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Pending Verification List */}
       {pendingVerification.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-            <TbCertificate className="w-6 h-6 mr-2 text-orange-600" />
+        <div className="card p-8">
+          <h3 className="text-2xl font-russo text-secondary-900 mb-8 flex items-center">
+            <div className="w-8 h-8 bg-warning-100 rounded-lg flex items-center justify-center mr-3">
+              <TbCertificate className="w-5 h-5 text-warning-600" />
+            </div>
             Models Awaiting TEE Verification
           </h3>
           
-          <div className="space-y-6">
+          <div className="space-y-8">
             {pendingVerification.map((task) => (
-              <div key={task.id} className="border border-gray-200 rounded-lg p-6">
-                <div className="flex justify-between items-start mb-4">
+              <div key={task.id} className="card-hover p-6 border-l-4 border-l-warning-400">
+                <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h4 className="text-lg font-medium text-gray-900">{task.fileName}</h4>
-                    <p className="text-gray-600">
+                    <h4 className="text-xl font-albert font-semibold text-secondary-900">{task.fileName}</h4>
+                    <p className="text-secondary-600 font-albert mt-1">
                       Uploaded: {formatFileSize(task.fileSize)} • {new Date().toLocaleDateString()}
                     </p>
-                    <div className="mt-2 space-y-1">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {task.modelBlobId && (
-                        <span className="inline-block bg-black text-white text-xs font-medium px-2.5 py-0.5 rounded mr-2">
+                        <span className="badge bg-primary-100 text-primary-800">
                           Model: {task.modelBlobId.substring(0, 12)}...
                         </span>
                       )}
                       {task.datasetBlobId && (
-                        <span className="inline-block bg-gray-300 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
+                        <span className="badge bg-secondary-100 text-secondary-800">
                           Dataset: {task.datasetBlobId.substring(0, 12)}...
                         </span>
                       )}
                       {task.blobId && !task.modelBlobId && (
-                        <span className="inline-block bg-gray-200 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
+                        <span className="badge bg-surface-200 text-secondary-700">
                           Blob: {task.blobId.substring(0, 12)}...
                         </span>
                       )}
                     </div>
                   </div>
-                  <span className="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
+                  <span className="badge badge-warning">
                     Needs Verification
                   </span>
                 </div>
 
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-gray-800">
-                    <strong>Action Required:</strong> Your model has been successfully uploaded to Walrus storage. 
-                    To publish it to the marketplace, you must complete TEE attestation verification.
-                  </p>
+                <div className="bg-warning-50 border border-warning-200 rounded-xl p-5 mb-6">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-warning-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-white text-sm font-bold">!</span>
+                    </div>
+                    <div>
+                      <h5 className="font-albert font-semibold text-warning-800 mb-1">Action Required</h5>
+                      <p className="font-albert text-warning-700 leading-relaxed">
+                        Your model has been successfully uploaded to Walrus storage. 
+                        To publish it to the marketplace, you must complete TEE attestation verification.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {(() => {
@@ -148,7 +164,9 @@ export default function DashboardPending() {
                   })
                   return (task.modelBlobId || task.blobId) ? (
                     <div>
-                      <p className="text-sm text-gray-600 mb-3">Verification interface loading...</p>
+                      <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 mb-4">
+                        <p className="font-albert text-primary-700">Verification interface ready</p>
+                      </div>
                       <ModelVerificationFlow
                         modelBlobId={task.modelBlobId || task.blobId || ''}
                         datasetBlobId={task.datasetBlobId}
@@ -168,7 +186,9 @@ export default function DashboardPending() {
                       />
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-600">No blob ID found for verification</p>
+                    <div className="bg-danger-50 border border-danger-200 rounded-xl p-4">
+                      <p className="font-albert text-danger-700">No blob ID found for verification</p>
+                    </div>
                   )
                 })()}
               </div>
@@ -179,32 +199,38 @@ export default function DashboardPending() {
 
       {/* Verified Models */}
       {verified.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-            <TbShieldCheck className="w-6 h-6 mr-2 text-green-600" />
+        <div className="card p-8">
+          <h3 className="text-2xl font-russo text-secondary-900 mb-8 flex items-center">
+            <div className="w-8 h-8 bg-success-100 rounded-lg flex items-center justify-center mr-3">
+              <TbShieldCheck className="w-5 h-5 text-success-600" />
+            </div>
             Verified Models
           </h3>
           
-          <div className="space-y-4">
+          <div className="space-y-6">
             {verified.map((task) => (
-              <div key={task.id} className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="flex items-center gap-4">
-                  <TbShieldCheck className="w-6 h-6 text-green-600" />
-                  <div>
-                    <p className="font-semibold text-green-900">{task.fileName}</p>
-                    <p className="text-green-700 text-sm">
-                      {formatFileSize(task.fileSize)} • Verified • Ready for marketplace
-                    </p>
-                    {task.blockchainTxDigest && (
-                      <p className="text-green-600 text-xs mt-1">
-                        Tx: {task.blockchainTxDigest.substring(0, 20)}...
+              <div key={task.id} className="card-hover p-6 bg-gradient-to-r from-success-50 to-success-100 border-success-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-success-500 rounded-xl flex items-center justify-center">
+                      <TbShieldCheck className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-albert font-semibold text-success-900 text-lg">{task.fileName}</p>
+                      <p className="text-success-700 font-albert">
+                        {formatFileSize(task.fileSize)} • Verified • Ready for marketplace
                       </p>
-                    )}
+                      {task.blockchainTxDigest && (
+                        <code className="text-xs bg-success-200 px-2 py-1 rounded text-success-800 font-mono mt-2 inline-block">
+                          Tx: {task.blockchainTxDigest.substring(0, 20)}...
+                        </code>
+                      )}
+                    </div>
                   </div>
+                  <span className="badge badge-success">
+                    Verified
+                  </span>
                 </div>
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                  Verified ✓
-                </span>
               </div>
             ))}
           </div>
@@ -213,10 +239,12 @@ export default function DashboardPending() {
 
       {/* Empty State */}
       {pendingVerification.length === 0 && verified.length === 0 && (
-        <div className="text-center py-12">
-          <TbCertificate className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No models pending verification</h3>
-          <p className="text-gray-600">
+        <div className="card p-12 text-center">
+          <div className="w-24 h-24 bg-secondary-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <TbCertificate className="w-12 h-12 text-secondary-400" />
+          </div>
+          <h3 className="text-2xl font-russo text-secondary-900 mb-3">No models pending verification</h3>
+          <p className="text-secondary-600 font-albert max-w-md mx-auto leading-relaxed">
             Upload a model first, then it will appear here for TEE verification before marketplace publication.
           </p>
         </div>
