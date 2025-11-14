@@ -14,7 +14,7 @@ export default function Home() {
       </div>
 
       {/* Header */}
-      <Header activeTab="marketplace" />
+      <Header />
       
       {/* Hero Section */}
       <HeroSection />

@@ -203,7 +203,7 @@ export default function ModelPage({ params }: ModelPageProps) {
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
-        <Header activeTab="marketplace" />
+        <Header />
         <main className="relative z-10 py-6">
           <div className="container max-w-7xl mx-auto px-6">
             <div className="text-center py-20">
@@ -219,7 +219,7 @@ export default function ModelPage({ params }: ModelPageProps) {
   if (!model) {
     return (
       <div className="min-h-screen bg-white">
-        <Header activeTab="marketplace" />
+        <Header />
         <main className="relative z-10 py-6">
           <div className="container max-w-7xl mx-auto px-6">
             <div className="text-center py-20">
@@ -239,7 +239,7 @@ export default function ModelPage({ params }: ModelPageProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header activeTab="marketplace" />
+      <Header />
       
       <main className="relative z-10 py-6">
         <div className="container max-w-7xl mx-auto px-6">

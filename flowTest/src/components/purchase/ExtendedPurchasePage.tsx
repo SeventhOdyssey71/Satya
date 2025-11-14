@@ -147,7 +147,7 @@ export default function ExtendedPurchasePage({
   return (
     <div className={`min-h-screen bg-gray-50 ${className}`}>
       {/* Main Satya Navigation */}
-      <Header activeTab="marketplace" />
+      <Header />
       
       {/* Top Navigation Bar */}
       <div className="bg-white border-b border-gray-200">

@@ -25,7 +25,7 @@ export default function TestTEEPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <Header activeTab="marketplace" />
+      <Header />
       
       {/* Main Content */}
       <main className="relative z-10 py-6">

@@ -19,7 +19,7 @@ export default function DashboardPage() {
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-white">
-        <Header activeTab="dashboard" />
+        <Header />
         <main className="relative z-10 py-6">
           <div className="container max-w-7xl mx-auto px-6">
             <div className="max-w-4xl mx-auto text-center py-20">
@@ -35,7 +35,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-surface-50 via-surface-100/50 to-primary-50/30">
       {/* Header */}
-      <Header activeTab="dashboard" />
+      <Header />
       
       {/* Hero Section */}
       <section className="relative py-12">

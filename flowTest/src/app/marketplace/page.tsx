@@ -25,7 +25,7 @@ export default function MarketplacePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-surface-50 via-surface-100/50 to-primary-50/30">
       {/* Header */}
-      <Header activeTab="marketplace" />
+      <Header />
       
       {/* Hero Banner */}
       <section className="relative py-12 md:py-16">
