@@ -11,19 +11,19 @@ export default function DashboardPending() {
   // Debug logging
   console.log('All tasks for dashboard:', allTasks)
 
-  // Add mock tasks if none exist (for testing verification flow)
-  const mockTasks = allTasks.length === 0 ? [
+  // Create mock tasks for testing (always show these for now)
+  const mockTasks = [
     {
       id: 'mock_1',
       title: 'Test Model 1',
-      fileName: 'eurostile-extended.zip',
+      fileName: 'eurostile-extended (1).zip',
       fileSize: 21248, // 20.79 KB
       status: 'completed' as const,
       progress: 100,
       phases: [],
       createdAt: new Date(),
       updatedAt: new Date(),
-      verificationStatus: 'pending' as const,
+      verificationStatus: undefined, // This makes it show as pending verification
       modelBlobId: 'q73BP2a0_-e-dhA2i5Tj8hsf2_Ll92jBOFAmYRr0H1zz_iE',
       datasetBlobId: 'pmPnUh0stRV35bHd8f7yYeAi0vp8sL3kp9mNbCxQ2rS6_dI'
     },
@@ -37,11 +37,11 @@ export default function DashboardPending() {
       phases: [],
       createdAt: new Date(),
       updatedAt: new Date(),
-      verificationStatus: 'pending' as const,
+      verificationStatus: undefined, // This makes it show as pending verification
       modelBlobId: 'x94GP8b2_-f-ehB3j6Uk9itg3_Mm03kCPGBnZSs1I2az_jF',
       datasetBlobId: 'qnQoVi1tuSW46cId9g8zZfBj1wq9tM4lq0nOcDyR3sT7_eJ'
     }
-  ] : []
+  ]
 
   // Filter tasks that need verification (uploaded but not verified)
   const pendingVerification = [...allTasks, ...mockTasks].filter(task => 
@@ -138,25 +138,39 @@ export default function DashboardPending() {
                   </p>
                 </div>
 
-                {(task.modelBlobId || task.blobId) && (
-                  <ModelVerificationFlow
-                    modelBlobId={task.modelBlobId || task.blobId || ''}
-                    datasetBlobId={task.datasetBlobId}
-                    modelName={task.fileName}
-                    onVerificationComplete={(attestation, txDigest) => {
-                      // Update task with verification data and upload to marketplace
-                      console.log('Verification and marketplace upload complete:', { 
-                        attestation, 
-                        txDigest, 
-                        taskId: task.id 
-                      })
-                      
-                      // TODO: Update the task status in context
-                      // This would mark the task as verified and ready for marketplace
-                      alert(`Model "${task.fileName}" successfully verified and uploaded to marketplace!\nTransaction: ${txDigest.slice(0, 20)}...`)
-                    }}
-                  />
-                )}
+                {(() => {
+                  console.log('Checking verification flow for task:', {
+                    id: task.id,
+                    fileName: task.fileName,
+                    modelBlobId: task.modelBlobId,
+                    blobId: task.blobId,
+                    shouldRender: !!(task.modelBlobId || task.blobId)
+                  })
+                  return (task.modelBlobId || task.blobId) ? (
+                    <div>
+                      <p className="text-sm text-blue-600 mb-3">🔄 Verification interface loading...</p>
+                      <ModelVerificationFlow
+                        modelBlobId={task.modelBlobId || task.blobId || ''}
+                        datasetBlobId={task.datasetBlobId}
+                        modelName={task.fileName}
+                        onVerificationComplete={(attestation, txDigest) => {
+                          // Update task with verification data and upload to marketplace
+                          console.log('Verification and marketplace upload complete:', { 
+                            attestation, 
+                            txDigest, 
+                            taskId: task.id 
+                          })
+                          
+                          // TODO: Update the task status in context
+                          // This would mark the task as verified and ready for marketplace
+                          alert(`Model "${task.fileName}" successfully verified and uploaded to marketplace!\nTransaction: ${txDigest.slice(0, 20)}...`)
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-red-600">❌ No blob ID found for verification</p>
+                  )
+                })()}
               </div>
             ))}
           </div>
