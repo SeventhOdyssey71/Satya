@@ -185,7 +185,7 @@ export function ModelVerificationFlow({
               }
             } catch (error) {
               console.error('Marketplace upload failed:', error);
-              setError(`Verification successful, but marketplace upload failed: ${error.message}`);
+              setError(`Verification successful, but marketplace upload failed: ${error instanceof Error ? error.message : String(error)}`);
             }
           },
           onError: (error) => {

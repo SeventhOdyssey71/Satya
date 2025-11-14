@@ -1,4 +1,4 @@
-export { TEECompute } from './TEECompute';
+export { default as TEECompute } from './TEECompute';
 export { TEEAttestationCard } from './TEEAttestationCard';
 export { ModelVerificationFlow } from './ModelVerificationFlow';
 export { default as MLProcessingSection } from './MLProcessingSection';

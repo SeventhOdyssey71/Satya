@@ -135,7 +135,7 @@ export default function MLProcessingSection({
           predictions: teeResult.ml_processing_result?.predictions || [1],
           probabilities: [[0.1, 0.9]], // Mock probabilities
           confidence_scores: [teeResult.ml_processing_result?.confidence || 0.95],
-          input_shape: "Decrypted data processing",
+          input_shape: ["Decrypted data processing"],
           timestamp: teeResult.tee_attestation?.timestamp || new Date().toISOString(),
           real_model: true
         };

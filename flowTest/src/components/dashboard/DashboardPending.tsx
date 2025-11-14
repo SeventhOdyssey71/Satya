@@ -127,9 +127,9 @@ export default function DashboardPending() {
                           Dataset: {task.datasetBlobId.substring(0, 12)}...
                         </span>
                       )}
-                      {task.blobId && !task.modelBlobId && (
+                      {(task as any).blobId && !task.modelBlobId && (
                         <span className="badge bg-surface-200 text-secondary-700">
-                          Blob: {task.blobId.substring(0, 12)}...
+                          Blob: {(task as any).blobId.substring(0, 12)}...
                         </span>
                       )}
                     </div>
@@ -159,16 +159,16 @@ export default function DashboardPending() {
                     id: task.id,
                     fileName: task.fileName,
                     modelBlobId: task.modelBlobId,
-                    blobId: task.blobId,
-                    shouldRender: !!(task.modelBlobId || task.blobId)
+                    blobId: (task as any).blobId,
+                    shouldRender: !!(task.modelBlobId || (task as any).blobId)
                   })
-                  return (task.modelBlobId || task.blobId) ? (
+                  return (task.modelBlobId || (task as any).blobId) ? (
                     <div>
                       <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 mb-4">
                         <p className="font-albert text-primary-700">Verification interface ready</p>
                       </div>
                       <ModelVerificationFlow
-                        modelBlobId={task.modelBlobId || task.blobId || ''}
+                        modelBlobId={task.modelBlobId || (task as any).blobId || ''}
                         datasetBlobId={task.datasetBlobId}
                         modelName={task.fileName}
                         onVerificationComplete={(attestation, txDigest) => {

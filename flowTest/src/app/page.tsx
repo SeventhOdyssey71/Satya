@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/ui/Header'
-import { HiArrowRight, HiShieldCheck, HiLightningBolt, HiGlobe, HiChevronDown, HiSparkles } from 'react-icons/hi2'
+import { HiArrowRight, HiShieldCheck, HiBolt, HiGlobeAmericas, HiChevronDown, HiSparkles } from 'react-icons/hi2'
 import { TbShield, TbDatabase, TbNetwork, TbCloudCheck } from 'react-icons/tb'
 
 export default function Home() {
@@ -160,7 +160,7 @@ function FeaturesSection() {
             
             return (
               <div key={index} className="card-hover p-6 text-center group animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl border ${colorClasses[feature.color]} mb-4 group-hover:scale-110 transition-transform`}>
+                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl border ${colorClasses[feature.color as keyof typeof colorClasses]} mb-4 group-hover:scale-110 transition-transform`}>
                   <IconComponent className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-russo mb-3 text-secondary-800">{feature.title}</h3>
@@ -232,7 +232,7 @@ function TrustedMarketplacesSection() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="badge bg-white/20 text-white border-white/30">
-                      <HiLightningBolt className="w-3 h-3" />
+                      <HiBolt className="w-3 h-3" />
                       High Performance
                     </div>
                     <div className="badge bg-white/20 text-white border-white/30">
@@ -261,7 +261,7 @@ function TrustedMarketplacesSection() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="badge bg-white/20 text-white border-white/30">
-                      <HiGlobe className="w-3 h-3" />
+                      <HiGlobeAmericas className="w-3 h-3" />
                       Autonomous Systems
                     </div>
                     <div className="badge bg-white/20 text-white border-white/30">

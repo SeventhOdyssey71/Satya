@@ -96,7 +96,7 @@ export function TEEVerificationStep({
     });
   };
 
-  const isStepValid = verificationStatus === 'verified' && blockchainTxDigest;
+  const isStepValid = verificationStatus === 'verified' && !!blockchainTxDigest;
 
   return (
     <div className="space-y-6">

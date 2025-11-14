@@ -249,7 +249,8 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
               enableEncryption: true,
               policyType: 'payment-gated',
               accessDuration: 30,
-              isPrivate: false
+              isPrivate: false,
+              verificationStatus: 'pending'
             })
           }}
           onViewListing={(listingId) => {
@@ -291,11 +292,6 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
           isValid={steps[currentStep].validate()}
           validation={validation}
           isWalletConnected={isWalletConnected}
-          onTbUpload={handleUpload}
-          uploadedFiles={{
-            modelBlobId: data.modelBlobId,
-            datasetBlobId: data.datasetBlobId
-          }}
           onCancel={onCancel}
         />
       </div>
