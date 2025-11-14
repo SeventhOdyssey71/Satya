@@ -483,12 +483,6 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
     }
   }
 
-  const handleThumbnailSelect = (files: File[]) => {
-    if (files.length > 0) {
-      onChange({ thumbnailFile: files[0] })
-    }
-  }
-
   const handleDatasetFileSelect = async (files: File[]) => {
     if (files.length > 0) {
       const file = files[0]
@@ -534,11 +528,6 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
     }
   }
 
-  const handleSampleSelect = (files: File[]) => {
-    if (files.length > 0) {
-      onChange({ sampleFile: files[0] })
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -640,46 +629,6 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
             </p>
           </div>
 
-          {/* Thumbnail */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Thumbnail Image (Optional)
-            </label>
-            <FileUploadZone
-              accept={{ 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'] }}
-              maxSize={10 * 1024 * 1024} // 10MB
-              onFileSelect={handleThumbnailSelect}
-              placeholder="Drop thumbnail image here or click to browse"
-              files={data.thumbnailFile ? [data.thumbnailFile] : []}
-              onFileRemove={() => onChange({ thumbnailFile: undefined })}
-            />
-          </div>
-
-          {/* Sample File */}
-          <div>
-            <label className="flex items-center space-x-2 mb-2">
-              <input
-                type="checkbox"
-                checked={data.enableSample}
-                onChange={(e) => onChange({ enableSample: e.target.checked })}
-                className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Include Sample File
-              </span>
-            </label>
-            
-            {data.enableSample && (
-              <FileUploadZone
-                accept={{ '*/*': [] }}
-                maxSize={100 * 1024 * 1024} // 100MB
-                onFileSelect={handleSampleSelect}
-                placeholder="Drop sample file here or click to browse"
-                files={data.sampleFile ? [data.sampleFile] : []}
-                onFileRemove={() => onChange({ sampleFile: undefined })}
-              />
-            )}
-          </div>
         </div>
       </div>
 
