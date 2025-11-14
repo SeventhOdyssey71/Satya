@@ -46,9 +46,9 @@ export function TEEAttestationCard({
   
   if (!attestationData) {
     return (
-      <div className="bg-gray-50 rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">TEE Attestation</h3>
-        <p className="text-gray-600">Run model verification to generate attestation data</p>
+      <div className="bg-secondary-50 rounded-lg border border-secondary-200 p-6">
+        <h3 className="text-lg font-semibold text-secondary-800 mb-2">TEE Attestation</h3>
+        <p className="text-secondary-600">Run model verification to generate attestation data</p>
       </div>
     );
   }
@@ -56,11 +56,11 @@ export function TEEAttestationCard({
   const qualityPercent = (attestationData.ml_processing_result.quality_score * 100).toFixed(1);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+    <div className="bg-white rounded-lg border border-secondary-200 p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">TEE Attestation Data</h3>
+        <h3 className="text-lg font-semibold text-secondary-900">TEE Attestation Data</h3>
         {isVerified && (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary-200 text-secondary-800">
             ✅ Verified
           </span>
         )}
@@ -69,18 +69,18 @@ export function TEEAttestationCard({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
         <div className="space-y-2">
           <div>
-            <span className="font-medium text-gray-700">Request ID:</span>
-            <span className="ml-2 font-mono text-gray-600">{attestationData.request_id}</span>
+            <span className="font-medium text-secondary-700">Request ID:</span>
+            <span className="ml-2 font-mono text-secondary-600">{attestationData.request_id}</span>
           </div>
           
           <div>
-            <span className="font-medium text-gray-700">Enclave ID:</span>
-            <span className="ml-2 font-mono text-gray-600">{attestationData.verification_metadata.enclave_id}</span>
+            <span className="font-medium text-secondary-700">Enclave ID:</span>
+            <span className="ml-2 font-mono text-secondary-600">{attestationData.verification_metadata.enclave_id}</span>
           </div>
 
           <div>
-            <span className="font-medium text-gray-700">Model Hash:</span>
-            <span className="ml-2 font-mono text-gray-600 break-all">
+            <span className="font-medium text-secondary-700">Model Hash:</span>
+            <span className="ml-2 font-mono text-secondary-600 break-all">
               {attestationData.ml_processing_result.model_hash.substring(0, 32)}...
             </span>
           </div>
@@ -88,36 +88,36 @@ export function TEEAttestationCard({
 
         <div className="space-y-2">
           <div>
-            <span className="font-medium text-gray-700">Quality Score:</span>
-            <span className="ml-2 font-semibold text-green-600">{qualityPercent}%</span>
+            <span className="font-medium text-secondary-700">Quality Score:</span>
+            <span className="ml-2 font-semibold text-secondary-800">{qualityPercent}%</span>
           </div>
 
           <div>
-            <span className="font-medium text-gray-700">PCR0:</span>
-            <span className="ml-2 font-mono text-gray-600">
+            <span className="font-medium text-secondary-700">PCR0:</span>
+            <span className="ml-2 font-mono text-secondary-600">
               {attestationData.tee_attestation.pcr0.substring(0, 16)}...
             </span>
           </div>
 
           <div>
-            <span className="font-medium text-gray-700">Source:</span>
-            <span className="ml-2 text-gray-600">{attestationData.verification_metadata.source}</span>
+            <span className="font-medium text-secondary-700">Source:</span>
+            <span className="ml-2 text-secondary-600">{attestationData.verification_metadata.source}</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h4 className="text-sm font-semibold text-gray-800 mb-2">Cryptographic Signatures</h4>
+      <div className="bg-secondary-50 rounded-lg p-4">
+        <h4 className="text-sm font-semibold text-secondary-800 mb-2">Cryptographic Signatures</h4>
         <div className="space-y-1 text-xs">
           <div>
-            <span className="font-medium text-gray-700">TEE Signature:</span>
-            <span className="ml-2 font-mono text-gray-600 break-all">
+            <span className="font-medium text-secondary-700">TEE Signature:</span>
+            <span className="ml-2 font-mono text-secondary-600 break-all">
               {attestationData.tee_attestation.signature.substring(0, 32)}...
             </span>
           </div>
           <div>
-            <span className="font-medium text-gray-700">ML Signature:</span>
-            <span className="ml-2 font-mono text-gray-600 break-all">
+            <span className="font-medium text-secondary-700">ML Signature:</span>
+            <span className="ml-2 font-mono text-secondary-600 break-all">
               {attestationData.ml_processing_result.signature.substring(0, 32)}...
             </span>
           </div>
@@ -130,8 +130,8 @@ export function TEEAttestationCard({
           disabled={isVerifying}
           className={`w-full px-4 py-2 rounded-lg font-medium text-white transition-colors ${
             isVerifying
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700'
+              ? 'bg-secondary-400 cursor-not-allowed'
+              : 'bg-secondary-800 hover:bg-secondary-900'
           }`}
         >
           {isVerifying ? (
@@ -146,8 +146,8 @@ export function TEEAttestationCard({
       )}
 
       {isVerified && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-          <p className="text-sm text-green-800 font-medium">
+        <div className="bg-secondary-100 border border-secondary-200 rounded-lg p-3">
+          <p className="text-sm text-secondary-800 font-medium">
             ✅ Successfully verified on SUI blockchain
           </p>
         </div>

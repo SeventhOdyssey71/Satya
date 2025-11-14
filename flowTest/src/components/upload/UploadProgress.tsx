@@ -32,13 +32,13 @@ export default function UploadProgress({
     const IconComponent = phase.icon
     
     if (phase.status === 'completed') {
-      return <CheckCircle className="w-6 h-6 text-green-500" />
+      return <CheckCircle className="w-6 h-6 text-secondary-700" />
     } else if (phase.status === 'error') {
-      return <AlertCircle className="w-6 h-6 text-red-500" />
+      return <AlertCircle className="w-6 h-6 text-secondary-800" />
     } else if (phase.status === 'in-progress') {
-      return <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+      return <Loader2 className="w-6 h-6 text-secondary-600 animate-spin" />
     } else {
-      return <IconComponent className="w-6 h-6 text-gray-400" />
+      return <IconComponent className="w-6 h-6 text-secondary-400" />
     }
   }
 
@@ -61,15 +61,15 @@ export default function UploadProgress({
       <div className="p-6 border-b">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-medium text-gray-900">Uploading Model</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="text-lg font-medium text-secondary-900">Uploading Model</h3>
+            <p className="text-sm text-secondary-600">
               Please wait while we process and upload your model
             </p>
           </div>
           {onCancel && (
             <button
               onClick={onCancel}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-sm text-secondary-600 hover:text-secondary-800 border border-secondary-300 rounded-md hover:bg-secondary-50 transition-colors"
             >
               Cancel
             </button>
@@ -78,13 +78,13 @@ export default function UploadProgress({
         
         {/* Overall Progress */}
         <div className="mt-4">
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
+          <div className="flex justify-between text-sm text-secondary-600 mb-2">
             <span>Overall Progress</span>
             <span>{overallProgress.toFixed(1)}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-secondary-200 rounded-full h-2">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-secondary-800 h-2 rounded-full transition-all duration-300"
               style={{ width: `${overallProgress}%` }}
             />
           </div>
@@ -106,24 +106,24 @@ export default function UploadProgress({
                 <div className="flex items-center justify-between">
                   <h4 className={`text-sm font-medium
                     ${phase.status === 'completed' 
-                      ? 'text-green-900' 
+                      ? 'text-secondary-900' 
                       : phase.status === 'error' 
-                        ? 'text-red-900'
+                        ? 'text-secondary-900'
                         : phase.status === 'in-progress'
-                          ? 'text-blue-900'
-                          : 'text-gray-500'
+                          ? 'text-secondary-900'
+                          : 'text-secondary-500'
                     }
                   `}>
                     {phase.name}
                   </h4>
                   <span className={`text-xs font-medium
                     ${phase.status === 'completed' 
-                      ? 'text-green-600' 
+                      ? 'text-secondary-700' 
                       : phase.status === 'error' 
-                        ? 'text-red-600'
+                        ? 'text-secondary-800'
                         : phase.status === 'in-progress'
-                          ? 'text-blue-600'
-                          : 'text-gray-400'
+                          ? 'text-secondary-700'
+                          : 'text-secondary-400'
                     }
                   `}>
                     {getPhaseStatusText(phase)}
@@ -132,8 +132,8 @@ export default function UploadProgress({
                 
                 <p className={`text-xs mt-1
                   ${phase.status === 'in-progress' 
-                    ? 'text-gray-700' 
-                    : 'text-gray-500'
+                    ? 'text-secondary-700' 
+                    : 'text-secondary-500'
                   }
                 `}>
                   {phase.error || phase.description}
@@ -142,9 +142,9 @@ export default function UploadProgress({
                 {/* Individual Progress Bar */}
                 {phase.status === 'in-progress' && phase.progress !== undefined && (
                   <div className="mt-2">
-                    <div className="w-full bg-gray-200 rounded-full h-1">
+                    <div className="w-full bg-secondary-200 rounded-full h-1">
                       <div
-                        className="bg-blue-600 h-1 rounded-full transition-all duration-300"
+                        className="bg-secondary-800 h-1 rounded-full transition-all duration-300"
                         style={{ width: `${phase.progress}%` }}
                       />
                     </div>
@@ -154,7 +154,7 @@ export default function UploadProgress({
 
               {/* Connector Line */}
               {index < phases.length - 1 && (
-                <div className="absolute left-9 mt-8 w-px h-8 bg-gray-200" />
+                <div className="absolute left-9 mt-8 w-px h-8 bg-secondary-200" />
               )}
             </div>
           ))}

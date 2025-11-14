@@ -23,7 +23,7 @@ export default function MarketplacePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface-50 via-surface-100/50 to-primary-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-surface-50 via-surface-100/50 to-surface-200/50">
       {/* Header */}
       <Header />
       
@@ -31,9 +31,9 @@ export default function MarketplacePage() {
       <section className="relative py-12 md:py-16">
         <div className="container-custom">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 border border-primary-200 rounded-full mb-6 animate-fade-in">
-              <HiSparkles className="w-4 h-4 text-primary-600" />
-              <span className="text-sm font-albert font-medium text-primary-700">Verified AI Models</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-100 border border-secondary-200 rounded-full mb-6 animate-fade-in">
+              <HiSparkles className="w-4 h-4 text-secondary-600" />
+              <span className="text-sm font-albert font-medium text-secondary-700">Verified AI Models</span>
             </div>
             
             <h1 className="text-4xl md:text-5xl font-russo leading-tight mb-6 animate-slide-up">
@@ -133,8 +133,8 @@ function CombinedNavigation({
             key={category.value}
             className={`inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-albert font-medium transition-all duration-200 ${
               activeCategory === category.value 
-                ? 'bg-primary-600 text-white shadow-soft' 
-                : 'bg-surface-50 text-secondary-700 border border-border hover:bg-surface-100 hover:border-primary-300 hover:text-primary-600'
+                ? 'bg-secondary-800 text-white shadow-soft' 
+                : 'bg-surface-50 text-secondary-700 border border-border hover:bg-surface-100 hover:border-secondary-400 hover:text-secondary-800'
             }`}
             onClick={() => onCategoryChange(category.value)}
           >
@@ -150,8 +150,8 @@ function CombinedNavigation({
 function MarketplaceGuide() {
   return (
     <div className="mt-16 pt-12 border-t border-border">
-      <div className="card p-8 text-center bg-gradient-to-r from-primary-50 to-accent-50 border-primary-200">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 text-white rounded-2xl mb-4">
+      <div className="card p-8 text-center bg-gradient-to-r from-secondary-50 to-secondary-100 border-secondary-200">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-secondary-600 text-white rounded-2xl mb-4">
           <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>

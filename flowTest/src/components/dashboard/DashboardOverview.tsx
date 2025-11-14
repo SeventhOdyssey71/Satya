@@ -30,70 +30,70 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
       {/* Status Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Pending Card */}
-        <div className="card-hover bg-gradient-to-br from-warning-50 to-warning-100 border-warning-200 p-8">
+        <div className="card-hover bg-gradient-to-br from-secondary-100 to-secondary-200 border-secondary-300 p-8">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <IoTime className="w-5 h-5 text-warning-600" />
-                <h3 className="text-lg font-russo text-warning-800">Pending</h3>
+                <IoTime className="w-5 h-5 text-secondary-600" />
+                <h3 className="text-lg font-russo text-secondary-800">Pending</h3>
               </div>
-              <p className="text-4xl font-russo text-warning-700 mb-2">{statusCounts.pending}</p>
-              <p className="text-warning-600">Processing uploads</p>
+              <p className="text-4xl font-russo text-secondary-700 mb-2">{statusCounts.pending}</p>
+              <p className="text-secondary-600">Processing uploads</p>
             </div>
-            <div className="w-16 h-16 bg-warning-200 rounded-2xl flex items-center justify-center">
-              <IoTime className="w-8 h-8 text-warning-700" />
+            <div className="w-16 h-16 bg-secondary-300 rounded-2xl flex items-center justify-center">
+              <IoTime className="w-8 h-8 text-secondary-700" />
             </div>
           </div>
           {statusCounts.pending > 0 && (
-            <div className="mt-4 pt-4 border-t border-warning-200">
-              <div className="w-full bg-warning-200 rounded-full h-2">
-                <div className="bg-warning-600 h-2 rounded-full w-1/3 animate-pulse"></div>
+            <div className="mt-4 pt-4 border-t border-secondary-300">
+              <div className="w-full bg-secondary-300 rounded-full h-2">
+                <div className="bg-secondary-700 h-2 rounded-full w-1/3 animate-pulse"></div>
               </div>
-              <p className="text-sm text-warning-600 mt-2">Verification in progress...</p>
+              <p className="text-sm text-secondary-600 mt-2">Verification in progress...</p>
             </div>
           )}
         </div>
 
         {/* Completed Card */}
-        <div className="card-hover bg-gradient-to-br from-success-50 to-success-100 border-success-200 p-8">
+        <div className="card-hover bg-gradient-to-br from-secondary-50 to-secondary-100 border-secondary-200 p-8">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <IoCheckmarkCircle className="w-5 h-5 text-success-600" />
-                <h3 className="text-lg font-russo text-success-800">Completed</h3>
+                <IoCheckmarkCircle className="w-5 h-5 text-secondary-600" />
+                <h3 className="text-lg font-russo text-secondary-800">Completed</h3>
               </div>
-              <p className="text-4xl font-russo text-success-700 mb-2">{statusCounts.completed}</p>
-              <p className="text-success-600">Available in marketplace</p>
+              <p className="text-4xl font-russo text-secondary-700 mb-2">{statusCounts.completed}</p>
+              <p className="text-secondary-600">Available in marketplace</p>
             </div>
-            <div className="w-16 h-16 bg-success-200 rounded-2xl flex items-center justify-center">
-              <IoCheckmarkCircle className="w-8 h-8 text-success-700" />
+            <div className="w-16 h-16 bg-secondary-200 rounded-2xl flex items-center justify-center">
+              <IoCheckmarkCircle className="w-8 h-8 text-secondary-700" />
             </div>
           </div>
           {statusCounts.completed > 0 && (
-            <div className="mt-4 pt-4 border-t border-success-200">
-              <p className="text-sm text-success-600">Ready for downloads</p>
+            <div className="mt-4 pt-4 border-t border-secondary-200">
+              <p className="text-sm text-secondary-600">Ready for downloads</p>
             </div>
           )}
         </div>
 
         {/* Failed Card */}
-        <div className="card-hover bg-gradient-to-br from-danger-50 to-danger-100 border-danger-200 p-8">
+        <div className="card-hover bg-gradient-to-br from-secondary-200 to-secondary-300 border-secondary-400 p-8">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <IoCloseCircle className="w-5 h-5 text-danger-600" />
-                <h3 className="text-lg font-russo text-danger-800">Failed</h3>
+                <IoCloseCircle className="w-5 h-5 text-secondary-700" />
+                <h3 className="text-lg font-russo text-secondary-900">Failed</h3>
               </div>
-              <p className="text-4xl font-russo text-danger-700 mb-2">{statusCounts.failed}</p>
-              <p className="text-danger-600">Requires attention</p>
+              <p className="text-4xl font-russo text-secondary-800 mb-2">{statusCounts.failed}</p>
+              <p className="text-secondary-700">Requires attention</p>
             </div>
-            <div className="w-16 h-16 bg-danger-200 rounded-2xl flex items-center justify-center">
-              <IoCloseCircle className="w-8 h-8 text-danger-700" />
+            <div className="w-16 h-16 bg-secondary-400 rounded-2xl flex items-center justify-center">
+              <IoCloseCircle className="w-8 h-8 text-secondary-800" />
             </div>
           </div>
           {statusCounts.failed > 0 && (
-            <div className="mt-4 pt-4 border-t border-danger-200">
-              <button className="btn-sm bg-danger-600 text-white hover:bg-danger-700">
+            <div className="mt-4 pt-4 border-t border-secondary-400">
+              <button className="btn-sm bg-secondary-800 text-white hover:bg-secondary-900">
                 Review Issues
               </button>
             </div>

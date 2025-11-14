@@ -6,11 +6,11 @@ import { TbShield, TbDatabase, TbNetwork, TbCloudCheck } from 'react-icons/tb'
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-surface-50 via-primary-50/30 to-accent-50/30">
+    <div className="relative min-h-screen bg-gradient-to-br from-surface-50 via-surface-100 to-surface-200">
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-200/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-accent-200/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-secondary-200/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-secondary-300/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       {/* Header */}
@@ -46,9 +46,9 @@ function HeroSection() {
       <div className="container-custom">
         <div className="text-center max-w-5xl mx-auto">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 border border-primary-200 rounded-full mb-8 animate-fade-in">
-            <HiShieldCheck className="w-4 h-4 text-primary-600" />
-            <span className="text-sm font-albert font-medium text-primary-700">Trusted AI Marketplace</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-100 border border-secondary-200 rounded-full mb-8 animate-fade-in">
+            <HiShieldCheck className="w-4 h-4 text-secondary-600" />
+            <span className="text-sm font-albert font-medium text-secondary-700">Trusted AI Marketplace</span>
           </div>
 
           {/* Main Headline */}
@@ -152,10 +152,10 @@ function FeaturesSection() {
           {features.map((feature, index) => {
             const IconComponent = feature.icon;
             const colorClasses = {
-              primary: "bg-primary-100 text-primary-600 border-primary-200",
-              accent: "bg-accent-100 text-accent-600 border-accent-200",
-              success: "bg-success-100 text-success-600 border-success-200",
-              warning: "bg-warning-100 text-warning-600 border-warning-200"
+              primary: "bg-secondary-100 text-secondary-600 border-secondary-200",
+              accent: "bg-secondary-200 text-secondary-700 border-secondary-300",
+              success: "bg-secondary-100 text-secondary-600 border-secondary-200",
+              warning: "bg-secondary-300 text-secondary-800 border-secondary-400"
             };
             
             return (
@@ -193,10 +193,10 @@ function TrustedMarketplacesSection() {
           {/* Featured Model 1 */}
           <div className="lg:col-span-1 lg:row-span-2">
             <div className="card-interactive h-full min-h-[600px] bg-gradient-to-br from-secondary-900 to-secondary-800 text-white relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-accent-500/20" />
+              <div className="absolute inset-0 bg-gradient-to-br from-secondary-700/20 to-secondary-600/20" />
               <div className="relative h-full flex flex-col justify-between p-8">
                 <div>
-                  <div className="badge-success mb-4">
+                  <div className="badge bg-secondary-200 text-secondary-800 mb-4">
                     <HiShieldCheck className="w-3 h-3" />
                     TEE Verified
                   </div>
@@ -226,8 +226,8 @@ function TrustedMarketplacesSection() {
 
           {/* Featured Model 2 */}
           <div className="lg:col-span-2">
-            <div className="card-interactive h-80 bg-gradient-to-r from-primary-600 to-primary-700 text-white relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-accent-500/30 to-transparent" />
+            <div className="card-interactive h-80 bg-gradient-to-r from-secondary-700 to-secondary-800 text-white relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-secondary-600/30 to-transparent" />
               <div className="relative h-full flex items-end p-8">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-4">
@@ -240,7 +240,7 @@ function TrustedMarketplacesSection() {
                     </div>
                   </div>
                   <h3 className="text-3xl font-russo mb-4">Vision Opus x229</h3>
-                  <p className="text-primary-100 mb-6 leading-relaxed max-w-lg">
+                  <p className="text-surface-200 mb-6 leading-relaxed max-w-lg">
                     State-of-the-art computer vision model with real-time processing capabilities and enterprise-grade security.
                   </p>
                 </div>
@@ -255,8 +255,8 @@ function TrustedMarketplacesSection() {
 
           {/* Featured Model 3 */}
           <div className="lg:col-span-2">
-            <div className="card-interactive h-80 bg-gradient-to-r from-accent-600 to-accent-700 text-white relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-tl from-primary-500/30 to-transparent" />
+            <div className="card-interactive h-80 bg-gradient-to-r from-secondary-600 to-secondary-700 text-white relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-tl from-secondary-500/30 to-transparent" />
               <div className="relative h-full flex items-end p-8">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-4">
@@ -269,7 +269,7 @@ function TrustedMarketplacesSection() {
                     </div>
                   </div>
                   <h3 className="text-3xl font-russo mb-4">AutoDrive Neural Net</h3>
-                  <p className="text-accent-100 mb-6 leading-relaxed max-w-lg">
+                  <p className="text-surface-200 mb-6 leading-relaxed max-w-lg">
                     Advanced autonomous driving model with multi-sensor fusion and real-time decision making capabilities.
                   </p>
                 </div>
@@ -279,7 +279,7 @@ function TrustedMarketplacesSection() {
                       View Model
                     </button>
                   </Link>
-                  <button className="btn bg-white text-accent-700 hover:bg-surface-100">
+                  <button className="btn bg-white text-secondary-800 hover:bg-surface-100">
                     Try Demo
                   </button>
                 </div>
@@ -332,7 +332,7 @@ function SuiStackSection() {
 
   return (
     <section className="relative z-10 py-20 bg-secondary-900 text-white">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-900/20 to-accent-900/20"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-secondary-800/20 to-secondary-700/20"></div>
       <div className="container-custom relative">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-russo mb-6">
@@ -353,7 +353,7 @@ function SuiStackSection() {
                   <p className="text-secondary-300 mb-4 leading-relaxed">{tech.description}</p>
                   <div className="flex flex-wrap gap-2">
                     {tech.features.map((feature, featureIndex) => (
-                      <span key={featureIndex} className="badge bg-primary-500/20 text-primary-300 border-primary-500/30">
+                      <span key={featureIndex} className="badge bg-secondary-500/20 text-secondary-200 border-secondary-500/30">
                         {feature}
                       </span>
                     ))}
@@ -384,19 +384,19 @@ function TrustEnforcedSection() {
             
             <div className="space-y-4 mb-8">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-success-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
                 <span className="text-secondary-700">Cryptographic verification of model integrity</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-success-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
                 <span className="text-secondary-700">Hardware-based attestation through TEE</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-success-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
                 <span className="text-secondary-700">Immutable transaction records on blockchain</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-success-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
                 <span className="text-secondary-700">Privacy-preserving encrypted storage</span>
               </div>
             </div>
@@ -410,19 +410,19 @@ function TrustEnforcedSection() {
           </div>
           
           <div className="relative">
-            <div className="bg-gradient-to-br from-primary-100 to-accent-100 rounded-3xl p-8 border border-border shadow-large">
+            <div className="bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-3xl p-8 border border-border shadow-large">
               <div className="grid grid-cols-2 gap-4 h-80">
                 <div className="space-y-4">
-                  <div className="card p-4 bg-success-50 border-success-200">
+                  <div className="card p-4 bg-secondary-100 border-secondary-200">
                     <div className="flex items-center gap-2 mb-2">
-                      <HiShieldCheck className="w-4 h-4 text-success-600" />
-                      <span className="text-sm font-medium text-success-800">TEE Verified</span>
+                      <HiShieldCheck className="w-4 h-4 text-secondary-600" />
+                      <span className="text-sm font-medium text-secondary-800">TEE Verified</span>
                     </div>
-                    <div className="h-8 bg-success-200 rounded animate-pulse"></div>
+                    <div className="h-8 bg-secondary-200 rounded animate-pulse"></div>
                   </div>
                   <div className="card p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <HiSparkles className="w-4 h-4 text-primary-600" />
+                      <HiSparkles className="w-4 h-4 text-secondary-600" />
                       <span className="text-sm font-medium">Encrypted</span>
                     </div>
                     <div className="space-y-2">
@@ -443,12 +443,12 @@ function TrustEnforcedSection() {
                       <div className="h-2 bg-secondary-200 rounded w-2/3"></div>
                     </div>
                   </div>
-                  <div className="card p-4 bg-primary-50 border-primary-200">
+                  <div className="card p-4 bg-secondary-100 border-secondary-200">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-4 h-4 bg-primary-500 rounded animate-pulse"></div>
-                      <span className="text-sm font-medium text-primary-800">Verified</span>
+                      <div className="w-4 h-4 bg-secondary-500 rounded animate-pulse"></div>
+                      <span className="text-sm font-medium text-secondary-800">Verified</span>
                     </div>
-                    <div className="h-8 bg-primary-200 rounded"></div>
+                    <div className="h-8 bg-secondary-200 rounded"></div>
                   </div>
                 </div>
               </div>
@@ -504,7 +504,7 @@ function FAQSection() {
 
 function FAQItem({ question, answer, expanded }: { question: string, answer: string, expanded: boolean }) {
   return (
-    <div className={`card-hover p-8 transition-all duration-300 ${expanded ? 'bg-primary-50 border-primary-200' : ''}`}>
+    <div className={`card-hover p-8 transition-all duration-300 ${expanded ? 'bg-secondary-100 border-secondary-200' : ''}`}>
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <h3 className="text-xl font-russo mb-4 text-secondary-800">
@@ -516,7 +516,7 @@ function FAQItem({ question, answer, expanded }: { question: string, answer: str
             </p>
           )}
         </div>
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${expanded ? 'bg-primary-600 text-white' : 'bg-surface-200 text-secondary-600'}`}>
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${expanded ? 'bg-secondary-800 text-white' : 'bg-surface-200 text-secondary-600'}`}>
           {expanded ? (
             <div className="w-4 h-0.5 bg-white" />
           ) : (
@@ -536,7 +536,7 @@ function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-tr from-primary-600 to-accent-600 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-tr from-secondary-600 to-secondary-800 rounded-xl flex items-center justify-center">
                   <HiSparkles className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-2xl font-russo text-gradient">Satya</h3>

@@ -64,10 +64,10 @@ export default function DashboardPending() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-albert font-semibold text-lg text-secondary-700">Awaiting Verification</h3>
-              <p className="text-4xl font-russo font-bold text-warning-600 mt-3">{pendingVerification.length}</p>
+              <p className="text-4xl font-russo font-bold text-secondary-600 mt-3">{pendingVerification.length}</p>
             </div>
-            <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
-              <TbClockHour4 className="w-6 h-6 text-warning-600" />
+            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center">
+              <TbClockHour4 className="w-6 h-6 text-secondary-600" />
             </div>
           </div>
         </div>
@@ -76,21 +76,21 @@ export default function DashboardPending() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-albert font-semibold text-lg text-secondary-700">In Verification</h3>
-              <p className="text-4xl font-russo font-bold text-primary-600 mt-3">{inVerification.length}</p>
+              <p className="text-4xl font-russo font-bold text-secondary-600 mt-3">{inVerification.length}</p>
             </div>
-            <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-              <TbShieldX className="w-6 h-6 text-primary-600" />
+            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center">
+              <TbShieldX className="w-6 h-6 text-secondary-600" />
             </div>
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-success-50 to-success-100 border-success-200">
+        <div className="card p-6 bg-gradient-to-br from-secondary-100 to-secondary-200 border-secondary-200">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-albert font-semibold text-lg text-success-800">Verified</h3>
-              <p className="text-4xl font-russo font-bold text-success-600 mt-3">{verified.length}</p>
+              <h3 className="font-albert font-semibold text-lg text-secondary-800">Verified</h3>
+              <p className="text-4xl font-russo font-bold text-secondary-700 mt-3">{verified.length}</p>
             </div>
-            <div className="w-12 h-12 bg-success-500 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-secondary-700 rounded-xl flex items-center justify-center">
               <TbShieldCheck className="w-6 h-6 text-white" />
             </div>
           </div>

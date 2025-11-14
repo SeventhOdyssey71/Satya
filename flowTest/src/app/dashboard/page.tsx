@@ -33,7 +33,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface-50 via-surface-100/50 to-primary-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-surface-50 via-surface-100/50 to-secondary-100/30">
       {/* Header */}
       <Header />
       
@@ -63,7 +63,7 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab('overview')}
                     className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
                       activeTab === 'overview'
-                        ? 'bg-primary-600 text-white shadow-soft'
+                        ? 'bg-secondary-800 text-white shadow-soft'
                         : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
                     }`}
                   >
@@ -73,7 +73,7 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab('pending')}
                     className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
                       activeTab === 'pending'
-                        ? 'bg-primary-600 text-white shadow-soft'
+                        ? 'bg-secondary-800 text-white shadow-soft'
                         : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
                     }`}
                   >
@@ -83,7 +83,7 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab('history')}
                     className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
                       activeTab === 'history'
-                        ? 'bg-primary-600 text-white shadow-soft'
+                        ? 'bg-secondary-800 text-white shadow-soft'
                         : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
                     }`}
                   >
@@ -93,7 +93,7 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab('downloads')}
                     className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
                       activeTab === 'downloads'
-                        ? 'bg-primary-600 text-white shadow-soft'
+                        ? 'bg-secondary-800 text-white shadow-soft'
                         : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
                     }`}
                   >
