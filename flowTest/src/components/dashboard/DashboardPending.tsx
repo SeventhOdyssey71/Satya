@@ -98,8 +98,16 @@ export default function DashboardPending() {
                     modelBlobId={task.blobId}
                     modelName={task.fileName}
                     onVerificationComplete={(attestation, txDigest) => {
-                      // Update task with verification data
-                      console.log('Verification complete:', { attestation, txDigest })
+                      // Update task with verification data and upload to marketplace
+                      console.log('Verification and marketplace upload complete:', { 
+                        attestation, 
+                        txDigest, 
+                        taskId: task.id 
+                      })
+                      
+                      // TODO: Update the task status in context
+                      // This would mark the task as verified and ready for marketplace
+                      alert(`Model "${task.fileName}" successfully verified and uploaded to marketplace!\nTransaction: ${txDigest.slice(0, 20)}...`)
                     }}
                   />
                 )}

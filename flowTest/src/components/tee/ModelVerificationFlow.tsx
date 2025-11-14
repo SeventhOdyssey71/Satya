@@ -29,39 +29,78 @@ export function ModelVerificationFlow({
 
   const PACKAGE_ID = "0x3bb585bfbc7c637bbfce62b92c8711bcbd752f48117d80477f4260f7dd9448fd"; // SUI testnet
 
+  const uploadToMarketplace = async (attestationData: TEEAttestationData, txDigest: string) => {
+    console.log('Uploading verified model to marketplace...');
+    
+    // Create marketplace listing with verified model data
+    const listingData = {
+      title: modelName,
+      description: `Verified AI model with TEE attestation. Quality Score: ${(attestationData.ml_processing_result.quality_score * 100).toFixed(2)}%. Verified on SUI blockchain.`,
+      category: 'Machine Learning',
+      modelBlobId: modelBlobId,
+      datasetBlobId: datasetBlobId,
+      teeAttestation: attestationData,
+      blockchainTxDigest: txDigest,
+      verificationStatus: 'verified' as const,
+      price: '1.0', // Default price - should be configurable
+      isEncrypted: true,
+      tags: ['AI', 'TEE-Verified', 'Blockchain-Attested']
+    };
+
+    // Upload to marketplace API
+    const response = await fetch('/api/marketplace/create-listing', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(listingData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Marketplace upload failed');
+    }
+
+    const result = await response.json();
+    console.log('Model successfully uploaded to marketplace:', result);
+    return result;
+  };
+
   const generateTEEAttestation = async () => {
     setIsGeneratingAttestation(true);
     setError(null);
 
     try {
-      // Step 1: Run ML inference with real models
-      const mlResponse = await fetch('http://localhost:8001/inference/tiny_lr', {
+      console.log('Starting real TEE verification for blobs:', { modelBlobId, datasetBlobId });
+
+      // Step 1: Decrypt blobs and process in TEE using real blob IDs
+      const decryptResponse = await fetch('/api/decrypt-blobs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          inputs: [[1.2, 2.3, 3.4, 4.5, 5.6, 6.7, 7.8, 8.9, 9.0, 10.1]],
           model_blob_id: modelBlobId,
           dataset_blob_id: datasetBlobId
         }),
       });
 
-      if (!mlResponse.ok) {
-        throw new Error('ML inference failed - ensure tiny models server is running on port 8001');
+      if (!decryptResponse.ok) {
+        throw new Error('Failed to decrypt blobs from Walrus storage');
       }
 
-      const mlResult = await mlResponse.json();
+      const { decrypted_model_data, decrypted_dataset_data } = await decryptResponse.json();
+      console.log('Successfully decrypted blobs');
 
-      // Step 2: Generate real TEE attestation
+      // Step 2: Process decrypted data in TEE
       const teeResponse = await fetch('http://localhost:5001/complete_verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model_result: {
-            ...mlResult,
-            model_name: modelName,
-            blob_ids: { model: modelBlobId, dataset: datasetBlobId }
-          },
-          assessment_type: 'marketplace_verification'
+          decrypted_model_data,
+          decrypted_dataset_data,
+          model_blob_id: modelBlobId,
+          dataset_blob_id: datasetBlobId,
+          assessment_type: 'marketplace_verification',
+          use_decrypted_data: true
         }),
       });
 
@@ -70,6 +109,7 @@ export function ModelVerificationFlow({
       }
 
       const attestation = await teeResponse.json();
+      console.log('Real TEE attestation generated:', attestation);
       setAttestationData(attestation);
 
     } catch (err) {
@@ -125,13 +165,21 @@ export function ModelVerificationFlow({
       signAndExecuteTransaction(
         { transaction },
         {
-          onSuccess: (result) => {
+          onSuccess: async (result) => {
             console.log('On-chain verification successful:', result);
             setVerificationResult(result);
             
-            // Call completion callback
-            if (onVerificationComplete) {
-              onVerificationComplete(attestationData, result.digest);
+            // Step 3: Upload verified model to marketplace
+            try {
+              await uploadToMarketplace(attestationData, result.digest);
+              
+              // Call completion callback
+              if (onVerificationComplete) {
+                onVerificationComplete(attestationData, result.digest);
+              }
+            } catch (error) {
+              console.error('Marketplace upload failed:', error);
+              setError(`Verification successful, but marketplace upload failed: ${error.message}`);
             }
           },
           onError: (error) => {
