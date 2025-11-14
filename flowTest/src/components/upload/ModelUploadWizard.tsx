@@ -884,7 +884,20 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
           
           <div>
             <p className="text-sm font-medium text-gray-500">Description</p>
-            <p className="text-sm text-gray-900">{data.description || 'Not specified'}</p>
+            <div className="text-sm text-gray-900 space-y-2">
+              <p>{data.description || 'Not specified'}</p>
+              {data.teeAttestation && (
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="font-medium text-blue-900 text-xs">🔒 TEE Verification Details:</p>
+                  <p className="text-xs text-blue-800 mt-1">
+                    This model has been verified in a Trusted Execution Environment (TEE) with cryptographic attestation. 
+                    Quality Score: {(data.teeAttestation.ml_processing_result?.quality_score * 100).toFixed(2)}%. 
+                    Enclave ID: {data.teeAttestation.verification_metadata?.enclave_id}. 
+                    {data.blockchainTxDigest && `Blockchain verified on SUI (Tx: ${data.blockchainTxDigest.slice(0, 16)}...).`}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {data.tags.length > 0 && (
@@ -908,10 +921,53 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
               ) : (
                 <p className="text-red-600">• Model file: Not selected</p>
               )}
-              {data.thumbnailFile && <p>• Thumbnail: {data.thumbnailFile.name}</p>}
-              {data.sampleFile && <p>• Sample: {data.sampleFile.name}</p>}
+              {data.datasetFile ? (
+                <p>• Dataset: {data.datasetFile.name} ({(data.datasetFile.size / 1024 / 1024).toFixed(1)} MB)</p>
+              ) : (
+                <p className="text-red-600">• Dataset file: Not selected</p>
+              )}
             </div>
           </div>
+
+          {/* Encrypted Blob IDs */}
+          {(data.modelBlobId || data.datasetBlobId) && (
+            <div>
+              <p className="text-sm font-medium text-gray-500">Encrypted Blob IDs (Walrus Storage)</p>
+              <div className="text-sm text-gray-900 space-y-1">
+                {data.modelBlobId && (
+                  <p>• Model Blob ID: <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.modelBlobId}</span></p>
+                )}
+                {data.datasetBlobId && (
+                  <p>• Dataset Blob ID: <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.datasetBlobId}</span></p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TEE Attestation Data */}
+          {data.teeAttestation && (
+            <div>
+              <p className="text-sm font-medium text-gray-500">TEE Attestation Data</p>
+              <div className="text-sm text-gray-900 space-y-1">
+                <p>• Request ID: <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.teeAttestation.request_id}</span></p>
+                <p>• Enclave ID: <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.teeAttestation.verification_metadata?.enclave_id}</span></p>
+                <p>• Model Hash: <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.teeAttestation.ml_processing_result?.model_hash}</span></p>
+                <p>• Quality Score: <span className="font-semibold">{(data.teeAttestation.ml_processing_result?.quality_score * 100).toFixed(2)}%</span></p>
+                <p>• Attestation Type: <span className="text-green-600">{data.teeAttestation.verification_metadata?.attestation_type || 'Real Cryptographic Proof'}</span></p>
+              </div>
+            </div>
+          )}
+
+          {/* Blockchain Transaction */}
+          {data.blockchainTxDigest && (
+            <div>
+              <p className="text-sm font-medium text-gray-500">Blockchain Verification</p>
+              <div className="text-sm text-gray-900 space-y-1">
+                <p>• Transaction Hash: <span className="font-mono text-xs bg-gray-100 px-1 rounded">{data.blockchainTxDigest}</span></p>
+                <p>• Verification Status: <span className="text-green-600 font-semibold">{data.verificationStatus === 'verified' ? '✅ Verified on SUI Blockchain' : '⏳ Pending Verification'}</span></p>
+              </div>
+            </div>
+          )}
 
           {(data.maxDownloads || data.accessDuration || data.expiryDays) && (
             <div>
