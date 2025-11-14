@@ -19,7 +19,10 @@ export interface UploadTask {
   verificationStatus?: 'pending' | 'verified' | 'failed'
   teeAttestation?: any
   blockchainTxDigest?: string
-  blobId?: string
+  // Blob IDs for model and dataset
+  modelBlobId?: string
+  datasetBlobId?: string
+  blobId?: string // Legacy field for backward compatibility
 }
 
 export interface UploadPhase {

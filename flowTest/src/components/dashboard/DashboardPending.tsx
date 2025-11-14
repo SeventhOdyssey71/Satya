@@ -8,9 +8,44 @@ import { useUploadTasks } from '@/contexts/UploadContext'
 export default function DashboardPending() {
   const { allTasks } = useUploadTasks()
 
+  // Debug logging
+  console.log('All tasks for dashboard:', allTasks)
+
+  // Add mock tasks if none exist (for testing verification flow)
+  const mockTasks = allTasks.length === 0 ? [
+    {
+      id: 'mock_1',
+      title: 'Test Model 1',
+      fileName: 'eurostile-extended.zip',
+      fileSize: 21248, // 20.79 KB
+      status: 'completed' as const,
+      progress: 100,
+      phases: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      verificationStatus: 'pending' as const,
+      modelBlobId: 'q73BP2a0_-e-dhA2i5Tj8hsf2_Ll92jBOFAmYRr0H1zz_iE',
+      datasetBlobId: 'pmPnUh0stRV35bHd8f7yYeAi0vp8sL3kp9mNbCxQ2rS6_dI'
+    },
+    {
+      id: 'mock_2', 
+      title: 'Test Model 2',
+      fileName: 'fleet-landing.zip',
+      fileSize: 200151, // 195.41 KB
+      status: 'completed' as const,
+      progress: 100,
+      phases: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      verificationStatus: 'pending' as const,
+      modelBlobId: 'x94GP8b2_-f-ehB3j6Uk9itg3_Mm03kCPGBnZSs1I2az_jF',
+      datasetBlobId: 'qnQoVi1tuSW46cId9g8zZfBj1wq9tM4lq0nOcDyR3sT7_eJ'
+    }
+  ] : []
+
   // Filter tasks that need verification (uploaded but not verified)
-  const pendingVerification = allTasks.filter(task => 
-    task.status === 'completed' && !task.verificationStatus
+  const pendingVerification = [...allTasks, ...mockTasks].filter(task => 
+    task.status === 'completed' && (!task.verificationStatus || task.verificationStatus === 'pending')
   )
 
   const inVerification = allTasks.filter(task => 
@@ -73,10 +108,20 @@ export default function DashboardPending() {
                     <p className="text-gray-600">
                       Uploaded: {formatFileSize(task.fileSize)} • {new Date().toLocaleDateString()}
                     </p>
-                    <div className="mt-2">
-                      {task.blobId && (
+                    <div className="mt-2 space-y-1">
+                      {task.modelBlobId && (
+                        <span className="inline-block bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
+                          Model: {task.modelBlobId.substring(0, 12)}...
+                        </span>
+                      )}
+                      {task.datasetBlobId && (
                         <span className="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
-                          Blob ID: {task.blobId.substring(0, 12)}...
+                          Dataset: {task.datasetBlobId.substring(0, 12)}...
+                        </span>
+                      )}
+                      {task.blobId && !task.modelBlobId && (
+                        <span className="inline-block bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
+                          Blob: {task.blobId.substring(0, 12)}...
                         </span>
                       )}
                     </div>
@@ -93,9 +138,10 @@ export default function DashboardPending() {
                   </p>
                 </div>
 
-                {task.blobId && (
+                {(task.modelBlobId || task.blobId) && (
                   <ModelVerificationFlow
-                    modelBlobId={task.blobId}
+                    modelBlobId={task.modelBlobId || task.blobId || ''}
+                    datasetBlobId={task.datasetBlobId}
                     modelName={task.fileName}
                     onVerificationComplete={(attestation, txDigest) => {
                       // Update task with verification data and upload to marketplace
