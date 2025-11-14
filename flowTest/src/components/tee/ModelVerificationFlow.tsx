@@ -232,7 +232,7 @@ export function ModelVerificationFlow({
               className={`w-full px-4 py-3 rounded-lg font-medium text-white transition-colors ${
                 isGeneratingAttestation || !!attestationData
                   ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-purple-600 hover:bg-purple-700'
+                  : 'bg-black hover:bg-gray-800'
               }`}
             >
               {isGeneratingAttestation ? (
@@ -241,9 +241,9 @@ export function ModelVerificationFlow({
                   <span>Processing in TEE...</span>
                 </div>
               ) : attestationData ? (
-                '✅ TEE Processing Complete'
+                'TEE Processing Complete'
               ) : (
-                '🧠 Process in TEE'
+                'Process in TEE'
               )}
             </button>
 
@@ -251,30 +251,29 @@ export function ModelVerificationFlow({
               <button
                 onClick={verifyOnChain}
                 disabled={isVerifyingOnChain || !account}
-                className={`w-full px-4 py-3 rounded-lg font-medium text-white transition-colors ${
+                className={`w-full px-4 py-3 rounded-lg font-medium transition-colors ${
                   isVerifyingOnChain || !account
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
+                    ? 'bg-gray-400 cursor-not-allowed text-gray-600'
+                    : 'bg-white border border-gray-300 text-black hover:bg-gray-50'
                 }`}
               >
                 {isVerifyingOnChain ? (
                   <div className="flex items-center justify-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
                     <span>Verifying on SUI Blockchain...</span>
                   </div>
                 ) : !account ? (
-                  '🔒 Connect Wallet to Verify'
+                  'Connect Wallet to Verify'
                 ) : (
-                  '🔗 Verify on SUI Blockchain'
+                  'Verify on SUI Blockchain'
                 )}
               </button>
             )}
 
             {verificationResult && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-green-800">
-                  <span className="text-green-600">✅</span>
-                  <span className="font-medium">Blockchain Verification Complete!</span>
+              <div className="bg-gray-50 border border-gray-300 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-gray-900">
+                  <span className="font-medium">Blockchain Verification Complete</span>
                 </div>
               </div>
             )}

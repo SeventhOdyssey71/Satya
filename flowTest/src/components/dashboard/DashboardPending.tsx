@@ -60,33 +60,33 @@ export default function DashboardPending() {
     <div className="space-y-8">
       {/* Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-yellow-900">Awaiting Verification</h3>
-              <p className="text-3xl font-bold text-yellow-700 mt-2">{pendingVerification.length}</p>
+              <h3 className="text-lg font-semibold text-gray-900">Awaiting Verification</h3>
+              <p className="text-3xl font-bold text-black mt-2">{pendingVerification.length}</p>
             </div>
-            <TbClockHour4 className="w-8 h-8 text-yellow-600" />
+            <TbClockHour4 className="w-8 h-8 text-gray-600" />
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <div className="bg-white border border-gray-300 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-blue-900">In Verification</h3>
-              <p className="text-3xl font-bold text-blue-700 mt-2">{inVerification.length}</p>
+              <h3 className="text-lg font-semibold text-gray-900">In Verification</h3>
+              <p className="text-3xl font-bold text-black mt-2">{inVerification.length}</p>
             </div>
-            <TbShieldX className="w-8 h-8 text-blue-600" />
+            <TbShieldX className="w-8 h-8 text-gray-600" />
           </div>
         </div>
 
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+        <div className="bg-black border border-black rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-green-900">Verified</h3>
-              <p className="text-3xl font-bold text-green-700 mt-2">{verified.length}</p>
+              <h3 className="text-lg font-semibold text-white">Verified</h3>
+              <p className="text-3xl font-bold text-white mt-2">{verified.length}</p>
             </div>
-            <TbShieldCheck className="w-8 h-8 text-green-600" />
+            <TbShieldCheck className="w-8 h-8 text-white" />
           </div>
         </div>
       </div>
@@ -110,29 +110,29 @@ export default function DashboardPending() {
                     </p>
                     <div className="mt-2 space-y-1">
                       {task.modelBlobId && (
-                        <span className="inline-block bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
+                        <span className="inline-block bg-black text-white text-xs font-medium px-2.5 py-0.5 rounded mr-2">
                           Model: {task.modelBlobId.substring(0, 12)}...
                         </span>
                       )}
                       {task.datasetBlobId && (
-                        <span className="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
+                        <span className="inline-block bg-gray-300 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
                           Dataset: {task.datasetBlobId.substring(0, 12)}...
                         </span>
                       )}
                       {task.blobId && !task.modelBlobId && (
-                        <span className="inline-block bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
+                        <span className="inline-block bg-gray-200 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
                           Blob: {task.blobId.substring(0, 12)}...
                         </span>
                       )}
                     </div>
                   </div>
-                  <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                  <span className="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
                     Needs Verification
                   </span>
                 </div>
 
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-orange-800">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-gray-800">
                     <strong>Action Required:</strong> Your model has been successfully uploaded to Walrus storage. 
                     To publish it to the marketplace, you must complete TEE attestation verification.
                   </p>
@@ -148,7 +148,7 @@ export default function DashboardPending() {
                   })
                   return (task.modelBlobId || task.blobId) ? (
                     <div>
-                      <p className="text-sm text-blue-600 mb-3">🔄 Verification interface loading...</p>
+                      <p className="text-sm text-gray-600 mb-3">Verification interface loading...</p>
                       <ModelVerificationFlow
                         modelBlobId={task.modelBlobId || task.blobId || ''}
                         datasetBlobId={task.datasetBlobId}
@@ -168,7 +168,7 @@ export default function DashboardPending() {
                       />
                     </div>
                   ) : (
-                    <p className="text-sm text-red-600">❌ No blob ID found for verification</p>
+                    <p className="text-sm text-gray-600">No blob ID found for verification</p>
                   )
                 })()}
               </div>
