@@ -9,6 +9,8 @@ interface ModelVerificationFlowProps {
   modelBlobId: string;
   datasetBlobId?: string;
   modelName: string;
+  modelFileSize?: number;
+  datasetFileSize?: number;
   onVerificationComplete?: (attestationData: TEEAttestationData, txDigest: string) => void;
 }
 
@@ -16,6 +18,8 @@ export function ModelVerificationFlow({
   modelBlobId,
   datasetBlobId,
   modelName,
+  modelFileSize,
+  datasetFileSize,
   onVerificationComplete
 }: ModelVerificationFlowProps) {
   const [isGeneratingAttestation, setIsGeneratingAttestation] = useState(false);
@@ -39,6 +43,8 @@ export function ModelVerificationFlow({
       category: 'Machine Learning',
       modelBlobId: modelBlobId,
       datasetBlobId: datasetBlobId,
+      modelFileSize: modelFileSize,
+      datasetFileSize: datasetFileSize,
       teeAttestation: attestationData,
       blockchainTxDigest: txDigest,
       verificationStatus: 'verified' as const,

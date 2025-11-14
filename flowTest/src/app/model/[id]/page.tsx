@@ -37,14 +37,13 @@ interface ModelDetails extends ModelCard {
   totalPrice?: string
 }
 
-// Helper function to convert blockchain event to ModelDetails
+// Helper function to convert blockchain event to ModelDetails (fallback for legacy models)
 function createModelDetailsFromEvent(event: ModelListedEvent, modelId: string): ModelDetails {
   // Parse price from wei/mist to SUI (remove trailing zeros and decimal if whole number)
   const priceInSui = (parseFloat(event.downloadPrice) / 1e9).toString().replace(/\.?0+$/, '')
   
-  // Calculate estimated attestation price based on file size (mock calculation)
-  const estimatedSize = Math.random() * 2.5 + 0.5 // Random size between 0.5GB - 3GB
-  const attestationPrice = (0.1 + Math.ceil(estimatedSize) * 0.01).toFixed(3)
+  // Attestation price calculation
+  const attestationPrice = '0.1'
   const totalPrice = (parseFloat(priceInSui) + parseFloat(attestationPrice) + 0.05).toFixed(3)
   
   // Format date
@@ -53,8 +52,8 @@ function createModelDetailsFromEvent(event: ModelListedEvent, modelId: string): 
   return {
     id: modelId,
     title: event.title,
-    description: `Encrypted AI model secured by SEAL technology. Listed by ${event.creator.slice(0, 10)}...${event.creator.slice(-8)} on ${new Date(event.timestamp).toLocaleDateString()}.`,
-    longDescription: `This AI model has been uploaded to the marketplace and secured with SEAL encryption. The model is stored on Walrus distributed storage (Blob ID: ${event.walrusBlobId}) and can be accessed after purchase verification through our TEE-based attestation system. The model includes comprehensive training data and has been verified through our secure attestation process.`,
+    description: `AI model listed on blockchain. Listed by ${event.creator.slice(0, 10)}...${event.creator.slice(-8)} on ${new Date(event.timestamp).toLocaleDateString()}.`,
+    longDescription: `This AI model has been uploaded to the marketplace and secured with SEAL encryption. The model is stored on Walrus distributed storage (Blob ID: ${event.walrusBlobId}) and can be accessed after purchase verification through our TEE-based attestation system.`,
     author: `${event.creator.slice(0, 8)}...${event.creator.slice(-8)}`,
     authorAvatar: '/images/Claude.png',
     price: priceInSui,
@@ -63,25 +62,22 @@ function createModelDetailsFromEvent(event: ModelListedEvent, modelId: string): 
     category: 'Machine Learning',
     isVerified: true,
     isEncrypted: true,
-    downloads: Math.floor(Math.random() * 100) + 1,
-    rating: 4.5 + Math.random() * 0.5,
-    reviewCount: Math.floor(Math.random() * 50) + 5,
+    downloads: 0,
+    rating: 0,
+    reviewCount: 0,
     thumbnailUrl: undefined,
-    tags: ['AI', 'SEAL Encrypted', 'Blockchain', 'Decentralized'],
+    tags: ['AI', 'Blockchain'],
     createdAt: createdDate,
     updatedAt: createdDate,
     trending: false,
     isNew: Date.now() - event.timestamp < 7 * 24 * 60 * 60 * 1000,
-    sampleAvailable: true,
-    fileSize: estimatedSize * 1024 * 1024 * 1024, // Convert to bytes
-    datasetSize: (estimatedSize * 0.3) * 1024 * 1024 * 1024, // Dataset is ~30% of model size
+    sampleAvailable: false,
+    fileSize: undefined, // No file size data from blockchain events
+    datasetSize: undefined, // No dataset size data from blockchain events
     features: [
-      'SEAL encrypted for secure access',
       'Stored on Walrus distributed storage',
-      'TEE-based attestation verification',
-      'Blockchain-verified authenticity',
-      'Decentralized model hosting',
-      'AWS Nitro Enclaves computation'
+      'Blockchain-verified listing',
+      `Blob ID: ${event.walrusBlobId?.slice(0, 20)}...`
     ]
   }
 }
@@ -107,19 +103,65 @@ export default function ModelPage({ params }: ModelPageProps) {
     try {
       setLoading(true)
       
-      // Fetch real model data from blockchain
+      // First try to fetch from marketplace API (real uploaded models)
+      try {
+        const response = await fetch('/api/marketplace/create-listing')
+        if (response.ok) {
+          const { listings } = await response.json()
+          const marketplaceListing = listings.find((listing: any) => listing.id === modelId)
+          
+          if (marketplaceListing) {
+            // Use real marketplace data
+            setModel({
+              id: marketplaceListing.id,
+              title: marketplaceListing.title,
+              description: marketplaceListing.description,
+              longDescription: marketplaceListing.description,
+              author: `${marketplaceListing.creator?.slice(0, 8) || 'Unknown'}...`,
+              authorAvatar: '/images/Claude.png',
+              price: marketplaceListing.price || '1.0',
+              attestationPrice: '0.1',
+              totalPrice: (parseFloat(marketplaceListing.price || '1.0') + 0.15).toFixed(2),
+              category: marketplaceListing.category || 'Machine Learning',
+              isVerified: marketplaceListing.verificationStatus === 'verified',
+              isEncrypted: marketplaceListing.isEncrypted || true,
+              downloads: marketplaceListing.downloads || 0,
+              rating: marketplaceListing.rating || 4.5,
+              reviewCount: marketplaceListing.reviews?.length || 0,
+              thumbnailUrl: undefined,
+              tags: marketplaceListing.tags || ['AI', 'TEE-Verified', 'Blockchain-Attested'],
+              createdAt: marketplaceListing.createdAt || new Date().toISOString().split('T')[0],
+              updatedAt: marketplaceListing.createdAt || new Date().toISOString().split('T')[0],
+              trending: false,
+              isNew: true,
+              sampleAvailable: true,
+              fileSize: marketplaceListing.modelFileSize || undefined,
+              datasetSize: marketplaceListing.datasetFileSize || undefined,
+              features: [
+                'SEAL encrypted for secure access',
+                'Stored on Walrus distributed storage',
+                'TEE-based attestation verification',
+                'Blockchain-verified authenticity',
+                'Real cryptographic proofs',
+                ...(marketplaceListing.modelBlobId ? [`Model Blob ID: ${marketplaceListing.modelBlobId.slice(0, 20)}...`] : []),
+                ...(marketplaceListing.datasetBlobId ? [`Dataset Blob ID: ${marketplaceListing.datasetBlobId.slice(0, 20)}...`] : [])
+              ]
+            })
+            return
+          }
+        }
+      } catch (marketplaceError) {
+        console.log('Marketplace API not available, trying blockchain events')
+      }
+      
+      // Fallback to blockchain events if marketplace API fails
       const eventService = new EventService()
-      
-      // First, get all model events for this listing ID
       const modelEvents = await eventService.getModelEvents(modelId)
-      
-      // Find the ListingCreated event for this model
       const listingEvent = modelEvents.find(event => 
         event.type === 'ListingCreated' && event.listingId === modelId
       ) as ModelListedEvent
       
       if (!listingEvent) {
-        // If no specific event found, try to get from general listings
         const allListings = await eventService.getModelListings(100)
         const foundListing = allListings.events.find(event => 
           event.type === 'ListingCreated' && event.listingId === modelId
@@ -281,18 +323,22 @@ export default function ModelPage({ params }: ModelPageProps) {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       <div>
                         <span className="text-gray-700 font-medium">Model Size:</span>
-                        <p className="font-semibold text-black">{model.fileSize ? formatFileSize(model.fileSize) : '--'}</p>
+                        <p className="font-semibold text-black">
+                          {model.fileSize ? formatFileSize(model.fileSize) : 'Available after verification'}
+                        </p>
                       </div>
                       <div>
                         <span className="text-gray-700 font-medium">Dataset Size:</span>
-                        <p className="font-semibold text-black">{model.datasetSize ? formatFileSize(model.datasetSize) : '--'}</p>
+                        <p className="font-semibold text-black">
+                          {model.datasetSize ? formatFileSize(model.datasetSize) : 'Available after verification'}
+                        </p>
                       </div>
                       <div>
                         <span className="text-gray-700 font-medium">Total Size:</span>
                         <p className="font-semibold text-black">
                           {(model.fileSize && model.datasetSize) 
                             ? formatFileSize(model.fileSize + model.datasetSize) 
-                            : '--'
+                            : 'Available after verification'
                           }
                         </p>
                       </div>

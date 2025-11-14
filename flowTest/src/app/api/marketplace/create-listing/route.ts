@@ -31,7 +31,12 @@ export async function POST(request: NextRequest) {
       status: 'active',
       downloads: 0,
       rating: 0,
-      reviews: []
+      reviews: [],
+      // Include file sizes and blob info
+      modelFileSize: listingData.modelFileSize,
+      datasetFileSize: listingData.datasetFileSize,
+      modelBlobId: listingData.modelBlobId,
+      datasetBlobId: listingData.datasetBlobId
     }
 
     // Add to marketplace (in real app, save to database)
