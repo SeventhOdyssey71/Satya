@@ -325,7 +325,7 @@ async def complete_verification(request: dict):
         model_path = None
         
         # Map model ID to actual file path
-        tiny_models_dir = Path("nautilus-production/tiny_models")
+        tiny_models_dir = Path("tiny_models")
         model_mapping = {
             "tiny_lr": tiny_models_dir / "logistic_regression.pkl",
             "wine_lr": tiny_models_dir / "logistic_regression.pkl", 
