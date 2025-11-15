@@ -128,7 +128,7 @@ export class WalrusStorageService {
     options: UploadOptions & { signer: any }
   ): Promise<UploadResult> {
     try {
-      const result = await this.sdkClient.uploadFile(file, options.signer, {
+      const result = await this.sdkClient.uploadFile(file, {
         epochs: options.epochs || WALRUS_CONFIG.agent.defaultEpochs,
         deletable: true,
         onProgress: options.onProgress

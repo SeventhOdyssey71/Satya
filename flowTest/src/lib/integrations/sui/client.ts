@@ -1,6 +1,5 @@
 import { SuiClient, SuiTransactionBlockResponse } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
-import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { DataListing, PurchaseRequest, MarketplaceError, ErrorCode } from '../types';
 import { MARKETPLACE_CONFIG } from '../../constants';
 
@@ -166,46 +165,80 @@ export class SuiMarketplaceClient {
     }
   }
 
+  createPurchaseTransaction(
+    request: PurchaseRequest,
+    paymentCoin: string,
+    buyerAddress: string
+  ): Transaction {
+    const tx = new Transaction();
+    
+    // Set gas budget and sender
+    tx.setGasBudget(MARKETPLACE_CONFIG.DEFAULT_GAS_BUDGET);
+    tx.setSender(buyerAddress);
+    
+    tx.moveCall({
+      target: `${this.config.packageId}::data_marketplace::purchase_data`,
+      arguments: [
+        tx.object(this.config.marketplaceObjectId),
+        tx.pure.string(request.listingId),
+        tx.object(paymentCoin),
+        tx.pure.u32(request.accessDuration || 24),
+        tx.object('0x6') // clock object
+      ]
+    });
+
+    return tx;
+  }
+
   async purchaseData(
     request: PurchaseRequest,
     paymentCoin: string,
-    keypair: Ed25519Keypair
+    walletSigner: any // dapp-kit wallet signer
   ): Promise<string> {
     try {
-      const tx = new Transaction();
+      // Get user address from wallet
+      const userAddress = walletSigner.toSuiAddress ? walletSigner.toSuiAddress() : 
+                          (walletSigner.address || walletSigner.getAddress?.());
       
-      tx.moveCall({
-        target: `${this.config.packageId}::data_marketplace::purchase_data`,
-        arguments: [
-          tx.object(this.config.marketplaceObjectId),
-          tx.pure.string(request.listingId),
-          tx.object(paymentCoin),
-          tx.pure.u32(request.accessDuration || 24),
-          tx.object('0x6') // clock object
-        ]
-      });
+      if (!userAddress) {
+        throw new Error('Unable to get user address from wallet');
+      }
 
-      const result = await this.client.signAndExecuteTransaction({
-        signer: keypair,
-        transaction: tx,
-        options: {
-          showEffects: true,
-          showEvents: true
-        }
-      });
+      const tx = this.createPurchaseTransaction(request, paymentCoin, userAddress);
+
+      console.log('Prompting user to sign purchase transaction...');
+
+      // Use wallet signer to prompt user for transaction signing
+      let result;
+      if (walletSigner.signAndExecuteTransaction) {
+        result = await walletSigner.signAndExecuteTransaction({
+          transaction: tx,
+          options: {
+            showEffects: true,
+            showEvents: true,
+            showInput: true,
+            showObjectChanges: true
+          }
+        });
+      } else {
+        throw new Error('Wallet does not support transaction signing');
+      }
 
       // Check transaction status
       const statusString = result.effects?.status?.status || result.effects?.status;
       const isSuccess = statusString === 'success' || (!!result.digest && !result.effects?.status?.error);
       
       if (!isSuccess) {
-        const error = result.effects?.status?.error || 'Transaction failed';
+        const error = result.effects?.status?.error || result.errors?.[0] || 'Transaction execution failed';
+        console.error('Purchase transaction failed:', error);
         throw new Error(`Transaction failed: ${error}`);
       }
 
+      console.log('Purchase transaction successful:', result.digest);
       const purchaseId = this.extractPurchaseIdFromEvents(result);
       return purchaseId;
     } catch (error) {
+      console.error('Purchase data error:', error);
       throw new MarketplaceError(
         ErrorCode.NETWORK_ERROR,
         `Failed to purchase data: ${error instanceof Error ? error.message : String(error)}`
@@ -213,30 +246,60 @@ export class SuiMarketplaceClient {
     }
   }
 
+  createConfirmDownloadTransaction(
+    purchaseId: string,
+    attestationId: string | null,
+    userAddress: string
+  ): Transaction {
+    const tx = new Transaction();
+    
+    // Set gas budget and sender
+    tx.setGasBudget(MARKETPLACE_CONFIG.DEFAULT_GAS_BUDGET);
+    tx.setSender(userAddress);
+    
+    tx.moveCall({
+      target: `${this.config.packageId}::data_marketplace::confirm_download`,
+      arguments: [
+        tx.object(this.config.marketplaceObjectId),
+        tx.pure.string(purchaseId),
+        tx.pure.vector('string', attestationId ? [attestationId] : [])
+      ]
+    });
+
+    return tx;
+  }
+
   async confirmDownload(
     purchaseId: string,
     attestationId: string | null,
-    keypair: Ed25519Keypair
+    walletSigner: any // dapp-kit wallet signer
   ): Promise<void> {
     try {
-      const tx = new Transaction();
+      // Get user address from wallet
+      const userAddress = walletSigner.toSuiAddress ? walletSigner.toSuiAddress() : 
+                          (walletSigner.address || walletSigner.getAddress?.());
       
-      tx.moveCall({
-        target: `${this.config.packageId}::data_marketplace::confirm_download`,
-        arguments: [
-          tx.object(this.config.marketplaceObjectId),
-          tx.pure.string(purchaseId),
-          tx.pure.vector('string', attestationId ? [attestationId] : [])
-        ]
-      });
+      if (!userAddress) {
+        throw new Error('Unable to get user address from wallet');
+      }
 
-      const result = await this.client.signAndExecuteTransaction({
-        signer: keypair,
-        transaction: tx,
-        options: {
-          showEffects: true
-        }
-      });
+      const tx = this.createConfirmDownloadTransaction(purchaseId, attestationId, userAddress);
+
+      console.log('Prompting user to sign download confirmation transaction...');
+
+      // Use wallet signer to prompt user for transaction signing
+      let result;
+      if (walletSigner.signAndExecuteTransaction) {
+        result = await walletSigner.signAndExecuteTransaction({
+          transaction: tx,
+          options: {
+            showEffects: true,
+            showEvents: true
+          }
+        });
+      } else {
+        throw new Error('Wallet does not support transaction signing');
+      }
 
       // Check transaction status
       const statusString = result.effects?.status?.status || result.effects?.status;
@@ -246,7 +309,10 @@ export class SuiMarketplaceClient {
         const error = result.effects?.status?.error || 'Transaction failed';
         throw new Error(`Transaction failed: ${error}`);
       }
+
+      console.log('Download confirmation successful:', result.digest);
     } catch (error) {
+      console.error('Confirm download error:', error);
       throw new MarketplaceError(
         ErrorCode.NETWORK_ERROR,
         `Failed to confirm download: ${error instanceof Error ? error.message : String(error)}`
@@ -254,34 +320,64 @@ export class SuiMarketplaceClient {
     }
   }
 
+  createDisputeTransaction(
+    purchaseId: string,
+    reason: string,
+    evidenceHash: string | null,
+    userAddress: string
+  ): Transaction {
+    const tx = new Transaction();
+    
+    // Set gas budget and sender
+    tx.setGasBudget(MARKETPLACE_CONFIG.DEFAULT_GAS_BUDGET);
+    tx.setSender(userAddress);
+    
+    tx.moveCall({
+      target: `${this.config.packageId}::data_marketplace::create_dispute`,
+      arguments: [
+        tx.object(this.config.marketplaceObjectId),
+        tx.pure.string(purchaseId),
+        tx.pure.string(reason),
+        tx.pure.vector('vector<u8>', evidenceHash ? [Array.from(Buffer.from(evidenceHash, 'hex'))] : []),
+        tx.object('0x6') // clock object
+      ]
+    });
+
+    return tx;
+  }
+
   async createDispute(
     purchaseId: string,
     reason: string,
     evidenceHash: string | null,
-    keypair: Ed25519Keypair
+    walletSigner: any // dapp-kit wallet signer
   ): Promise<string> {
     try {
-      const tx = new Transaction();
+      // Get user address from wallet
+      const userAddress = walletSigner.toSuiAddress ? walletSigner.toSuiAddress() : 
+                          (walletSigner.address || walletSigner.getAddress?.());
       
-      tx.moveCall({
-        target: `${this.config.packageId}::data_marketplace::create_dispute`,
-        arguments: [
-          tx.object(this.config.marketplaceObjectId),
-          tx.pure.string(purchaseId),
-          tx.pure.string(reason),
-          tx.pure.vector('vector<u8>', evidenceHash ? [Array.from(Buffer.from(evidenceHash, 'hex'))] : []),
-          tx.object('0x6') // clock object
-        ]
-      });
+      if (!userAddress) {
+        throw new Error('Unable to get user address from wallet');
+      }
 
-      const result = await this.client.signAndExecuteTransaction({
-        signer: keypair,
-        transaction: tx,
-        options: {
-          showEffects: true,
-          showEvents: true
-        }
-      });
+      const tx = this.createDisputeTransaction(purchaseId, reason, evidenceHash, userAddress);
+
+      console.log('Prompting user to sign dispute creation transaction...');
+
+      // Use wallet signer to prompt user for transaction signing
+      let result;
+      if (walletSigner.signAndExecuteTransaction) {
+        result = await walletSigner.signAndExecuteTransaction({
+          transaction: tx,
+          options: {
+            showEffects: true,
+            showEvents: true
+          }
+        });
+      } else {
+        throw new Error('Wallet does not support transaction signing');
+      }
 
       // Check transaction status
       const statusString = result.effects?.status?.status || result.effects?.status;
@@ -292,9 +388,11 @@ export class SuiMarketplaceClient {
         throw new Error(`Transaction failed: ${error}`);
       }
 
+      console.log('Dispute creation successful:', result.digest);
       const disputeId = this.extractDisputeIdFromEvents(result);
       return disputeId;
     } catch (error) {
+      console.error('Create dispute error:', error);
       throw new MarketplaceError(
         ErrorCode.NETWORK_ERROR,
         `Failed to create dispute: ${error instanceof Error ? error.message : String(error)}`

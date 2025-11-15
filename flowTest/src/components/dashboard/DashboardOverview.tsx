@@ -30,70 +30,70 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
       {/* Status Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Pending Card */}
-        <div className="card-hover bg-gradient-to-br from-white to-surface-100 border-secondary-300 p-8">
+        <div className="card-hover bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 p-8 hover:shadow-orange-100/50 transition-all duration-300">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <IoTime className="w-5 h-5 text-secondary-600" />
-                <h3 className="text-lg font-russo text-secondary-800">Pending</h3>
+                <IoTime className="w-5 h-5 text-orange-600" />
+                <h3 className="text-lg font-russo text-orange-800">Pending</h3>
               </div>
-              <p className="text-4xl font-russo text-secondary-700 mb-2">{statusCounts.pending}</p>
-              <p className="text-secondary-600">Processing uploads</p>
+              <p className="text-4xl font-russo text-orange-700 mb-2">{statusCounts.pending}</p>
+              <p className="text-orange-600">Processing uploads</p>
             </div>
-            <div className="w-16 h-16 bg-surface-200 rounded-2xl flex items-center justify-center">
-              <IoTime className="w-8 h-8 text-secondary-700" />
+            <div className="w-16 h-16 bg-orange-200/80 rounded-2xl flex items-center justify-center">
+              <IoTime className="w-8 h-8 text-orange-600" />
             </div>
           </div>
           {statusCounts.pending > 0 && (
-            <div className="mt-4 pt-4 border-t border-surface-300">
-              <div className="w-full bg-surface-200 rounded-full h-2">
-                <div className="bg-secondary-700 h-2 rounded-full w-1/3 animate-pulse"></div>
+            <div className="mt-4 pt-4 border-t border-orange-200">
+              <div className="w-full bg-orange-200 rounded-full h-2">
+                <div className="bg-orange-500 h-2 rounded-full w-1/3 animate-pulse"></div>
               </div>
-              <p className="text-sm text-secondary-600 mt-2">Verification in progress...</p>
+              <p className="text-sm text-orange-600 mt-2">Verification in progress...</p>
             </div>
           )}
         </div>
 
         {/* Completed Card */}
-        <div className="card-hover bg-gradient-to-br from-white to-surface-100 border-secondary-200 p-8">
+        <div className="card-hover bg-gradient-to-br from-green-50 to-green-100 border-green-200 p-8 hover:shadow-green-100/50 transition-all duration-300">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <IoCheckmarkCircle className="w-5 h-5 text-secondary-600" />
-                <h3 className="text-lg font-russo text-secondary-800">Completed</h3>
+                <IoCheckmarkCircle className="w-5 h-5 text-green-600" />
+                <h3 className="text-lg font-russo text-green-800">Completed</h3>
               </div>
-              <p className="text-4xl font-russo text-secondary-700 mb-2">{statusCounts.completed}</p>
-              <p className="text-secondary-600">Available in marketplace</p>
+              <p className="text-4xl font-russo text-green-700 mb-2">{statusCounts.completed}</p>
+              <p className="text-green-600">Available in marketplace</p>
             </div>
-            <div className="w-16 h-16 bg-surface-200 rounded-2xl flex items-center justify-center">
-              <IoCheckmarkCircle className="w-8 h-8 text-secondary-700" />
+            <div className="w-16 h-16 bg-green-200/80 rounded-2xl flex items-center justify-center">
+              <IoCheckmarkCircle className="w-8 h-8 text-green-600" />
             </div>
           </div>
           {statusCounts.completed > 0 && (
-            <div className="mt-4 pt-4 border-t border-surface-300">
-              <p className="text-sm text-secondary-600">Ready for downloads</p>
+            <div className="mt-4 pt-4 border-t border-green-200">
+              <p className="text-sm text-green-600">Ready for downloads</p>
             </div>
           )}
         </div>
 
         {/* Failed Card */}
-        <div className="card-hover bg-gradient-to-br from-surface-100 to-surface-200 border-secondary-300 p-8">
+        <div className="card-hover bg-gradient-to-br from-red-50 to-red-100 border-red-200 p-8 hover:shadow-red-100/50 transition-all duration-300">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <IoCloseCircle className="w-5 h-5 text-secondary-700" />
-                <h3 className="text-lg font-russo text-secondary-900">Failed</h3>
+                <IoCloseCircle className="w-5 h-5 text-red-600" />
+                <h3 className="text-lg font-russo text-red-800">Failed</h3>
               </div>
-              <p className="text-4xl font-russo text-secondary-800 mb-2">{statusCounts.failed}</p>
-              <p className="text-secondary-700">Requires attention</p>
+              <p className="text-4xl font-russo text-red-700 mb-2">{statusCounts.failed}</p>
+              <p className="text-red-600">Requires attention</p>
             </div>
-            <div className="w-16 h-16 bg-surface-300 rounded-2xl flex items-center justify-center">
-              <IoCloseCircle className="w-8 h-8 text-secondary-800" />
+            <div className="w-16 h-16 bg-red-200/80 rounded-2xl flex items-center justify-center">
+              <IoCloseCircle className="w-8 h-8 text-red-600" />
             </div>
           </div>
           {statusCounts.failed > 0 && (
-            <div className="mt-4 pt-4 border-t border-surface-300">
-              <button className="btn-sm bg-secondary-800 text-white hover:bg-secondary-900">
+            <div className="mt-4 pt-4 border-t border-red-200">
+              <button className="btn-sm bg-red-600 text-white hover:bg-red-700 transition-colors">
                 Review Issues
               </button>
             </div>
@@ -103,52 +103,52 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card p-6 text-center">
-          <div className="w-12 h-12 bg-white border border-surface-300 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <IoStatsChart className="w-6 h-6 text-primary-600" />
+        <div className="card p-6 text-center bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-blue-100/50 transition-all duration-300">
+          <div className="w-12 h-12 bg-blue-500/10 border border-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <IoStatsChart className="w-6 h-6 text-blue-600" />
           </div>
-          <p className="text-sm text-secondary-600 mb-1">Total Uploads</p>
-          <p className="text-3xl font-russo text-secondary-900 mb-1">{allTasks.length}</p>
-          <div className="text-xs text-secondary-500">
+          <p className="text-sm text-blue-600/80 mb-1">Total Uploads</p>
+          <p className="text-3xl font-russo text-blue-800 mb-1">{allTasks.length}</p>
+          <div className="text-xs text-blue-600/70">
             {allTasks.length > 0 ? '+2 this week' : 'Get started!'}
           </div>
         </div>
 
-        <div className="card p-6 text-center">
-          <div className="w-12 h-12 bg-white border border-surface-300 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <IoDownload className="w-6 h-6 text-accent-600" />
+        <div className="card p-6 text-center bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-purple-100/50 transition-all duration-300">
+          <div className="w-12 h-12 bg-purple-500/10 border border-purple-200 rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <IoDownload className="w-6 h-6 text-purple-600" />
           </div>
-          <p className="text-sm text-secondary-600 mb-1">Total Size</p>
-          <p className="text-3xl font-russo text-secondary-900 mb-1">
+          <p className="text-sm text-purple-600/80 mb-1">Total Size</p>
+          <p className="text-3xl font-russo text-purple-800 mb-1">
             {formatFileSize(allTasks.reduce((sum, task) => sum + task.fileSize, 0))}
           </p>
-          <div className="text-xs text-secondary-500">
+          <div className="text-xs text-purple-600/70">
             Across all models
           </div>
         </div>
 
-        <div className="card p-6 text-center">
-          <div className="w-12 h-12 bg-white border border-surface-300 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <svg className="w-6 h-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="card p-6 text-center bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200 hover:shadow-amber-100/50 transition-all duration-300">
+          <div className="w-12 h-12 bg-amber-500/10 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <p className="text-sm text-secondary-600 mb-1">Avg. Speed</p>
-          <p className="text-3xl font-russo text-secondary-900 mb-1">2.4 MB/s</p>
-          <div className="text-xs text-secondary-500">
+          <p className="text-sm text-amber-600/80 mb-1">Avg. Speed</p>
+          <p className="text-3xl font-russo text-amber-800 mb-1">2.4 MB/s</p>
+          <div className="text-xs text-amber-600/70">
             Upload speed
           </div>
         </div>
 
-        <div className="card p-6 text-center">
-          <div className="w-12 h-12 bg-white border border-surface-300 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <IoCheckmarkCircle className="w-6 h-6 text-success-600" />
+        <div className="card p-6 text-center bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 hover:shadow-emerald-100/50 transition-all duration-300">
+          <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <IoCheckmarkCircle className="w-6 h-6 text-emerald-600" />
           </div>
-          <p className="text-sm text-secondary-600 mb-1">Success Rate</p>
-          <p className="text-3xl font-russo text-secondary-900 mb-1">
+          <p className="text-sm text-emerald-600/80 mb-1">Success Rate</p>
+          <p className="text-3xl font-russo text-emerald-800 mb-1">
             {allTasks.length ? Math.round((statusCounts.completed / allTasks.length) * 100) : 0}%
           </p>
-          <div className="text-xs text-secondary-500">
+          <div className="text-xs text-emerald-600/70">
             Verification rate
           </div>
         </div>

@@ -2,9 +2,9 @@
 
 import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
 import { walrus, WalrusFile } from '@mysten/walrus';
-import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+// Ed25519Keypair removed - using wallet-based signing only
 import { Transaction } from '@mysten/sui/transactions';
-import { WALRUS_CONFIG } from '../config/walrus.config';
+import { WALRUS_CONFIG } from '../../../constants';
 import { logger } from '../../core/logger';
 import { UploadResult, WalrusError, DownloadError, BlobNotFoundError } from '../types';
 
@@ -49,215 +49,120 @@ export class WalrusSDKClient {
   }
 
   /**
-   * Upload a file using Walrus SDK with proper WAL token spending
+   * Upload a file using Walrus HTTP API (no private key required)
    */
   async uploadFile(
     file: File,
-    signer: Ed25519Keypair | DappKitSigner,
     options: WalrusUploadOptions = {}
   ): Promise<UploadResult> {
     try {
       const epochs = options.epochs || WALRUS_CONFIG.agent.defaultEpochs;
-      const deletable = options.deletable ?? true;
-
-      const signerAddress = signer.toSuiAddress ? signer.toSuiAddress() : 'unknown';
       
-      logger.info('Starting Walrus SDK upload', {
+      logger.info('Starting Walrus HTTP API upload', {
         fileName: file.name,
         fileSize: file.size,
-        epochs,
-        deletable,
-        signerAddress
+        epochs
       });
 
-      // Convert File to Uint8Array
-      const fileData = new Uint8Array(await file.arrayBuffer());
-      
-      // Create WalrusFile object
-      const walrusFile = WalrusFile.from({
-        contents: fileData,
-        identifier: file.name,
-        tags: {
-          'content-type': file.type || 'application/octet-stream',
-          'upload-timestamp': Date.now().toString(),
-          'file-size': file.size.toString()
-        }
-      });
-
-      // Try the Walrus SDK upload (works with Ed25519Keypair)
-      logger.debug('Attempting Walrus SDK upload');
-      
-      try {
-        // Check if signer is an Ed25519Keypair or need to create one
-        let actualSigner: Ed25519Keypair;
-        if (signer && 'toSuiPrivateKey' in signer && typeof signer.toSuiPrivateKey === 'function') {
-          // It's already an Ed25519Keypair
-          actualSigner = signer as Ed25519Keypair;
-        } else {
-          // It's a wallet object, we need to create a temporary keypair for Walrus uploads
-          // For now, use the test keypair for Walrus since Walrus SDK doesn't support wallet signing yet
-          const testPrivateKey = 'suiprivkey1qr4ms6vljlawapq0f8clc50epw3z27kclmfn6mwrfhljx7wpks7yuf0eaws';
-          actualSigner = Ed25519Keypair.fromSecretKey(testPrivateKey);
-        }
-        
-        const results = await this.client.walrus.writeFiles({
-          files: [walrusFile],
-          epochs,
-          deletable,
-          signer: actualSigner
-        });
-
-        if (!results || results.length === 0) {
-          throw new WalrusError('Upload failed: No results returned from Walrus SDK');
-        }
-
-        const result = results[0];
-        
-        if (!result.blobId) {
-          throw new WalrusError('Upload failed: No blob ID returned');
-        }
-
-        logger.info('Walrus SDK upload successful', {
-          fileName: file.name,
-          blobId: result.blobId,
-          objectId: result.id,
-          epochs
-        });
-
-        return {
-          success: true,
-          blobId: result.blobId,
-          certificate: result.blobObject ? 'certified' : 'pending'
-        };
-
-      } catch (sdkError) {
-        const sdkErrorMessage = sdkError instanceof Error ? sdkError.message : String(sdkError);
-        const normalizedMessage = sdkErrorMessage.toLowerCase();
-        logger.warn('Walrus SDK upload failed, this may be due to network issues', {
-          error: sdkErrorMessage
-        });
-
-        const networkFailurePatterns = [
-          'failed to fetch',
-          'net::err',
-          'certificate',
-          'ssl',
-          'storage node',
-          'bad request',
-          'not registered',
-          'status code',
-          'cors',
-          'connection'
-        ];
-        
-        // Instead of failing completely, throw the network error so the storage service can handle it
-        if (
-          sdkErrorMessage.includes('Too many failures while writing blob') ||
-          sdkErrorMessage.includes('nodes') ||
-          networkFailurePatterns.some(pattern => normalizedMessage.includes(pattern))
-        ) {
-          throw new WalrusError('Walrus network unavailable. Storage nodes are experiencing issues. Please try again later.');
-        }
-        
-        throw new WalrusError(`Walrus upload failed: ${sdkErrorMessage}`);
-      }
+      // Use HTTP API for upload to avoid private key requirement
+      return await this.storeViaHttpAPI(file, options);
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Walrus SDK upload failed', {
+      logger.error('Walrus upload operation failed', { 
         fileName: file.name,
-        fileSize: file.size,
-        signerAddress: (signer && 'toSuiAddress' in signer && signer.toSuiAddress) ? signer.toSuiAddress() : 'unknown',
-        error: errorMessage
+        error: error instanceof Error ? error.message : String(error) 
       });
-
-      // Check for specific error types
-      if (errorMessage.includes('could not find WAL coins')) {
-        throw new WalrusError('Insufficient WAL tokens. Please ensure your wallet has WAL tokens for storage payments.');
-      }
-      
-      if (errorMessage.includes('Insufficient funds') || errorMessage.includes('insufficient')) {
-        throw new WalrusError('Insufficient SUI tokens for transaction fees. Please top up your wallet.');
-      }
-
-      if (errorMessage.includes('Too many failures while writing blob') || errorMessage.includes('nodes')) {
-        throw new WalrusError('Walrus network unavailable. Storage nodes are experiencing issues. Please try again later.');
-      }
-
-      if (errorMessage.includes('network') || errorMessage.includes('connection')) {
-        throw new WalrusError('Network connection error. Please check your internet connection and try again.');
-      }
-
-      throw new WalrusError(`Upload failed: ${errorMessage}`);
+      throw new WalrusError(`Failed to upload file: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   /**
-   * Upload multiple files in a single transaction
+   * HTTP API fallback for file uploads (no private key required)
+   */
+  private async storeViaHttpAPI(file: File, options: WalrusUploadOptions = {}): Promise<UploadResult> {
+    try {
+      const epochs = options.epochs || WALRUS_CONFIG.agent.defaultEpochs;
+      
+      logger.info('Using Walrus HTTP API for upload', {
+        fileName: file.name,
+        fileSize: file.size,
+        epochs
+      });
+
+      // Create form data for HTTP upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('epochs', epochs.toString());
+
+      // Use Walrus Publisher endpoint
+      const publisherUrl = WALRUS_CONFIG.PUBLISHER_URL;
+      const response = await fetch(`${publisherUrl}/v1/store?epochs=${epochs}`, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': 'application/octet-stream',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new WalrusError(`HTTP upload failed: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      
+      options.onProgress?.(100);
+
+      return {
+        success: true,
+        blobId: result.newlyCreated?.blobObject?.blobId || result.alreadyCertified?.blobId || '',
+        certificate: result.newlyCreated ? 'certified' : 'already_certified'
+      };
+
+    } catch (error) {
+      logger.error('HTTP API upload failed', { 
+        fileName: file.name,
+        error: error instanceof Error ? error.message : String(error) 
+      });
+      throw new WalrusError(`HTTP upload failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * Upload multiple files sequentially using HTTP API
    */
   async uploadFiles(
     files: File[],
-    signer: Ed25519Keypair,
     options: WalrusUploadOptions = {}
   ): Promise<UploadResult[]> {
     try {
-      const epochs = options.epochs || WALRUS_CONFIG.agent.defaultEpochs;
-      const deletable = options.deletable ?? true;
-
-      logger.info('Starting batch Walrus SDK upload', {
+      logger.info('Starting batch Walrus HTTP upload', {
         fileCount: files.length,
-        totalSize: files.reduce((sum, f) => sum + f.size, 0),
-        epochs,
-        signerAddress: signer.toSuiAddress()
+        totalSize: files.reduce((sum, f) => sum + f.size, 0)
       });
 
-      // Convert files to WalrusFile objects
-      const walrusFiles = await Promise.all(files.map(async (file, index) => {
-        const fileData = new Uint8Array(await file.arrayBuffer());
-        
-        return WalrusFile.from({
-          contents: fileData,
-          identifier: `${index}_${file.name}`,
-          tags: {
-            'content-type': file.type || 'application/octet-stream',
-            'upload-timestamp': Date.now().toString(),
-            'file-size': file.size.toString(),
-            'batch-index': index.toString()
-          }
-        });
-      }));
-
-      // Upload using Walrus SDK
-      const results = await this.client.walrus.writeFiles({
-        files: walrusFiles,
-        epochs,
-        deletable,
-        signer: signer
-      });
-
-      if (!results || results.length !== files.length) {
-        throw new WalrusError(`Batch upload failed: Expected ${files.length} results, got ${results?.length || 0}`);
+      // Upload files sequentially using HTTP API
+      const results: UploadResult[] = [];
+      
+      for (const file of files) {
+        try {
+          const result = await this.storeViaHttpAPI(file, options);
+          results.push(result);
+        } catch (error) {
+          results.push({
+            success: false,
+            blobId: '',
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
       }
-
-      const uploadResults: UploadResult[] = results.map((result: any, index: number) => ({
-        success: true,
-        blobId: result.blobId,
-        certificate: result.blobObject ? 'certified' : 'pending',
-        fileName: files[index].name
-      }));
-
-      logger.info('Batch Walrus SDK upload successful', {
-        fileCount: files.length,
-        blobIds: uploadResults.map(r => r.blobId)
-      });
-
-      return uploadResults;
-
+      
+      return results;
+      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Batch Walrus SDK upload failed', {
+      logger.error('Batch Walrus HTTP upload failed', {
         fileCount: files.length,
-        signerAddress: signer.toSuiAddress(),
         error: errorMessage
       });
 

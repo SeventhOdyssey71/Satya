@@ -4,13 +4,13 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1d1d1f;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #000000;
+    --foreground: #f5f5f7;
   }
 }
 
@@ -20,104 +20,138 @@
   }
   
   body {
-    @apply bg-surface-50 text-secondary-900 antialiased;
+    @apply bg-white text-gray-900 antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
-    line-height: 1.6;
+    line-height: 1.5;
+    font-weight: 300;
+    letter-spacing: -0.01em;
   }
 
-  /* Improved typography scale */
-  h1 { @apply text-4xl md:text-5xl lg:text-6xl font-russo leading-tight tracking-tight text-secondary-900; }
-  h2 { @apply text-3xl md:text-4xl lg:text-5xl font-russo leading-tight tracking-tight text-secondary-900; }
-  h3 { @apply text-2xl md:text-3xl font-russo leading-snug tracking-tight text-secondary-800; }
-  h4 { @apply text-xl md:text-2xl font-albert font-semibold leading-snug text-secondary-800; }
-  h5 { @apply text-lg md:text-xl font-albert font-semibold leading-snug text-secondary-700; }
-  h6 { @apply text-base md:text-lg font-albert font-medium leading-normal text-secondary-700; }
+  /* Apple-inspired typography scale - Clean and minimal */
+  h1 { 
+    @apply text-5xl md:text-6xl lg:text-7xl font-russo leading-[1.05] tracking-[-0.02em] text-gray-900; 
+    font-weight: 400;
+  }
+  h2 { 
+    @apply text-4xl md:text-5xl lg:text-6xl font-russo leading-[1.1] tracking-[-0.02em] text-gray-900; 
+    font-weight: 400;
+  }
+  h3 { 
+    @apply text-3xl md:text-4xl font-russo leading-[1.15] tracking-[-0.01em] text-gray-900; 
+    font-weight: 400;
+  }
+  h4 { 
+    @apply text-2xl md:text-3xl font-albert font-light leading-[1.2] tracking-[-0.01em] text-gray-900; 
+  }
+  h5 { 
+    @apply text-xl md:text-2xl font-albert font-light leading-[1.3] tracking-[-0.01em] text-gray-800; 
+  }
+  h6 { 
+    @apply text-lg md:text-xl font-albert font-normal leading-[1.4] tracking-[-0.01em] text-gray-800; 
+  }
 
-  p { @apply font-albert leading-relaxed text-secondary-800; }
+  p { 
+    @apply font-albert font-light leading-relaxed text-gray-600; 
+    font-size: 17px;
+  }
   
-  /* Focus styles */
+  /* Subtle focus styles */
   *:focus {
-    @apply outline-none ring-2 ring-secondary-400/40 ring-offset-2 ring-offset-surface-50;
+    @apply outline-none ring-1 ring-gray-400/30 ring-offset-1 ring-offset-white;
   }
 
-  /* Selection styles */
+  /* Clean selection styles */
   ::selection {
-    @apply bg-white text-secondary-900;
+    @apply bg-gray-200/50 text-gray-900;
   }
 }
 
 @layer components {
-  /* Button variants */
+  /* Apple-inspired button variants - Clean and minimal */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-albert font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 font-albert font-normal transition-all duration-300 focus:outline-none disabled:opacity-40 disabled:pointer-events-none;
+    font-size: 17px;
+    letter-spacing: -0.01em;
   }
 
   .btn-primary {
-    @apply btn bg-black text-white hover:bg-secondary-800 focus:ring-secondary-400/40 shadow-soft hover:shadow-medium;
+    @apply btn bg-gray-900 text-white hover:bg-gray-800 active:bg-gray-700;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
   .btn-secondary {
-    @apply btn bg-white text-secondary-900 border border-secondary-300 hover:bg-surface-50 focus:ring-secondary-400/40 shadow-card hover:shadow-soft;
+    @apply btn bg-white text-gray-900 border border-gray-300 hover:bg-gray-50 active:bg-gray-100;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
   .btn-ghost {
-    @apply btn text-secondary-800 hover:bg-surface-100 hover:text-secondary-900 focus:ring-secondary-400/40;
+    @apply btn text-gray-700 hover:bg-gray-100/50 active:bg-gray-100;
   }
 
   .btn-accent {
-    @apply btn bg-secondary-700 text-white hover:bg-secondary-800 focus:ring-secondary-400/40 shadow-soft hover:shadow-medium;
+    @apply btn bg-gray-800 text-white hover:bg-gray-700 active:bg-gray-600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
   .btn-sm {
-    @apply px-4 py-2 text-sm rounded-lg;
+    @apply px-4 py-2 text-[15px] rounded-full;
   }
 
   .btn-lg {
-    @apply px-8 py-4 text-lg rounded-2xl;
+    @apply px-8 py-3.5 text-[19px] rounded-full;
   }
 
-  /* Card variants */
+  /* Apple-inspired card variants - Subtle and clean */
   .card {
-    @apply bg-white border border-secondary-300 rounded-2xl shadow-card;
+    @apply bg-white border border-gray-200 rounded-2xl;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   }
 
   .card-hover {
-    @apply card transition-all duration-200 hover:shadow-medium hover:-translate-y-1;
+    @apply card transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5;
   }
 
   .card-interactive {
     @apply card-hover cursor-pointer;
   }
 
-  /* Input styles */
+  /* Clean input styles */
   .input {
-    @apply w-full px-4 py-3 bg-white border border-secondary-300 rounded-xl font-albert text-secondary-900 placeholder-secondary-500 transition-colors focus:border-secondary-700 focus:ring-secondary-400/40;
+    @apply w-full px-4 py-3 bg-white border border-gray-300 rounded-xl font-albert font-light text-gray-900 placeholder-gray-400 transition-all duration-200;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+  
+  .input:focus {
+    @apply border-gray-400 outline-none;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
   }
 
-  /* Badge styles */
+  /* Minimal badge styles */
   .badge {
-    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-albert font-medium;
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-albert font-normal;
+    letter-spacing: -0.01em;
   }
 
   .badge-success {
-    @apply badge bg-white border border-secondary-300 text-secondary-900;
+    @apply badge bg-gray-100 text-gray-700 border border-gray-200;
   }
 
   .badge-warning {
-    @apply badge bg-secondary-300 text-secondary-900;
+    @apply badge bg-gray-200 text-gray-800;
   }
 
   .badge-danger {
-    @apply badge bg-secondary-800 text-white;
+    @apply badge bg-gray-900 text-white;
   }
 
   .badge-primary {
-    @apply badge bg-white border border-secondary-300 text-secondary-900;
+    @apply badge bg-gray-100 text-gray-700 border border-gray-200;
   }
 
   /* Loading states */
   .skeleton {
-    @apply animate-pulse bg-secondary-200 rounded;
+    @apply animate-pulse bg-gray-200 rounded;
   }
 
   .shimmer {
@@ -125,7 +159,7 @@
   }
 
   .shimmer::after {
-    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent animate-shimmer;
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer;
     content: '';
   }
 
@@ -134,41 +168,45 @@
     @apply max-w-7xl mx-auto px-6 sm:px-8 lg:px-12;
   }
 
-  /* Navigation tabs */
+  /* Clean navigation tabs */
   .nav-tab {
-    @apply px-4 py-2 font-albert font-medium text-secondary-700 transition-colors border-b-2 border-transparent hover:text-secondary-900;
+    @apply px-4 py-2 font-albert font-normal text-gray-600 transition-colors border-b-2 border-transparent hover:text-gray-900;
+    font-size: 17px;
+    letter-spacing: -0.01em;
   }
 
   .nav-tab-active {
-    @apply nav-tab text-secondary-900 border-secondary-900;
+    @apply nav-tab text-gray-900 border-gray-900;
   }
 
-  /* Form sections */
+  /* Minimal form sections */
   .form-section {
-    @apply space-y-6 p-6 bg-white border border-secondary-300 rounded-2xl;
+    @apply space-y-8 p-8 bg-white border border-gray-200 rounded-2xl;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   }
 
   .form-group {
-    @apply space-y-2;
+    @apply space-y-3;
   }
 
   .form-label {
-    @apply block text-sm font-albert font-medium text-secondary-900;
+    @apply block text-[15px] font-albert font-normal text-gray-900;
+    letter-spacing: -0.01em;
   }
 
   .form-error {
-    @apply text-sm font-albert text-secondary-900;
+    @apply text-[15px] font-albert font-normal text-gray-700;
   }
 
   .form-help {
-    @apply text-sm font-albert text-secondary-700;
+    @apply text-[15px] font-albert font-light text-gray-500;
   }
 }
 
 @layer utilities {
   /* Text utilities */
   .text-gradient {
-    @apply bg-gradient-to-r from-secondary-600 to-secondary-800 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent;
   }
 
   /* Layout utilities */

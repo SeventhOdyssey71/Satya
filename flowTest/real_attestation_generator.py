@@ -12,48 +12,27 @@ import json
 import time
 from datetime import datetime
 from pathlib import Path
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from cryptography.hazmat.primitives.asymmetric import ed25519
+# Cryptographic imports removed - using hash-based simulation only
 import subprocess
 import sys
 
 class RealAttestationGenerator:
     def __init__(self):
-        # Generate or load TEE signing key
-        self.tee_private_key = self._get_or_create_tee_key()
-        self.tee_public_key = self.tee_private_key.public_key()
+        # Generate TEE identity for simulation purposes only
+        # Real TEE would have hardware-secured keys
+        print("🔐 WARNING: This is a simulation-only TEE attestation generator")
+        print("🔐 Real TEE systems use hardware-secured keys and proper attestation")
         
         # System measurements for PCR calculation
         self.system_measurements = self._compute_system_measurements()
         
-    def _get_or_create_tee_key(self):
-        """Get or create a persistent TEE signing key"""
-        key_file = Path("tee_signing_key.pem")
-        
-        if key_file.exists():
-            # Load existing key
-            with open(key_file, "rb") as f:
-                private_key = serialization.load_pem_private_key(
-                    f.read(), 
-                    password=None
-                )
-                print("🔑 Loaded existing TEE signing key")
-                return private_key
-        else:
-            # Generate new key
-            private_key = Ed25519PrivateKey.generate()
-            
-            # Save key
-            with open(key_file, "wb") as f:
-                f.write(private_key.private_bytes(
-                    encoding=serialization.Encoding.PEM,
-                    format=serialization.PrivateFormat.PKCS8,
-                    encryption_algorithm=serialization.NoEncryption()
-                ))
-            
-            print("🔑 Generated new TEE signing key")
-            return private_key
+    def _generate_simulation_identity(self):
+        """Generate simulation identity hash for demo purposes"""
+        # Create a deterministic identity based on system properties
+        system_info = f"{platform.node()}-{platform.system()}-{os.getpid()}"
+        identity_hash = hashlib.sha256(system_info.encode()).hexdigest()
+        print("🆔 Generated simulation TEE identity")
+        return identity_hash
     
     def _compute_system_measurements(self):
         """Compute real system measurements for PCR values"""
@@ -145,19 +124,14 @@ class RealAttestationGenerator:
             file_size = os.path.getsize(model_path) if os.path.exists(model_path) else 1000
             return min(0.7 + (file_size / 20000.0), 0.9)
     
-    def generate_real_enclave_id(self):
-        """Generate real enclave ID based on system and TEE key"""
-        # Combine system info and public key for unique enclave ID
-        public_key_bytes = self.tee_public_key.public_bytes(
-            encoding=serialization.Encoding.Raw,
-            format=serialization.PublicFormat.Raw
-        )
-        
+    def generate_simulation_enclave_id(self):
+        """Generate simulation enclave ID based on system properties"""
+        # Combine system info for unique enclave ID
         enclave_data = {
             "hostname": platform.node(),
             "system": platform.system(),
             "machine": platform.machine(), 
-            "public_key": public_key_bytes.hex(),
+            "simulation_id": self._generate_simulation_identity(),
             "pid": os.getpid()
         }
         
@@ -165,13 +139,13 @@ class RealAttestationGenerator:
             json.dumps(enclave_data, sort_keys=True).encode()
         ).hexdigest()
         
-        enclave_id = f"enc_{enclave_hash[:16]}"
-        print(f"🆔 Generated real enclave ID: {enclave_id}")
+        enclave_id = f"sim_enc_{enclave_hash[:16]}"
+        print(f"🆔 Generated simulation enclave ID: {enclave_id}")
         return enclave_id
     
-    def sign_attestation(self, attestation_data):
-        """Create real cryptographic signature for attestation"""
-        # Create canonical representation for signing
+    def generate_simulation_attestation(self, attestation_data):
+        """Generate simulation attestation hash for demo purposes"""
+        # Create canonical representation for hashing
         signing_data = {
             "pcr0": attestation_data["pcr0"],
             "pcr1": attestation_data["pcr1"], 
@@ -182,16 +156,16 @@ class RealAttestationGenerator:
         }
         
         canonical_bytes = json.dumps(signing_data, sort_keys=True).encode()
-        signature = self.tee_private_key.sign(canonical_bytes)
+        simulation_hash = hashlib.sha256(canonical_bytes).hexdigest()
         
-        signature_hex = signature.hex()
-        print(f"✍️  Created real Ed25519 signature: {signature_hex[:32]}...")
+        print(f"✅ Created simulation attestation hash: {simulation_hash[:32]}...")
         
-        return signature_hex
+        return simulation_hash
     
-    def generate_real_attestation(self, model_path, model_result=None):
-        """Generate complete real TEE attestation"""
-        print(f"\n🔒 Generating REAL TEE attestation for {model_path}")
+    def generate_simulation_attestation_data(self, model_path, model_result=None):
+        """Generate simulation TEE attestation for demo purposes"""
+        print(f"\n🔒 Generating SIMULATION TEE attestation for {model_path}")
+        print("⚠️  This is for demo purposes only - real TEE requires hardware attestation")
         
         # Real model hash
         model_hash = self.compute_real_model_hash(model_path)
@@ -199,13 +173,13 @@ class RealAttestationGenerator:
         # Real quality score
         quality_score = self.compute_real_quality_score(model_path)
         
-        # Real enclave ID
-        enclave_id = self.generate_real_enclave_id()
+        # Simulation enclave ID
+        enclave_id = self.generate_simulation_enclave_id()
         
         # Current timestamp
         timestamp = datetime.utcnow().isoformat() + "Z"
         
-        # Real attestation data
+        # Simulation attestation data
         attestation_data = {
             "pcr0": self.system_measurements["pcr0"],
             "pcr1": self.system_measurements["pcr1"],
@@ -215,14 +189,14 @@ class RealAttestationGenerator:
             "enclave_id": enclave_id
         }
         
-        # Real cryptographic signature
-        signature = self.sign_attestation(attestation_data)
-        attestation_data["signature"] = signature
+        # Simulation attestation hash
+        attestation_hash = self.generate_simulation_attestation(attestation_data)
+        attestation_data["attestation_hash"] = attestation_hash
         
         # Request ID
         request_id = f"req_{int(time.time() * 1000)}"
         
-        # Complete real verification result
+        # Complete simulation verification result
         verification_result = {
             "request_id": request_id,
             "tee_attestation": attestation_data,
@@ -232,22 +206,22 @@ class RealAttestationGenerator:
                 "quality_score": quality_score,
                 "predictions": model_result.get("predictions", []) if model_result else [],
                 "confidence": model_result.get("confidence_scores", [0.0])[0] if model_result and model_result.get("confidence_scores") else 0.0,
-                "signature": self.sign_ml_result(model_hash, quality_score, request_id)
+                "result_hash": self.generate_ml_result_hash(model_hash, quality_score, request_id)
             },
             "verification_metadata": {
                 "enclave_id": enclave_id,
-                "source": "real_tee_attestation",
+                "source": "simulation_tee_attestation",
                 "timestamp": timestamp,
                 "model_path": str(model_path),
-                "attestation_type": "real_cryptographic_proof"
+                "attestation_type": "simulation_hash_based"
             }
         }
         
-        print("✅ Generated REAL TEE attestation with cryptographic proof")
+        print("✅ Generated SIMULATION TEE attestation with hash verification")
         return verification_result
     
-    def sign_ml_result(self, model_hash, quality_score, request_id):
-        """Sign ML processing result"""
+    def generate_ml_result_hash(self, model_hash, quality_score, request_id):
+        """Generate ML processing result hash for simulation"""
         ml_data = {
             "model_hash": model_hash,
             "quality_score": quality_score,
@@ -256,16 +230,15 @@ class RealAttestationGenerator:
         }
         
         canonical_bytes = json.dumps(ml_data, sort_keys=True).encode()
-        signature = self.tee_private_key.sign(canonical_bytes)
-        return signature.hex()
+        result_hash = hashlib.sha256(canonical_bytes).hexdigest()
+        return result_hash
     
-    def verify_attestation(self, attestation_data):
-        """Verify a real TEE attestation signature"""
+    def verify_simulation_attestation(self, attestation_data):
+        """Verify a simulation TEE attestation hash"""
         try:
-            signature_hex = attestation_data.get("signature", "")
-            signature_bytes = bytes.fromhex(signature_hex)
+            provided_hash = attestation_data.get("attestation_hash", "")
             
-            # Reconstruct signing data
+            # Reconstruct attestation data
             signing_data = {
                 "pcr0": attestation_data["pcr0"],
                 "pcr1": attestation_data["pcr1"],
@@ -277,42 +250,46 @@ class RealAttestationGenerator:
             
             canonical_bytes = json.dumps(signing_data, sort_keys=True).encode()
             
-            # Verify signature
-            self.tee_public_key.verify(signature_bytes, canonical_bytes)
-            print("✅ Attestation signature VERIFIED")
-            return True
+            # Verify hash
+            expected_hash = hashlib.sha256(canonical_bytes).hexdigest()
+            if provided_hash == expected_hash:
+                print("✅ Simulation attestation hash VERIFIED")
+                return True
+            else:
+                print("❌ Simulation attestation hash MISMATCH")
+                return False
             
         except Exception as e:
-            print(f"❌ Attestation signature verification FAILED: {e}")
+            print(f"❌ Simulation attestation verification FAILED: {e}")
             return False
 
 def main():
-    """Test the real attestation generator"""
+    """Test the simulation attestation generator"""
     generator = RealAttestationGenerator()
     
     # Test with real model files
-    tiny_models_dir = Path("nautilus-production/tiny_models")
+    tiny_models_dir = Path("tiny_models")
     
     if tiny_models_dir.exists():
         for model_file in tiny_models_dir.glob("*.pkl"):
             print(f"\n{'='*60}")
-            print(f"TESTING REAL ATTESTATION FOR: {model_file.name}")
+            print(f"TESTING SIMULATION ATTESTATION FOR: {model_file.name}")
             print(f"{'='*60}")
             
-            # Generate real attestation
-            real_attestation = generator.generate_real_attestation(model_file)
+            # Generate simulation attestation
+            simulation_attestation = generator.generate_simulation_attestation_data(model_file)
             
-            # Verify the signature
-            is_valid = generator.verify_attestation(real_attestation["tee_attestation"])
+            # Verify the hash
+            is_valid = generator.verify_simulation_attestation(simulation_attestation["tee_attestation"])
             
             # Show summary
-            print(f"\n📋 REAL ATTESTATION SUMMARY:")
+            print(f"\n📋 SIMULATION ATTESTATION SUMMARY:")
             print(f"   Model: {model_file.name}")
-            print(f"   Hash: {real_attestation['ml_processing_result']['model_hash'][:32]}...")
-            print(f"   Quality: {real_attestation['ml_processing_result']['quality_score']:.3f}")
-            print(f"   Enclave: {real_attestation['verification_metadata']['enclave_id']}")
+            print(f"   Hash: {simulation_attestation['ml_processing_result']['model_hash'][:32]}...")
+            print(f"   Quality: {simulation_attestation['ml_processing_result']['quality_score']:.3f}")
+            print(f"   Enclave: {simulation_attestation['verification_metadata']['enclave_id']}")
             print(f"   Valid: {'✅ YES' if is_valid else '❌ NO'}")
-            print(f"   PCR0: {real_attestation['tee_attestation']['pcr0'][:16]}...")
+            print(f"   PCR0: {simulation_attestation['tee_attestation']['pcr0'][:16]}...")
             
     else:
         print("❌ tiny_models directory not found")

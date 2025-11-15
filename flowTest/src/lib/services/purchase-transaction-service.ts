@@ -1,6 +1,7 @@
 import { SuiClient, SuiTransactionBlockResponse } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { WalletAccount } from '@mysten/wallet-standard';
+import { MARKETPLACE_CONFIG } from '../constants';
 
 export interface PurchaseTransaction {
   modelId: string;
@@ -61,8 +62,9 @@ export class PurchaseTransactionService {
       // Create transaction block
       const transaction = new Transaction();
 
-      // Set gas budget
-      transaction.setGasBudget(10_000_000);
+      // Set gas budget to avoid dry run errors
+      transaction.setGasBudget(MARKETPLACE_CONFIG.DEFAULT_GAS_BUDGET); // Use configured gas budget
+      transaction.setSender(account.address);
 
       // Add purchase transaction call
       const [licenseNft] = transaction.moveCall({

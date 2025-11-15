@@ -6,11 +6,11 @@ import { TbShield, TbDatabase, TbNetwork, TbCloudCheck } from 'react-icons/tb'
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-surface-50 via-surface-100 to-surface-200">
-      {/* Background Effects */}
+    <div className="relative min-h-screen bg-white">
+      {/* Subtle background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-secondary-200/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-secondary-300/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gray-100/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-gray-100/20 rounded-full blur-3xl"></div>
       </div>
 
       {/* Header */}
@@ -46,9 +46,9 @@ function HeroSection() {
       <div className="container-custom">
         <div className="text-center max-w-5xl mx-auto">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-secondary-300 rounded-full mb-8 animate-fade-in shadow-card">
-            <HiShieldCheck className="w-4 h-4 text-secondary-600" />
-            <span className="text-sm font-albert font-medium text-secondary-700">Trusted AI Marketplace</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-200 rounded-full mb-8 animate-fade-in">
+            <HiShieldCheck className="w-4 h-4 text-gray-600" />
+            <span className="text-[15px] font-albert font-normal text-gray-700">Trusted AI Marketplace</span>
           </div>
 
           {/* Main Headline */}
@@ -57,7 +57,7 @@ function HeroSection() {
           </h1>
           
           {/* Subtitle */}
-          <p className="text-xl md:text-2xl font-albert text-secondary-800 max-w-3xl mx-auto mb-12 leading-relaxed animate-slide-up">
+          <p className="text-xl md:text-2xl font-albert font-light text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed animate-slide-up">
             Secure AI models and datasets with TEE verification, encrypted storage, and blockchain transparency. 
             Building the future of trusted machine learning.
           </p>
@@ -80,10 +80,10 @@ function HeroSection() {
 
           {/* Tech Stack */}
           <div className="text-center animate-fade-in">
-            <p className="text-lg font-albert text-secondary-700 mb-8">Built on the Sui Stack</p>
+            <p className="text-lg font-albert font-light text-gray-600 mb-8">Built on the Sui Stack</p>
             <div className="flex items-center justify-center gap-8 md:gap-16">
-              <div className="group transition-transform hover:scale-110">
-                <div className="p-4 bg-white border border-secondary-300 rounded-2xl shadow-card hover:shadow-soft transition-all">
+              <div className="group transition-transform hover:scale-105">
+                <div className="p-4 bg-white border border-gray-200 rounded-2xl hover:shadow-md transition-all">
                   <Image 
                     src="/images/Seal.svg" 
                     alt="SEAL"
@@ -93,8 +93,8 @@ function HeroSection() {
                   />
                 </div>
               </div>
-              <div className="group transition-transform hover:scale-110">
-                <div className="p-4 bg-white border border-secondary-300 rounded-2xl shadow-card hover:shadow-soft transition-all">
+              <div className="group transition-transform hover:scale-105">
+                <div className="p-4 bg-white border border-gray-200 rounded-2xl hover:shadow-md transition-all">
                   <img 
                     src="/images/Walrus.png" 
                     alt="WALRUS"
@@ -143,7 +143,7 @@ function FeaturesSection() {
       <div className="container-custom">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-russo mb-6">Why Choose Satya?</h2>
-          <p className="text-lg text-secondary-800 max-w-2xl mx-auto">
+          <p className="text-lg font-albert font-light text-gray-600 max-w-2xl mx-auto">
             Built with cutting-edge security and transparency features to ensure trust in AI model trading.
           </p>
         </div>
@@ -152,19 +152,19 @@ function FeaturesSection() {
           {features.map((feature, index) => {
             const IconComponent = feature.icon;
             const colorClasses = {
-              primary: "bg-white text-secondary-600 border-secondary-300",
-              accent: "bg-white text-secondary-700 border-secondary-300",
-              success: "bg-white text-secondary-600 border-secondary-300",
-              warning: "bg-white text-secondary-800 border-secondary-300"
+              primary: "bg-white text-gray-600 border-gray-200",
+              accent: "bg-white text-gray-700 border-gray-200",
+              success: "bg-white text-gray-600 border-gray-200",
+              warning: "bg-white text-gray-800 border-gray-200"
             };
             
             return (
-              <div key={index} className="card-hover p-6 text-center group animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl border ${colorClasses[feature.color as keyof typeof colorClasses]} mb-4 group-hover:scale-110 transition-transform`}>
+              <div key={index} className="card-hover p-8 text-center group animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
+                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl border ${colorClasses[feature.color as keyof typeof colorClasses]} mb-6 group-hover:scale-105 transition-transform`}>
                   <IconComponent className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-russo mb-3 text-secondary-900">{feature.title}</h3>
-                <p className="text-secondary-800 leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-russo mb-3 text-gray-900">{feature.title}</h3>
+                <p className="font-albert font-light text-gray-600 leading-relaxed">{feature.description}</p>
               </div>
             );
           })}
@@ -182,7 +182,7 @@ function TrustedMarketplacesSection() {
           <h2 className="text-3xl md:text-4xl font-russo mb-6">
             Trusted AI Model Marketplace
           </h2>
-          <p className="text-lg text-secondary-800 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg font-albert font-light text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Eliminating the "trust me bro" barrier with verifiable, secure, and transparent AI model trading. 
             Each model comes with cryptographic proofs and hardware-verified attestations.
           </p>
@@ -191,28 +191,27 @@ function TrustedMarketplacesSection() {
         {/* Featured Models Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {/* Featured Model 1 */}
-          <div className="lg:col-span-1 lg:row-span-2">
-            <div className="card-interactive h-full min-h-[600px] bg-gradient-to-br from-white to-surface-100 border border-secondary-300 text-secondary-900 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-surface-100/20 to-surface-200/20" />
+            <div className="lg:col-span-1 lg:row-span-2">
+            <div className="card-interactive h-full min-h-[600px] bg-white border border-gray-200 text-gray-900 relative overflow-hidden">
               <div className="relative h-full flex flex-col justify-between p-8">
                 <div>
-                  <div className="badge bg-white text-secondary-800 border border-secondary-300 mb-4 shadow-card">
+                  <div className="badge bg-gray-100 text-gray-700 border border-gray-200 mb-4">
                     <HiShieldCheck className="w-3 h-3" />
                     TEE Verified
                   </div>
                   <h3 className="text-3xl font-russo mb-4">Medical AI x129</h3>
-                  <p className="text-secondary-800 mb-6 leading-relaxed">
+                  <p className="font-albert font-light text-gray-600 mb-6 leading-relaxed">
                     Advanced diagnostic model trained on verified hospital data with full privacy compliance and hardware security attestation.
                   </p>
                 </div>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-secondary-600">Downloads</span>
-                    <span className="text-secondary-900 font-medium">2,439</span>
+                  <div className="flex items-center justify-between text-[15px] font-albert font-normal">
+                    <span className="text-gray-600">Downloads</span>
+                    <span className="text-gray-900">2,439</span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-secondary-600">Price</span>
-                    <span className="text-secondary-900 font-medium">25.5 SUI</span>
+                  <div className="flex items-center justify-between text-[15px] font-albert font-normal">
+                    <span className="text-gray-600">Price</span>
+                    <span className="text-gray-900">25.5 SUI</span>
                   </div>
                   <Link href="/model/medical-ai-x129">
                     <button className="btn-secondary w-full">
@@ -226,26 +225,25 @@ function TrustedMarketplacesSection() {
 
           {/* Featured Model 2 */}
           <div className="lg:col-span-2">
-            <div className="card-interactive h-80 bg-gradient-to-r from-white to-surface-100 border border-secondary-300 text-secondary-900 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-surface-200/30 to-transparent" />
+            <div className="card-interactive h-80 bg-white border border-gray-200 text-gray-900 relative overflow-hidden">
               <div className="relative h-full flex items-end p-8">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="badge bg-white text-secondary-800 border border-secondary-300 shadow-card">
+                    <div className="badge bg-gray-100 text-gray-700 border border-gray-200">
                       <HiBolt className="w-3 h-3" />
                       High Performance
                     </div>
-                    <div className="badge bg-white text-secondary-800 border border-secondary-300 shadow-card">
+                    <div className="badge bg-gray-100 text-gray-700 border border-gray-200">
                       Computer Vision
                     </div>
                   </div>
                   <h3 className="text-3xl font-russo mb-4">Vision Opus x229</h3>
-                  <p className="text-secondary-800 mb-6 leading-relaxed max-w-lg">
+                  <p className="font-albert font-light text-gray-600 mb-6 leading-relaxed max-w-lg">
                     State-of-the-art computer vision model with real-time processing capabilities and enterprise-grade security.
                   </p>
                 </div>
                 <Link href="/model/vision-opus-x229">
-                  <button className="btn bg-white/20 border border-white/30 text-white hover:bg-white/30 backdrop-blur-sm">
+                  <button className="btn-secondary">
                     Explore Model
                   </button>
                 </Link>
@@ -255,31 +253,30 @@ function TrustedMarketplacesSection() {
 
           {/* Featured Model 3 */}
           <div className="lg:col-span-2">
-            <div className="card-interactive h-80 bg-gradient-to-r from-white to-surface-100 border border-secondary-300 text-secondary-900 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-tl from-surface-200/30 to-transparent" />
+            <div className="card-interactive h-80 bg-white border border-gray-200 text-gray-900 relative overflow-hidden">
               <div className="relative h-full flex items-end p-8">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="badge bg-white text-secondary-800 border border-secondary-300 shadow-card">
+                    <div className="badge bg-gray-100 text-gray-700 border border-gray-200">
                       <HiGlobeAmericas className="w-3 h-3" />
                       Autonomous Systems
                     </div>
-                    <div className="badge bg-white text-secondary-800 border border-secondary-300 shadow-card">
+                    <div className="badge bg-gray-100 text-gray-700 border border-gray-200">
                       Real-time
                     </div>
                   </div>
                   <h3 className="text-3xl font-russo mb-4">AutoDrive Neural Net</h3>
-                  <p className="text-secondary-800 mb-6 leading-relaxed max-w-lg">
+                  <p className="font-albert font-light text-gray-600 mb-6 leading-relaxed max-w-lg">
                     Advanced autonomous driving model with multi-sensor fusion and real-time decision making capabilities.
                   </p>
                 </div>
                 <div className="flex gap-3">
                   <Link href="/model/autodrive-neural">
-                    <button className="btn bg-white/20 border border-white/30 text-white hover:bg-white/30 backdrop-blur-sm">
+                    <button className="btn-secondary">
                       View Model
                     </button>
                   </Link>
-                  <button className="btn bg-white text-secondary-800 hover:bg-surface-100">
+                  <button className="btn-ghost">
                     Try Demo
                   </button>
                 </div>

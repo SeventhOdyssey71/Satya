@@ -25,8 +25,8 @@ export const MARKETPLACE_CONFIG = {
   PLATFORM_FEE_PERCENTAGE: parseInt(process.env.NEXT_PUBLIC_PLATFORM_FEE_PERCENTAGE || '250', 10),
   FEE_DENOMINATOR: parseInt(process.env.NEXT_PUBLIC_FEE_DENOMINATOR || '10000', 10),
   
-  // Gas Configuration
-  DEFAULT_GAS_BUDGET: parseInt(process.env.NEXT_PUBLIC_DEFAULT_GAS_BUDGET || '100000000', 10),
+  // Gas Configuration - Increased for robust transaction execution
+  DEFAULT_GAS_BUDGET: parseInt(process.env.NEXT_PUBLIC_DEFAULT_GAS_BUDGET || '200000000', 10),
   MAX_GAS_BUDGET: parseInt(process.env.NEXT_PUBLIC_MAX_GAS_BUDGET || '1000000000', 10),
 } as const
 
