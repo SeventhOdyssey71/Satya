@@ -86,7 +86,6 @@ export default function Header({ isHomepage = false }: HeaderProps) {
                     className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 transition-colors rounded-md"
                   >
                     <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span className="text-sm text-gray-600">Connected</span>
                     <span className="text-sm text-black font-mono">
                       {account.address.slice(0, 6)}...{account.address.slice(-4)}
                     </span>
