@@ -11,17 +11,129 @@ export class SealClientWrapper {
   private client: SealClient;
   private suiClient: SuiClient;
   private sessionCache: Map<string, SessionKey> = new Map();
+  private static instance: SealClientWrapper | null = null;
   
   constructor(suiClient: SuiClient) {
+    // Prevent multiple instances
+    if (SealClientWrapper.instance) {
+      return SealClientWrapper.instance;
+    }
+    
     this.suiClient = suiClient;
     
-    // Create SEAL client directly
-    this.client = new SealClient({
-      suiClient: suiClient as any, // Cast to compatible client type
-      serverConfigs: SEAL_CONFIG.testnet.keyServers,
-      verifyKeyServers: SEAL_CONFIG.testnet.verifyKeyServers,
-      timeout: 30000 // 30 seconds
-    });
+    try {
+      // Create SEAL client with proper configuration
+      console.log('Initializing SEAL client with:', {
+        packageId: SEAL_CONFIG.testnet.packageId,
+        keyServers: SEAL_CONFIG.testnet.keyServers,
+        verifyKeyServers: SEAL_CONFIG.testnet.verifyKeyServers
+      });
+      
+      this.client = new SealClient({
+        suiClient: suiClient as any,
+        serverConfigs: SEAL_CONFIG.testnet.keyServers,
+        verifyKeyServers: SEAL_CONFIG.testnet.verifyKeyServers,
+        timeout: 30000
+      });
+      
+      // Verify package exists on network (async, non-blocking)
+      this.verifyPackage().catch(error => {
+        console.warn('Could not verify SEAL package:', error);
+      });
+      
+      // Run quick validation test in development
+      if (process.env.NODE_ENV === 'development') {
+        import('../utils/seal-test').then(({ validateSealClient }) => {
+          validateSealClient().catch(console.warn);
+        }).catch(() => {}); // Ignore import errors
+      }
+    } catch (error) {
+      console.error('Failed to initialize SEAL client:', error);
+      throw new SealError(`SEAL client initialization failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    
+    SealClientWrapper.instance = this;
+  }
+  
+  /**
+   * Get singleton instance
+   */
+  static getInstance(suiClient: SuiClient): SealClientWrapper {
+    if (!SealClientWrapper.instance) {
+      try {
+        SealClientWrapper.instance = new SealClientWrapper(suiClient);
+      } catch (error) {
+        // If creation fails, reset instance and rethrow
+        SealClientWrapper.instance = null;
+        throw error;
+      }
+    }
+    return SealClientWrapper.instance;
+  }
+  
+  /**
+   * Reset singleton instance (for development/testing)
+   */
+  static resetInstance(): void {
+    SealClientWrapper.instance = null;
+  }
+  
+  /**
+   * Check if instance exists
+   */
+  static hasInstance(): boolean {
+    return SealClientWrapper.instance !== null;
+  }
+  
+  /**
+   * Verify SEAL package exists on network
+   */
+  private async verifyPackage(): Promise<void> {
+    try {
+      console.log('🔍 Verifying SEAL package:', SEAL_CONFIG.testnet.packageId);
+      
+      // Try to get the package object
+      const packageInfo = await this.suiClient.getObject({
+        id: SEAL_CONFIG.testnet.packageId,
+        options: { 
+          showType: true, 
+          showContent: true, 
+          showPreviousTransaction: true,
+          showOwner: true,
+          showStorageRebate: true
+        }
+      });
+      
+      console.log('📦 SEAL package details:', packageInfo);
+      
+      if (packageInfo.error) {
+        console.error('❌ Package error:', packageInfo.error);
+        
+        // Try to find the correct SEAL package by searching for packages
+        try {
+          console.log('🔎 Searching for SEAL packages on testnet...');
+          const events = await this.suiClient.queryEvents({
+            query: { Package: SEAL_CONFIG.testnet.packageId },
+            limit: 10
+          });
+          console.log('📊 SEAL package events:', events);
+        } catch (eventError) {
+          console.warn('Could not query package events:', eventError);
+        }
+      } else if (packageInfo.data) {
+        console.log('✅ SEAL package found successfully');
+        console.log('📄 Package type:', packageInfo.data.type);
+        console.log('🔢 Package version:', packageInfo.data.version);
+        console.log('👤 Package owner:', packageInfo.data.owner);
+        
+        // Verify this is actually a package object
+        if (packageInfo.data.type !== 'package') {
+          console.warn('⚠️  Object is not a package type:', packageInfo.data.type);
+        }
+      }
+    } catch (error) {
+      console.warn('❌ SEAL package verification failed:', error);
+    }
   }
   
   /**
@@ -41,12 +153,18 @@ export class SealClientWrapper {
     }
     
     try {
+      console.log('Creating SEAL session with:', {
+        address,
+        packageId: SEAL_CONFIG.testnet.packageId,
+        ttlMin: ttlMinutes || SEAL_CONFIG.agent.sessionTTLMinutes
+      });
+      
       // Create new session
       const session = await SessionKey.create({
         address,
         packageId: SEAL_CONFIG.testnet.packageId,
         ttlMin: ttlMinutes || SEAL_CONFIG.agent.sessionTTLMinutes,
-        signer,
+        signer: signer as any,
         suiClient: this.suiClient as any
       });
       
@@ -69,13 +187,25 @@ export class SealClientWrapper {
     threshold?: number
   ): Promise<{ encryptedObject: Uint8Array; symmetricKey: Uint8Array }> {
     try {
+      // Normalize package ID format
+      const packageId = SEAL_CONFIG.testnet.packageId.startsWith('0x') 
+        ? SEAL_CONFIG.testnet.packageId 
+        : `0x${SEAL_CONFIG.testnet.packageId}`;
+
       const encryptOptions: EncryptOptions = {
         threshold: threshold || SEAL_CONFIG.testnet.threshold,
-        packageId: SEAL_CONFIG.testnet.packageId,
+        packageId: packageId,
         id: identity, // Use the identity for encryption
         data,
         aad: new TextEncoder().encode(policyId) // Use policyId as additional authenticated data
       };
+      
+      console.log('SEAL encrypt options:', {
+        threshold: encryptOptions.threshold,
+        packageId: encryptOptions.packageId,
+        id: encryptOptions.id,
+        dataLength: data.length
+      });
       
       const result = await this.client.encrypt(encryptOptions);
       
@@ -188,7 +318,7 @@ export class SealClientWrapper {
     const session = SessionKey.import(
       exportedSession, 
       this.suiClient as any, 
-      signer
+      signer as any
     );
     
     const sessionKey = `${exportedSession.address}:${exportedSession.packageId}`;
@@ -232,5 +362,20 @@ export class SealClientWrapper {
       activeSessions,
       expiredSessions
     };
+  }
+}
+
+// Reset instance in development mode during hot module replacement
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  // Clear instance on page reload/refresh in development
+  window.addEventListener('beforeunload', () => {
+    SealClientWrapper.resetInstance();
+  });
+  
+  // Also clear on hot reload if available
+  if ((module as any).hot) {
+    (module as any).hot.dispose(() => {
+      SealClientWrapper.resetInstance();
+    });
   }
 }

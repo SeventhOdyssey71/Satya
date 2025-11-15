@@ -47,13 +47,18 @@ export class UploadService {
   private activeUploads = new Map<string, AbortController>();
 
   constructor() {
-    // Initialize SUI client first 
-    const suiClient = new SuiClient({
-      url: SUI_CONFIG.RPC_URL
-    });
-    
-    this.sealService = new SealEncryptionService(suiClient);
-    this.walrusService = new WalrusStorageService();
+    try {
+      // Initialize SUI client first 
+      const suiClient = new SuiClient({
+        url: SUI_CONFIG.RPC_URL
+      });
+      
+      this.sealService = new SealEncryptionService(suiClient);
+      this.walrusService = new WalrusStorageService();
+    } catch (error) {
+      console.error('Failed to initialize UploadService:', error);
+      throw error;
+    }
   }
 
   // Upload file with optional encryption
@@ -103,23 +108,45 @@ export class UploadService {
           details: { algorithm: 'AES-256-GCM' }
         });
 
-        encryptionResult = await this.sealService.encryptData(
-          fileData,
-          request.policyType || PolicyType.PAYMENT_GATED,
-          request.policyParams || {}
-        );
+        try {
+          encryptionResult = await this.sealService.encryptData(
+            fileData,
+            request.policyType || PolicyType.PAYMENT_GATED,
+            request.policyParams || {}
+          );
 
-        if (!encryptionResult.success) {
-          throw new Error(`Encryption failed: ${encryptionResult.error}`);
+          if (!encryptionResult.success) {
+            throw new Error(`Encryption failed: ${encryptionResult.error}`);
+          }
+
+          processedData = new Uint8Array(encryptionResult.encryptedData);
+        } catch (error) {
+          logger.warn('SEAL encryption failed, proceeding with unencrypted upload', {
+            fileId,
+            error: error instanceof Error ? error.message : String(error)
+          });
+          
+          // Continue with unencrypted upload as fallback
+          onProgress?.({
+            phase: 'encryption',
+            progress: 30,
+            message: 'Encryption unavailable, uploading without encryption...',
+            details: { fallback: true, reason: 'SEAL encryption failed' }
+          });
+          
+          // Keep original data for unencrypted upload
+          processedData = fileData;
+          encryptionResult = undefined;
         }
-
-        processedData = new Uint8Array(encryptionResult.encryptedData);
-        logger.debug('File encrypted successfully', {
-          fileId,
-          policyId: encryptionResult.policyId,
-          originalSize: fileData.length,
-          encryptedSize: processedData.length
-        });
+        
+        if (encryptionResult) {
+          logger.debug('File encrypted successfully', {
+            fileId,
+            policyId: encryptionResult.policyId,
+            originalSize: fileData.length,
+            encryptedSize: processedData.length
+          });
+        }
       }
 
       if (controller.signal.aborted) {
@@ -137,10 +164,11 @@ export class UploadService {
         }
       });
 
+      const isActuallyEncrypted = request.encrypt && encryptionResult !== undefined;
       const uploadFile = new File(
         [processedData],
-        request.encrypt ? `${request.file.name}.encrypted` : request.file.name,
-        { type: request.encrypt ? 'application/octet-stream' : request.file.type }
+        isActuallyEncrypted ? `${request.file.name}.encrypted` : request.file.name,
+        { type: isActuallyEncrypted ? 'application/octet-stream' : request.file.type }
       );
 
       // Use HTTP API for upload instead of SDK to avoid private key requirement
@@ -190,7 +218,8 @@ export class UploadService {
       logger.info('File upload completed successfully', {
         fileId,
         blobId: uploadResult.blobId,
-        encrypted: !!request.encrypt,
+        encrypted: isActuallyEncrypted,
+        encryptionRequested: request.encrypt,
         size: request.file.size
       });
 
