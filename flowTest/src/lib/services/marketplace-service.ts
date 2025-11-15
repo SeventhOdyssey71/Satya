@@ -71,7 +71,7 @@ export class MarketplaceService {
       marketplaceObjectId: MARKETPLACE_CONFIG.OBJECT_ID
     });
     
-    this.sealService = new SealEncryptionService(this.suiClient);
+    this.sealService = new SealEncryptionService(this.suiClient.suiClient);
     this.walrusService = new WalrusStorageService();
   }
 

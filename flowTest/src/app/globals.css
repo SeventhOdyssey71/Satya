@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
+  --background: #f5f9ef;
   --foreground: #1d1d1f;
 }
 
@@ -20,7 +20,8 @@
   }
   
   body {
-    @apply bg-white text-gray-900 antialiased;
+    background-color: #f5f9ef;
+    @apply text-gray-900 antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
     line-height: 1.5;
     font-weight: 300;
@@ -57,7 +58,8 @@
   
   /* Subtle focus styles */
   *:focus {
-    @apply outline-none ring-1 ring-gray-400/30 ring-offset-1 ring-offset-white;
+    @apply outline-none ring-1 ring-gray-400/30 ring-offset-1;
+    ring-offset-color: #f5f9ef;
   }
 
   /* Clean selection styles */

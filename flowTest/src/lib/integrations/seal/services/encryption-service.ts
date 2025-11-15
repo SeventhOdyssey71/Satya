@@ -260,6 +260,12 @@ export class SealEncryptionService {
       return result.encryptedObject;
     } catch (error) {
       console.error(`SEAL DEK encryption failed for policy ${policyId}:`, error);
+      
+      // Check if this is a PTB/package ID error - these are usually unrecoverable
+      if (error instanceof Error && error.message.includes('Package ID used in PTB is invalid')) {
+        throw new SealError(`SEAL configuration error - invalid package ID: ${SEAL_CONFIG.testnet.packageId}. This may indicate the package is not deployed or has moved.`);
+      }
+      
       throw new SealError(`Failed to encrypt DEK with SEAL: ${error instanceof Error ? error.message : String(error)}`);
     }
   }

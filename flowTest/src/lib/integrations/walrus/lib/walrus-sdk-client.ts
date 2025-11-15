@@ -1,9 +1,5 @@
 // Walrus SDK Client - SUI wallet integrated storage client
 
-import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
-import { walrus, WalrusFile } from '@mysten/walrus';
-// Ed25519Keypair removed - using wallet-based signing only
-import { Transaction } from '@mysten/sui/transactions';
 import { WALRUS_CONFIG } from '../../../constants';
 import { logger } from '../../core/logger';
 import { UploadResult, WalrusError, DownloadError, BlobNotFoundError } from '../types';
@@ -20,31 +16,26 @@ export interface DappKitSigner {
 }
 
 export class WalrusSDKClient {
-  private client: any; // SuiClient extended with walrus
+  private browserClient: any = null;
   private network: 'testnet' | 'mainnet' | 'devnet';
+  private initialized = false;
+  private isServerSide = typeof window === 'undefined';
 
   constructor(network: 'testnet' | 'mainnet' | 'devnet' = 'testnet') {
     this.network = network;
+  }
+
+  // Initialize Walrus client (HTTP-only for now)
+  private async ensureInitialized(): Promise<void> {
+    if (this.initialized) {
+      return;
+    }
+
+    // For now, skip SDK initialization and use HTTP-only
+    this.initialized = false;
     
-    // Create SUI client with Walrus extension
-    const suiClient = new SuiClient({
-      url: getFullnodeUrl(network)
-    });
-    
-    // Configure Walrus with network and upload relay to avoid direct storage node connections
-    this.client = suiClient.$extend(walrus({
-      network: network as 'testnet' | 'mainnet',
-      uploadRelay: {
-        host: 'https://upload-relay.testnet.walrus.space',
-        sendTip: {
-          max: 1000 // Maximum tip in MIST
-        }
-      }
-    }));
-    
-    logger.info('Walrus SDK client initialized', {
-      network,
-      rpcUrl: getFullnodeUrl(network)
+    logger.info('Using HTTP-only Walrus client (SDK disabled)', {
+      network: this.network
     });
   }
 
@@ -56,15 +47,7 @@ export class WalrusSDKClient {
     options: WalrusUploadOptions = {}
   ): Promise<UploadResult> {
     try {
-      const epochs = options.epochs || WALRUS_CONFIG.agent.defaultEpochs;
-      
-      logger.info('Starting Walrus HTTP API upload', {
-        fileName: file.name,
-        fileSize: file.size,
-        epochs
-      });
-
-      // Use HTTP API for upload to avoid private key requirement
+      // Always use HTTP API for now (SDK disabled)
       return await this.storeViaHttpAPI(file, options);
 
     } catch (error) {
@@ -175,27 +158,12 @@ export class WalrusSDKClient {
    */
   async downloadBlob(blobId: string): Promise<Uint8Array> {
     try {
-      logger.debug('Starting Walrus SDK download', { blobId });
-
-      // Use Walrus SDK for download
-      const data = await this.client.walrus.readBlob({
-        blobId: blobId
-      });
-
-      if (!data) {
-        throw new BlobNotFoundError(blobId);
-      }
-
-      logger.info('Walrus SDK download successful', {
-        blobId,
-        dataSize: data.length
-      });
-
-      return new Uint8Array(data);
+      // Always use HTTP API for now (SDK disabled)
+      return await this.downloadViaHttpAPI(blobId);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Walrus SDK download failed', {
+      logger.error('Walrus download failed', {
         blobId,
         error: errorMessage
       });
@@ -205,6 +173,46 @@ export class WalrusSDKClient {
       }
 
       throw new DownloadError(`Download failed: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * HTTP API fallback for blob downloads
+   */
+  private async downloadViaHttpAPI(blobId: string): Promise<Uint8Array> {
+    try {
+      logger.info('Using Walrus HTTP API for download', { blobId });
+
+      const aggregatorUrl = WALRUS_CONFIG.AGGREGATOR_URL;
+      const response = await fetch(`${aggregatorUrl}/v1/retrieve/${blobId}`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new BlobNotFoundError(blobId);
+        }
+        throw new DownloadError(`HTTP download failed: ${response.status} - ${response.statusText}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      
+      logger.info('Walrus HTTP API download successful', {
+        blobId,
+        dataSize: arrayBuffer.byteLength
+      });
+
+      return new Uint8Array(arrayBuffer);
+
+    } catch (error) {
+      logger.error('HTTP API download failed', {
+        blobId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      
+      if (error instanceof BlobNotFoundError) {
+        throw error;
+      }
+      
+      throw new DownloadError(`HTTP download failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -222,9 +230,8 @@ export class WalrusSDKClient {
 
       // Query Sui for blob object information
       // This would use the Walrus system object to get blob metadata
-      const blobInfo = await this.client.walrus.getBlobInfo({
-        blobId: blobId
-      });
+      // For HTTP-only mode, this is not available
+      const blobInfo = null;
 
       if (!blobInfo) {
         return null;
@@ -236,10 +243,10 @@ export class WalrusSDKClient {
       });
 
       return {
-        size: blobInfo.size || 0,
-        encoding: blobInfo.encoding || 'unknown',
-        certified: blobInfo.certified || false,
-        storageEndEpoch: blobInfo.storageEndEpoch
+        size: 0,
+        encoding: 'unknown',
+        certified: false,
+        storageEndEpoch: undefined
       };
 
     } catch (error) {
@@ -266,16 +273,12 @@ export class WalrusSDKClient {
       logger.debug('Checking upload capability', { address });
 
       // Get WAL token balance
-      const walCoins = await this.client.getCoins({
-        owner: address,
-        coinType: '0x2::sui::SUI' // This would need to be updated to actual WAL coin type
-      });
+      // For HTTP-only mode, coin balance checking is not available
+      const walCoins = { data: [] };
 
-      // Get SUI token balance
-      const suiCoins = await this.client.getCoins({
-        owner: address,
-        coinType: '0x2::sui::SUI'
-      });
+      // Get SUI token balance  
+      // For HTTP-only mode, coin balance checking is not available
+      const suiCoins = { data: [] };
 
       const hasWAL = walCoins.data && walCoins.data.length > 0;
       const hasSUI = suiCoins.data && suiCoins.data.length > 0;

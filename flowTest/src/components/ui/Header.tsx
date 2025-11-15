@@ -30,7 +30,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
   }, [])
 
   return (
-    <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50">
+    <header className="backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50" style={{ backgroundColor: 'rgba(245, 249, 239, 0.8)' }}>
       <div className="container-custom">
         <div className="flex items-center justify-between py-3">
           {/* Logo */}

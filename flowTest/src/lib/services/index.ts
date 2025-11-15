@@ -76,7 +76,16 @@ export function getUploadService(): UploadService {
   }
   
   if (!uploadService) {
-    uploadService = new UploadService();
+    try {
+      uploadService = new UploadService();
+    } catch (error) {
+      console.error('Failed to create UploadService:', error);
+      // Return a mock service in case of initialization failure
+      return {
+        uploadFile: async () => { throw new Error('Upload service not available'); },
+        getHealthStatus: async () => ({ overall: 'failed' as const })
+      } as UploadService;
+    }
   }
   return uploadService;
 }

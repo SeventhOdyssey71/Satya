@@ -20,6 +20,11 @@ export class SuiMarketplaceClient {
     });
   }
 
+  // Getter for accessing the SuiClient instance
+  get suiClient(): SuiClient {
+    return this.client;
+  }
+
   // Create a transaction for wallet signing (dapp-kit compatible)
   createListingTransaction(
     listing: Omit<DataListing, 'id' | 'createdAt' | 'isActive'>,

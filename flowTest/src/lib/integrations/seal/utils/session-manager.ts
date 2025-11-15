@@ -14,7 +14,7 @@ export class SessionManager {
   private sessionTTL: number;
   
   constructor(suiClient: SuiClient) {
-    this.sealClient = new SealClientWrapper(suiClient);
+    this.sealClient = SealClientWrapper.getInstance(suiClient);
     this.refreshThreshold = SEAL_CONFIG.agent.sessionRefreshThresholdMinutes * 60 * 1000;
     this.sessionTTL = SEAL_CONFIG.agent.sessionTTLMinutes * 60 * 1000;
     
