@@ -1,9 +1,9 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useCurrentAccount, ConnectButton } from '@mysten/dapp-kit'
+import { useCurrentAccount, ConnectButton, useDisconnectWallet } from '@mysten/dapp-kit'
 
 interface HeaderProps {
   isHomepage?: boolean
@@ -13,6 +13,21 @@ export default function Header({ isHomepage = false }: HeaderProps) {
   const pathname = usePathname()
   const isHomepageRoute = isHomepage || pathname === '/'
   const account = useCurrentAccount()
+  const { mutate: disconnect } = useDisconnectWallet()
+  const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <header className="bg-white border-b border-gray-200">
@@ -65,12 +80,31 @@ export default function Header({ isHomepage = false }: HeaderProps) {
               
               {/* Wallet Connection */}
               {account ? (
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-gray-500 rounded-full"></span>
-                  <span className="text-sm text-gray-600">Connected</span>
-                  <span className="text-sm text-black font-mono">
-                    {account.address.slice(0, 6)}...{account.address.slice(-4)}
-                  </span>
+                <div className="relative" ref={dropdownRef}>
+                  <button 
+                    onClick={() => setShowDropdown(!showDropdown)}
+                    className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 transition-colors rounded-md"
+                  >
+                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    <span className="text-sm text-gray-600">Connected</span>
+                    <span className="text-sm text-black font-mono">
+                      {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                    </span>
+                  </button>
+                  
+                  {showDropdown && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                      <button
+                        onClick={() => {
+                          disconnect()
+                          setShowDropdown(false)
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Disconnect Wallet
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <ConnectButton 
