@@ -35,28 +35,28 @@ export const MARKETPLACE_CONFIG = {
 // ============================================
 
 export const SEAL_CONFIG = {
-  PACKAGE_ID: process.env.NEXT_PUBLIC_SEAL_PACKAGE_ID || '',
+  PACKAGE_ID: '0x8afa5d31dbaa0a8fb07082692940ca3d56b5e856c5126cb5a3693f0a4de63b82',
   UPGRADE_CAP_ID: process.env.NEXT_PUBLIC_SEAL_UPGRADE_CAP_ID || '',
   
-  // Key Servers
+  // Key Servers - Updated with correct testnet server object IDs
   KEY_SERVERS: [
     {
-      OBJECT_ID: process.env.NEXT_PUBLIC_SEAL_KEY_SERVER_1_OBJECT_ID || '',
-      URL: process.env.NEXT_PUBLIC_SEAL_KEY_SERVER_1_URL || '',
+      OBJECT_ID: '0x2304dd255b13eaf5cb471bd5188df946a64f1715ee2b7b02fecf306bd12ceebc',
+      URL: 'https://seal-key-server-testnet-1.mystenlabs.com',
     },
     {
-      OBJECT_ID: process.env.NEXT_PUBLIC_SEAL_KEY_SERVER_2_OBJECT_ID || '',
-      URL: process.env.NEXT_PUBLIC_SEAL_KEY_SERVER_2_URL || '',
+      OBJECT_ID: '0x81aeaa8c25d2c912e1dc23b4372305b7a602c4ec4cc3e510963bc635e500aa37',
+      URL: 'https://seal-key-server-testnet-2.mystenlabs.com',
     },
   ],
   
   // Agent Configuration
   agent: {
-    threshold: parseInt(process.env.NEXT_PUBLIC_SEAL_THRESHOLD || '2', 10),
-    defaultEpochs: parseInt(process.env.NEXT_PUBLIC_SEAL_DEFAULT_EPOCHS || '200', 10),
-    sessionTtlMinutes: parseInt(process.env.NEXT_PUBLIC_SEAL_SESSION_TTL_MINUTES || '30', 10),
-    cacheSize: parseInt(process.env.NEXT_PUBLIC_SEAL_CACHE_SIZE || '100', 10),
-    maxRetries: parseInt(process.env.NEXT_PUBLIC_SEAL_MAX_RETRIES || '3', 10),
+    threshold: 2,
+    defaultEpochs: 200,
+    sessionTtlMinutes: 30,
+    cacheSize: 100,
+    maxRetries: 3,
   },
 } as const
 

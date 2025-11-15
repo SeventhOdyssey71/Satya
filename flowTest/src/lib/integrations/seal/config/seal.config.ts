@@ -6,13 +6,14 @@ export const SEAL_CONFIG = {
   testnet: {
     keyServers: MAIN_SEAL_CONFIG.KEY_SERVERS.map(server => ({
       objectId: server.OBJECT_ID,
+      url: server.URL,
       weight: (server as any).WEIGHT || 1,
       apiKeyName: (server as any).API_KEY_NAME,
       apiKey: (server as any).API_KEY
     } as KeyServerConfig)),
     packageId: MAIN_SEAL_CONFIG.PACKAGE_ID,
     threshold: MAIN_SEAL_CONFIG.agent.threshold,
-    verifyKeyServers: false // For testnet, set to true in production
+    verifyKeyServers: false // Disable for testnet as recommended by SEAL SDK docs
   },
   
   agent: {
