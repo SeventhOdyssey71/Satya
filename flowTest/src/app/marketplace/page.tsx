@@ -40,7 +40,7 @@ export default function MarketplacePage() {
               Discover <span className="text-gradient">Trusted</span> AI Models
             </h1>
             
-            <p className="text-xl text-secondary-600 mb-8 leading-relaxed animate-slide-up">
+            <p className="text-xl text-secondary-800 mb-8 leading-relaxed animate-slide-up">
               Browse verified AI models with TEE attestation, cryptographic proofs, and transparent pricing. 
               Every model is secured by hardware-level guarantees.
             </p>
@@ -133,8 +133,8 @@ function CombinedNavigation({
             key={category.value}
             className={`inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-albert font-medium transition-all duration-200 ${
               activeCategory === category.value 
-                ? 'bg-secondary-800 text-white shadow-soft' 
-                : 'bg-surface-50 text-secondary-700 border border-border hover:bg-surface-100 hover:border-secondary-400 hover:text-secondary-800'
+                ? 'bg-black text-white shadow-soft' 
+                : 'bg-white text-secondary-900 border border-secondary-300 hover:bg-surface-50 hover:border-secondary-500 hover:text-secondary-900'
             }`}
             onClick={() => onCategoryChange(category.value)}
           >
@@ -157,7 +157,7 @@ function MarketplaceGuide() {
           </svg>
         </div>
         <h3 className="text-xl font-russo mb-4 text-secondary-800">Need Help Getting Started?</h3>
-        <p className="text-secondary-600 mb-6 leading-relaxed max-w-2xl mx-auto">
+        <p className="text-secondary-800 mb-6 leading-relaxed max-w-2xl mx-auto">
           Learn how to verify AI models, understand TEE attestations, and make secure purchases in our comprehensive marketplace guide.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

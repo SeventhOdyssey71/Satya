@@ -57,7 +57,7 @@ function HeroSection() {
           </h1>
           
           {/* Subtitle */}
-          <p className="text-xl md:text-2xl font-albert text-secondary-600 max-w-3xl mx-auto mb-12 leading-relaxed animate-slide-up">
+          <p className="text-xl md:text-2xl font-albert text-secondary-800 max-w-3xl mx-auto mb-12 leading-relaxed animate-slide-up">
             Secure AI models and datasets with TEE verification, encrypted storage, and blockchain transparency. 
             Building the future of trusted machine learning.
           </p>
@@ -80,10 +80,10 @@ function HeroSection() {
 
           {/* Tech Stack */}
           <div className="text-center animate-fade-in">
-            <p className="text-lg font-albert text-secondary-500 mb-8">Built on the Sui Stack</p>
+            <p className="text-lg font-albert text-secondary-700 mb-8">Built on the Sui Stack</p>
             <div className="flex items-center justify-center gap-8 md:gap-16">
               <div className="group transition-transform hover:scale-110">
-                <div className="p-4 bg-surface-50 border border-border rounded-2xl shadow-card hover:shadow-soft transition-all">
+                <div className="p-4 bg-white border border-secondary-300 rounded-2xl shadow-card hover:shadow-soft transition-all">
                   <Image 
                     src="/images/Seal.svg" 
                     alt="SEAL"
@@ -94,7 +94,7 @@ function HeroSection() {
                 </div>
               </div>
               <div className="group transition-transform hover:scale-110">
-                <div className="p-4 bg-surface-50 border border-border rounded-2xl shadow-card hover:shadow-soft transition-all">
+                <div className="p-4 bg-white border border-secondary-300 rounded-2xl shadow-card hover:shadow-soft transition-all">
                   <img 
                     src="/images/Walrus.png" 
                     alt="WALRUS"
@@ -143,7 +143,7 @@ function FeaturesSection() {
       <div className="container-custom">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-russo mb-6">Why Choose Satya?</h2>
-          <p className="text-lg text-secondary-600 max-w-2xl mx-auto">
+          <p className="text-lg text-secondary-800 max-w-2xl mx-auto">
             Built with cutting-edge security and transparency features to ensure trust in AI model trading.
           </p>
         </div>
@@ -163,8 +163,8 @@ function FeaturesSection() {
                 <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl border ${colorClasses[feature.color as keyof typeof colorClasses]} mb-4 group-hover:scale-110 transition-transform`}>
                   <IconComponent className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-russo mb-3 text-secondary-800">{feature.title}</h3>
-                <p className="text-secondary-600 leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-russo mb-3 text-secondary-900">{feature.title}</h3>
+                <p className="text-secondary-800 leading-relaxed">{feature.description}</p>
               </div>
             );
           })}
@@ -182,7 +182,7 @@ function TrustedMarketplacesSection() {
           <h2 className="text-3xl md:text-4xl font-russo mb-6">
             Trusted AI Model Marketplace
           </h2>
-          <p className="text-lg text-secondary-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg text-secondary-800 max-w-3xl mx-auto leading-relaxed">
             Eliminating the "trust me bro" barrier with verifiable, secure, and transparent AI model trading. 
             Each model comes with cryptographic proofs and hardware-verified attestations.
           </p>
@@ -201,17 +201,17 @@ function TrustedMarketplacesSection() {
                     TEE Verified
                   </div>
                   <h3 className="text-3xl font-russo mb-4">Medical AI x129</h3>
-                  <p className="text-surface-200 mb-6 leading-relaxed">
+                  <p className="text-white mb-6 leading-relaxed">
                     Advanced diagnostic model trained on verified hospital data with full privacy compliance and hardware security attestation.
                   </p>
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-surface-300">Downloads</span>
+                    <span className="text-gray-300">Downloads</span>
                     <span className="text-white font-medium">2,439</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-surface-300">Price</span>
+                    <span className="text-gray-300">Price</span>
                     <span className="text-white font-medium">25.5 SUI</span>
                   </div>
                   <Link href="/model/medical-ai-x129">
@@ -240,7 +240,7 @@ function TrustedMarketplacesSection() {
                     </div>
                   </div>
                   <h3 className="text-3xl font-russo mb-4">Vision Opus x229</h3>
-                  <p className="text-surface-200 mb-6 leading-relaxed max-w-lg">
+                  <p className="text-white mb-6 leading-relaxed max-w-lg">
                     State-of-the-art computer vision model with real-time processing capabilities and enterprise-grade security.
                   </p>
                 </div>
@@ -269,7 +269,7 @@ function TrustedMarketplacesSection() {
                     </div>
                   </div>
                   <h3 className="text-3xl font-russo mb-4">AutoDrive Neural Net</h3>
-                  <p className="text-surface-200 mb-6 leading-relaxed max-w-lg">
+                  <p className="text-white mb-6 leading-relaxed max-w-lg">
                     Advanced autonomous driving model with multi-sensor fusion and real-time decision making capabilities.
                   </p>
                 </div>
@@ -338,7 +338,7 @@ function SuiStackSection() {
           <h2 className="text-3xl md:text-4xl font-russo mb-6">
             Built on the Sui Stack
           </h2>
-          <p className="text-xl text-secondary-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Leveraging cutting-edge blockchain infrastructure and privacy technology to create the most secure and efficient AI marketplace.
           </p>
         </div>
@@ -350,10 +350,10 @@ function SuiStackSection() {
                 <div className="text-4xl">{tech.icon}</div>
                 <div className="flex-1">
                   <h3 className="text-xl font-russo mb-2">{tech.name}</h3>
-                  <p className="text-secondary-300 mb-4 leading-relaxed">{tech.description}</p>
+                  <p className="text-gray-300 mb-4 leading-relaxed">{tech.description}</p>
                   <div className="flex flex-wrap gap-2">
                     {tech.features.map((feature, featureIndex) => (
-                      <span key={featureIndex} className="badge bg-secondary-500/20 text-secondary-200 border-secondary-500/30">
+                      <span key={featureIndex} className="badge bg-gray-700/50 text-gray-200 border-gray-600">
                         {feature}
                       </span>
                     ))}
@@ -377,7 +377,7 @@ function TrustEnforcedSection() {
             <h2 className="text-3xl md:text-4xl font-russo mb-6">
               Trust Enforced by Design
             </h2>
-            <p className="text-xl text-secondary-600 mb-8 leading-relaxed">
+            <p className="text-xl text-secondary-800 mb-8 leading-relaxed">
               Every transaction is protected by cryptographic proofs, hardware attestations, and blockchain immutability. 
               No more hoping for the best - trust is mathematically guaranteed.
             </p>
@@ -385,19 +385,19 @@ function TrustEnforcedSection() {
             <div className="space-y-4 mb-8">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
-                <span className="text-secondary-700">Cryptographic verification of model integrity</span>
+                <span className="text-secondary-900">Cryptographic verification of model integrity</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
-                <span className="text-secondary-700">Hardware-based attestation through TEE</span>
+                <span className="text-secondary-900">Hardware-based attestation through TEE</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
-                <span className="text-secondary-700">Immutable transaction records on blockchain</span>
+                <span className="text-secondary-900">Immutable transaction records on blockchain</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
-                <span className="text-secondary-700">Privacy-preserving encrypted storage</span>
+                <span className="text-secondary-900">Privacy-preserving encrypted storage</span>
               </div>
             </div>
             
@@ -489,7 +489,7 @@ function FAQSection() {
       <div className="container-custom">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-russo mb-6">Frequently Asked Questions</h2>
-          <p className="text-lg text-secondary-600">Everything you need to know about Satya</p>
+          <p className="text-lg text-secondary-800">Everything you need to know about Satya</p>
         </div>
 
         <div className="space-y-4 max-w-4xl mx-auto">
@@ -511,12 +511,12 @@ function FAQItem({ question, answer, expanded }: { question: string, answer: str
             {question}
           </h3>
           {expanded && (
-            <p className="text-secondary-600 leading-relaxed pr-8">
+            <p className="text-secondary-800 leading-relaxed pr-8">
               {answer}
             </p>
           )}
         </div>
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${expanded ? 'bg-secondary-800 text-white' : 'bg-surface-200 text-secondary-600'}`}>
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${expanded ? 'bg-black text-white' : 'bg-secondary-200 text-secondary-700'}`}>
           {expanded ? (
             <div className="w-4 h-0.5 bg-white" />
           ) : (
@@ -541,7 +541,7 @@ function Footer() {
                 </div>
                 <h3 className="text-2xl font-russo text-gradient">Satya</h3>
               </div>
-              <p className="text-secondary-300 leading-relaxed mb-8 max-w-lg">
+              <p className="text-gray-300 leading-relaxed mb-8 max-w-lg">
                 Building the future of trusted AI with verifiable security, transparent transactions, and privacy-preserving technology.
               </p>
               <div className="flex gap-4">
@@ -561,25 +561,25 @@ function Footer() {
             <div>
               <h4 className="font-russo mb-6">Platform</h4>
               <div className="space-y-4">
-                <Link href="/marketplace" className="block text-secondary-300 hover:text-white transition-colors">Marketplace</Link>
-                <Link href="/upload" className="block text-secondary-300 hover:text-white transition-colors">Upload Model</Link>
-                <Link href="/dashboard" className="block text-secondary-300 hover:text-white transition-colors">Dashboard</Link>
+                <Link href="/marketplace" className="block text-gray-300 hover:text-white transition-colors">Marketplace</Link>
+                <Link href="/upload" className="block text-gray-300 hover:text-white transition-colors">Upload Model</Link>
+                <Link href="/dashboard" className="block text-gray-300 hover:text-white transition-colors">Dashboard</Link>
               </div>
             </div>
             
             <div>
               <h4 className="font-russo mb-6">Resources</h4>
               <div className="space-y-4">
-                <a href="#" className="block text-secondary-300 hover:text-white transition-colors">Documentation</a>
-                <a href="#" className="block text-secondary-300 hover:text-white transition-colors">API Reference</a>
-                <a href="#" className="block text-secondary-300 hover:text-white transition-colors">Security</a>
-                <a href="#" className="block text-secondary-300 hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" className="block text-gray-300 hover:text-white transition-colors">Documentation</a>
+                <a href="#" className="block text-gray-300 hover:text-white transition-colors">API Reference</a>
+                <a href="#" className="block text-gray-300 hover:text-white transition-colors">Security</a>
+                <a href="#" className="block text-gray-300 hover:text-white transition-colors">Privacy Policy</a>
               </div>
             </div>
           </div>
           
           <div className="border-t border-secondary-700 mt-12 pt-8 text-center">
-            <p className="text-secondary-400">© 2024 Satya. Built with ❤️ on the Sui blockchain.</p>
+            <p className="text-gray-400">© 2024 Satya. Built with ❤️ on the Sui blockchain.</p>
           </div>
         </div>
       </div>

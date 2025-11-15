@@ -33,7 +33,7 @@
   h5 { @apply text-lg md:text-xl font-albert font-semibold leading-snug text-secondary-700; }
   h6 { @apply text-base md:text-lg font-albert font-medium leading-normal text-secondary-700; }
 
-  p { @apply font-albert leading-relaxed text-secondary-600; }
+  p { @apply font-albert leading-relaxed text-secondary-800; }
   
   /* Focus styles */
   *:focus {
@@ -57,11 +57,11 @@
   }
 
   .btn-secondary {
-    @apply btn bg-surface-50 text-secondary-700 border border-border hover:bg-surface-100 focus:ring-secondary-400/40 shadow-card hover:shadow-soft;
+    @apply btn bg-white text-secondary-900 border border-secondary-300 hover:bg-surface-50 focus:ring-secondary-400/40 shadow-card hover:shadow-soft;
   }
 
   .btn-ghost {
-    @apply btn text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900 focus:ring-secondary-400/40;
+    @apply btn text-secondary-800 hover:bg-secondary-100 hover:text-secondary-900 focus:ring-secondary-400/40;
   }
 
   .btn-accent {
@@ -78,7 +78,7 @@
 
   /* Card variants */
   .card {
-    @apply bg-surface-50 border border-border rounded-2xl shadow-card;
+    @apply bg-white border border-secondary-300 rounded-2xl shadow-card;
   }
 
   .card-hover {
@@ -91,7 +91,7 @@
 
   /* Input styles */
   .input {
-    @apply w-full px-4 py-3 bg-surface-50 border border-border rounded-xl font-albert text-secondary-900 placeholder-secondary-400 transition-colors focus:border-secondary-600 focus:ring-secondary-400/40;
+    @apply w-full px-4 py-3 bg-white border border-secondary-300 rounded-xl font-albert text-secondary-900 placeholder-secondary-500 transition-colors focus:border-secondary-700 focus:ring-secondary-400/40;
   }
 
   /* Badge styles */
@@ -100,7 +100,7 @@
   }
 
   .badge-success {
-    @apply badge bg-secondary-200 text-secondary-800;
+    @apply badge bg-secondary-200 text-secondary-900;
   }
 
   .badge-warning {
@@ -108,11 +108,11 @@
   }
 
   .badge-danger {
-    @apply badge bg-secondary-400 text-white;
+    @apply badge bg-secondary-800 text-white;
   }
 
   .badge-primary {
-    @apply badge bg-secondary-100 text-secondary-800;
+    @apply badge bg-secondary-200 text-secondary-900;
   }
 
   /* Loading states */
@@ -136,7 +136,7 @@
 
   /* Navigation tabs */
   .nav-tab {
-    @apply px-4 py-2 font-albert font-medium text-secondary-500 transition-colors border-b-2 border-transparent hover:text-secondary-700;
+    @apply px-4 py-2 font-albert font-medium text-secondary-700 transition-colors border-b-2 border-transparent hover:text-secondary-900;
   }
 
   .nav-tab-active {
@@ -145,7 +145,7 @@
 
   /* Form sections */
   .form-section {
-    @apply space-y-6 p-6 bg-surface-50 border border-border rounded-2xl;
+    @apply space-y-6 p-6 bg-white border border-secondary-300 rounded-2xl;
   }
 
   .form-group {
@@ -153,15 +153,15 @@
   }
 
   .form-label {
-    @apply block text-sm font-albert font-medium text-secondary-700;
+    @apply block text-sm font-albert font-medium text-secondary-900;
   }
 
   .form-error {
-    @apply text-sm font-albert text-secondary-800;
+    @apply text-sm font-albert text-secondary-900;
   }
 
   .form-help {
-    @apply text-sm font-albert text-secondary-500;
+    @apply text-sm font-albert text-secondary-700;
   }
 }
 

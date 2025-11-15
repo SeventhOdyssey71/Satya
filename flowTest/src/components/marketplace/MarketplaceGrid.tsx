@@ -90,7 +90,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({ filters }) => 
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <div className="w-12 h-12 border-4 border-secondary-200 border-t-secondary-600 rounded-full animate-spin"></div>
-        <p className="text-secondary-600 font-albert">Discovering amazing AI models...</p>
+        <p className="text-secondary-800 font-albert">Discovering amazing AI models...</p>
       </div>
     );
   }
@@ -105,7 +105,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({ filters }) => 
         </div>
         <div className="text-center">
           <h3 className="text-xl font-russo text-secondary-800 mb-2">Something went wrong</h3>
-          <p className="text-secondary-600 mb-6">{error}</p>
+          <p className="text-secondary-800 mb-6">{error}</p>
           <button
             onClick={() => loadListings()}
             className="btn-primary"
@@ -126,7 +126,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({ filters }) => 
           </svg>
         </div>
         <h3 className="text-2xl font-russo text-secondary-800 mb-4">No models found</h3>
-        <p className="text-secondary-600 mb-8 max-w-md mx-auto">
+        <p className="text-secondary-800 mb-8 max-w-md mx-auto">
           Be the first to upload and sell your AI models on the marketplace! Start building the future of trusted AI.
         </p>
         <button className="btn-primary btn-lg">
@@ -144,10 +144,10 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({ filters }) => 
           <h2 className="text-xl font-russo text-secondary-800">
             {listings.length} model{listings.length !== 1 ? 's' : ''} found
           </h2>
-          <p className="text-secondary-600">Verified and ready for download</p>
+          <p className="text-secondary-800">Verified and ready for download</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-secondary-600">Sort by:</span>
+          <span className="text-sm text-secondary-800">Sort by:</span>
           <select className="input py-2 px-3 text-sm">
             <option>Most Popular</option>
             <option>Newest</option>
@@ -272,15 +272,15 @@ function ModelCard({ model, onPurchase }: { model: ModelListedEvent, onPurchase:
           </div>
 
           {/* Description */}
-          <p className="text-secondary-600 mb-4 line-clamp-2 leading-relaxed">
+          <p className="text-secondary-800 mb-4 line-clamp-2 leading-relaxed">
             {mockDescription}
           </p>
 
           {/* Stats Row */}
-          <div className="flex items-center justify-between text-sm text-secondary-500 mb-4">
+          <div className="flex items-center justify-between text-sm text-secondary-700 mb-4">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-secondary-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-secondary-600" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
                 <span>{mockRating}</span>
@@ -292,7 +292,7 @@ function ModelCard({ model, onPurchase }: { model: ModelListedEvent, onPurchase:
                 <span>{mockDownloads.toLocaleString()}</span>
               </div>
             </div>
-            <div className="text-secondary-400">
+            <div className="text-secondary-600">
               {formatDate(model.timestamp)}
             </div>
           </div>
@@ -303,8 +303,8 @@ function ModelCard({ model, onPurchase }: { model: ModelListedEvent, onPurchase:
               {model.creator.slice(0, 2).toUpperCase()}
             </div>
             <div>
-              <div className="text-sm text-secondary-500">Created by</div>
-              <div className="text-sm font-medium text-secondary-700">{truncateId(model.creator)}</div>
+              <div className="text-sm text-secondary-700">Created by</div>
+              <div className="text-sm font-medium text-secondary-900">{truncateId(model.creator)}</div>
             </div>
           </div>
 
