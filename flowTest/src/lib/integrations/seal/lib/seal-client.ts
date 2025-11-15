@@ -23,11 +23,7 @@ export class SealClientWrapper {
     
     try {
       // Create SEAL client with proper configuration
-      console.log('Initializing SEAL client with:', {
-        packageId: SEAL_CONFIG.testnet.packageId,
-        keyServers: SEAL_CONFIG.testnet.keyServers,
-        verifyKeyServers: SEAL_CONFIG.testnet.verifyKeyServers
-      });
+      console.log('🔧 Initializing SEAL client for testnet');
       
       this.client = new SealClient({
         suiClient: suiClient as any,
@@ -200,11 +196,11 @@ export class SealClientWrapper {
         aad: new TextEncoder().encode(policyId) // Use policyId as additional authenticated data
       };
       
-      console.log('SEAL encrypt options:', {
+      // Log encryption attempt for debugging
+      console.log('🔐 SEAL encryption attempt:', {
         threshold: encryptOptions.threshold,
-        packageId: encryptOptions.packageId,
-        id: encryptOptions.id,
-        dataLength: data.length
+        packageId: encryptOptions.packageId.substring(0, 10) + '...',
+        dataSize: data.length
       });
       
       const result = await this.client.encrypt(encryptOptions);
