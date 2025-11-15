@@ -1,10 +1,12 @@
 // Upload Service Layer - Handles file uploads with encryption
 
+import { SuiClient } from '@mysten/sui/client';
 import { SealEncryptionService } from '../integrations/seal/services/encryption-service';
 import { WalrusStorageService } from '../integrations/walrus/services/storage-service';
 import { logger } from '../integrations/core/logger';
 import { PolicyType, EncryptionResult } from '../integrations/seal/types';
 import { UploadResult } from '../integrations/walrus/types';
+import { SUI_CONFIG } from '../constants';
 
 export interface FileUploadRequest {
   file: File;
@@ -45,7 +47,12 @@ export class UploadService {
   private activeUploads = new Map<string, AbortController>();
 
   constructor() {
-    this.sealService = new SealEncryptionService();
+    // Initialize SUI client first 
+    const suiClient = new SuiClient({
+      url: SUI_CONFIG.RPC_URL
+    });
+    
+    this.sealService = new SealEncryptionService(suiClient);
     this.walrusService = new WalrusStorageService();
   }
 

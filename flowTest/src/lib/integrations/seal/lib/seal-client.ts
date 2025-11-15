@@ -1,6 +1,6 @@
 // SEAL Client Wrapper - Real SEAL SDK Integration
 
-import { SealClient, seal, SessionKey, type ExportedSessionKey, type EncryptOptions, type DecryptOptions } from '@mysten/seal';
+import { SealClient, SessionKey, type ExportedSessionKey, type EncryptOptions, type DecryptOptions } from '@mysten/seal';
 import { SuiClient } from '@mysten/sui/client';
 import type { Signer } from '@mysten/sui/cryptography';
 import { Transaction } from '@mysten/sui/transactions';
@@ -15,15 +15,13 @@ export class SealClientWrapper {
   constructor(suiClient: SuiClient) {
     this.suiClient = suiClient;
     
-    // Extend the SUI client with SEAL capabilities
-    const sealExtension = seal({
+    // Create SEAL client directly
+    this.client = new SealClient({
+      suiClient: suiClient as any, // Cast to compatible client type
       serverConfigs: SEAL_CONFIG.testnet.keyServers,
       verifyKeyServers: SEAL_CONFIG.testnet.verifyKeyServers,
       timeout: 30000 // 30 seconds
     });
-    
-    const extendedClient = suiClient.$extend(sealExtension);
-    this.client = extendedClient.seal;
   }
   
   /**

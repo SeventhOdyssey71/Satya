@@ -6,9 +6,9 @@ export const SEAL_CONFIG = {
   testnet: {
     keyServers: MAIN_SEAL_CONFIG.KEY_SERVERS.map(server => ({
       objectId: server.OBJECT_ID,
-      weight: server.WEIGHT || 1,
-      apiKeyName: server.API_KEY_NAME,
-      apiKey: server.API_KEY
+      weight: (server as any).WEIGHT || 1,
+      apiKeyName: (server as any).API_KEY_NAME,
+      apiKey: (server as any).API_KEY
     } as KeyServerConfig)),
     packageId: MAIN_SEAL_CONFIG.PACKAGE_ID,
     threshold: MAIN_SEAL_CONFIG.agent.threshold,

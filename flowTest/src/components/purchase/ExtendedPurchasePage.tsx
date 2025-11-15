@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { SuiClient } from '@mysten/sui/client'
 import { 
   Shield, 
   Lock, 
@@ -69,7 +70,9 @@ export default function ExtendedPurchasePage({
       network: 'testnet'
     })
 
-    const sealService = new SealEncryptionService()
+    // Create temporary SUI client for SEAL operations
+    const suiClient = new SuiClient({ url: process.env.NEXT_PUBLIC_SUI_NETWORK_URL || 'https://fullnode.testnet.sui.io' });
+    const sealService = new SealEncryptionService(suiClient)
     const walrusService = new WalrusStorageService()
     
     return new PurchaseVerificationService(

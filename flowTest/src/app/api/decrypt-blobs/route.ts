@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { SuiClient } from '@mysten/sui/client'
 import { WalrusStorageService } from '@/lib/integrations/walrus/services/storage-service'
 import { SealEncryptionService } from '@/lib/integrations/seal/services/encryption-service'
 
@@ -14,7 +15,9 @@ export async function POST(request: NextRequest) {
     }
 
     const walrusService = new WalrusStorageService()
-    const sealService = new SealEncryptionService()
+    // Create a temporary SUI client for this API call
+    const suiClient = new SuiClient({ url: process.env.NEXT_PUBLIC_SUI_NETWORK_URL || 'https://fullnode.testnet.sui.io' });
+    const sealService = new SealEncryptionService(suiClient)
 
     // Step 1: Download encrypted files from Walrus
     const modelData = await walrusService.downloadBlob(model_blob_id)
