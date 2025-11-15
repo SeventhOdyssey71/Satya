@@ -84,7 +84,7 @@ export default function UploadProgress({
           </div>
           <div className="w-full bg-secondary-200 rounded-full h-2">
             <div
-              className="bg-secondary-800 h-2 rounded-full transition-all duration-300"
+              className="bg-secondary-700 h-2 rounded-full transition-all duration-300"
               style={{ width: `${overallProgress}%` }}
             />
           </div>
@@ -144,7 +144,7 @@ export default function UploadProgress({
                   <div className="mt-2">
                     <div className="w-full bg-secondary-200 rounded-full h-1">
                       <div
-                        className="bg-secondary-800 h-1 rounded-full transition-all duration-300"
+                        className="bg-secondary-700 h-1 rounded-full transition-all duration-300"
                         style={{ width: `${phase.progress}%` }}
                       />
                     </div>

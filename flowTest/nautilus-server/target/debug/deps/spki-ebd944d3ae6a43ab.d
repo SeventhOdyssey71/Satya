@@ -1,0 +1,10 @@
+/Users/eromonseleodigie/Satya/nautilus/src/nautilus-server/target/debug/deps/libspki-ebd944d3ae6a43ab.rmeta: /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/lib.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/algorithm.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/error.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/spki.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/traits.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/../README.md
+
+/Users/eromonseleodigie/Satya/nautilus/src/nautilus-server/target/debug/deps/spki-ebd944d3ae6a43ab.d: /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/lib.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/algorithm.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/error.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/spki.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/traits.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/../README.md
+
+/Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/lib.rs:
+/Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/algorithm.rs:
+/Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/error.rs:
+/Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/spki.rs:
+/Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/traits.rs:
+/Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spki-0.6.0/src/../README.md:

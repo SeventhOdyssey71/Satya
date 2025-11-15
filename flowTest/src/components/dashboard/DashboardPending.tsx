@@ -90,7 +90,7 @@ export default function DashboardPending() {
               <h3 className="font-albert font-semibold text-lg text-secondary-800">Verified</h3>
               <p className="text-4xl font-russo font-bold text-secondary-700 mt-3">{verified.length}</p>
             </div>
-            <div className="w-12 h-12 bg-secondary-700 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-white border border-secondary-300 rounded-xl flex items-center justify-center">
               <TbShieldCheck className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -123,7 +123,7 @@ export default function DashboardPending() {
                         </span>
                       )}
                       {task.datasetBlobId && (
-                        <span className="badge bg-secondary-100 text-secondary-800">
+                        <span className="badge bg-white text-secondary-800 border border-secondary-300 shadow-card">
                           Dataset: {task.datasetBlobId.substring(0, 12)}...
                         </span>
                       )}

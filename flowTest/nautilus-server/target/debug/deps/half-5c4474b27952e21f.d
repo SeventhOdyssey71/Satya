@@ -1,0 +1,10 @@
+/Users/eromonseleodigie/Satya/nautilus/src/nautilus-server/target/debug/deps/libhalf-5c4474b27952e21f.rmeta: /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/lib.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/bfloat.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/bfloat/convert.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/binary16.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/binary16/convert.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/slice.rs
+
+/Users/eromonseleodigie/Satya/nautilus/src/nautilus-server/target/debug/deps/half-5c4474b27952e21f.d: /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/lib.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/bfloat.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/bfloat/convert.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/binary16.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/binary16/convert.rs /Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/slice.rs
+
+/Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/lib.rs:
+/Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/bfloat.rs:
+/Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/bfloat/convert.rs:
+/Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/binary16.rs:
+/Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/binary16/convert.rs:
+/Users/eromonseleodigie/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/half-1.8.3/src/slice.rs:

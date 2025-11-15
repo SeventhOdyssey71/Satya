@@ -316,7 +316,7 @@ def main():
             
     else:
         print("❌ tiny_models directory not found")
-        print("   Run from nautilus-research directory")
+        print("   Run from flowTest directory")
 
 if __name__ == "__main__":
     main()

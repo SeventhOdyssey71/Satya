@@ -57,13 +57,13 @@ export default function DashboardPage() {
           {/* Dashboard Tabs */}
           <div className="mb-12">
             <div className="flex items-center justify-center">
-              <div className="bg-surface-50 rounded-2xl p-2 border border-border shadow-card">
+              <div className="bg-white rounded-2xl p-2 border border-secondary-300 shadow-card">
                 <nav className="flex space-x-1">
                   <button
                     onClick={() => setActiveTab('overview')}
                     className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
                       activeTab === 'overview'
-                        ? 'bg-secondary-800 text-white shadow-soft'
+                        ? 'bg-black text-white shadow-soft'
                         : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
                     }`}
                   >
@@ -73,7 +73,7 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab('pending')}
                     className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
                       activeTab === 'pending'
-                        ? 'bg-secondary-800 text-white shadow-soft'
+                        ? 'bg-black text-white shadow-soft'
                         : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
                     }`}
                   >
@@ -83,7 +83,7 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab('history')}
                     className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
                       activeTab === 'history'
-                        ? 'bg-secondary-800 text-white shadow-soft'
+                        ? 'bg-black text-white shadow-soft'
                         : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
                     }`}
                   >
@@ -93,7 +93,7 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab('downloads')}
                     className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
                       activeTab === 'downloads'
-                        ? 'bg-secondary-800 text-white shadow-soft'
+                        ? 'bg-black text-white shadow-soft'
                         : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
                     }`}
                   >

@@ -31,7 +31,7 @@ export default function MarketplacePage() {
       <section className="relative py-12 md:py-16">
         <div className="container-custom">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-100 border border-secondary-200 rounded-full mb-6 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-secondary-300 rounded-full mb-6 animate-fade-in shadow-card">
               <HiSparkles className="w-4 h-4 text-secondary-600" />
               <span className="text-sm font-albert font-medium text-secondary-700">Verified AI Models</span>
             </div>
@@ -150,8 +150,8 @@ function CombinedNavigation({
 function MarketplaceGuide() {
   return (
     <div className="mt-16 pt-12 border-t border-border">
-      <div className="card p-8 text-center bg-gradient-to-r from-secondary-50 to-secondary-100 border-secondary-200">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-secondary-600 text-white rounded-2xl mb-4">
+      <div className="card p-8 text-center bg-gradient-to-r from-white to-surface-50 border-secondary-200">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-white border border-secondary-300 text-secondary-700 rounded-2xl mb-4">
           <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>

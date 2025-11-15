@@ -155,12 +155,12 @@ export default function PurchaseModal({
                   <p className="text-secondary-600 text-sm mb-2">by {model.author}</p>
                   <div className="flex items-center gap-2">
                     {model.isVerified && (
-                      <span className="bg-secondary-200 text-secondary-800 px-2 py-1 rounded text-xs font-medium">
+                      <span className="bg-white border border-secondary-300 text-secondary-800 px-2 py-1 rounded text-xs font-medium">
                         Verified
                       </span>
                     )}
                     {model.isEncrypted && (
-                      <span className="bg-secondary-300 text-secondary-900 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+                      <span className="bg-white border border-secondary-300 text-secondary-900 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
                         <Lock className="w-3 h-3" />
                         SEAL Encrypted
                       </span>
@@ -198,7 +198,7 @@ export default function PurchaseModal({
                   <span className="font-medium text-secondary-900">Wallet Status</span>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
                     walletInfo.isConnected 
-                      ? 'bg-secondary-200 text-secondary-800' 
+                      ? 'bg-white border border-secondary-300 text-secondary-800' 
                       : 'bg-secondary-400 text-white'
                   }`}>
                     {walletInfo.isConnected ? 'Connected' : 'Disconnected'}

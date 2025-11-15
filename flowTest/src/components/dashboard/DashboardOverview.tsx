@@ -30,7 +30,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
       {/* Status Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Pending Card */}
-        <div className="card-hover bg-gradient-to-br from-secondary-100 to-secondary-200 border-secondary-300 p-8">
+        <div className="card-hover bg-gradient-to-br from-white to-surface-100 border-secondary-300 p-8">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
@@ -40,13 +40,13 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
               <p className="text-4xl font-russo text-secondary-700 mb-2">{statusCounts.pending}</p>
               <p className="text-secondary-600">Processing uploads</p>
             </div>
-            <div className="w-16 h-16 bg-secondary-300 rounded-2xl flex items-center justify-center">
+            <div className="w-16 h-16 bg-surface-200 rounded-2xl flex items-center justify-center">
               <IoTime className="w-8 h-8 text-secondary-700" />
             </div>
           </div>
           {statusCounts.pending > 0 && (
-            <div className="mt-4 pt-4 border-t border-secondary-300">
-              <div className="w-full bg-secondary-300 rounded-full h-2">
+            <div className="mt-4 pt-4 border-t border-surface-300">
+              <div className="w-full bg-surface-200 rounded-full h-2">
                 <div className="bg-secondary-700 h-2 rounded-full w-1/3 animate-pulse"></div>
               </div>
               <p className="text-sm text-secondary-600 mt-2">Verification in progress...</p>
@@ -55,7 +55,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
         </div>
 
         {/* Completed Card */}
-        <div className="card-hover bg-gradient-to-br from-secondary-50 to-secondary-100 border-secondary-200 p-8">
+        <div className="card-hover bg-gradient-to-br from-white to-surface-100 border-secondary-200 p-8">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
@@ -65,19 +65,19 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
               <p className="text-4xl font-russo text-secondary-700 mb-2">{statusCounts.completed}</p>
               <p className="text-secondary-600">Available in marketplace</p>
             </div>
-            <div className="w-16 h-16 bg-secondary-200 rounded-2xl flex items-center justify-center">
+            <div className="w-16 h-16 bg-surface-200 rounded-2xl flex items-center justify-center">
               <IoCheckmarkCircle className="w-8 h-8 text-secondary-700" />
             </div>
           </div>
           {statusCounts.completed > 0 && (
-            <div className="mt-4 pt-4 border-t border-secondary-200">
+            <div className="mt-4 pt-4 border-t border-surface-300">
               <p className="text-sm text-secondary-600">Ready for downloads</p>
             </div>
           )}
         </div>
 
         {/* Failed Card */}
-        <div className="card-hover bg-gradient-to-br from-secondary-200 to-secondary-300 border-secondary-400 p-8">
+        <div className="card-hover bg-gradient-to-br from-surface-100 to-surface-200 border-secondary-300 p-8">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
@@ -87,12 +87,12 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
               <p className="text-4xl font-russo text-secondary-800 mb-2">{statusCounts.failed}</p>
               <p className="text-secondary-700">Requires attention</p>
             </div>
-            <div className="w-16 h-16 bg-secondary-400 rounded-2xl flex items-center justify-center">
+            <div className="w-16 h-16 bg-surface-300 rounded-2xl flex items-center justify-center">
               <IoCloseCircle className="w-8 h-8 text-secondary-800" />
             </div>
           </div>
           {statusCounts.failed > 0 && (
-            <div className="mt-4 pt-4 border-t border-secondary-400">
+            <div className="mt-4 pt-4 border-t border-surface-300">
               <button className="btn-sm bg-secondary-800 text-white hover:bg-secondary-900">
                 Review Issues
               </button>
@@ -104,7 +104,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="card p-6 text-center">
-          <div className="w-12 h-12 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <div className="w-12 h-12 bg-white border border-surface-300 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <IoStatsChart className="w-6 h-6 text-primary-600" />
           </div>
           <p className="text-sm text-secondary-600 mb-1">Total Uploads</p>
@@ -115,7 +115,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
         </div>
 
         <div className="card p-6 text-center">
-          <div className="w-12 h-12 bg-accent-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <div className="w-12 h-12 bg-white border border-surface-300 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <IoDownload className="w-6 h-6 text-accent-600" />
           </div>
           <p className="text-sm text-secondary-600 mb-1">Total Size</p>
@@ -128,7 +128,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
         </div>
 
         <div className="card p-6 text-center">
-          <div className="w-12 h-12 bg-warning-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <div className="w-12 h-12 bg-white border border-surface-300 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <svg className="w-6 h-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
@@ -141,7 +141,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
         </div>
 
         <div className="card p-6 text-center">
-          <div className="w-12 h-12 bg-success-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <div className="w-12 h-12 bg-white border border-surface-300 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <IoCheckmarkCircle className="w-6 h-6 text-success-600" />
           </div>
           <p className="text-sm text-secondary-600 mb-1">Success Rate</p>
@@ -175,7 +175,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
         
         {allTasks.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-20 h-20 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-white border border-surface-300 rounded-full flex items-center justify-center mx-auto mb-6">
               <IoCloudUpload className="w-10 h-10 text-secondary-400" />
             </div>
             <h4 className="text-xl font-russo text-secondary-800 mb-3">No uploads yet</h4>
@@ -192,7 +192,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
         ) : (
           <div className="space-y-4">
             {allTasks.slice(0, 5).map((task, index) => (
-              <div key={task.id} className="flex items-center justify-between p-6 bg-surface-100 border border-border rounded-2xl hover:bg-surface-200 transition-colors group">
+              <div key={task.id} className="flex items-center justify-between p-6 bg-white border border-border rounded-2xl hover:bg-surface-50 transition-colors group">
                 <div className="flex items-center gap-4 flex-1">
                   <div className={`w-3 h-3 rounded-full ${getStatusColor(task.status)} ${task.status === 'pending' || task.status === 'uploading' ? 'animate-pulse' : ''}`} />
                   <div className="flex-1">

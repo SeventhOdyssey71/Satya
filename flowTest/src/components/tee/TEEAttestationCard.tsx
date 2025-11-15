@@ -60,7 +60,7 @@ export function TEEAttestationCard({
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-secondary-900">TEE Attestation Data</h3>
         {isVerified && (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary-200 text-secondary-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white border border-secondary-300 text-secondary-800">
             ✅ Verified
           </span>
         )}
@@ -131,7 +131,7 @@ export function TEEAttestationCard({
           className={`w-full px-4 py-2 rounded-lg font-medium text-white transition-colors ${
             isVerifying
               ? 'bg-secondary-400 cursor-not-allowed'
-              : 'bg-secondary-800 hover:bg-secondary-900'
+              : 'bg-black hover:bg-secondary-900'
           }`}
         >
           {isVerifying ? (

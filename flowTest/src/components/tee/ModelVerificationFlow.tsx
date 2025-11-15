@@ -216,7 +216,7 @@ export function ModelVerificationFlow({
             <div className="flex flex-col space-y-1">
               <span className="form-label">Model Blob ID</span>
               <div className="flex items-center space-x-2">
-                <code className="text-xs bg-secondary-100 px-2 py-1 rounded-lg text-secondary-700 font-mono">
+                <code className="text-xs bg-white border border-secondary-300 px-2 py-1 rounded-lg text-secondary-700 font-mono">
                   {modelBlobId.substring(0, 16)}...
                 </code>
               </div>
@@ -224,7 +224,7 @@ export function ModelVerificationFlow({
             {datasetBlobId && (
               <div className="md:col-span-2 flex flex-col space-y-1">
                 <span className="form-label">Dataset Blob ID</span>
-                <code className="text-xs bg-secondary-100 px-2 py-1 rounded-lg text-secondary-700 font-mono w-fit">
+                <code className="text-xs bg-white border border-secondary-300 px-2 py-1 rounded-lg text-secondary-700 font-mono w-fit">
                   {datasetBlobId.substring(0, 16)}...
                 </code>
               </div>
@@ -322,7 +322,7 @@ export function ModelVerificationFlow({
               <div className="space-y-3">
                 <div className="bg-surface-50 rounded-xl p-4">
                   <div className="text-sm font-albert text-secondary-600 mb-1">Transaction Digest</div>
-                  <code className="text-xs font-mono bg-secondary-100 px-2 py-1 rounded text-secondary-700">
+                  <code className="text-xs font-mono bg-white border border-secondary-300 px-2 py-1 rounded text-secondary-700">
                     {verificationResult.digest}
                   </code>
                 </div>

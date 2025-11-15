@@ -98,7 +98,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({ filters }) => 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6">
-        <div className="w-16 h-16 bg-secondary-100 rounded-full flex items-center justify-center">
+        <div className="w-16 h-16 bg-white border border-surface-300 rounded-full flex items-center justify-center">
           <svg className="w-8 h-8 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -120,7 +120,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({ filters }) => 
   if (listings.length === 0) {
     return (
       <div className="text-center py-20">
-        <div className="w-24 h-24 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-24 h-24 bg-white border border-surface-300 rounded-full flex items-center justify-center mx-auto mb-6">
           <svg className="w-12 h-12 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
@@ -249,14 +249,14 @@ function ModelCard({ model, onPurchase }: { model: ModelListedEvent, onPurchase:
 
           {/* Category Badge */}
           <div className="absolute top-4 right-4">
-            <div className="badge bg-secondary-900/70 text-white border-secondary-700 backdrop-blur-sm">
+            <div className="badge bg-white border border-secondary-300 text-secondary-800 shadow-card backdrop-blur-sm">
               {getCategory(model.title)}
             </div>
           </div>
 
           {/* Price Tag */}
           <div className="absolute bottom-4 right-4">
-            <div className="bg-surface-50/95 backdrop-blur-sm border border-border rounded-xl px-3 py-2">
+            <div className="bg-white/95 backdrop-blur-sm border border-secondary-300 rounded-xl px-3 py-2 shadow-card">
               <div className="text-lg font-russo text-secondary-900">{formatPrice(model.downloadPrice)}</div>
             </div>
           </div>

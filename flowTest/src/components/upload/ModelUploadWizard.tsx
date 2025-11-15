@@ -951,10 +951,10 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
               <p className="form-label">Blob Info</p>
               <div className="font-albert text-secondary-800 space-y-2 mt-3">
                 {data.modelBlobId && (
-                  <p>• Model Blob ID (Encrypted): <code className="bg-secondary-100 px-2 py-1 rounded text-secondary-700 font-mono text-xs">{data.modelBlobId}</code></p>
+                  <p>• Model Blob ID (Encrypted): <code className="bg-white border border-secondary-300 px-2 py-1 rounded text-secondary-700 font-mono text-xs">{data.modelBlobId}</code></p>
                 )}
                 {data.datasetBlobId && (
-                  <p>• Dataset Blob ID (Unencrypted): <code className="bg-secondary-100 px-2 py-1 rounded text-secondary-700 font-mono text-xs">{data.datasetBlobId}</code></p>
+                  <p>• Dataset Blob ID (Unencrypted): <code className="bg-white border border-secondary-300 px-2 py-1 rounded text-secondary-700 font-mono text-xs">{data.datasetBlobId}</code></p>
                 )}
               </div>
             </div>

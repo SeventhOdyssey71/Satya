@@ -42,7 +42,7 @@
 
   /* Selection styles */
   ::selection {
-    @apply bg-secondary-200 text-secondary-900;
+    @apply bg-white text-secondary-900;
   }
 }
 
@@ -61,7 +61,7 @@
   }
 
   .btn-ghost {
-    @apply btn text-secondary-800 hover:bg-secondary-100 hover:text-secondary-900 focus:ring-secondary-400/40;
+    @apply btn text-secondary-800 hover:bg-surface-100 hover:text-secondary-900 focus:ring-secondary-400/40;
   }
 
   .btn-accent {
@@ -100,7 +100,7 @@
   }
 
   .badge-success {
-    @apply badge bg-secondary-200 text-secondary-900;
+    @apply badge bg-white border border-secondary-300 text-secondary-900;
   }
 
   .badge-warning {
@@ -112,7 +112,7 @@
   }
 
   .badge-primary {
-    @apply badge bg-secondary-200 text-secondary-900;
+    @apply badge bg-white border border-secondary-300 text-secondary-900;
   }
 
   /* Loading states */
