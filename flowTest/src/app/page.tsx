@@ -14,7 +14,7 @@ export default function Home() {
       </div>
 
       {/* Header */}
-      <Header />
+      <Header isHomepage={true} />
       
       {/* Hero Section */}
       <HeroSection />
