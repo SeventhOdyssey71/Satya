@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/ui/Header'
+import SealTestButton from '@/components/debug/SealTestButton'
 import { HiArrowRight, HiShieldCheck, HiBolt, HiGlobeAmericas, HiChevronDown, HiSparkles } from 'react-icons/hi2'
 import { TbShield, TbDatabase, TbNetwork, TbCloudCheck } from 'react-icons/tb'
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen bg-white">
+    <div className="relative min-h-screen" style={{ backgroundColor: '#f5f9ef' }}>
       {/* Subtle background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gray-100/30 rounded-full blur-3xl"></div>
@@ -36,6 +37,9 @@ export default function Home() {
       
       {/* Footer */}
       <Footer />
+      
+      {/* Debug component for development */}
+      <SealTestButton />
     </div>
   )
 }
@@ -83,7 +87,7 @@ function HeroSection() {
             <p className="text-lg font-albert font-light text-gray-600 mb-8">Built on the Sui Stack</p>
             <div className="flex items-center justify-center gap-8 md:gap-16">
               <div className="group transition-transform hover:scale-105">
-                <div className="p-4 bg-white border border-gray-200 rounded-2xl hover:shadow-md transition-all">
+                <div className="p-4 border border-gray-200 rounded-2xl hover:shadow-md transition-all" style={{ backgroundColor: '#f5f9e5' }}>
                   <Image 
                     src="/images/Seal.svg" 
                     alt="SEAL"
@@ -94,7 +98,7 @@ function HeroSection() {
                 </div>
               </div>
               <div className="group transition-transform hover:scale-105">
-                <div className="p-4 bg-white border border-gray-200 rounded-2xl hover:shadow-md transition-all">
+                <div className="p-4 border border-gray-200 rounded-2xl hover:shadow-md transition-all" style={{ backgroundColor: '#f5f9e5' }}>
                   <img 
                     src="/images/Walrus.png" 
                     alt="WALRUS"
@@ -151,20 +155,33 @@ function FeaturesSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => {
             const IconComponent = feature.icon;
-            const colorClasses = {
-              primary: "bg-white text-gray-600 border-gray-200",
-              accent: "bg-white text-gray-700 border-gray-200",
-              success: "bg-white text-gray-600 border-gray-200",
-              warning: "bg-white text-gray-800 border-gray-200"
+            const solidColorClasses = {
+              primary: "text-gray-900",
+              accent: "text-gray-900", 
+              success: "text-gray-900",
+              warning: ""
+            };
+            const solidColorStyles = {
+              primary: { backgroundColor: '#92a3fb' },
+              accent: { backgroundColor: '#e7fc7e' },
+              success: { backgroundColor: '#9df9bc' },
+              warning: { backgroundColor: '#000000' }
             };
             
             return (
-              <div key={index} className="card-hover p-8 text-center group animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl border ${colorClasses[feature.color as keyof typeof colorClasses]} mb-6 group-hover:scale-105 transition-transform`}>
+              <div 
+                key={index} 
+                className={`card-hover p-8 text-center group animate-slide-up rounded-2xl ${solidColorClasses[feature.color as keyof typeof solidColorClasses]}`} 
+                style={{ 
+                  animationDelay: `${index * 100}ms`,
+                  ...solidColorStyles[feature.color as keyof typeof solidColorStyles]
+                }}
+              >
+                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6 group-hover:scale-105 transition-transform ${feature.color === 'warning' ? 'bg-white/20' : 'bg-white/80 text-gray-900'}`} style={feature.color === 'warning' ? { color: '#f5f9e5' } : {}}>
                   <IconComponent className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-russo mb-3 text-gray-900">{feature.title}</h3>
-                <p className="font-albert font-light text-gray-600 leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-russo mb-3" style={feature.color === 'warning' ? { color: '#f5f9e5' } : {}}>{feature.title}</h3>
+                <p className={`font-albert font-light leading-relaxed ${feature.color === 'warning' ? '' : 'text-gray-800'}`} style={feature.color === 'warning' ? { color: '#f5f9e5' } : {}}>{feature.description}</p>
               </div>
             );
           })}
@@ -192,32 +209,27 @@ function TrustedMarketplacesSection() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {/* Featured Model 1 */}
             <div className="lg:col-span-1 lg:row-span-2">
-            <div className="card-interactive h-full min-h-[600px] bg-white border border-gray-200 text-gray-900 relative overflow-hidden">
+            <div className="card-interactive h-full min-h-[600px] border border-gray-200 text-gray-900 relative overflow-hidden" style={{ backgroundColor: '#92a3fb' }}>
               <div className="relative h-full flex flex-col justify-between p-8">
                 <div>
-                  <div className="badge bg-gray-100 text-gray-700 border border-gray-200 mb-4">
+                  <div className="badge bg-white/80 text-gray-800 border border-gray-300 mb-4">
                     <HiShieldCheck className="w-3 h-3" />
                     TEE Verified
                   </div>
-                  <h3 className="text-3xl font-russo mb-4">Medical AI x129</h3>
-                  <p className="font-albert font-light text-gray-600 mb-6 leading-relaxed">
+                  <h3 className="text-3xl font-russo mb-4 text-gray-900">Medical AI x129</h3>
+                  <p className="font-albert font-light text-gray-800 mb-6 leading-relaxed">
                     Advanced diagnostic model trained on verified hospital data with full privacy compliance and hardware security attestation.
                   </p>
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between text-[15px] font-albert font-normal">
-                    <span className="text-gray-600">Downloads</span>
+                    <span className="text-gray-700">Downloads</span>
                     <span className="text-gray-900">2,439</span>
                   </div>
                   <div className="flex items-center justify-between text-[15px] font-albert font-normal">
-                    <span className="text-gray-600">Price</span>
+                    <span className="text-gray-700">Price</span>
                     <span className="text-gray-900">25.5 SUI</span>
                   </div>
-                  <Link href="/model/medical-ai-x129">
-                    <button className="btn-secondary w-full">
-                      View Details
-                    </button>
-                  </Link>
                 </div>
               </div>
             </div>
@@ -225,60 +237,45 @@ function TrustedMarketplacesSection() {
 
           {/* Featured Model 2 */}
           <div className="lg:col-span-2">
-            <div className="card-interactive h-80 bg-white border border-gray-200 text-gray-900 relative overflow-hidden">
+            <div className="card-interactive h-80 border border-gray-200 text-gray-900 relative overflow-hidden" style={{ backgroundColor: '#9df9bc' }}>
               <div className="relative h-full flex items-end p-8">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="badge bg-gray-100 text-gray-700 border border-gray-200">
+                    <div className="badge bg-white/80 text-gray-800 border border-gray-300">
                       <HiBolt className="w-3 h-3" />
                       High Performance
                     </div>
-                    <div className="badge bg-gray-100 text-gray-700 border border-gray-200">
+                    <div className="badge bg-white/80 text-gray-800 border border-gray-300">
                       Computer Vision
                     </div>
                   </div>
-                  <h3 className="text-3xl font-russo mb-4">Vision Opus x229</h3>
-                  <p className="font-albert font-light text-gray-600 mb-6 leading-relaxed max-w-lg">
+                  <h3 className="text-3xl font-russo mb-4 text-gray-900">Vision Opus x229</h3>
+                  <p className="font-albert font-light text-gray-800 mb-6 leading-relaxed max-w-lg">
                     State-of-the-art computer vision model with real-time processing capabilities and enterprise-grade security.
                   </p>
                 </div>
-                <Link href="/model/vision-opus-x229">
-                  <button className="btn-secondary">
-                    Explore Model
-                  </button>
-                </Link>
               </div>
             </div>
           </div>
 
           {/* Featured Model 3 */}
           <div className="lg:col-span-2">
-            <div className="card-interactive h-80 bg-white border border-gray-200 text-gray-900 relative overflow-hidden">
+            <div className="card-interactive h-80 border border-gray-200 text-gray-900 relative overflow-hidden" style={{ backgroundColor: '#e7fc7e' }}>
               <div className="relative h-full flex items-end p-8">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="badge bg-gray-100 text-gray-700 border border-gray-200">
+                    <div className="badge bg-white/80 text-gray-800 border border-gray-300">
                       <HiGlobeAmericas className="w-3 h-3" />
                       Autonomous Systems
                     </div>
-                    <div className="badge bg-gray-100 text-gray-700 border border-gray-200">
+                    <div className="badge bg-white/80 text-gray-800 border border-gray-300">
                       Real-time
                     </div>
                   </div>
-                  <h3 className="text-3xl font-russo mb-4">AutoDrive Neural Net</h3>
-                  <p className="font-albert font-light text-gray-600 mb-6 leading-relaxed max-w-lg">
+                  <h3 className="text-3xl font-russo mb-4 text-gray-900">AutoDrive Neural Net</h3>
+                  <p className="font-albert font-light text-gray-800 mb-6 leading-relaxed max-w-lg">
                     Advanced autonomous driving model with multi-sensor fusion and real-time decision making capabilities.
                   </p>
-                </div>
-                <div className="flex gap-3">
-                  <Link href="/model/autodrive-neural">
-                    <button className="btn-secondary">
-                      View Model
-                    </button>
-                  </Link>
-                  <button className="btn-ghost">
-                    Try Demo
-                  </button>
                 </div>
               </div>
             </div>
@@ -328,37 +325,35 @@ function SuiStackSection() {
   ];
 
   return (
-    <section className="relative z-10 py-20 bg-white text-secondary-900">
-      <div className="absolute inset-0 bg-gradient-to-br from-surface-100/20 to-surface-200/20"></div>
+    <section className="relative z-10 py-20 bg-black text-white">
       <div className="container-custom relative">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-russo mb-6">
-            Built on the Sui Stack
+        <div className="text-center mb-20">
+          <h2 className="text-3xl md:text-5xl font-russo text-white tracking-tight leading-tight">
+            Secure AI Marketplace Built on Trusted Infrastructure
           </h2>
-          <p className="text-xl text-secondary-700 max-w-3xl mx-auto leading-relaxed">
-            Leveraging cutting-edge blockchain infrastructure and privacy technology to create the most secure and efficient AI marketplace.
-          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {technologies.map((tech, index) => (
-            <div key={index} className="bg-white/90 backdrop-blur-xl border border-secondary-300 rounded-2xl p-8 hover:bg-white transition-all animate-slide-up shadow-card" style={{ animationDelay: `${index * 100}ms` }}>
-              <div className="flex items-start gap-4">
-                <div className="text-4xl">{tech.icon}</div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-russo mb-2">{tech.name}</h3>
-                  <p className="text-secondary-700 mb-4 leading-relaxed">{tech.description}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {tech.features.map((feature, featureIndex) => (
-                      <span key={featureIndex} className="badge bg-surface-100 text-secondary-800 border-secondary-300">
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="rounded-3xl p-8 text-black" style={{ backgroundColor: '#92a3fb' }}>
+            <h3 className="text-2xl font-bold mb-6">TEE Verification</h3>
+            <p className="text-lg leading-relaxed">
+              Hardware-based security ensures model integrity and prevents tampering through trusted execution environments.
+            </p>
+          </div>
+          
+          <div className="rounded-3xl p-8 text-black" style={{ backgroundColor: '#9df9bc' }}>
+            <h3 className="text-2xl font-bold mb-6">Blockchain Transparency</h3>
+            <p className="text-lg leading-relaxed">
+              Immutable transaction records and smart contract automation ensure trust and reliable ownership.
+            </p>
+          </div>
+          
+          <div className="rounded-3xl p-8 text-black" style={{ backgroundColor: '#e7fc7e' }}>
+            <h3 className="text-2xl font-bold mb-6">Encrypted Storage</h3>
+            <p className="text-lg leading-relaxed">
+              SEAL encryption protects sensitive data while maintaining usability and compliance with privacy regulations.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -482,18 +477,17 @@ function FAQSection() {
   ];
 
   return (
-    <section className="relative z-10 py-20 bg-surface-100">
+    <section className="relative z-10 py-20" style={{ backgroundColor: '#9df9bc' }}>
       <div className="container-custom">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-russo mb-6">Frequently Asked Questions</h2>
-          <p className="text-lg text-secondary-800">Everything you need to know about Satya</p>
+        <div className="text-left">
+          <h2 className="text-4xl md:text-6xl font-bold mb-12 text-black tracking-tight leading-tight">
+            Get Started Today
+          </h2>
+          <p className="text-xl text-black leading-relaxed mb-16 max-w-2xl">
+            Join the future of AI marketplaces with verified models, secure transactions, and transparent pricing. Start trading with confidence.
+          </p>
         </div>
-
-        <div className="space-y-4 max-w-4xl mx-auto">
-          {faqItems.map((item, index) => (
-            <FAQItem key={index} {...item} />
-          ))}
-        </div>
+        
       </div>
     </section>
   )
@@ -527,9 +521,9 @@ function FAQItem({ question, answer, expanded }: { question: string, answer: str
 
 function Footer() {
   return (
-    <footer className="relative z-10 py-16 bg-white text-secondary-900 border-t border-secondary-200">
+    <footer className="relative z-10 py-16 text-secondary-900" style={{ backgroundColor: '#f5f9ef' }}>
       <div className="container-custom">
-        <div className="bg-surface-100 rounded-3xl p-16 relative border border-secondary-300">
+        <div className="p-16 relative">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-6">
@@ -575,9 +569,6 @@ function Footer() {
             </div>
           </div>
           
-          <div className="border-t border-secondary-300 mt-12 pt-8 text-center">
-            <p className="text-secondary-600">© 2024 Satya. Built with ❤️ on the Sui blockchain.</p>
-          </div>
         </div>
       </div>
     </footer>
