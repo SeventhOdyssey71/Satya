@@ -141,6 +141,10 @@ export class ModelUploadService {
         throw new Error(`Model upload failed: ${modelUploadResult.error}`);
       }
 
+      if (!modelUploadResult.blobId) {
+        throw new Error('Model upload succeeded but no blob ID was returned');
+      }
+
       // Phase 3: Upload dataset if provided
       let datasetUploadResult: FileUploadResult | undefined;
       if (data.datasetFile) {
@@ -209,7 +213,7 @@ export class ModelUploadService {
         tags: data.tags,
         modelBlobId: modelUploadResult.blobId!,
         datasetBlobId: datasetUploadResult?.blobId,
-        encryptionPolicyId: modelUploadResult.encryptionId || modelUploadResult.policyId!,
+        encryptionPolicyId: modelUploadResult.encryptionId || modelUploadResult.policyId || 'no-encryption-policy',
         sealMetadata: new Uint8Array(0), // SEAL metadata from encryption
         price: (parseFloat(data.price) * 1000000000).toString(), // Convert to smallest units
         maxDownloads: data.maxDownloads
