@@ -56,7 +56,7 @@ export default function ModelPurchaseFlow({ model, onComplete }: ModelPurchaseFl
       
       // In a real implementation, this would call the marketplace contract
       // tx.moveCall({
-      //   target: `${PACKAGE_ID}::marketplace_v2::purchase_model`,
+      //   target: `${PACKAGE_ID}::marketplace::purchase_model`,
       //   arguments: [
       //     tx.object(model.listingId),
       //     tx.pure(model.attestationTxDigest), // Include attestation reference

@@ -31,7 +31,7 @@ module satya::marketplace {
     const STATUS_REJECTED: u8 = 4;
 
     /// Marketplace singleton object for global state
-    struct MarketplaceRegistry has key {
+    public struct MarketplaceRegistry has key {
         id: UID,
         pending_models: Table<ID, bool>,
         verified_models: Table<ID, bool>,
@@ -40,7 +40,7 @@ module satya::marketplace {
     }
 
     /// Model upload in pending state
-    struct PendingModel has key, store {
+    public struct PendingModel has key, store {
         id: UID,
         creator: address,
         title: String,
@@ -63,7 +63,7 @@ module satya::marketplace {
     }
 
     /// TEE verification result
-    struct VerificationResult has key, store {
+    public struct VerificationResult has key, store {
         id: UID,
         model_id: ID,
         enclave_id: String,
@@ -75,7 +75,7 @@ module satya::marketplace {
     }
 
     /// Marketplace listing after verification
-    struct MarketplaceModel has key, store {
+    public struct MarketplaceModel has key, store {
         id: UID,
         pending_model_id: ID,
         verification_id: ID,
@@ -102,7 +102,7 @@ module satya::marketplace {
     }
 
     /// Purchase record for buyers
-    struct PurchaseRecord has key, store {
+    public struct PurchaseRecord has key, store {
         id: UID,
         buyer: address,
         model_id: ID,
@@ -117,7 +117,7 @@ module satya::marketplace {
     }
 
     /// Events
-    struct ModelUploaded has copy, drop {
+    public struct ModelUploaded has copy, drop {
         model_id: ID,
         creator: address,
         title: String,
@@ -125,14 +125,14 @@ module satya::marketplace {
         status: u8,
     }
 
-    struct VerificationSubmitted has copy, drop {
+    public struct VerificationSubmitted has copy, drop {
         model_id: ID,
         verification_id: ID,
         quality_score: u64,
         verified: bool,
     }
 
-    struct ModelListed has copy, drop {
+    public struct ModelListed has copy, drop {
         model_id: ID,
         marketplace_id: ID,
         creator: address,
@@ -140,7 +140,7 @@ module satya::marketplace {
         verified: bool,
     }
 
-    struct ModelPurchased has copy, drop {
+    public struct ModelPurchased has copy, drop {
         purchase_id: ID,
         buyer: address,
         model_id: ID,
@@ -314,13 +314,15 @@ module satya::marketplace {
             verified: true,
         });
 
+        let creator = model.creator;
+        
         // Clean up pending state
         table::remove(&mut registry.pending_models, model_id);
         table::remove(&mut registry.verified_models, model_id);
 
         // Transfer objects to creator
-        transfer::public_transfer(model, model.creator);
-        transfer::public_transfer(verification, model.creator);
+        transfer::public_transfer(model, creator);
+        transfer::public_transfer(verification, creator);
 
         marketplace_model
     }
@@ -329,7 +331,7 @@ module satya::marketplace {
     public fun purchase_model(
         marketplace_model: &mut MarketplaceModel,
         registry: &mut MarketplaceRegistry,
-        payment: Coin<SUI>,
+        mut payment: Coin<SUI>,
         clock: &Clock,
         ctx: &mut TxContext
     ): PurchaseRecord {
