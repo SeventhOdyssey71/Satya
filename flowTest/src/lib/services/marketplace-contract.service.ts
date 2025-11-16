@@ -296,7 +296,8 @@ export class MarketplaceContractService {
         ],
       });
 
-      tx.transferObjects([verificationResult], tx.gas);
+      const senderAddress = await signer.toSuiAddress();
+      tx.transferObjects([verificationResult], senderAddress);
 
       const txResult = await this.suiClient.signAndExecuteTransaction({
         transaction: tx,
@@ -383,7 +384,8 @@ export class MarketplaceContractService {
         ],
       });
 
-      tx.transferObjects([marketplaceModel], tx.gas);
+      const senderAddress = await signer.toSuiAddress();
+      tx.transferObjects([marketplaceModel], senderAddress);
 
       const txResult = await this.suiClient.signAndExecuteTransaction({
         transaction: tx,
@@ -499,7 +501,8 @@ export class MarketplaceContractService {
         ],
       });
 
-      tx.transferObjects([purchaseRecord], tx.gas);
+      const senderAddress = await signer.toSuiAddress();
+      tx.transferObjects([purchaseRecord], senderAddress);
 
       const txResult = await this.suiClient.signAndExecuteTransaction({
         transaction: tx,
