@@ -90,6 +90,26 @@ export function getUploadService(): UploadService {
   return uploadService;
 }
 
+// Get upload service with fallback RPC support
+export async function getUploadServiceWithFallback(): Promise<UploadService> {
+  if (typeof window === 'undefined') {
+    return {} as UploadService;
+  }
+  
+  if (!uploadService) {
+    try {
+      console.log('🔄 Creating upload service with RPC fallback...');
+      uploadService = await UploadService.createWithFallback();
+      console.log('✅ Upload service with fallback created successfully');
+    } catch (error) {
+      console.error('❌ Failed to create UploadService with fallback:', error);
+      // Fallback to regular upload service
+      uploadService = new UploadService();
+    }
+  }
+  return uploadService;
+}
+
 export function getDownloadService(): DownloadService {
   if (typeof window === 'undefined') {
     return {} as DownloadService;

@@ -9,6 +9,13 @@ export const SUI_CONFIG = {
   NETWORK: process.env.NEXT_PUBLIC_SUI_NETWORK as 'testnet' | 'mainnet' | 'devnet' || 'testnet',
   RPC_URL: process.env.NEXT_PUBLIC_SUI_RPC_URL || 'https://fullnode.testnet.sui.io:443',
   WEBSOCKET_URL: process.env.NEXT_PUBLIC_SUI_WEBSOCKET_URL || 'wss://fullnode.testnet.sui.io:9001',
+  
+  // Fallback RPC endpoints for better reliability
+  FALLBACK_RPC_URLS: [
+    'https://rpc.h2o-nodes.com/dsn/0d7b76b217d1a03ffd77b066624b5c690fa89892032/v1/service', // H2O Nodes SEAL testnet
+    'https://fullnode.testnet.sui.io:443', // Default Sui testnet
+    'https://sui-testnet-endpoint.blockvision.org/v1'
+  ],
 } as const
 
 // ============================================

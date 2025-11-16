@@ -6,11 +6,15 @@ import type { Signer } from '@mysten/sui/cryptography';
 import { Transaction } from '@mysten/sui/transactions';
 import { SEAL_CONFIG } from '../config/seal.config';
 import { SealError, SessionError } from '../types';
+import { KeyServerManager } from './key-server-manager';
+import { SessionKeyManager } from './session-key-manager';
 
 export class SealClientWrapper {
   private client: SealClient;
   private suiClient: SuiClient;
   private sessionCache: Map<string, SessionKey> = new Map();
+  private keyServerManager: KeyServerManager;
+  private sessionKeyManager: SessionKeyManager;
   private static instance: SealClientWrapper | null = null;
   
   constructor(suiClient: SuiClient) {
@@ -22,12 +26,22 @@ export class SealClientWrapper {
     this.suiClient = suiClient;
     
     try {
+      // Initialize managers
+      this.keyServerManager = new KeyServerManager(suiClient);
+      this.sessionKeyManager = new SessionKeyManager(suiClient);
+      
       // Create SEAL client with proper configuration
-      console.log('🔧 Initializing SEAL client for testnet');
+      console.log('🔧 Initializing SEAL client for testnet with key server management');
+      
+      // Use best available key servers
+      const bestServers = this.keyServerManager.selectBestKeyServers();
+      const serverConfigs = bestServers.length > 0 
+        ? bestServers.map(s => ({ objectId: s.objectId, url: s.url, weight: s.weight }))
+        : SEAL_CONFIG.testnet.keyServers;
       
       this.client = new SealClient({
         suiClient: suiClient as any,
-        serverConfigs: SEAL_CONFIG.testnet.keyServers,
+        serverConfigs,
         verifyKeyServers: SEAL_CONFIG.testnet.verifyKeyServers,
         timeout: 30000
       });
@@ -71,6 +85,11 @@ export class SealClientWrapper {
    * Reset singleton instance (for development/testing)
    */
   static resetInstance(): void {
+    if (SealClientWrapper.instance) {
+      // Cleanup managers
+      SealClientWrapper.instance.keyServerManager?.destroy();
+      SealClientWrapper.instance.sessionKeyManager?.destroy();
+    }
     SealClientWrapper.instance = null;
   }
   
@@ -140,36 +159,23 @@ export class SealClientWrapper {
     signer?: Signer,
     ttlMinutes?: number
   ): Promise<SessionKey> {
-    const sessionKey = `${address}:${SEAL_CONFIG.testnet.packageId}`;
-    
-    // Check cache first
-    const cached = this.sessionCache.get(sessionKey);
-    if (cached && !cached.isExpired()) {
-      return cached;
-    }
-    
     try {
-      console.log('Creating SEAL session with:', {
+      const { sessionKey, isNew } = await this.sessionKeyManager.getOrCreateSession(
         address,
-        packageId: SEAL_CONFIG.testnet.packageId,
-        ttlMin: ttlMinutes || SEAL_CONFIG.agent.sessionTTLMinutes
-      });
-      
-      // Create new session
-      const session = await SessionKey.create({
-        address,
-        packageId: SEAL_CONFIG.testnet.packageId,
-        ttlMin: ttlMinutes || SEAL_CONFIG.agent.sessionTTLMinutes,
-        signer: signer as any,
-        suiClient: this.suiClient as any
-      });
-      
-      // Cache the session
-      this.sessionCache.set(sessionKey, session);
-      
-      return session;
+        SEAL_CONFIG.testnet.packageId,
+        signer,
+        ttlMinutes
+      );
+
+      if (isNew) {
+        console.log('✅ Created new SEAL session for address:', address.substring(0, 10) + '...');
+      } else {
+        console.log('🔄 Reusing existing SEAL session for address:', address.substring(0, 10) + '...');
+      }
+
+      return sessionKey;
     } catch (error) {
-      throw new SessionError(`Failed to create session for ${address}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new SessionError(`Failed to get or create session for ${address}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   
@@ -337,27 +343,55 @@ export class SealClientWrapper {
   /**
    * Get session statistics
    */
-  getSessionStats(): {
-    totalSessions: number;
-    activeSessions: number;
-    expiredSessions: number;
-  } {
-    let activeSessions = 0;
-    let expiredSessions = 0;
+  getSessionStats() {
+    return this.sessionKeyManager.getSessionStats();
+  }
+
+  /**
+   * Get key server manager for advanced operations
+   */
+  getKeyServerManager(): KeyServerManager {
+    return this.keyServerManager;
+  }
+
+  /**
+   * Get session key manager for advanced operations
+   */
+  getSessionKeyManager(): SessionKeyManager {
+    return this.sessionKeyManager;
+  }
+
+  /**
+   * Get key server health and metrics
+   */
+  async getKeyServerHealth() {
+    return await this.keyServerManager.checkAllKeyServersHealth();
+  }
+
+  /**
+   * Get key server metrics
+   */
+  async getKeyServerMetrics() {
+    return await this.keyServerManager.getKeyServerMetrics();
+  }
+
+  /**
+   * Test all key servers for SEAL operations
+   */
+  async testAllKeyServers() {
+    const servers = this.keyServerManager.getConfiguredKeyServers();
+    const testPromises = servers.map(server => 
+      this.keyServerManager.testKeyServerForSeal(server)
+    );
     
-    for (const session of this.sessionCache.values()) {
-      if (session.isExpired()) {
-        expiredSessions++;
-      } else {
-        activeSessions++;
-      }
-    }
+    const results = await Promise.allSettled(testPromises);
     
-    return {
-      totalSessions: this.sessionCache.size,
-      activeSessions,
-      expiredSessions
-    };
+    return servers.map((server, index) => ({
+      server,
+      result: results[index].status === 'fulfilled' 
+        ? results[index].value 
+        : { success: false, error: (results[index] as PromiseRejectedResult).reason }
+    }));
   }
 }
 

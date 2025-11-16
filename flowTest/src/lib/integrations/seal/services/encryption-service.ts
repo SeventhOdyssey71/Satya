@@ -1,6 +1,7 @@
 // Seal Encryption Service - High-level encryption operations
 
 import { SuiClient } from '@mysten/sui/client';
+import { createSuiClientWithFallback } from '../../sui/rpc-fallback';
 import { Transaction } from '@mysten/sui/transactions';
 import type { Signer } from '@mysten/sui/cryptography';
 import { SessionKey } from '@mysten/seal';
@@ -36,6 +37,16 @@ export class SealEncryptionService {
     this.sessionManager = new SessionManager(suiClient);
     this.dekCache = new DEKCache(SEAL_CONFIG.agent.cacheSize);
     this.sealClient = this.sessionManager.getSealClient();
+  }
+
+  // Create service with fallback RPC support
+  static async createWithFallback(): Promise<SealEncryptionService> {
+    try {
+      const suiClient = await createSuiClientWithFallback();
+      return new SealEncryptionService(suiClient);
+    } catch (error) {
+      throw new SealError(`Failed to create SEAL service with fallback: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
   
   // Encrypt data with policy

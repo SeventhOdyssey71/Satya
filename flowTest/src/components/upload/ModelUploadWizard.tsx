@@ -35,7 +35,6 @@ interface ModelUploadData {
   datasetBlobId?: string
   
   // Security
-  enableEncryption: boolean
   policyType: string
   accessDuration?: number
   
@@ -94,7 +93,6 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     tags: [],
     price: '',
     enableSample: false,
-    enableEncryption: true,
     policyType: 'payment-gated',
     accessDuration: 30,
     isPrivate: false,
@@ -141,7 +139,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
 
       // Step 1: TbUpload file and encrypt with SEAL, upload to Walrus
       console.log('Step 1: SEAL encryption and Walrus upload...')
-      const uploadResult = await upload.uploadModel(data, walletObject)
+      const uploadResult = await upload.uploadModel({...data, enableEncryption: true}, walletObject)
       
       if (!uploadResult.success) {
         throw new Error(`TbUpload failed: ${uploadResult.error}`)
@@ -246,8 +244,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
               tags: [],
               price: '',
               enableSample: false,
-              enableEncryption: true,
-              policyType: 'payment-gated',
+                        policyType: 'payment-gated',
               accessDuration: 30,
               isPrivate: false,
               verificationStatus: 'pending'
@@ -723,24 +720,24 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCanc
         
         <div className="space-y-8">
           <div className="form-group">
-            <label className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={data.enableEncryption}
-                onChange={(e) => onChange({ enableEncryption: e.target.checked })}
-                className="w-5 h-5 rounded border-border text-primary-600 focus:ring-primary-500/20"
-              />
-              <span className="form-label mb-0">
-                Enable SEAL Encryption
-              </span>
-            </label>
-            <p className="form-help mt-2 ml-8">
-              Recommended: Encrypts your model with policy-based access control
-            </p>
+            <div className="flex items-center space-x-3 p-4 bg-primary-50 rounded-xl border border-primary-200">
+              <div className="w-5 h-5 rounded bg-primary-600 flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <span className="form-label mb-0">
+                  SEAL Encryption Enabled
+                </span>
+                <p className="form-help mt-1">
+                  Your model will be encrypted with policy-based access control for maximum security
+                </p>
+              </div>
+            </div>
           </div>
 
-          {data.enableEncryption && (
-            <div className="form-group">
+          <div className="form-group">
               <label className="form-label">
                 Access Policy
               </label>
@@ -763,7 +760,6 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCanc
                 ))}
               </div>
             </div>
-          )}
 
           <div className="form-group border-t border-border pt-6">
             <label className="flex items-center space-x-3">
@@ -878,7 +874,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
             </div>
             <div>
               <p className="form-label">Encryption</p>
-              <p className="font-albert text-secondary-800">{data.enableEncryption ? 'Enabled' : 'Disabled'}</p>
+              <p className="font-albert text-secondary-800 text-green-600">✓ SEAL Encryption Enabled</p>
             </div>
           </div>
           

@@ -61,6 +61,19 @@ export class UploadService {
     }
   }
 
+  // Create upload service with fallback RPC support
+  static async createWithFallback(): Promise<UploadService> {
+    try {
+      const uploadService = new UploadService();
+      // Replace the SEAL service with fallback-enabled version
+      uploadService.sealService = await SealEncryptionService.createWithFallback();
+      return uploadService;
+    } catch (error) {
+      console.error('Failed to create UploadService with fallback:', error);
+      throw error;
+    }
+  }
+
   // Upload file with optional encryption
   async uploadFile(
     request: FileUploadRequest,
@@ -108,36 +121,17 @@ export class UploadService {
           details: { algorithm: 'AES-256-GCM' }
         });
 
-        try {
-          encryptionResult = await this.sealService.encryptData(
-            fileData,
-            request.policyType || PolicyType.PAYMENT_GATED,
-            request.policyParams || {}
-          );
+        encryptionResult = await this.sealService.encryptData(
+          fileData,
+          request.policyType || PolicyType.PAYMENT_GATED,
+          request.policyParams || {}
+        );
 
-          if (!encryptionResult.success) {
-            throw new Error(`Encryption failed: ${encryptionResult.error}`);
-          }
-
-          processedData = new Uint8Array(encryptionResult.encryptedData);
-        } catch (error) {
-          logger.warn('SEAL encryption failed, proceeding with unencrypted upload', {
-            fileId,
-            error: error instanceof Error ? error.message : String(error)
-          });
-          
-          // Continue with unencrypted upload as fallback
-          onProgress?.({
-            phase: 'encryption',
-            progress: 30,
-            message: 'Encryption unavailable, uploading without encryption...',
-            details: { fallback: true, reason: 'SEAL encryption failed' }
-          });
-          
-          // Keep original data for unencrypted upload
-          processedData = fileData;
-          encryptionResult = undefined;
+        if (!encryptionResult.success) {
+          throw new Error(`Encryption failed: ${encryptionResult.error}`);
         }
+
+        processedData = new Uint8Array(encryptionResult.encryptedData);
         
         if (encryptionResult) {
           logger.debug('File encrypted successfully', {
@@ -164,7 +158,7 @@ export class UploadService {
         }
       });
 
-      const isActuallyEncrypted = request.encrypt && encryptionResult !== undefined;
+      const isActuallyEncrypted = request.encrypt && encryptionResult?.success;
       const uploadFile = new File(
         [processedData],
         isActuallyEncrypted ? `${request.file.name}.encrypted` : request.file.name,
@@ -219,7 +213,6 @@ export class UploadService {
         fileId,
         blobId: uploadResult.blobId,
         encrypted: isActuallyEncrypted,
-        encryptionRequested: request.encrypt,
         size: request.file.size
       });
 
@@ -328,14 +321,7 @@ export class UploadService {
     let canEncrypt = true;
 
     try {
-      // Test storage connectivity
-      const storageConnected = await this.walrusService.testConnectivity();
-      if (!storageConnected) {
-        canUpload = false;
-        issues.push('Storage service unavailable');
-      }
-
-      // Test encryption service
+      // Test encryption service first - now required
       try {
         const testData = new Uint8Array([1, 2, 3, 4]);
         const encResult = await this.sealService.encryptData(
@@ -345,11 +331,22 @@ export class UploadService {
         );
         if (!encResult.success) {
           canEncrypt = false;
-          issues.push('Encryption service unavailable');
+          canUpload = false; // Upload requires encryption
+          issues.push('Encryption service unavailable - uploads require SEAL encryption');
         }
       } catch (error) {
         canEncrypt = false;
-        issues.push('Encryption test failed');
+        canUpload = false; // Upload requires encryption
+        issues.push('Encryption test failed - uploads require SEAL encryption');
+      }
+
+      // Test storage connectivity only if encryption works
+      if (canEncrypt) {
+        const storageConnected = await this.walrusService.testConnectivity();
+        if (!storageConnected) {
+          canUpload = false;
+          issues.push('Storage service unavailable');
+        }
       }
 
     } catch (error) {
