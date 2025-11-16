@@ -68,7 +68,7 @@ export class PurchaseTransactionService {
 
       // Add purchase transaction call
       const [licenseNft] = transaction.moveCall({
-        target: `${purchase.marketplaceContract}::marketplace::purchase_model`,
+        target: `${purchase.marketplaceContract}::marketplace_v2::purchase_model`,
         arguments: [
           transaction.pure.string(purchase.modelId),
           transaction.pure.address(purchase.sellerAddress),

@@ -84,7 +84,7 @@ export class MarketplaceContractService {
 
       // Upload model call
       const result = tx.moveCall({
-        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model`,
+        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace_v2::upload_model`,
         arguments: [
           tx.pure.string(params.title),
           tx.pure.string(params.description),
@@ -185,7 +185,7 @@ export class MarketplaceContractService {
 
       // Submit for verification
       tx.moveCall({
-        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::submit_for_verification`,
+        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace_v2::submit_for_verification`,
         arguments: [
           pendingModel,
           tx.object(MARKETPLACE_CONFIG.REGISTRY_OBJECT_ID),
@@ -258,7 +258,7 @@ export class MarketplaceContractService {
       });
 
       const verificationResult = tx.moveCall({
-        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::complete_verification`,
+        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace_v2::complete_verification`,
         arguments: [
           pendingModel,
           tx.object(MARKETPLACE_CONFIG.REGISTRY_OBJECT_ID),
@@ -349,7 +349,7 @@ export class MarketplaceContractService {
       });
 
       const marketplaceModel = tx.moveCall({
-        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::list_on_marketplace`,
+        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace_v2::list_on_marketplace`,
         arguments: [
           pendingModel,
           verification,
@@ -425,7 +425,7 @@ export class MarketplaceContractService {
     
     // Call purchase_model function
     tx.moveCall({
-      target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::purchase_model`,
+      target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace_v2::purchase_model`,
       arguments: [
         tx.object(MARKETPLACE_CONFIG.MARKETPLACE_OBJECT_ID),
         tx.pure.id(params.marketplaceModelId),
@@ -465,7 +465,7 @@ export class MarketplaceContractService {
       });
 
       const purchaseRecord = tx.moveCall({
-        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::purchase_model`,
+        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace_v2::purchase_model`,
         arguments: [
           marketplaceModel,
           tx.object(MARKETPLACE_CONFIG.REGISTRY_OBJECT_ID),
@@ -534,7 +534,7 @@ export class MarketplaceContractService {
     try {
       const result = await this.suiClient.queryObjects({
         filter: {
-          StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::MarketplaceModel`
+          StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace_v2::MarketplaceModel`
         },
         limit,
         options: {
@@ -566,7 +566,7 @@ export class MarketplaceContractService {
     try {
       const result = await this.suiClient.queryObjects({
         filter: {
-          StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::PendingModel`
+          StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace_v2::PendingModel`
         },
         options: {
           showContent: true,
@@ -606,7 +606,7 @@ export class MarketplaceContractService {
     try {
       const result = await this.suiClient.queryObjects({
         filter: {
-          StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::PurchaseRecord`
+          StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace_v2::PurchaseRecord`
         },
         options: {
           showContent: true,
