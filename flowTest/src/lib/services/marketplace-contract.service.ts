@@ -71,16 +71,12 @@ export class MarketplaceContractService {
       logger.info('Creating upload model transaction', {
         title: params.title,
         blobId: params.modelBlobId,
-        price: params.price
+        price: params.price,
+        packageId: MARKETPLACE_CONFIG.PACKAGE_ID,
+        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model`
       });
 
       const tx = new Transaction();
-
-      // Add current epoch timestamp
-      tx.moveCall({
-        target: `0x2::clock::create_for_testing`, // Use system clock in production
-        arguments: [tx.pure.u64(Date.now())]
-      });
 
       // Upload model call
       const result = tx.moveCall({
@@ -100,7 +96,7 @@ export class MarketplaceContractService {
           params.maxDownloads ? 
             tx.pure.option('u64', params.maxDownloads) : 
             tx.pure.option('u64', []),
-          tx.object('0x6'), // Clock object
+          tx.object('0x6'), // System Clock object
         ],
       });
 
