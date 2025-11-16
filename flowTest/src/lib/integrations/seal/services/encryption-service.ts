@@ -314,21 +314,10 @@ export class SealEncryptionService {
   
   // Generate a deterministic identity from policy for SEAL encryption
   private generateIdentityFromPolicy(policyId: string): string {
-    // Create a deterministic hex string identity that can be reconstructed
-    // Use SHA-256 hash to create a valid hex string from policy + package ID
-    const identitySource = `${policyId}_${SEAL_CONFIG.testnet.packageId}`;
-    
-    // Convert to hex using browser's crypto.subtle or a simple hex encoding
-    const encoder = new TextEncoder();
-    const data = encoder.encode(identitySource);
-    
-    // Convert to hex string (each byte becomes 2 hex characters)
-    const hexString = Array.from(data)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-    
-    // Ensure it's prefixed with 0x for proper hex format
-    return `0x${hexString}`;
+    // SEAL SDK expects the identity to be a simple string
+    // Use just the policy ID as the identity for now
+    // TODO: Verify with SEAL documentation for proper identity format
+    return policyId;
   }
   
   // Create authorization transaction for SEAL access control

@@ -206,6 +206,8 @@ export class SealClientWrapper {
       console.log('🔐 SEAL encryption attempt:', {
         threshold: encryptOptions.threshold,
         packageId: encryptOptions.packageId.substring(0, 10) + '...',
+        identity: identity.substring(0, 20) + '...',
+        policyId: policyId,
         dataSize: data.length
       });
       
