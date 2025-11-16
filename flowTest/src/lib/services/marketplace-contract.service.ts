@@ -5,13 +5,7 @@ import { Transaction } from '@mysten/sui/transactions';
 import type { Signer } from '@mysten/sui/cryptography';
 import { createSuiClientWithFallback } from '../integrations/sui/rpc-fallback';
 import { logger } from '../integrations/core/logger';
-
-// Contract configuration
-export const MARKETPLACE_CONFIG = {
-  PACKAGE_ID: process.env.NEXT_PUBLIC_MARKETPLACE_PACKAGE_ID || '0x0000000000000000000000000000000000000000000000000000000000000000',
-  REGISTRY_OBJECT_ID: process.env.NEXT_PUBLIC_MARKETPLACE_REGISTRY_ID || '',
-  PLATFORM_ADDRESS: process.env.NEXT_PUBLIC_PLATFORM_ADDRESS || '0x0000000000000000000000000000000000000000000000000000000000000000',
-};
+import { MARKETPLACE_CONFIG } from '../constants';
 
 export interface UploadModelParams {
   title: string;
@@ -110,8 +104,8 @@ export class MarketplaceContractService {
 
       const tx = new Transaction();
 
-      // Upload model call
-      const result = tx.moveCall({
+      // Upload model call (entry function - no return value to capture)
+      tx.moveCall({
         target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`,
         arguments: [
           tx.pure.string(params.title),
@@ -135,6 +129,14 @@ export class MarketplaceContractService {
       // Entry function auto-transfers the PendingModel to the transaction sender
       // No manual transfer needed
 
+      // Debug: log the transaction before execution
+      logger.info('About to execute transaction', {
+        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`,
+        packageId: MARKETPLACE_CONFIG.PACKAGE_ID,
+        argumentCount: 11,
+        isEntryFunction: true
+      });
+
       // Execute transaction
       const txResult = await this.suiClient.signAndExecuteTransaction({
         transaction: tx,
@@ -144,6 +146,14 @@ export class MarketplaceContractService {
           showEvents: true,
           showObjectChanges: true
         }
+      }).catch(error => {
+        logger.error('Transaction execution failed', {
+          error: error.message,
+          stack: error.stack,
+          errorType: typeof error,
+          errorProps: Object.keys(error)
+        });
+        throw error;
       });
 
       if (txResult.effects?.status?.status === 'success') {
@@ -216,7 +226,7 @@ export class MarketplaceContractService {
         target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::submit_for_verification`,
         arguments: [
           pendingModel,
-          tx.object(MARKETPLACE_CONFIG.REGISTRY_OBJECT_ID),
+          tx.object(MARKETPLACE_CONFIG.REGISTRY_ID),
           tx.object('0x6'), // Clock
         ],
       });
@@ -289,7 +299,7 @@ export class MarketplaceContractService {
         target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::complete_verification`,
         arguments: [
           pendingModel,
-          tx.object(MARKETPLACE_CONFIG.REGISTRY_OBJECT_ID),
+          tx.object(MARKETPLACE_CONFIG.REGISTRY_ID),
           tx.pure.string(params.enclaveId),
           tx.pure.u64(params.qualityScore),
           tx.pure.string(params.securityAssessment),
@@ -382,7 +392,7 @@ export class MarketplaceContractService {
         arguments: [
           pendingModel,
           verification,
-          tx.object(MARKETPLACE_CONFIG.REGISTRY_OBJECT_ID),
+          tx.object(MARKETPLACE_CONFIG.REGISTRY_ID),
           tx.object('0x6'), // Clock
         ],
       });
@@ -457,7 +467,7 @@ export class MarketplaceContractService {
     tx.moveCall({
       target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::purchase_model`,
       arguments: [
-        tx.object(MARKETPLACE_CONFIG.REGISTRY_OBJECT_ID),
+        tx.object(MARKETPLACE_CONFIG.REGISTRY_ID),
         tx.pure.id(params.marketplaceModelId),
         paymentCoin
       ]
@@ -498,7 +508,7 @@ export class MarketplaceContractService {
         target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::purchase_model`,
         arguments: [
           marketplaceModel,
-          tx.object(MARKETPLACE_CONFIG.REGISTRY_OBJECT_ID),
+          tx.object(MARKETPLACE_CONFIG.REGISTRY_ID),
           paymentCoin,
           tx.object('0x6'), // Clock
         ],
