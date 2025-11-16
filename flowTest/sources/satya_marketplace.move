@@ -160,7 +160,41 @@ module satya::marketplace {
         transfer::share_object(registry);
     }
 
-    /// Phase 1: Upload model to pending state
+    /// Phase 1: Upload model to pending state (entry function version)
+    public entry fun upload_model_entry(
+        title: String,
+        description: String,
+        category: String,
+        tags: vector<String>,
+        model_blob_id: String,
+        dataset_blob_id: Option<String>,
+        encryption_policy_id: String,
+        seal_metadata: vector<u8>,
+        price: u64,
+        max_downloads: Option<u64>,
+        clock: &Clock,
+        ctx: &mut TxContext
+    ) {
+        let model = upload_model(
+            title,
+            description,
+            category,
+            tags,
+            model_blob_id,
+            dataset_blob_id,
+            encryption_policy_id,
+            seal_metadata,
+            price,
+            max_downloads,
+            clock,
+            ctx
+        );
+        
+        // Auto-transfer to sender
+        transfer::public_transfer(model, tx_context::sender(ctx));
+    }
+
+    /// Phase 1: Upload model to pending state (helper function)
     public fun upload_model(
         title: String,
         description: String,

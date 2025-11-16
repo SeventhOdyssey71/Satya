@@ -8,8 +8,8 @@ const { Transaction } = require('@mysten/sui/transactions');
 // Configuration from .env.local
 const SUI_NETWORK = 'testnet';
 const SUI_RPC_URL = 'https://fullnode.testnet.sui.io:443';
-const MARKETPLACE_PACKAGE_ID = '0x2643c7f8f6ea672a2780c8259be490bfc57cfa2c3895cbfd6109bde5e65a0bc7';
-const MARKETPLACE_REGISTRY_ID = '0xc6c008c9df4017f000a28b37c4949a931b566258d52eaa3ae4b5be17a6e1bf06';
+const MARKETPLACE_PACKAGE_ID = '0x9a4098e65be1c3af358eb2efb6376ac3628ae0b35fc304166f14b46527d29a4b';
+const MARKETPLACE_REGISTRY_ID = '0x04285569e6e6fd4592b8e998d3e7796442c3adee5d5db1ddd4089579d4d983f3';
 
 async function testSmartContractCall() {
   console.log('🧪 Testing Smart Contract Call...');
@@ -54,9 +54,9 @@ async function testSmartContractCall() {
     console.log('\n🔨 Testing transaction construction...');
     const tx = new Transaction();
     
-    // Test the upload_model function call structure (matches actual bytecode signature)
-    const result = tx.moveCall({
-      target: `${MARKETPLACE_PACKAGE_ID}::marketplace::upload_model`,
+    // Test the upload_model_entry function call structure (entry function auto-transfers)
+    tx.moveCall({
+      target: `${MARKETPLACE_PACKAGE_ID}::marketplace::upload_model_entry`,
       arguments: [
         tx.pure.string('Test Model Title'),
         tx.pure.string('Test model description'),
@@ -72,9 +72,7 @@ async function testSmartContractCall() {
       ],
     });
     
-    // Transfer the returned PendingModel to the test address  
-    const senderAddress = await keypair.toSuiAddress();
-    tx.transferObjects([result], senderAddress);
+    // Entry function auto-transfers the PendingModel - no manual transfer needed
     
     console.log('✓ Transaction constructed successfully');
     console.log('✓ moveCall target verified');

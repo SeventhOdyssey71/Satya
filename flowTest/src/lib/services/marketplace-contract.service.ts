@@ -112,25 +112,28 @@ export class MarketplaceContractService {
 
       // Upload model call
       const result = tx.moveCall({
-        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model`,
+        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`,
         arguments: [
           tx.pure.string(params.title),
           tx.pure.string(params.description),
           tx.pure.string(params.category),
           tx.pure.vector('string', validTags),
           tx.pure.string(params.modelBlobId),
-          tx.pure.option('string', params.datasetBlobId ?? null),
+          params.datasetBlobId ? 
+            tx.pure.option('string', params.datasetBlobId) : 
+            tx.pure.option('string', []),
           tx.pure.string(params.encryptionPolicyId),
           tx.pure.vector('u8', Array.from(params.sealMetadata)),
           tx.pure.u64(params.price),
-          tx.pure.option('u64', params.maxDownloads ?? null),
+          params.maxDownloads ? 
+            tx.pure.option('u64', params.maxDownloads) : 
+            tx.pure.option('u64', []),
           tx.object('0x6'), // System Clock object
         ],
       });
 
-      // Transfer the returned PendingModel to the transaction sender
-      const senderAddress = await signer.toSuiAddress();
-      tx.transferObjects([result], senderAddress);
+      // Entry function auto-transfers the PendingModel to the transaction sender
+      // No manual transfer needed
 
       // Execute transaction
       const txResult = await this.suiClient.signAndExecuteTransaction({
