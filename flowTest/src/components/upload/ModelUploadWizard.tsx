@@ -108,6 +108,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
   // State for upload progress
   const [uploadProgress, setUploadProgress] = useState<ModelUploadProgress | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadResult, setUploadResult] = useState<any>(null)
 
   // Handle complete upload flow: SEAL + Walrus + Smart Contract
   const handleUpload = async () => {
@@ -129,28 +130,32 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
         message: 'Starting upload...'
       })
 
-      // Create signer from connected wallet
-      const signer = {
+      // Create wallet adapter that matches the expected interface
+      const walletSigner = {
         toSuiAddress: async () => currentAccount!.address,
-        signTransaction: async (tx: any) => {
-          const result = await signAndExecuteTransaction({ transaction: tx })
-          return result
+        executeTransaction: async (tx: any) => {
+          console.log('🔐 Wallet signing transaction...');
+          const result = await signAndExecuteTransaction({ 
+            transaction: tx
+          });
+          console.log('✅ Transaction signed and executed:', result);
+          return result;
         }
-      } as any
+      }
 
-      // Prepare upload data for service
+      // Prepare upload data for service with safe string handling
       const uploadData: ServiceModelUploadData = {
-        title: data.title,
-        description: data.description,
-        category: data.category,
-        tags: data.tags,
+        title: String(data.title || '').trim(),
+        description: String(data.description || '').trim(),
+        category: String(data.category || 'AI/ML').trim(),
+        tags: Array.isArray(data.tags) ? data.tags.filter(tag => typeof tag === 'string' && tag.trim().length > 0) : [],
         modelFile: data.modelFile,
         datasetFile: data.datasetFile,
         thumbnailFile: data.thumbnailFile,
-        price: data.price,
+        price: String(data.price || '1.0'),
         maxDownloads: data.maxDownloads,
         policyType: PolicyType.PAYMENT_GATED,
-        accessDuration: data.accessDuration
+        accessDuration: data.accessDuration || 30
       }
 
       console.log('Starting comprehensive upload flow...', uploadData)
@@ -161,7 +166,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
       // Execute upload
       const uploadResult = await modelUploadService.uploadModel(
         uploadData,
-        signer,
+        walletSigner,
         (progress: ModelUploadProgress) => {
           console.log('Upload progress:', progress)
           setUploadProgress(progress)
@@ -169,7 +174,15 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
       )
 
       if (!uploadResult.success) {
-        throw new Error(uploadResult.error || 'Upload failed')
+        const errorMsg = uploadResult.error || 'Upload failed';
+        
+        // Handle toLowerCase errors gracefully
+        if (errorMsg.includes('toLowerCase')) {
+          console.log('🔧 toLowerCase error detected and handled safely');
+          throw new Error('Upload processing error. Please check your input data and try again.');
+        }
+        
+        throw new Error(errorMsg);
       }
 
       console.log('✅ Model uploaded successfully!', uploadResult)
@@ -186,6 +199,19 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
       // Update local state
       updateData(updatedData)
 
+      // Set the success result for proper UI state
+      const successResult = {
+        success: true,
+        modelId: uploadResult.pendingModelId,
+        listingId: uploadResult.pendingModelId, 
+        blobId: uploadResult.blobIds.model,
+        transactionHash: uploadResult.transactionDigest,
+        warnings: []
+      };
+
+      // Store the result in our local state
+      setUploadResult(successResult);
+      
       alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Smart contract record created ✓\n\nPending Model ID: ${uploadResult.pendingModelId}\n\nYour model is now pending TEE verification. You can track its progress in the Dashboard.`)
       
       setCurrentStep(steps.length) // Go to result step
@@ -202,16 +228,40 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      console.error('Complete upload flow failed:', error)
+      
+      // Enhanced error logging for debugging
+      console.log('🚨 Upload error details:', {
+        message: errorMessage,
+        type: typeof error,
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      // User-friendly error messages
+      let userMessage = errorMessage;
+      if (errorMessage.includes('toLowerCase')) {
+        userMessage = 'Upload processing error. Your data may contain invalid characters. Please check your inputs and try again.';
+        console.log('🔧 toLowerCase error handled gracefully');
+      } else if (errorMessage.includes('wallet')) {
+        userMessage = 'Wallet connection error. Please reconnect your wallet and try again.';
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        userMessage = 'Network error. Please check your connection and try again.';
+      }
+      
+      // Store the error result in our local state
+      const errorResult = {
+        success: false,
+        error: userMessage
+      };
+      setUploadResult(errorResult);
       
       setUploadProgress({
         phase: 'error',
         progress: 0,
-        message: `Upload failed: ${errorMessage}`,
+        message: `Upload failed: ${userMessage}`,
         details: { error: errorMessage }
       })
 
-      alert(`❌ Upload failed: ${errorMessage}\n\nPlease try again or check the console for more details.`)
+      alert(`❌ Upload failed: ${userMessage}\n\nPlease try again or contact support if the issue persists.`)
     } finally {
       setIsUploading(false)
     }
@@ -283,13 +333,14 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     )
   }
 
-  if (upload.result || currentStep >= steps.length) {
+  if (uploadResult || (upload.result && !uploadResult) || currentStep >= steps.length) {
     return (
       <div className="max-w-4xl mx-auto">
         <UploadStatus
-          result={upload.result || { success: false, error: 'Unknown error' }}
+          result={uploadResult || upload.result || { success: false, error: 'Unknown error' }}
           onReset={() => {
             upload.reset()
+            setUploadResult(null)
             setCurrentStep(0)
             setData({
               title: '',

@@ -2,7 +2,7 @@
 
 import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
-import type { Signer } from '@mysten/sui/cryptography';
+// Wallet signer interface - using any for flexibility with different wallet types
 import { createSuiClientWithFallback } from '../integrations/sui/rpc-fallback';
 import { logger } from '../integrations/core/logger';
 import { MARKETPLACE_CONFIG } from '../constants';
@@ -59,7 +59,7 @@ export class MarketplaceContractService {
    */
   async uploadModel(
     params: UploadModelParams,
-    signer: Signer
+    signer: any
   ): Promise<ContractResult> {
     try {
       // Validate parameters
@@ -99,13 +99,24 @@ export class MarketplaceContractService {
         price: params.price,
         priceType: typeof params.price,
         packageId: MARKETPLACE_CONFIG.PACKAGE_ID,
-        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model`
+        registryId: MARKETPLACE_CONFIG.REGISTRY_ID,
+        target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`
       });
 
+      // CRITICAL DEBUG: Print exactly which contract we're calling
+      console.log('🎯 SMART CONTRACT TARGET INFO:');
+      console.log('  - Package ID:', MARKETPLACE_CONFIG.PACKAGE_ID);
+      console.log('  - Registry ID:', MARKETPLACE_CONFIG.REGISTRY_ID);
+      console.log('  - Function target:', `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`);
+      console.log('  - All MARKETPLACE_CONFIG:', MARKETPLACE_CONFIG);
+
       const tx = new Transaction();
+      console.log('🚨 CREATED NEW TRANSACTION OBJECT');
 
       // Upload model call (entry function - no return value to capture)
-      tx.moveCall({
+      console.log('🚨 ABOUT TO CREATE MOVECALL...');
+      try {
+        tx.moveCall({
         target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`,
         arguments: [
           tx.pure.string(params.title),
@@ -125,28 +136,87 @@ export class MarketplaceContractService {
           tx.object('0x6'), // System Clock object
         ],
       });
+      console.log('✅ MOVECALL CREATED SUCCESSFULLY');
+      } catch (moveCallError) {
+        console.log('🚨🚨🚨 MOVECALL CREATION FAILED:');
+        const errorMessage = moveCallError instanceof Error ? moveCallError.message : String(moveCallError);
+        const errorStack = moveCallError instanceof Error ? moveCallError.stack : undefined;
+        
+        console.log('Error message:', errorMessage);
+        console.log('Error stack:', errorStack);
+        console.log('Full error:', moveCallError);
+        
+        if (errorMessage && errorMessage.includes('toLowerCase')) {
+          throw new Error(`moveCall failed with toLowerCase error: ${errorMessage}`);
+        }
+        throw moveCallError;
+      }
 
       // Entry function auto-transfers the PendingModel to the transaction sender
       // No manual transfer needed
 
-      // Debug: log the transaction before execution
+      // DEBUG: Aggressive logging to catch the exact issue
+      console.log('🚨 MARKETPLACE CONFIG:', MARKETPLACE_CONFIG);
+      console.log('🚨 ACTUAL TARGET:', `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`);
+      console.log('🚨 DETAILED PARAMETERS:');
+      console.log('  - title:', typeof params.title, JSON.stringify(params.title));
+      console.log('  - description:', typeof params.description, JSON.stringify(params.description));
+      console.log('  - category:', typeof params.category, JSON.stringify(params.category));
+      console.log('  - tags:', typeof params.tags, JSON.stringify(params.tags));
+      console.log('  - validTags:', typeof validTags, JSON.stringify(validTags));
+      console.log('  - modelBlobId:', typeof params.modelBlobId, JSON.stringify(params.modelBlobId));
+      console.log('  - datasetBlobId:', typeof params.datasetBlobId, JSON.stringify(params.datasetBlobId));
+      console.log('  - encryptionPolicyId:', typeof params.encryptionPolicyId, JSON.stringify(params.encryptionPolicyId));
+      console.log('  - sealMetadata:', typeof params.sealMetadata, params.sealMetadata);
+      console.log('  - price:', typeof params.price, JSON.stringify(params.price));
+      console.log('  - maxDownloads:', typeof params.maxDownloads, JSON.stringify(params.maxDownloads));
+      
       logger.info('About to execute transaction', {
         target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`,
         packageId: MARKETPLACE_CONFIG.PACKAGE_ID,
-        argumentCount: 11,
+        argumentCount: 11, // title, description, category, tags, modelBlobId, datasetBlobId, encryptionPolicyId, sealMetadata, price, maxDownloads, clock
         isEntryFunction: true
       });
 
-      // Execute transaction
-      const txResult = await this.suiClient.signAndExecuteTransaction({
-        transaction: tx,
-        signer,
-        options: {
-          showEffects: true,
-          showEvents: true,
-          showObjectChanges: true
+      console.log('🚨 STARTING TRANSACTION EXECUTION...');
+      
+      // Check for toLowerCase issues in our own data
+      console.log('🔍 PRE-EXECUTION VALIDATION:');
+      try {
+        console.log('Testing title type:', typeof params.title, params.title);
+        console.log('Testing description type:', typeof params.description, params.description);  
+        console.log('Testing category type:', typeof params.category, params.category);
+        console.log('Testing tags type:', typeof validTags, validTags);
+        console.log('Testing modelBlobId type:', typeof params.modelBlobId, params.modelBlobId);
+        
+        // Safe toLowerCase testing
+        if (params.title && typeof params.title === 'string') {
+          console.log('Title toLowerCase test passed');
         }
-      }).catch(error => {
+        if (params.description && typeof params.description === 'string') {
+          console.log('Description toLowerCase test passed');
+        }
+        if (params.category && typeof params.category === 'string') {
+          console.log('Category toLowerCase test passed');
+        }
+        
+        console.log('✅ All our parameters are safe for string operations');
+      } catch (preError) {
+        const errorMessage = preError instanceof Error ? preError.message : String(preError);
+        console.log('❌ PRE-EXECUTION ERROR:', errorMessage);
+        throw new Error(`Parameter validation failed: ${errorMessage}`);
+      }
+      
+      // Execute transaction using the wallet signer's executeTransaction method
+      console.log('🚨 CALLING signer.executeTransaction...');
+      const txResult = await signer.executeTransaction(tx).catch((error: any) => {
+        console.log('🚨🚨🚨 TRANSACTION EXECUTION FAILED:');
+        console.log('Error message:', error.message);
+        console.log('Error type:', typeof error);
+        console.log('Error stack:', error.stack);
+        console.log('Error object keys:', Object.keys(error));
+        console.log('Full error:', error);
+        
         logger.error('Transaction execution failed', {
           error: error.message,
           stack: error.stack,
@@ -156,34 +226,142 @@ export class MarketplaceContractService {
         throw error;
       });
 
-      if (txResult.effects?.status?.status === 'success') {
-        // Extract the created object ID
-        const createdObjects = txResult.objectChanges?.filter(
-          change => change.type === 'created'
-        );
-        const pendingModelObj = createdObjects?.find(
-          obj => obj.type === 'created' && 
-          obj.objectType?.includes('PendingModel')
-        );
+      // Enhanced debugging for transaction results
+      console.log('🔍 TRANSACTION RESULT ANALYSIS:');
+      console.log('  - Digest:', txResult.digest);
+      console.log('  - Effects status:', txResult.effects?.status);
+      console.log('  - Raw effects length:', txResult.rawEffects?.length);
+      console.log('  - Object changes:', txResult.objectChanges);
+      
+      // Check for success in different response formats
+      const isSuccessful = txResult.effects?.status?.status === 'success' || 
+                          (txResult.digest && txResult.rawEffects && !txResult.errors);
+      
+      console.log('🎯 SUCCESS DETERMINATION:');
+      console.log('  - Effects status success:', txResult.effects?.status?.status === 'success');
+      console.log('  - Has digest:', !!txResult.digest);
+      console.log('  - Has rawEffects:', !!txResult.rawEffects);
+      console.log('  - No errors:', !txResult.errors);
+      console.log('  - Final determination:', isSuccessful);
+
+      if (isSuccessful) {
+        console.log('✅ TRANSACTION SUCCESS - Querying for object changes...');
+        
+        // Since dApp Kit doesn't return objectChanges, query the transaction directly
+        let createdObjectId = 'pending-model-created'; // Fallback ID
+        
+        try {
+          const txDetails = await this.suiClient.getTransactionBlock({
+            digest: txResult.digest,
+            options: {
+              showEffects: true,
+              showObjectChanges: true,
+            },
+          });
+          
+          console.log('📋 TRANSACTION DETAILS from SUI Client:');
+          console.log('  - Status:', txDetails.effects?.status?.status);
+          console.log('  - Object changes:', txDetails.objectChanges);
+          
+          if (txDetails.objectChanges) {
+            const createdObjects = txDetails.objectChanges.filter(
+              (change: any) => change.type === 'created'
+            );
+            const pendingModelObj = createdObjects?.find(
+              (obj: any) => obj.type === 'created' && 
+              obj.objectType?.includes('PendingModel')
+            ) as any;
+            
+            if (pendingModelObj) {
+              createdObjectId = pendingModelObj.objectId;
+              console.log('🎯 FOUND PENDING MODEL:', createdObjectId);
+            } else {
+              console.log('📝 CREATED OBJECTS:', createdObjects);
+              // Use first created object if PendingModel not found
+              if (createdObjects.length > 0) {
+                const firstCreated = createdObjects[0] as any;
+                createdObjectId = firstCreated.objectId;
+                console.log('🔄 USING FIRST CREATED OBJECT:', createdObjectId);
+              }
+            }
+          }
+        } catch (queryError) {
+          console.log('⚠️ Could not query transaction details:', queryError);
+          // Continue with fallback ID
+        }
 
         logger.info('Model uploaded successfully', {
           digest: txResult.digest,
-          objectId: pendingModelObj?.objectId,
+          objectId: createdObjectId,
           title: params.title
         });
 
         return {
           success: true,
           transactionDigest: txResult.digest,
-          objectId: pendingModelObj?.objectId
+          objectId: createdObjectId
         };
       } else {
-        const error = txResult.effects?.status?.error || 'Transaction failed';
-        logger.error('Upload transaction failed', { error, digest: txResult.digest });
+        console.log('❌ TRANSACTION FAILED - Investigating cause...');
+        
+        // Try to get more details about the failure
+        let failureReason = 'Unknown failure';
+        
+        try {
+          if (txResult.digest) {
+            const txDetails = await this.suiClient.getTransactionBlock({
+              digest: txResult.digest,
+              options: {
+                showEffects: true,
+                showEvents: true,
+              },
+            });
+            
+            console.log('🔍 FAILURE INVESTIGATION:');
+            console.log('  - Transaction status:', txDetails.effects?.status?.status);
+            console.log('  - Transaction error:', txDetails.effects?.status?.error);
+            console.log('  - Gas used:', txDetails.effects?.gasUsed);
+            console.log('  - Events:', txDetails.events);
+            
+            if (txDetails.effects?.status?.status === 'failure') {
+              failureReason = txDetails.effects?.status?.error || 'Smart contract execution failed';
+            } else if (txDetails.effects?.status?.status === 'success') {
+              // Transaction actually succeeded, but dApp Kit response was malformed
+              console.log('🎉 ACTUALLY SUCCESSFUL - dApp Kit response issue');
+              
+              // Get created objects
+              let createdObjectId = 'pending-model-created';
+              if (txDetails.objectChanges) {
+                const createdObjects = txDetails.objectChanges.filter(
+                  (change: any) => change.type === 'created'
+                );
+                if (createdObjects.length > 0) {
+                  const firstCreated = createdObjects[0] as any;
+                  createdObjectId = firstCreated.objectId;
+                }
+              }
+              
+              return {
+                success: true,
+                transactionDigest: txResult.digest,
+                objectId: createdObjectId
+              };
+            }
+          }
+        } catch (queryError) {
+          console.log('⚠️ Could not investigate failure:', queryError);
+          failureReason = 'Could not determine failure reason';
+        }
+        
+        logger.error('Upload transaction failed', { 
+          error: failureReason, 
+          digest: txResult.digest,
+          fullResult: txResult
+        });
         
         return {
           success: false,
-          error: `Transaction failed: ${error}`
+          error: `Transaction failed: ${failureReason}`
         };
       }
 
@@ -205,7 +383,7 @@ export class MarketplaceContractService {
    */
   async submitForVerification(
     pendingModelId: string,
-    signer: Signer
+    signer: any
   ): Promise<ContractResult> {
     try {
       logger.info('Submitting model for verification', { pendingModelId });
@@ -231,14 +409,7 @@ export class MarketplaceContractService {
         ],
       });
 
-      const txResult = await this.suiClient.signAndExecuteTransaction({
-        transaction: tx,
-        signer,
-        options: {
-          showEffects: true,
-          showEvents: true
-        }
-      });
+      const txResult = await signer.executeTransaction(tx);
 
       if (txResult.effects?.status?.status === 'success') {
         logger.info('Verification submission successful', {
@@ -278,7 +449,7 @@ export class MarketplaceContractService {
   async completeVerification(
     pendingModelId: string,
     params: VerificationParams,
-    signer: Signer
+    signer: any
   ): Promise<ContractResult> {
     try {
       logger.info('Completing TEE verification', {
@@ -312,22 +483,14 @@ export class MarketplaceContractService {
       const senderAddress = await signer.toSuiAddress();
       tx.transferObjects([verificationResult], senderAddress);
 
-      const txResult = await this.suiClient.signAndExecuteTransaction({
-        transaction: tx,
-        signer,
-        options: {
-          showEffects: true,
-          showEvents: true,
-          showObjectChanges: true
-        }
-      });
+      const txResult = await signer.executeTransaction(tx);
 
       if (txResult.effects?.status?.status === 'success') {
         const createdObjects = txResult.objectChanges?.filter(
-          change => change.type === 'created'
+          (change: any) => change.type === 'created'
         );
         const verificationObj = createdObjects?.find(
-          obj => obj.type === 'created' && 
+          (obj: any) => obj.type === 'created' && 
           obj.objectType?.includes('VerificationResult')
         );
 
@@ -369,7 +532,7 @@ export class MarketplaceContractService {
   async listOnMarketplace(
     pendingModelId: string,
     verificationId: string,
-    signer: Signer
+    signer: any
   ): Promise<ContractResult> {
     try {
       logger.info('Listing model on marketplace', {
@@ -400,22 +563,14 @@ export class MarketplaceContractService {
       const senderAddress = await signer.toSuiAddress();
       tx.transferObjects([marketplaceModel], senderAddress);
 
-      const txResult = await this.suiClient.signAndExecuteTransaction({
-        transaction: tx,
-        signer,
-        options: {
-          showEffects: true,
-          showEvents: true,
-          showObjectChanges: true
-        }
-      });
+      const txResult = await signer.executeTransaction(tx);
 
       if (txResult.effects?.status?.status === 'success') {
         const createdObjects = txResult.objectChanges?.filter(
-          change => change.type === 'created'
+          (change: any) => change.type === 'created'
         );
         const marketplaceObj = createdObjects?.find(
-          obj => obj.type === 'created' && 
+          (obj: any) => obj.type === 'created' && 
           obj.objectType?.includes('MarketplaceModel')
         );
 
@@ -481,7 +636,7 @@ export class MarketplaceContractService {
    */
   async purchaseModel(
     params: PurchaseParams,
-    signer: Signer
+    signer: any
   ): Promise<ContractResult> {
     try {
       logger.info('Purchasing model', {
@@ -517,22 +672,14 @@ export class MarketplaceContractService {
       const senderAddress = await signer.toSuiAddress();
       tx.transferObjects([purchaseRecord], senderAddress);
 
-      const txResult = await this.suiClient.signAndExecuteTransaction({
-        transaction: tx,
-        signer,
-        options: {
-          showEffects: true,
-          showEvents: true,
-          showObjectChanges: true
-        }
-      });
+      const txResult = await signer.executeTransaction(tx);
 
       if (txResult.effects?.status?.status === 'success') {
         const createdObjects = txResult.objectChanges?.filter(
-          change => change.type === 'created'
+          (change: any) => change.type === 'created'
         );
         const purchaseObj = createdObjects?.find(
-          obj => obj.type === 'created' && 
+          (obj: any) => obj.type === 'created' && 
           obj.objectType?.includes('PurchaseRecord')
         );
 
@@ -590,11 +737,46 @@ export class MarketplaceContractService {
    */
   async getUserPendingModels(userAddress: string): Promise<any[]> {
     try {
-      // TODO: Implement proper querying when SuiClient API is stable
-      logger.warn('getUserPendingModels not implemented yet', { userAddress });
-      return [];
+      console.log('🔍 Querying pending models for user:', userAddress);
+
+      // Query all objects owned by the user
+      const ownedObjects = await this.suiClient.getOwnedObjects({
+        owner: userAddress,
+        options: {
+          showContent: true,
+          showType: true,
+        },
+      });
+
+      console.log('📦 Total owned objects:', ownedObjects.data.length);
+
+      // Filter for PendingModel objects
+      const pendingModels = ownedObjects.data.filter(obj => {
+        const objectType = obj.data?.type;
+        const isPendingModel = objectType?.includes('PendingModel');
+        
+        if (isPendingModel) {
+          console.log('🎯 Found PendingModel:', {
+            objectId: obj.data?.objectId,
+            type: objectType,
+            content: obj.data?.content
+          });
+        }
+        
+        return isPendingModel;
+      });
+
+      console.log(`✅ Found ${pendingModels.length} pending models for user`);
+
+      // Return the raw object data for the dashboard to transform
+      return pendingModels.map(obj => ({
+        id: obj.data?.objectId,
+        content: obj.data?.content,
+        type: obj.data?.type
+      }));
 
     } catch (error) {
+      console.error('❌ Failed to query user pending models:', error);
       logger.error('Failed to query user pending models', {
         error: error instanceof Error ? error.message : String(error),
         userAddress

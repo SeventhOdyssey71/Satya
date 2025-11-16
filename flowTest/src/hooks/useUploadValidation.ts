@@ -169,8 +169,14 @@ export function useUploadValidation(data: ModelUploadData) {
         })
       }
 
-      // Check file extension
-      const fileExtension = data.modelFile.name.toLowerCase().substring(data.modelFile.name.lastIndexOf('.'))
+      // Check file extension safely
+      let fileExtension = '';
+      if (data.modelFile.name && typeof data.modelFile.name === 'string') {
+        const dotIndex = data.modelFile.name.lastIndexOf('.');
+        if (dotIndex !== -1) {
+          fileExtension = data.modelFile.name.toLowerCase().substring(dotIndex);
+        }
+      }
       if (!SUPPORTED_MODEL_EXTENSIONS.includes(fileExtension)) {
         issues.push({
           field: 'modelFile',
@@ -216,8 +222,14 @@ export function useUploadValidation(data: ModelUploadData) {
         })
       }
 
-      // Check file extension
-      const datasetExtension = data.datasetFile.name.toLowerCase().substring(data.datasetFile.name.lastIndexOf('.'))
+      // Check file extension safely
+      let datasetExtension = '';
+      if (data.datasetFile.name && typeof data.datasetFile.name === 'string') {
+        const dotIndex = data.datasetFile.name.lastIndexOf('.');
+        if (dotIndex !== -1) {
+          datasetExtension = data.datasetFile.name.toLowerCase().substring(dotIndex);
+        }
+      }
       if (!SUPPORTED_DATASET_EXTENSIONS.includes(datasetExtension)) {
         issues.push({
           field: 'datasetFile',
@@ -246,7 +258,13 @@ export function useUploadValidation(data: ModelUploadData) {
         })
       }
 
-      const thumbExtension = data.thumbnailFile.name.toLowerCase().substring(data.thumbnailFile.name.lastIndexOf('.'))
+      let thumbExtension = '';
+      if (data.thumbnailFile.name && typeof data.thumbnailFile.name === 'string') {
+        const dotIndex = data.thumbnailFile.name.lastIndexOf('.');
+        if (dotIndex !== -1) {
+          thumbExtension = data.thumbnailFile.name.toLowerCase().substring(dotIndex);
+        }
+      }
       if (!SUPPORTED_IMAGE_EXTENSIONS.includes(thumbExtension)) {
         issues.push({
           field: 'thumbnailFile',

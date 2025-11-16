@@ -5,7 +5,7 @@ import { MarketplaceContractService, type UploadModelParams } from './marketplac
 import { TEEVerificationService, type ModelVerificationRequest } from './tee-verification.service';
 import { PolicyType } from '../integrations/seal/types';
 import { logger } from '../integrations/core/logger';
-import type { Signer } from '@mysten/sui/cryptography';
+// Wallet signer interface - using any for flexibility with different wallet types
 
 export interface ModelUploadData {
   // Basic Info
@@ -81,7 +81,7 @@ export class ModelUploadService {
    */
   async uploadModel(
     data: ModelUploadData,
-    signer: Signer,
+    signer: any,
     onProgress?: ModelUploadProgressCallback
   ): Promise<ModelUploadResult> {
     const uploadId = crypto.randomUUID();
@@ -206,6 +206,16 @@ export class ModelUploadService {
         message: 'Creating blockchain record...'
       });
 
+      // Validate and prepare contract parameters with extensive debugging
+      const priceInSui = parseFloat(data.price);
+      const priceInMist = Math.round(priceInSui * 1000000000); // Convert to MIST (smallest SUI unit)
+      
+      console.log('💰 PRICE CONVERSION DEBUG:');
+      console.log('  - Original price string:', data.price);
+      console.log('  - Parsed price (SUI):', priceInSui);
+      console.log('  - Price in MIST:', priceInMist);
+      console.log('  - Price as string:', priceInMist.toString());
+
       const contractParams: UploadModelParams = {
         title: data.title,
         description: data.description,
@@ -215,9 +225,21 @@ export class ModelUploadService {
         datasetBlobId: datasetUploadResult?.blobId,
         encryptionPolicyId: modelUploadResult.encryptionId || modelUploadResult.policyId || 'no-encryption-policy',
         sealMetadata: new Uint8Array(0), // SEAL metadata from encryption
-        price: (parseFloat(data.price) * 1000000000).toString(), // Convert to smallest units
+        price: priceInMist.toString(),
         maxDownloads: data.maxDownloads
       };
+
+      console.log('📄 CONTRACT PARAMS DEBUG:');
+      console.log('  - Title:', contractParams.title);
+      console.log('  - Description length:', contractParams.description?.length);
+      console.log('  - Category:', contractParams.category);
+      console.log('  - Tags count:', contractParams.tags?.length);
+      console.log('  - Model blob ID:', contractParams.modelBlobId);
+      console.log('  - Dataset blob ID:', contractParams.datasetBlobId);
+      console.log('  - Encryption policy ID:', contractParams.encryptionPolicyId);
+      console.log('  - SEAL metadata length:', contractParams.sealMetadata?.length);
+      console.log('  - Price (MIST):', contractParams.price);
+      console.log('  - Max downloads:', contractParams.maxDownloads);
 
       const contractResult = await this.contractService.uploadModel(
         contractParams,
@@ -294,7 +316,7 @@ export class ModelUploadService {
    */
   async submitForVerification(
     pendingModelId: string,
-    signer: Signer
+    signer: any
   ): Promise<{ success: boolean; transactionDigest?: string; error?: string }> {
     try {
       logger.info('Submitting model for verification', { pendingModelId });
@@ -337,7 +359,7 @@ export class ModelUploadService {
     encryptionPolicyId: string,
     modelName: string,
     category: string,
-    signer: Signer
+    signer: any
   ): Promise<{ success: boolean; verificationId?: string; transactionDigest?: string; error?: string }> {
     try {
       logger.info('Starting TEE verification', {
@@ -401,7 +423,7 @@ export class ModelUploadService {
   async listOnMarketplace(
     pendingModelId: string,
     verificationId: string,
-    signer: Signer
+    signer: any
   ): Promise<{ success: boolean; marketplaceId?: string; transactionDigest?: string; error?: string }> {
     try {
       logger.info('Listing model on marketplace', {

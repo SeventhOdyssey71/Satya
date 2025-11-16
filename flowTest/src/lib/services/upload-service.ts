@@ -374,15 +374,22 @@ export class UploadService {
     }
 
     // Validate file type (basic check)
-    if (file.name.length > 255) {
+    if (file.name && file.name.length > 255) {
       throw new Error('File name is too long (maximum 255 characters)');
     }
 
     // Check for potentially dangerous file extensions
     const dangerousExtensions = ['.exe', '.bat', '.cmd', '.scr', '.com', '.pif'];
-    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-    if (dangerousExtensions.includes(fileExtension)) {
-      throw new Error(`File type ${fileExtension} is not allowed`);
+    
+    // Safe file extension extraction with null checks
+    if (file.name && typeof file.name === 'string') {
+      const dotIndex = file.name.lastIndexOf('.');
+      if (dotIndex !== -1) {
+        const fileExtension = file.name.toLowerCase().substring(dotIndex);
+        if (dangerousExtensions.includes(fileExtension)) {
+          throw new Error(`File type ${fileExtension} is not allowed`);
+        }
+      }
     }
   }
 

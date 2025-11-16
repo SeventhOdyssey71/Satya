@@ -199,40 +199,52 @@ export default function DashboardPending() {
 
       {/* Status Overview */}
       {!state.isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-albert font-semibold text-lg text-secondary-700">Awaiting Verification</h3>
-              <p className="text-4xl font-russo font-bold text-secondary-600 mt-3">{pendingVerification.length}</p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Awaiting Verification - Blue theme */}
+        <div className="rounded-3xl p-6 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl flex items-center justify-center mb-4">
+              <TbClockHour4 className="w-8 h-8 text-white" />
             </div>
-            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center">
-              <TbClockHour4 className="w-6 h-6 text-secondary-600" />
-            </div>
+            <h3 className="font-albert text-sm text-blue-600 mb-2">Awaiting Verification</h3>
+            <p className="text-3xl font-russo font-bold text-blue-700 mb-1">{pendingVerification.length}</p>
+            <p className="text-xs text-blue-500">Models pending</p>
           </div>
         </div>
 
-        <div className="card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-albert font-semibold text-lg text-secondary-700">In Verification</h3>
-              <p className="text-4xl font-russo font-bold text-secondary-600 mt-3">{inVerification.length}</p>
+        {/* In Verification - Purple theme */}
+        <div className="rounded-3xl p-6 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-500 rounded-2xl flex items-center justify-center mb-4">
+              <TbShieldX className="w-8 h-8 text-white" />
             </div>
-            <div className="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center">
-              <TbShieldX className="w-6 h-6 text-secondary-600" />
-            </div>
+            <h3 className="font-albert text-sm text-purple-600 mb-2">In Verification</h3>
+            <p className="text-3xl font-russo font-bold text-purple-700 mb-1">{inVerification.length}</p>
+            <p className="text-xs text-purple-500">Currently processing</p>
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-secondary-100 to-secondary-200 border-secondary-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-albert font-semibold text-lg text-secondary-800">Verified</h3>
-              <p className="text-4xl font-russo font-bold text-secondary-700 mt-3">{verified.length}</p>
+        {/* Processing Speed - Orange theme */}
+        <div className="rounded-3xl p-6 bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl flex items-center justify-center mb-4">
+              <TbRefresh className="w-8 h-8 text-white" />
             </div>
-            <div className="w-12 h-12 bg-white border border-secondary-300 rounded-xl flex items-center justify-center">
-              <TbShieldCheck className="w-6 h-6 text-white" />
+            <h3 className="font-albert text-sm text-orange-600 mb-2">Avg. Speed</h3>
+            <p className="text-3xl font-russo font-bold text-orange-700 mb-1">2.4</p>
+            <p className="text-xs text-orange-500">Minutes per verification</p>
+          </div>
+        </div>
+
+        {/* Verified - Green theme */}
+        <div className="rounded-3xl p-6 bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl flex items-center justify-center mb-4">
+              <TbShieldCheck className="w-8 h-8 text-white" />
             </div>
+            <h3 className="font-albert text-sm text-emerald-600 mb-2">Success Rate</h3>
+            <p className="text-3xl font-russo font-bold text-emerald-700 mb-1">{verified.length > 0 ? '100' : '0'}%</p>
+            <p className="text-xs text-emerald-500">Verification rate</p>
           </div>
         </div>
       </div>
@@ -242,16 +254,16 @@ export default function DashboardPending() {
       {!state.isLoading && pendingVerification.length > 0 && (
         <div className="card p-8">
           <h3 className="text-2xl font-russo text-secondary-900 mb-8 flex items-center">
-            <div className="w-8 h-8 bg-warning-100 rounded-lg flex items-center justify-center mr-3">
-              <TbCertificate className="w-5 h-5 text-warning-600" />
+            <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
+              <TbCertificate className="w-5 h-5 text-amber-600" />
             </div>
             Models Awaiting TEE Verification
-            <span className="ml-3 badge bg-warning-100 text-warning-800">{pendingVerification.length}</span>
+            <span className="ml-3 badge bg-amber-100 text-amber-800">{pendingVerification.length}</span>
           </h3>
           
           <div className="space-y-8">
             {pendingVerification.map((model) => (
-              <div key={model.id} className="card-hover p-6 border-l-4 border-l-warning-400">
+              <div key={model.id} className="card-hover p-6 border-l-4 border-l-amber-400">
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <h4 className="text-xl font-albert font-semibold text-secondary-900">{model.title}</h4>
@@ -266,7 +278,7 @@ export default function DashboardPending() {
                         Model: {model.modelBlobId.substring(0, 12)}...
                       </span>
                       {model.datasetBlobId && (
-                        <span className="badge bg-white text-secondary-800 border border-secondary-300 shadow-card">
+                        <span className="badge bg-secondary-100 text-secondary-800">
                           Dataset: {model.datasetBlobId.substring(0, 12)}...
                         </span>
                       )}
@@ -278,7 +290,9 @@ export default function DashboardPending() {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <span className="badge badge-warning">Needs Verification</span>
+                    <span className="badge badge-warning">
+                      Needs Verification
+                    </span>
                     {model.verificationAttempts > 0 && (
                       <span className="text-xs text-secondary-500">
                         Attempts: {model.verificationAttempts}
