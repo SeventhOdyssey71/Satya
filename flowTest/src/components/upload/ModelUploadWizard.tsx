@@ -290,6 +290,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
           validation={validation}
           isWalletConnected={isWalletConnected}
           onCancel={onCancel}
+          onTbUpload={handleUpload}
         />
       </div>
     </div>
