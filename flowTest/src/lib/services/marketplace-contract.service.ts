@@ -132,8 +132,8 @@ export class MarketplaceContractService {
         ],
       });
 
-      // Transfer the created PendingModel to sender  
-      tx.transferObjects([result], tx.gas);
+      // The PendingModel will be automatically transferred to the transaction sender
+      // No explicit transfer needed for objects returned from move calls
 
       // Execute transaction
       const txResult = await this.suiClient.signAndExecuteTransaction({
