@@ -13,19 +13,9 @@ import UploadProgress from './UploadProgress'
 import UploadStatus from './UploadStatus'
 import { useUpload, useUploadValidation } from '@/hooks'
 import { PolicyType } from '@/lib/integrations/seal/types'
+import { ModelUploadService, type ModelUploadData as ServiceModelUploadData, type ModelUploadProgress } from '@/lib/services/model-upload.service'
 
-interface ModelUploadData {
-  // Basic Info
-  title: string
-  description: string
-  category: string
-  tags: string[]
-  
-  // Pricing
-  price: string
-  enableSample: boolean
-  maxDownloads?: number
-  
+interface ModelUploadData extends Omit<ServiceModelUploadData, 'modelFile' | 'datasetFile' | 'thumbnailFile'> {
   // Files
   modelFile?: File
   datasetFile?: File
@@ -34,9 +24,8 @@ interface ModelUploadData {
   modelBlobId?: string
   datasetBlobId?: string
   
-  // Security
-  policyType: string
-  accessDuration?: number
+  // Additional UI fields
+  enableSample: boolean
   
   // TEE Verification (handled in Dashboard)
   teeAttestation?: any
@@ -114,52 +103,115 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
   const walletAddress = currentAccount?.address || ''
 
 
-  // Handle complete upload flow: SEAL + Walrus + Blockchain
+  // State for upload progress
+  const [uploadProgress, setUploadProgress] = useState<ModelUploadProgress | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+
+  // Handle complete upload flow: SEAL + Walrus + Smart Contract
   const handleUpload = async () => {
     if (!isWalletConnected) {
       alert('Please connect your wallet first')
       return
     }
 
+    if (!data.modelFile) {
+      alert('Please select a model file first')
+      return
+    }
+
     try {
-      // TEMPORARY: Create keypair for testing Walrus SDK integration
-      // Use connected wallet for transaction signing
-      if (!currentAccount?.address) {
-        throw new Error('Wallet not connected')
-      }
-      
-      // Create wallet object that can sign transactions
-      const walletObject = {
-        address: currentAccount.address,
-        signAndExecuteTransaction,
-        toSuiAddress: () => currentAccount.address
+      setIsUploading(true)
+      setUploadProgress({
+        phase: 'validation',
+        progress: 0,
+        message: 'Starting upload...'
+      })
+
+      // Create signer from connected wallet
+      const signer = {
+        toSuiAddress: async () => currentAccount!.address,
+        signTransaction: async (tx: any) => {
+          const result = await signAndExecuteTransaction({ transaction: tx })
+          return result
+        }
+      } as any
+
+      // Prepare upload data for service
+      const uploadData: ServiceModelUploadData = {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        tags: data.tags,
+        modelFile: data.modelFile,
+        datasetFile: data.datasetFile,
+        thumbnailFile: data.thumbnailFile,
+        price: data.price,
+        maxDownloads: data.maxDownloads,
+        policyType: PolicyType.PAYMENT_GATED,
+        accessDuration: data.accessDuration
       }
 
-      console.log('Starting complete upload flow...')
+      console.log('Starting comprehensive upload flow...', uploadData)
 
-      // Step 1: TbUpload file and encrypt with SEAL, upload to Walrus
-      console.log('Step 1: SEAL encryption and Walrus upload...')
-      const uploadResult = await upload.uploadModel({...data, enableEncryption: true}, walletObject)
-      
+      // Create upload service instance
+      const modelUploadService = await ModelUploadService.createWithFallback()
+
+      // Execute upload
+      const uploadResult = await modelUploadService.uploadModel(
+        uploadData,
+        signer,
+        (progress: ModelUploadProgress) => {
+          console.log('Upload progress:', progress)
+          setUploadProgress(progress)
+        }
+      )
+
       if (!uploadResult.success) {
-        throw new Error(`TbUpload failed: ${uploadResult.error}`)
+        throw new Error(uploadResult.error || 'Upload failed')
       }
 
-      console.log('✅ Model uploaded successfully!')
-      console.log('TbUpload result:', uploadResult)
+      console.log('✅ Model uploaded successfully!', uploadResult)
+
+      // Update data with results
+      const updatedData = {
+        ...data,
+        blockchainTxDigest: uploadResult.transactionDigest,
+        verificationStatus: 'pending' as const,
+        modelBlobId: uploadResult.blobIds.model,
+        datasetBlobId: uploadResult.blobIds.dataset
+      }
+
+      // Update local state
+      onChange(updatedData)
+
+      alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Smart contract record created ✓\n\nPending Model ID: ${uploadResult.pendingModelId}\n\nYour model is now pending TEE verification. You can track its progress in the Dashboard.`)
       
-      alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• TbUploaded to Walrus storage ✓\n• Marketplace listing created ✓\n\nListing ID: ${uploadResult.listingId || 'completed'}`)
       setCurrentStep(steps.length) // Go to result step
       
       // Call the callback if provided
       if (onUploadComplete) {
-        onUploadComplete(uploadResult)
+        onUploadComplete({
+          success: true,
+          pendingModelId: uploadResult.pendingModelId,
+          transactionDigest: uploadResult.transactionDigest,
+          blobIds: uploadResult.blobIds
+        })
       }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error('Complete upload flow failed:', error)
-      alert(`❌ TbUpload failed: ${errorMessage}`)
+      
+      setUploadProgress({
+        phase: 'error',
+        progress: 0,
+        message: `Upload failed: ${errorMessage}`,
+        details: { error: errorMessage }
+      })
+
+      alert(`❌ Upload failed: ${errorMessage}\n\nPlease try again or check the console for more details.`)
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -291,6 +343,8 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
           isWalletConnected={isWalletConnected}
           onCancel={onCancel}
           onTbUpload={handleUpload}
+          uploadProgress={uploadProgress}
+          isUploading={isUploading}
         />
       </div>
     </div>
@@ -793,7 +847,7 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCanc
   )
 }
 
-function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTbUpload }: StepProps) {
+function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTbUpload, uploadProgress, isUploading }: StepProps & { uploadProgress?: ModelUploadProgress | null; isUploading?: boolean }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async () => {
@@ -803,7 +857,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
     try {
       await onTbUpload()
     } catch (error) {
-      console.error('TbUpload failed:', error)
+      console.error('Upload failed:', error)
     } finally {
       setIsSubmitting(false)
     }
@@ -957,23 +1011,63 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
             </div>
           )}
 
-          {/* Verification Status */}
-          <div>
-            <p className="form-label">Verification Status</p>
-            <div className="mt-3">
-              <div className="bg-warning-50 border border-warning-200 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-warning-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm">⏳</span>
+          {/* Upload Progress */}
+          {uploadProgress && isUploading && (
+            <div>
+              <p className="form-label">Upload Progress</p>
+              <div className="mt-3">
+                <div className="bg-primary-50 border border-primary-200 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    </div>
+                    <span className="font-albert font-semibold text-primary-900">
+                      {uploadProgress.phase === 'validation' ? 'Validating' :
+                       uploadProgress.phase === 'encryption' ? 'Encrypting' :
+                       uploadProgress.phase === 'storage' ? 'Storing' :
+                       uploadProgress.phase === 'contract' ? 'Creating Record' :
+                       uploadProgress.phase === 'completed' ? 'Completed' :
+                       uploadProgress.phase === 'error' ? 'Error' : 'Processing'}
+                    </span>
                   </div>
-                  <span className="font-albert font-semibold text-warning-900">Pending Verification</span>
+                  <div className="mb-2">
+                    <div className="bg-white rounded-full h-2 overflow-hidden">
+                      <div 
+                        className="h-2 bg-primary-500 transition-all duration-300 ease-out"
+                        style={{ width: `${uploadProgress.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                  <p className="font-albert text-primary-700 text-sm">{uploadProgress.message}</p>
+                  {uploadProgress.pendingModelId && (
+                    <p className="font-albert text-primary-600 text-xs mt-2">
+                      Model ID: <code className="font-mono">{uploadProgress.pendingModelId}</code>
+                    </p>
+                  )}
                 </div>
-                <p className="font-albert text-warning-700 mt-2">
-                  Model will be pending until you verify it in your Dashboard using TEE attestation.
-                </p>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Verification Status */}
+          {!isUploading && (
+            <div>
+              <p className="form-label">Next Steps</p>
+              <div className="mt-3">
+                <div className="bg-warning-50 border border-warning-200 rounded-xl p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-warning-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">⏳</span>
+                    </div>
+                    <span className="font-albert font-semibold text-warning-900">Ready for TEE Verification</span>
+                  </div>
+                  <p className="font-albert text-warning-700 mt-2">
+                    After upload, your model will be pending until you verify it in your Dashboard using TEE attestation.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {(data.maxDownloads || data.accessDuration || data.expiryDays) && (
             <div>
