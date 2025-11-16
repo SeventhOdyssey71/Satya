@@ -54,7 +54,7 @@ export class UserService {
     this.suiClient = new SuiMarketplaceClient({
       network: SUI_CONFIG.NETWORK,
       packageId: MARKETPLACE_CONFIG.PACKAGE_ID,
-      marketplaceObjectId: MARKETPLACE_CONFIG.OBJECT_ID
+      marketplaceObjectId: MARKETPLACE_CONFIG.REGISTRY_ID
     });
   }
 
