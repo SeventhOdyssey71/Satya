@@ -115,13 +115,13 @@ export class MarketplaceContractService {
           tx.pure.string(params.modelBlobId),
           params.datasetBlobId ? 
             tx.pure.option('string', params.datasetBlobId) : 
-            tx.pure.option('string', []),
+            tx.pure.option('string', null),
           tx.pure.string(params.encryptionPolicyId),
           tx.pure.vector('u8', Array.from(params.sealMetadata)),
           tx.pure.u64(params.price),
           params.maxDownloads ? 
             tx.pure.option('u64', params.maxDownloads) : 
-            tx.pure.option('u64', []),
+            tx.pure.option('u64', null),
           tx.object('0x6'), // System Clock object
         ],
       });
