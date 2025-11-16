@@ -68,10 +68,42 @@ export class MarketplaceContractService {
     signer: Signer
   ): Promise<ContractResult> {
     try {
+      // Validate parameters
+      if (!params.title || typeof params.title !== 'string') {
+        throw new Error('Invalid title parameter');
+      }
+      if (!params.description || typeof params.description !== 'string') {
+        throw new Error('Invalid description parameter');
+      }
+      if (!params.category || typeof params.category !== 'string') {
+        throw new Error('Invalid category parameter');
+      }
+      if (!params.modelBlobId || typeof params.modelBlobId !== 'string') {
+        throw new Error('Invalid modelBlobId parameter');
+      }
+      if (!params.encryptionPolicyId || typeof params.encryptionPolicyId !== 'string') {
+        throw new Error('Invalid encryptionPolicyId parameter');
+      }
+      if (!params.price || (typeof params.price !== 'string' && typeof params.price !== 'number')) {
+        throw new Error(`Invalid price parameter: ${typeof params.price}, value: ${params.price}`);
+      }
+      if (!Array.isArray(params.tags)) {
+        throw new Error(`Invalid tags parameter: ${typeof params.tags}, value: ${params.tags}`);
+      }
+      // Ensure all tags are strings
+      const validTags = params.tags.filter(tag => typeof tag === 'string' && tag.length > 0);
+      if (validTags.length !== params.tags.length) {
+        logger.warn('Some tags were filtered out due to invalid type', {
+          originalTags: params.tags,
+          validTags: validTags
+        });
+      }
+
       logger.info('Creating upload model transaction', {
         title: params.title,
         blobId: params.modelBlobId,
         price: params.price,
+        priceType: typeof params.price,
         packageId: MARKETPLACE_CONFIG.PACKAGE_ID,
         target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model`
       });
@@ -85,7 +117,7 @@ export class MarketplaceContractService {
           tx.pure.string(params.title),
           tx.pure.string(params.description),
           tx.pure.string(params.category),
-          tx.pure.vector('string', params.tags),
+          tx.pure.vector('string', validTags),
           tx.pure.string(params.modelBlobId),
           params.datasetBlobId ? 
             tx.pure.option('string', params.datasetBlobId) : 
@@ -100,7 +132,7 @@ export class MarketplaceContractService {
         ],
       });
 
-      // Transfer the created PendingModel to sender
+      // Transfer the created PendingModel to sender  
       tx.transferObjects([result], tx.gas);
 
       // Execute transaction
