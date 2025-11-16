@@ -96,16 +96,24 @@ export class WalrusClient {
       
       const result = await response.json() as any;
       
+      // Extract blobId from the correct Walrus response format
+      const blobId = result.newlyCreated?.blobObject?.blobId || result.alreadyCertified?.blobId;
+      
+      if (!blobId) {
+        logger.error('Walrus upload succeeded but no blob ID found in response', { result });
+        throw new WalrusError('Upload successful but no blob ID returned', 500);
+      }
+      
       logger.info('Walrus upload successful', {
-        blobId: result.blob_id || result.blobId,
+        blobId,
         dataSize: data.length,
         epochs
       });
 
       return {
         success: true,
-        blobId: result.blob_id || result.blobId,
-        certificate: result.certificate
+        blobId,
+        certificate: result.newlyCreated ? 'newly_certified' : 'already_certified'
       };
       
     } catch (error) {
