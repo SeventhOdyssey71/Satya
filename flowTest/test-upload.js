@@ -72,8 +72,9 @@ async function testSmartContractCall() {
       ],
     });
     
-    // Transfer the returned PendingModel to the test address
-    tx.transferObjects([result], await keypair.toSuiAddress());
+    // Transfer the returned PendingModel to the test address  
+    const senderAddress = await keypair.toSuiAddress();
+    tx.transferObjects([result], senderAddress);
     
     console.log('✓ Transaction constructed successfully');
     console.log('✓ moveCall target verified');

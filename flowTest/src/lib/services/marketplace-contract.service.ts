@@ -128,8 +128,9 @@ export class MarketplaceContractService {
         ],
       });
 
-      // Transfer the returned PendingModel to the sender
-      tx.transferObjects([result], await signer.toSuiAddress());
+      // Transfer the returned PendingModel to the transaction sender
+      const senderAddress = await signer.toSuiAddress();
+      tx.transferObjects([result], senderAddress);
 
       // Execute transaction
       const txResult = await this.suiClient.signAndExecuteTransaction({
