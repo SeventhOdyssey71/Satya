@@ -58,7 +58,7 @@ export class KeyServerManager {
       mode: KeyServerMode.OPEN, // Testnet servers are typically Open mode
       weight: server.weight || 1,
       isActive: true
-    }));
+    }) as KeyServerConfig);
   }
 
   /**

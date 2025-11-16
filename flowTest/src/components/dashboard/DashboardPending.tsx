@@ -236,6 +236,7 @@ export default function DashboardPending() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Pending Verification List */}
       {!state.isLoading && pendingVerification.length > 0 && (
@@ -372,15 +373,13 @@ export default function DashboardPending() {
                       <TbShieldCheck className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <p className="font-albert font-semibold text-success-900 text-lg">{task.fileName}</p>
+                      <p className="font-albert font-semibold text-success-900 text-lg">{task.title}</p>
                       <p className="text-success-700 font-albert">
-                        {formatFileSize(task.fileSize)} • Verified • Ready for marketplace
+                        {task.category} • Verified • Ready for marketplace
                       </p>
-                      {task.blockchainTxDigest && (
-                        <code className="text-xs bg-success-200 px-2 py-1 rounded text-success-800 font-mono mt-2 inline-block">
-                          Tx: {task.blockchainTxDigest.substring(0, 20)}...
-                        </code>
-                      )}
+                      <code className="text-xs bg-success-200 px-2 py-1 rounded text-success-800 font-mono mt-2 inline-block">
+                        Model ID: {task.id.substring(0, 20)}...
+                      </code>
                     </div>
                   </div>
                   <span className="badge badge-success">

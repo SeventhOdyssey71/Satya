@@ -45,6 +45,8 @@ export class WalrusClient {
       let response: Response;
       
       try {
+        console.log('🚀 Starting Walrus upload request', { dataSize: data.length, timeout, url: uploadUrl });
+        
         response = await fetch(uploadUrl, {
           method: 'PUT',
           body: data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer,
@@ -54,6 +56,8 @@ export class WalrusClient {
           cache: 'no-cache',
           redirect: 'follow'
         });
+        
+        console.log('✅ Walrus upload request completed', { status: response.status });
         
         logger.debug('Walrus upload response received', {
           status: response.status,

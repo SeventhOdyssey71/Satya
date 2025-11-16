@@ -1,6 +1,6 @@
 // Seal Network Configuration
 import { SEAL_CONFIG as MAIN_SEAL_CONFIG } from '../../../constants';
-import type { KeyServerConfig } from '@mysten/seal';
+// import type { KeyServerConfig } from '@mysten/seal'; // Commented out to avoid type conflicts
 
 export const SEAL_CONFIG = {
   testnet: {
@@ -10,7 +10,7 @@ export const SEAL_CONFIG = {
       weight: (server as any).WEIGHT || 1,
       apiKeyName: (server as any).API_KEY_NAME,
       apiKey: (server as any).API_KEY
-    } as KeyServerConfig)),
+    })),
     packageId: MAIN_SEAL_CONFIG.PACKAGE_ID,
     threshold: MAIN_SEAL_CONFIG.agent.threshold,
     verifyKeyServers: false // Disable for testnet as recommended by SEAL SDK docs

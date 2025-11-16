@@ -412,6 +412,31 @@ export class MarketplaceContractService {
   }
 
   /**
+   * Create purchase transaction (for use with useSignAndExecuteTransaction)
+   */
+  async createPurchaseTransaction(params: PurchaseParams): Promise<Transaction> {
+    const tx = new Transaction();
+    
+    // Split coin for payment
+    const [paymentCoin] = tx.splitCoins(
+      tx.gas,
+      [tx.pure.u64(params.paymentAmount)]
+    );
+    
+    // Call purchase_model function
+    tx.moveCall({
+      target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::purchase_model`,
+      arguments: [
+        tx.object(MARKETPLACE_CONFIG.MARKETPLACE_OBJECT_ID),
+        tx.pure.id(params.marketplaceModelId),
+        paymentCoin
+      ]
+    });
+    
+    return tx;
+  }
+
+  /**
    * Phase 5: Purchase model from marketplace
    */
   async purchaseModel(

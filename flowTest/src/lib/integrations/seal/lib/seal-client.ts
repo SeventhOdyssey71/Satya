@@ -10,11 +10,11 @@ import { KeyServerManager } from './key-server-manager';
 import { SessionKeyManager } from './session-key-manager';
 
 export class SealClientWrapper {
-  private client: SealClient;
-  private suiClient: SuiClient;
+  private client!: SealClient;
+  private suiClient!: SuiClient;
   private sessionCache: Map<string, SessionKey> = new Map();
-  private keyServerManager: KeyServerManager;
-  private sessionKeyManager: SessionKeyManager;
+  private keyServerManager!: KeyServerManager;
+  private sessionKeyManager!: SessionKeyManager;
   private static instance: SealClientWrapper | null = null;
   
   constructor(suiClient: SuiClient) {

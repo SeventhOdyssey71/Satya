@@ -26,6 +26,7 @@ interface ModelUploadData extends Omit<ServiceModelUploadData, 'modelFile' | 'da
   
   // Additional UI fields
   enableSample: boolean
+  enableEncryption: boolean
   
   // TEE Verification (handled in Dashboard)
   teeAttestation?: any
@@ -82,7 +83,8 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     tags: [],
     price: '',
     enableSample: false,
-    policyType: 'payment-gated',
+    enableEncryption: true,
+    policyType: PolicyType.PAYMENT_GATED,
     accessDuration: 30,
     isPrivate: false,
     verificationStatus: 'pending' // Default to pending - verification happens in Dashboard
@@ -182,7 +184,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
       }
 
       // Update local state
-      onChange(updatedData)
+      updateData(updatedData)
 
       alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Smart contract record created ✓\n\nPending Model ID: ${uploadResult.pendingModelId}\n\nYour model is now pending TEE verification. You can track its progress in the Dashboard.`)
       
@@ -296,7 +298,8 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
               tags: [],
               price: '',
               enableSample: false,
-                        policyType: 'payment-gated',
+              enableEncryption: true,
+              policyType: PolicyType.PAYMENT_GATED,
               accessDuration: 30,
               isPrivate: false,
               verificationStatus: 'pending'
@@ -804,7 +807,7 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCanc
                       name="policyType"
                       value={policy.value}
                       checked={data.policyType === policy.value}
-                      onChange={(e) => onChange({ policyType: e.target.value })}
+                      onChange={(e) => onChange({ policyType: e.target.value as PolicyType })}
                       className="mt-1 w-5 h-5 border-border text-primary-600 focus:ring-primary-500/20"
                     />
                     <div>
