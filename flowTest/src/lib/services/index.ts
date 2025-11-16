@@ -84,7 +84,7 @@ export function getUploadService(): UploadService {
       return {
         uploadFile: async () => { throw new Error('Upload service not available'); },
         getHealthStatus: async () => ({ overall: 'failed' as const })
-      } as UploadService;
+      } as unknown as UploadService;
     }
   }
   return uploadService;

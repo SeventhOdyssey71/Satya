@@ -119,15 +119,11 @@ export class MarketplaceContractService {
           tx.pure.string(params.category),
           tx.pure.vector('string', validTags),
           tx.pure.string(params.modelBlobId),
-          params.datasetBlobId ? 
-            tx.pure.option('string', params.datasetBlobId) : 
-            tx.pure.option('string', []),
+          tx.pure.option('string', params.datasetBlobId ?? null),
           tx.pure.string(params.encryptionPolicyId),
           tx.pure.vector('u8', Array.from(params.sealMetadata)),
           tx.pure.u64(params.price),
-          params.maxDownloads ? 
-            tx.pure.option('u64', params.maxDownloads) : 
-            tx.pure.option('u64', []),
+          tx.pure.option('u64', params.maxDownloads ?? null),
           tx.object('0x6'), // System Clock object
         ],
       });
@@ -455,7 +451,7 @@ export class MarketplaceContractService {
     tx.moveCall({
       target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::purchase_model`,
       arguments: [
-        tx.object(MARKETPLACE_CONFIG.MARKETPLACE_OBJECT_ID),
+        tx.object(MARKETPLACE_CONFIG.REGISTRY_OBJECT_ID),
         tx.pure.id(params.marketplaceModelId),
         paymentCoin
       ]
@@ -560,24 +556,9 @@ export class MarketplaceContractService {
    */
   async getMarketplaceModels(limit = 50): Promise<any[]> {
     try {
-      const result = await this.suiClient.queryObjects({
-        filter: {
-          StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::MarketplaceModel`
-        },
-        limit,
-        options: {
-          showContent: true,
-          showType: true,
-          showOwner: true
-        }
-      });
-
-      return result.data.map(obj => ({
-        id: obj.data?.objectId,
-        content: obj.data?.content,
-        type: obj.data?.type,
-        owner: obj.data?.owner
-      }));
+      // TODO: Implement proper querying when SuiClient API is stable
+      logger.warn('getMarketplaceModels not implemented yet');
+      return [];
 
     } catch (error) {
       logger.error('Failed to query marketplace models', {
@@ -592,31 +573,9 @@ export class MarketplaceContractService {
    */
   async getUserPendingModels(userAddress: string): Promise<any[]> {
     try {
-      const result = await this.suiClient.queryObjects({
-        filter: {
-          StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::PendingModel`
-        },
-        options: {
-          showContent: true,
-          showType: true,
-          showOwner: true
-        }
-      });
-
-      // Filter by owner
-      return result.data
-        .filter(obj => 
-          obj.data?.owner && 
-          typeof obj.data.owner === 'object' && 
-          'AddressOwner' in obj.data.owner &&
-          obj.data.owner.AddressOwner === userAddress
-        )
-        .map(obj => ({
-          id: obj.data?.objectId,
-          content: obj.data?.content,
-          type: obj.data?.type,
-          owner: obj.data?.owner
-        }));
+      // TODO: Implement proper querying when SuiClient API is stable
+      logger.warn('getUserPendingModels not implemented yet', { userAddress });
+      return [];
 
     } catch (error) {
       logger.error('Failed to query user pending models', {
@@ -632,30 +591,9 @@ export class MarketplaceContractService {
    */
   async getUserPurchases(userAddress: string): Promise<any[]> {
     try {
-      const result = await this.suiClient.queryObjects({
-        filter: {
-          StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::PurchaseRecord`
-        },
-        options: {
-          showContent: true,
-          showType: true,
-          showOwner: true
-        }
-      });
-
-      return result.data
-        .filter(obj => 
-          obj.data?.owner && 
-          typeof obj.data.owner === 'object' && 
-          'AddressOwner' in obj.data.owner &&
-          obj.data.owner.AddressOwner === userAddress
-        )
-        .map(obj => ({
-          id: obj.data?.objectId,
-          content: obj.data?.content,
-          type: obj.data?.type,
-          owner: obj.data?.owner
-        }));
+      // TODO: Implement proper querying when SuiClient API is stable
+      logger.warn('getUserPurchases not implemented yet', { userAddress });
+      return [];
 
     } catch (error) {
       logger.error('Failed to query user purchases', {

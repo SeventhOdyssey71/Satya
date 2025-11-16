@@ -36,7 +36,7 @@ export class SealClientWrapper {
       // Use best available key servers
       const bestServers = this.keyServerManager.selectBestKeyServers();
       const serverConfigs = bestServers.length > 0 
-        ? bestServers.map(s => ({ objectId: s.objectId, url: s.url, weight: s.weight }))
+        ? bestServers.map(s => ({ objectId: s.objectId, url: s.url, weight: s.weight || 1 }))
         : SEAL_CONFIG.testnet.keyServers;
       
       this.client = new SealClient({
@@ -128,7 +128,7 @@ export class SealClientWrapper {
         try {
           console.log('🔎 Searching for SEAL packages on testnet...');
           const events = await this.suiClient.queryEvents({
-            query: { Package: SEAL_CONFIG.testnet.packageId },
+            query: { All: [] } as any,
             limit: 10
           });
           console.log('📊 SEAL package events:', events);

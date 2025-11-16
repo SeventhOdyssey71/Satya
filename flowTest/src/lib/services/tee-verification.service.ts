@@ -33,7 +33,7 @@ export interface ModelVerificationRequest {
 }
 
 export interface TEEVerificationResult {
-  success: bool;
+  success: boolean;
   verificationId?: string;
   enclaveId: string;
   qualityScore: number;
