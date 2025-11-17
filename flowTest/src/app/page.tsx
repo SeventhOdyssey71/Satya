@@ -325,32 +325,32 @@ function SuiStackSection() {
  ];
 
  return (
-  <section className="relative z-10 py-20 bg-white border-t border-gray-200">
+  <section className="relative z-10 py-20 bg-white border-t border-ocean/10">
    <div className="container-custom relative">
     <div className="text-center mb-20">
-     <h2 className="text-3xl md:text-5xl font-russo text-gray-900 tracking-tight leading-tight">
+     <h2 className="text-3xl md:text-5xl font-russo text-ocean tracking-tight leading-tight">
       Secure AI Marketplace Built on Trusted Infrastructure
      </h2>
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-     <div className="rounded-3xl p-8 text-black" style={{ backgroundColor: '#92a3fb' }}>
+     <div className="rounded-3xl p-8 bg-aqua/20 text-ocean border border-aqua/30">
       <h3 className="text-2xl font-bold mb-6">TEE Verification</h3>
-      <p className="text-lg leading-relaxed">
+      <p className="text-lg leading-relaxed text-ocean/80">
        Hardware-based security ensures model integrity and prevents tampering through trusted execution environments.
       </p>
      </div>
      
-     <div className="rounded-3xl p-8 text-black" style={{ backgroundColor: '#9df9bc' }}>
+     <div className="rounded-3xl p-8 bg-aqua/10 text-ocean border border-aqua/20">
       <h3 className="text-2xl font-bold mb-6">Blockchain Transparency</h3>
-      <p className="text-lg leading-relaxed">
+      <p className="text-lg leading-relaxed text-ocean/80">
        Immutable transaction records and smart contract automation ensure trust and reliable ownership.
       </p>
      </div>
      
-     <div className="rounded-3xl p-8 text-black" style={{ backgroundColor: '#e7fc7e' }}>
+     <div className="rounded-3xl p-8 bg-ocean text-white">
       <h3 className="text-2xl font-bold mb-6">Encrypted Storage</h3>
-      <p className="text-lg leading-relaxed">
+      <p className="text-lg leading-relaxed text-white/90">
        SEAL encryption protects sensitive data while maintaining usability and compliance with privacy regulations.
       </p>
      </div>
@@ -369,27 +369,27 @@ function TrustEnforcedSection() {
       <h2 className="text-3xl md:text-4xl font-russo mb-6">
        Trust Enforced by Design
       </h2>
-      <p className="text-xl text-secondary-800 mb-8 leading-relaxed">
+      <p className="text-xl text-ocean/70 mb-8 leading-relaxed">
        Every transaction is protected by cryptographic proofs, hardware attestations, and blockchain immutability. 
        No more hoping for the best - trust is mathematically guaranteed.
       </p>
       
       <div className="space-y-4 mb-8">
        <div className="flex items-center gap-3">
-        <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
-        <span className="text-secondary-900">Cryptographic verification of model integrity</span>
+        <div className="w-2 h-2 bg-ocean rounded-full"></div>
+        <span className="text-ocean">Cryptographic verification of model integrity</span>
        </div>
        <div className="flex items-center gap-3">
-        <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
-        <span className="text-secondary-900">Hardware-based attestation through TEE</span>
+        <div className="w-2 h-2 bg-ocean rounded-full"></div>
+        <span className="text-ocean">Hardware-based attestation through TEE</span>
        </div>
        <div className="flex items-center gap-3">
-        <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
-        <span className="text-secondary-900">Immutable transaction records on blockchain</span>
+        <div className="w-2 h-2 bg-ocean rounded-full"></div>
+        <span className="text-ocean">Immutable transaction records on blockchain</span>
        </div>
        <div className="flex items-center gap-3">
-        <div className="w-2 h-2 bg-secondary-600 rounded-full"></div>
-        <span className="text-secondary-900">Privacy-preserving encrypted storage</span>
+        <div className="w-2 h-2 bg-ocean rounded-full"></div>
+        <span className="text-ocean">Privacy-preserving encrypted storage</span>
        </div>
       </div>
       
@@ -402,19 +402,19 @@ function TrustEnforcedSection() {
      </div>
      
      <div className="relative">
-      <div className="bg-gradient-to-br from-white to-surface-100 rounded-3xl p-8 border border-secondary-300 shadow-large">
+      <div className="bg-white rounded-3xl p-8 border border-ocean/10 shadow-large">
        <div className="grid grid-cols-2 gap-4 h-80">
         <div className="space-y-4">
-         <div className="card p-4 bg-white border-secondary-300">
+         <div className="card p-4 bg-white border-ocean/10">
           <div className="flex items-center gap-2 mb-2">
-           <HiShieldCheck className="w-4 h-4 text-secondary-600" />
-           <span className="text-sm font-medium text-secondary-800">TEE Verified</span>
+           <HiShieldCheck className="w-4 h-4 text-ocean" />
+           <span className="text-sm font-medium text-ocean">TEE Verified</span>
           </div>
           <div className="h-8 bg-surface-200 rounded animate-pulse"></div>
          </div>
          <div className="card p-4">
           <div className="flex items-center gap-2 mb-2">
-           <HiSparkles className="w-4 h-4 text-secondary-600" />
+           <HiSparkles className="w-4 h-4 text-ocean" />
            <span className="text-sm font-medium">Encrypted</span>
           </div>
           <div className="space-y-2">
@@ -435,10 +435,10 @@ function TrustEnforcedSection() {
            <div className="h-2 bg-surface-200 rounded w-2/3"></div>
           </div>
          </div>
-         <div className="card p-4 bg-white border-secondary-300">
+         <div className="card p-4 bg-white border-ocean/10">
           <div className="flex items-center gap-2 mb-2">
-           <div className="w-4 h-4 bg-secondary-600 rounded animate-pulse"></div>
-           <span className="text-sm font-medium text-secondary-800">Verified</span>
+           <div className="w-4 h-4 bg-ocean rounded animate-pulse"></div>
+           <span className="text-sm font-medium text-ocean">Verified</span>
           </div>
           <div className="h-8 bg-surface-200 rounded"></div>
          </div>
@@ -477,13 +477,13 @@ function FAQSection() {
  ];
 
  return (
-  <section className="relative z-10 py-20" style={{ backgroundColor: '#9df9bc' }}>
+  <section className="relative z-10 py-20 bg-aqua/10">
    <div className="container-custom">
     <div className="text-left">
-     <h2 className="text-4xl md:text-6xl font-bold mb-12 text-black tracking-tight leading-tight">
+     <h2 className="text-4xl md:text-6xl font-bold mb-12 text-ocean tracking-tight leading-tight">
       Get Started Today
      </h2>
-     <p className="text-xl text-black leading-relaxed mb-16 max-w-2xl">
+     <p className="text-xl text-ocean/80 leading-relaxed mb-16 max-w-2xl">
       Join the future of AI marketplaces with verified models, secure transactions, and transparent pricing. Start trading with confidence.
      </p>
     </div>
@@ -498,16 +498,16 @@ function FAQItem({ question, answer, expanded }: { question: string, answer: str
   <div className={`card-hover p-8 transition-all duration-300 ${expanded ? 'bg-white border-secondary-300 shadow-card' : ''}`}>
    <div className="flex items-center justify-between">
     <div className="flex-1">
-     <h3 className="text-xl font-russo mb-4 text-secondary-800">
+     <h3 className="text-xl font-russo mb-4 text-ocean">
       {question}
      </h3>
      {expanded && (
-      <p className="text-secondary-800 leading-relaxed pr-8">
+      <p className="text-ocean/70 leading-relaxed pr-8">
        {answer}
       </p>
      )}
     </div>
-    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${expanded ? 'bg-gray-900 text-white' : 'bg-white border border-secondary-300 text-secondary-700'}`}>
+    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${expanded ? 'bg-ocean text-white' : 'bg-white border border-ocean/20 text-ocean'}`}>
      {expanded ? (
       <div className="w-4 h-0.5 bg-white" />
      ) : (
@@ -521,27 +521,27 @@ function FAQItem({ question, answer, expanded }: { question: string, answer: str
 
 function Footer() {
  return (
-  <footer className="relative z-10 py-16 text-secondary-900" style={{ backgroundColor: '#f5f9ef' }}>
+  <footer className="relative z-10 py-16 bg-white border-t border-ocean/10">
    <div className="container-custom">
     <div className="p-16 relative">
      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
       <div className="md:col-span-2">
        <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-gradient-to-tr from-secondary-600 to-secondary-800 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-ocean rounded-xl flex items-center justify-center">
          <HiSparkles className="w-6 h-6 text-white" />
         </div>
         <h3 className="text-2xl font-russo text-gradient">Satya</h3>
        </div>
-       <p className="text-secondary-700 leading-relaxed mb-8 max-w-lg">
+       <p className="text-ocean/70 leading-relaxed mb-8 max-w-lg">
         Building the future of trusted AI with verifiable security, transparent transactions, and privacy-preserving technology.
        </p>
        <div className="flex gap-4">
-        <div className="w-10 h-10 bg-white border border-secondary-300 rounded-lg flex items-center justify-center hover:bg-surface-100 cursor-pointer transition-colors text-secondary-600">
+        <div className="w-10 h-10 bg-white border border-ocean/20 rounded-lg flex items-center justify-center hover:bg-aqua/10 cursor-pointer transition-colors text-ocean">
          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M20 10c0-5.523-4.477-10-10-10S0 4.477 0 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V10h2.54V7.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V10h2.773l-.443 2.89h-2.33v6.988C16.343 19.128 20 14.991 20 10z" clipRule="evenodd" />
          </svg>
         </div>
-        <div className="w-10 h-10 bg-white border border-secondary-300 rounded-lg flex items-center justify-center hover:bg-surface-100 cursor-pointer transition-colors text-secondary-600">
+        <div className="w-10 h-10 bg-white border border-ocean/20 rounded-lg flex items-center justify-center hover:bg-aqua/10 cursor-pointer transition-colors text-ocean">
          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
           <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
          </svg>
@@ -550,21 +550,21 @@ function Footer() {
       </div>
       
       <div>
-       <h4 className="font-russo mb-6">Platform</h4>
+       <h4 className="font-russo mb-6 text-ocean">Platform</h4>
        <div className="space-y-4">
-        <Link href="/marketplace" className="block text-secondary-700 hover:text-secondary-900 transition-colors">Marketplace</Link>
-        <Link href="/upload" className="block text-secondary-700 hover:text-secondary-900 transition-colors">Upload Model</Link>
-        <Link href="/dashboard" className="block text-secondary-700 hover:text-secondary-900 transition-colors">Dashboard</Link>
+        <Link href="/marketplace" className="block text-ocean/70 hover:text-ocean transition-colors">Marketplace</Link>
+        <Link href="/upload" className="block text-ocean/70 hover:text-ocean transition-colors">Upload Model</Link>
+        <Link href="/dashboard" className="block text-ocean/70 hover:text-ocean transition-colors">Dashboard</Link>
        </div>
       </div>
       
       <div>
-       <h4 className="font-russo mb-6">Resources</h4>
+       <h4 className="font-russo mb-6 text-ocean">Resources</h4>
        <div className="space-y-4">
-        <a href="#" className="block text-secondary-700 hover:text-secondary-900 transition-colors">Documentation</a>
-        <a href="#" className="block text-secondary-700 hover:text-secondary-900 transition-colors">API Reference</a>
-        <a href="#" className="block text-secondary-700 hover:text-secondary-900 transition-colors">Security</a>
-        <a href="#" className="block text-secondary-700 hover:text-secondary-900 transition-colors">Privacy Policy</a>
+        <a href="#" className="block text-ocean/70 hover:text-ocean transition-colors">Documentation</a>
+        <a href="#" className="block text-ocean/70 hover:text-ocean transition-colors">API Reference</a>
+        <a href="#" className="block text-ocean/70 hover:text-ocean transition-colors">Security</a>
+        <a href="#" className="block text-ocean/70 hover:text-ocean transition-colors">Privacy Policy</a>
        </div>
       </div>
      </div>
