@@ -32,23 +32,23 @@ export * from './walrus/types';
 
 // Re-export for convenience
 export type {
-  // SEAL Types
-  PolicyType,
-  PolicyParams,
-  EncryptionResult,
-  DecryptionResult
+ // SEAL Types
+ PolicyType,
+ PolicyParams,
+ EncryptionResult,
+ DecryptionResult
 } from './seal/types';
 
 export type {
-  // Walrus Types
-  UploadResult,
-  UploadOptions,
-  BlobMetadata
+ // Walrus Types
+ UploadResult,
+ UploadOptions,
+ BlobMetadata
 } from './walrus/types';
 
 export type {
-  // Common Types
-  OperationResult,
-  MarketplaceError,
-  ErrorCode
+ // Common Types
+ OperationResult,
+ MarketplaceError,
+ ErrorCode
 } from './types';
