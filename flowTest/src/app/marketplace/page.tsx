@@ -202,7 +202,7 @@ export default function MarketplacePage() {
    </section>
    
    {/* Main Content */}
-   <main className="relative z-10 pb-8">
+   <main className="relative z-10 pb-16">
     <div className="container-custom">
      {/* Error Display */}
      {state.error && (
@@ -268,10 +268,14 @@ export default function MarketplacePage() {
    </main>
    
    {/* Invisible Footer with Copyright Bottom Left */}
-   <footer className="bg-white py-4">
+   <footer className="fixed bottom-0 left-0 right-0 bg-white py-3">
     <div className="container-custom">
-     <div className="text-left text-sm text-gray-500">
-      © 2024 Satya. All rights reserved.
+     <div className="flex justify-between items-center text-sm text-gray-500">
+      <div>© 2025 Satya. All rights reserved.</div>
+      <div className="flex gap-4">
+       <a href="/docs" className="hover:text-gray-700 transition-colors">Docs</a>
+       <a href="/help" className="hover:text-gray-700 transition-colors">Help</a>
+      </div>
      </div>
     </div>
    </footer>
