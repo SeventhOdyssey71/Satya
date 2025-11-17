@@ -74,8 +74,8 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
    {/* Quick Stats */}
    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
     <div className="bg-white border border-gray-200 rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
-     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-      <IoStatsChart className="w-5 h-5 text-blue-600" />
+     <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+      <IoStatsChart className="w-5 h-5 text-gray-600" />
      </div>
      <p className="text-sm text-gray-600 mb-1">Total Uploads</p>
      <p className="text-2xl font-semibold text-gray-900 mb-1">{allTasks.length}</p>
@@ -85,8 +85,8 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
     </div>
 
     <div className="bg-white border border-gray-200 rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
-     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-      <IoDownload className="w-5 h-5 text-blue-600" />
+     <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+      <IoDownload className="w-5 h-5 text-gray-600" />
      </div>
      <p className="text-sm text-gray-600 mb-1">Total Size</p>
      <p className="text-2xl font-semibold text-gray-900 mb-1">
@@ -98,8 +98,8 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
     </div>
 
     <div className="bg-white border border-gray-200 rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
-     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+     <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
       </svg>
      </div>
@@ -111,8 +111,8 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
     </div>
 
     <div className="bg-white border border-gray-200 rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
-     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-      <IoCheckmarkCircle className="w-5 h-5 text-blue-600" />
+     <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+      <IoCheckmarkCircle className="w-5 h-5 text-gray-600" />
      </div>
      <p className="text-sm text-gray-600 mb-1">Success Rate</p>
      <p className="text-2xl font-semibold text-gray-900 mb-1">
