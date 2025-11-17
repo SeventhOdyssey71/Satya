@@ -23,8 +23,8 @@ export default function DashboardPage() {
     <main className="relative z-10 py-6">
      <div className="container max-w-7xl mx-auto px-6">
       <div className="max-w-4xl mx-auto text-center py-20">
-       <h1 className="text-3xl font-russo text-black mb-8">Dashboard</h1>
-       <p className="text-gray-600 text-lg">Please connect your wallet to access your dashboard</p>
+       <h1 className="text-3xl font-russo text-ocean mb-8">Dashboard</h1>
+       <p className="text-ocean/70 text-lg">Please connect your wallet to access your dashboard</p>
       </div>
      </div>
     </main>
@@ -33,7 +33,7 @@ export default function DashboardPage() {
  }
 
  return (
-  <div className="min-h-screen bg-gradient-to-br from-surface-50 via-surface-100/50 to-secondary-100/30">
+  <div className="min-h-screen bg-white">
    {/* Header */}
    <Header />
    
@@ -44,7 +44,7 @@ export default function DashboardPage() {
       <h1 className="text-4xl md:text-5xl font-russo mb-4 animate-slide-up">
        Your <span className="text-gradient">AI Model</span> Dashboard
       </h1>
-      <p className="text-xl text-secondary-600 max-w-2xl mx-auto animate-slide-up">
+      <p className="text-xl text-ocean/70 max-w-2xl mx-auto animate-slide-up">
        Manage your uploads, track verification status, and monitor your AI model performance
       </p>
      </div>
@@ -57,14 +57,14 @@ export default function DashboardPage() {
      {/* Dashboard Tabs */}
      <div className="mb-12">
       <div className="flex items-center justify-center">
-       <div className="bg-white rounded-2xl p-2 border border-secondary-300 shadow-card">
+       <div className="bg-white rounded-2xl p-2 border border-ocean/10 shadow-card">
         <nav className="flex space-x-1">
          <button
           onClick={() => setActiveTab('overview')}
           className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
            activeTab === 'overview'
-            ? 'bg-gray-900 text-white shadow-soft'
-            : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
+            ? 'bg-ocean text-white shadow-soft'
+            : 'text-ocean/60 hover:text-ocean hover:bg-aqua/10'
           }`}
          >
           Overview
@@ -73,8 +73,8 @@ export default function DashboardPage() {
           onClick={() => setActiveTab('pending')}
           className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
            activeTab === 'pending'
-            ? 'bg-gray-900 text-white shadow-soft'
-            : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
+            ? 'bg-ocean text-white shadow-soft'
+            : 'text-ocean/60 hover:text-ocean hover:bg-aqua/10'
           }`}
          >
           Pending
@@ -83,8 +83,8 @@ export default function DashboardPage() {
           onClick={() => setActiveTab('history')}
           className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
            activeTab === 'history'
-            ? 'bg-gray-900 text-white shadow-soft'
-            : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
+            ? 'bg-ocean text-white shadow-soft'
+            : 'text-ocean/60 hover:text-ocean hover:bg-aqua/10'
           }`}
          >
           History
@@ -93,8 +93,8 @@ export default function DashboardPage() {
           onClick={() => setActiveTab('downloads')}
           className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
            activeTab === 'downloads'
-            ? 'bg-gray-900 text-white shadow-soft'
-            : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
+            ? 'bg-ocean text-white shadow-soft'
+            : 'text-ocean/60 hover:text-ocean hover:bg-aqua/10'
           }`}
          >
           Downloads

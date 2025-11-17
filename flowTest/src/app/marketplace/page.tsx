@@ -182,7 +182,7 @@ export default function MarketplacePage() {
  };
 
  return (
-  <div className="min-h-screen bg-gradient-to-br from-surface-50 via-surface-100/50 to-surface-200/50">
+  <div className="min-h-screen bg-white">
    {/* Header */}
    <Header />
    
@@ -190,23 +190,23 @@ export default function MarketplacePage() {
    <section className="relative py-12 md:py-16">
     <div className="container-custom">
      <div className="text-center max-w-4xl mx-auto">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-secondary-300 rounded-full mb-6 animate-fade-in shadow-card">
-       <HiSparkles className="w-4 h-4 text-secondary-600" />
-       <span className="text-sm font-albert font-medium text-secondary-700">Verified AI Models</span>
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-aqua/10 border border-aqua/20 rounded-full mb-6 animate-fade-in">
+       <HiSparkles className="w-4 h-4 text-ocean" />
+       <span className="text-sm font-albert font-medium text-ocean">Verified AI Models</span>
       </div>
       
       <h1 className="text-4xl md:text-5xl font-russo leading-tight mb-6 animate-slide-up">
        Discover <span className="text-gradient">Trusted</span> AI Models
       </h1>
       
-      <p className="text-xl text-secondary-800 mb-8 leading-relaxed animate-slide-up">
+      <p className="text-xl text-ocean/70 mb-8 leading-relaxed animate-slide-up">
        Browse verified AI models with TEE attestation, cryptographic proofs, and transparent pricing. 
        Every model is secured by hardware-level guarantees.
       </p>
 
       {/* Marketplace Stats */}
       {!state.isLoading && (
-       <div className="flex items-center justify-center gap-8 text-sm text-secondary-600 animate-slide-up">
+       <div className="flex items-center justify-center gap-8 text-sm text-ocean/60 animate-slide-up">
         <div className="flex items-center gap-2">
          <HiSparkles className="w-4 h-4" />
          <span>{state.totalModels} Models Available</span>
@@ -232,14 +232,14 @@ export default function MarketplacePage() {
     <div className="container-custom">
      {/* Error Display */}
      {state.error && (
-      <div className="bg-danger-50 border border-danger-200 rounded-xl p-6 mb-8">
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
        <div className="flex items-center gap-3">
-        <div className="w-6 h-6 bg-danger-500 rounded-full flex items-center justify-center">
+        <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
          <span className="text-white text-sm font-bold">!</span>
         </div>
         <div>
-         <h5 className="font-albert font-semibold text-danger-800">Error Loading Marketplace</h5>
-         <p className="font-albert text-danger-700">{state.error}</p>
+         <h5 className="font-albert font-semibold text-red-800">Error Loading Marketplace</h5>
+         <p className="font-albert text-red-700">{state.error}</p>
         </div>
        </div>
        <button
