@@ -387,7 +387,7 @@ function EnhancedNavigation({
       key={category.value}
       className={`inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-albert font-medium transition-all duration-200 ${
        activeCategory === category.value 
-        ? 'bg-black text-white shadow-soft' 
+        ? 'bg-gray-900 text-white shadow-soft' 
         : 'bg-white text-secondary-900 border border-secondary-300 hover:bg-surface-50 hover:border-secondary-500 hover:text-secondary-900'
       }`}
       onClick={() => onCategoryChange(category.value)}

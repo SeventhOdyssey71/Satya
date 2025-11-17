@@ -63,7 +63,7 @@ export default function DashboardPage() {
           onClick={() => setActiveTab('overview')}
           className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
            activeTab === 'overview'
-            ? 'bg-black text-white shadow-soft'
+            ? 'bg-gray-900 text-white shadow-soft'
             : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
           }`}
          >
@@ -73,7 +73,7 @@ export default function DashboardPage() {
           onClick={() => setActiveTab('pending')}
           className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
            activeTab === 'pending'
-            ? 'bg-black text-white shadow-soft'
+            ? 'bg-gray-900 text-white shadow-soft'
             : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
           }`}
          >
@@ -83,7 +83,7 @@ export default function DashboardPage() {
           onClick={() => setActiveTab('history')}
           className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
            activeTab === 'history'
-            ? 'bg-black text-white shadow-soft'
+            ? 'bg-gray-900 text-white shadow-soft'
             : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
           }`}
          >
@@ -93,7 +93,7 @@ export default function DashboardPage() {
           onClick={() => setActiveTab('downloads')}
           className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
            activeTab === 'downloads'
-            ? 'bg-black text-white shadow-soft'
+            ? 'bg-gray-900 text-white shadow-soft'
             : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
           }`}
          >

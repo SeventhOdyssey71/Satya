@@ -7,11 +7,11 @@ import { TbShield, TbDatabase, TbNetwork, TbCloudCheck } from 'react-icons/tb'
 
 export default function Home() {
  return (
-  <div className="relative min-h-screen" style={{ backgroundColor: '#f5f9ef' }}>
+  <div className="relative min-h-screen bg-white">
    {/* Subtle background effects */}
    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gray-100/30 rounded-full blur-3xl"></div>
-    <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-gray-100/20 rounded-full blur-3xl"></div>
+    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-aqua/10 rounded-full blur-3xl"></div>
+    <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-aqua/5 rounded-full blur-3xl"></div>
    </div>
 
    {/* Header */}
@@ -50,9 +50,9 @@ function HeroSection() {
    <div className="container-custom">
     <div className="text-center max-w-5xl mx-auto">
      {/* Badge */}
-     <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-200 rounded-full mb-8 animate-fade-in">
-      <HiShieldCheck className="w-4 h-4 text-gray-600" />
-      <span className="text-[15px] font-albert font-normal text-gray-700">Trusted AI Marketplace</span>
+     <div className="inline-flex items-center gap-2 px-4 py-2 bg-aqua/10 border border-aqua/20 rounded-full mb-8 animate-fade-in">
+      <HiShieldCheck className="w-4 h-4 text-ocean" />
+      <span className="text-[15px] font-albert font-normal text-ocean">Trusted AI Marketplace</span>
      </div>
 
      {/* Main Headline */}
@@ -61,7 +61,7 @@ function HeroSection() {
      </h1>
      
      {/* Subtitle */}
-     <p className="text-xl md:text-2xl font-albert font-light text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed animate-slide-up">
+     <p className="text-xl md:text-2xl font-albert font-light text-ocean/70 max-w-3xl mx-auto mb-12 leading-relaxed animate-slide-up">
       Secure AI models and datasets with TEE verification, encrypted storage, and blockchain transparency. 
       Building the future of trusted machine learning.
      </p>
@@ -84,10 +84,10 @@ function HeroSection() {
 
      {/* Tech Stack */}
      <div className="text-center animate-fade-in">
-      <p className="text-lg font-albert font-light text-gray-600 mb-8">Built on the Sui Stack</p>
+      <p className="text-lg font-albert font-light text-ocean/70 mb-8">Built on the Sui Stack</p>
       <div className="flex items-center justify-center gap-8 md:gap-16">
        <div className="group transition-transform hover:scale-105">
-        <div className="p-4 border border-gray-200 rounded-2xl hover:shadow-md transition-all" style={{ backgroundColor: '#f5f9e5' }}>
+        <div className="p-4 bg-white border border-ocean/10 rounded-2xl hover:shadow-md transition-all">
          <Image 
           src="/images/Seal.svg" 
           alt="SEAL"
@@ -98,7 +98,7 @@ function HeroSection() {
         </div>
        </div>
        <div className="group transition-transform hover:scale-105">
-        <div className="p-4 border border-gray-200 rounded-2xl hover:shadow-md transition-all" style={{ backgroundColor: '#f5f9e5' }}>
+        <div className="p-4 bg-white border border-ocean/10 rounded-2xl hover:shadow-md transition-all">
          <img 
           src="/images/Walrus.png" 
           alt="WALRUS"
@@ -147,7 +147,7 @@ function FeaturesSection() {
    <div className="container-custom">
     <div className="text-center mb-16">
      <h2 className="text-3xl md:text-4xl font-russo mb-6">Why Choose Satya?</h2>
-     <p className="text-lg font-albert font-light text-gray-600 max-w-2xl mx-auto">
+     <p className="text-lg font-albert font-light text-ocean/70 max-w-2xl mx-auto">
       Built with cutting-edge security and transparency features to ensure trust in AI model trading.
      </p>
     </div>
@@ -156,16 +156,16 @@ function FeaturesSection() {
      {features.map((feature, index) => {
       const IconComponent = feature.icon;
       const solidColorClasses = {
-       primary: "text-gray-900",
-       accent: "text-gray-900", 
-       success: "text-gray-900",
-       warning: ""
+       primary: "text-ocean",
+       accent: "text-ocean", 
+       success: "text-ocean",
+       warning: "text-white"
       };
       const solidColorStyles = {
-       primary: { backgroundColor: '#92a3fb' },
-       accent: { backgroundColor: '#e7fc7e' },
-       success: { backgroundColor: '#9df9bc' },
-       warning: { backgroundColor: '#000000' }
+       primary: { backgroundColor: '#E6F4FF' },
+       accent: { backgroundColor: '#C0E6FF' },
+       success: { backgroundColor: '#F0FBFF' },
+       warning: { backgroundColor: '#011829' }
       };
       
       return (
@@ -177,11 +177,11 @@ function FeaturesSection() {
          ...solidColorStyles[feature.color as keyof typeof solidColorStyles]
         }}
        >
-        <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6 group-hover:scale-105 transition-transform ${feature.color === 'warning' ? 'bg-white/20' : 'bg-white/80 text-gray-900'}`} style={feature.color === 'warning' ? { color: '#f5f9e5' } : {}}>
+        <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6 group-hover:scale-105 transition-transform ${feature.color === 'warning' ? 'bg-white/20' : 'bg-white text-ocean'}`}>
          <IconComponent className="w-8 h-8" />
         </div>
-        <h3 className="text-xl font-russo mb-3" style={feature.color === 'warning' ? { color: '#f5f9e5' } : {}}>{feature.title}</h3>
-        <p className={`font-albert font-light leading-relaxed ${feature.color === 'warning' ? '' : 'text-gray-800'}`} style={feature.color === 'warning' ? { color: '#f5f9e5' } : {}}>{feature.description}</p>
+        <h3 className="text-xl font-russo mb-3">{feature.title}</h3>
+        <p className={`font-albert font-light leading-relaxed ${feature.color === 'warning' ? 'text-white/90' : 'text-ocean/80'}`}>{feature.description}</p>
        </div>
       );
      })}
@@ -199,7 +199,7 @@ function TrustedMarketplacesSection() {
      <h2 className="text-3xl md:text-4xl font-russo mb-6">
       Trusted AI Model Marketplace
      </h2>
-     <p className="text-lg font-albert font-light text-gray-600 max-w-3xl mx-auto leading-relaxed">
+     <p className="text-lg font-albert font-light text-ocean/70 max-w-3xl mx-auto leading-relaxed">
       Eliminating the "trust me bro" barrier with verifiable, secure, and transparent AI model trading. 
       Each model comes with cryptographic proofs and hardware-verified attestations.
      </p>
@@ -209,26 +209,26 @@ function TrustedMarketplacesSection() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
      {/* Featured Model 1 */}
       <div className="lg:col-span-1 lg:row-span-2">
-      <div className="card-interactive h-full min-h-[600px] border border-gray-200 text-gray-900 relative overflow-hidden" style={{ backgroundColor: '#92a3fb' }}>
+      <div className="card-interactive h-full min-h-[600px] border border-ocean/10 text-ocean relative overflow-hidden bg-aqua/20">
        <div className="relative h-full flex flex-col justify-between p-8">
         <div>
-         <div className="badge bg-white/80 text-gray-800 border border-gray-300 mb-4">
+         <div className="badge bg-white text-ocean border border-ocean/20 mb-4">
           <HiShieldCheck className="w-3 h-3" />
           TEE Verified
          </div>
-         <h3 className="text-3xl font-russo mb-4 text-gray-900">Medical AI x129</h3>
-         <p className="font-albert font-light text-gray-800 mb-6 leading-relaxed">
+         <h3 className="text-3xl font-russo mb-4 text-ocean">Medical AI x129</h3>
+         <p className="font-albert font-light text-ocean/80 mb-6 leading-relaxed">
           Advanced diagnostic model trained on verified hospital data with full privacy compliance and hardware security attestation.
          </p>
         </div>
         <div className="space-y-4">
          <div className="flex items-center justify-between text-[15px] font-albert font-normal">
-          <span className="text-gray-700">Downloads</span>
-          <span className="text-gray-900">2,439</span>
+          <span className="text-ocean/60">Downloads</span>
+          <span className="text-ocean">2,439</span>
          </div>
          <div className="flex items-center justify-between text-[15px] font-albert font-normal">
-          <span className="text-gray-700">Price</span>
-          <span className="text-gray-900">25.5 SUI</span>
+          <span className="text-ocean/60">Price</span>
+          <span className="text-ocean">25.5 SUI</span>
          </div>
         </div>
        </div>
@@ -237,20 +237,20 @@ function TrustedMarketplacesSection() {
 
      {/* Featured Model 2 */}
      <div className="lg:col-span-2">
-      <div className="card-interactive h-80 border border-gray-200 text-gray-900 relative overflow-hidden" style={{ backgroundColor: '#9df9bc' }}>
+      <div className="card-interactive h-80 border border-ocean/10 text-ocean relative overflow-hidden bg-aqua/10">
        <div className="relative h-full flex items-end p-8">
         <div className="flex-1">
          <div className="flex items-center gap-2 mb-4">
-          <div className="badge bg-white/80 text-gray-800 border border-gray-300">
+          <div className="badge bg-white text-ocean border border-ocean/20">
            <HiBolt className="w-3 h-3" />
            High Performance
           </div>
-          <div className="badge bg-white/80 text-gray-800 border border-gray-300">
+          <div className="badge bg-white text-ocean border border-ocean/20">
            Computer Vision
           </div>
          </div>
-         <h3 className="text-3xl font-russo mb-4 text-gray-900">Vision Opus x229</h3>
-         <p className="font-albert font-light text-gray-800 mb-6 leading-relaxed max-w-lg">
+         <h3 className="text-3xl font-russo mb-4 text-ocean">Vision Opus x229</h3>
+         <p className="font-albert font-light text-ocean/80 mb-6 leading-relaxed max-w-lg">
           State-of-the-art computer vision model with real-time processing capabilities and enterprise-grade security.
          </p>
         </div>
@@ -260,20 +260,20 @@ function TrustedMarketplacesSection() {
 
      {/* Featured Model 3 */}
      <div className="lg:col-span-2">
-      <div className="card-interactive h-80 border border-gray-200 text-gray-900 relative overflow-hidden" style={{ backgroundColor: '#e7fc7e' }}>
+      <div className="card-interactive h-80 border border-ocean/10 text-ocean relative overflow-hidden" style={{ backgroundColor: '#C0E6FF' }}>
        <div className="relative h-full flex items-end p-8">
         <div className="flex-1">
          <div className="flex items-center gap-2 mb-4">
-          <div className="badge bg-white/80 text-gray-800 border border-gray-300">
+          <div className="badge bg-white text-ocean border border-ocean/20">
            <HiGlobeAmericas className="w-3 h-3" />
            Autonomous Systems
           </div>
-          <div className="badge bg-white/80 text-gray-800 border border-gray-300">
+          <div className="badge bg-white text-ocean border border-ocean/20">
            Real-time
           </div>
          </div>
-         <h3 className="text-3xl font-russo mb-4 text-gray-900">AutoDrive Neural Net</h3>
-         <p className="font-albert font-light text-gray-800 mb-6 leading-relaxed max-w-lg">
+         <h3 className="text-3xl font-russo mb-4 text-ocean">AutoDrive Neural Net</h3>
+         <p className="font-albert font-light text-ocean/80 mb-6 leading-relaxed max-w-lg">
           Advanced autonomous driving model with multi-sensor fusion and real-time decision making capabilities.
          </p>
         </div>
@@ -325,10 +325,10 @@ function SuiStackSection() {
  ];
 
  return (
-  <section className="relative z-10 py-20 bg-black text-white">
+  <section className="relative z-10 py-20 bg-white border-t border-gray-200">
    <div className="container-custom relative">
     <div className="text-center mb-20">
-     <h2 className="text-3xl md:text-5xl font-russo text-white tracking-tight leading-tight">
+     <h2 className="text-3xl md:text-5xl font-russo text-gray-900 tracking-tight leading-tight">
       Secure AI Marketplace Built on Trusted Infrastructure
      </h2>
     </div>
@@ -507,7 +507,7 @@ function FAQItem({ question, answer, expanded }: { question: string, answer: str
       </p>
      )}
     </div>
-    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${expanded ? 'bg-black text-white' : 'bg-white border border-secondary-300 text-secondary-700'}`}>
+    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${expanded ? 'bg-gray-900 text-white' : 'bg-white border border-secondary-300 text-secondary-700'}`}>
      {expanded ? (
       <div className="w-4 h-0.5 bg-white" />
      ) : (
