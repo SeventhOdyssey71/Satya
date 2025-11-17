@@ -52,11 +52,11 @@ export default function DashboardPage() {
    </section>
    
    {/* Main Content */}
-   <main className="relative z-10 pb-20">
+   <main className="relative z-10 pb-8">
     <div className="container-custom">
      {/* Dashboard Tabs */}
      <div className="mb-8">
-      <div className="flex items-center justify-center">
+      <div className="flex items-start">
        <div className="bg-white rounded-lg p-1 border border-gray-200">
         <nav className="flex space-x-1">
          <button

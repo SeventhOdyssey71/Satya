@@ -202,7 +202,7 @@ export default function MarketplacePage() {
    </section>
    
    {/* Main Content */}
-   <main className="relative z-10 pb-16">
+   <main className="relative z-10 pb-8">
     <div className="container-custom">
      {/* Error Display */}
      {state.error && (
