@@ -8,5 +8,5 @@ export { default as UploadStatus } from './UploadStatus'
 export { TEEVerificationStep } from './TEEVerificationStep'
 
 export type {
-  // Re-export any types that might be useful
+ // Re-export any types that might be useful
 } from './FileUploadZone'

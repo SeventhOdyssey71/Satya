@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Debug Test</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007acc;
+        }
+        .error { border-left-color: #ff4444; }
+        .success { border-left-color: #44ff44; }
+        .warning { border-left-color: #ffaa44; }
+        pre {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border: 1px solid #444;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+        }
+        button:hover { background: #0066aa; }
+        .error-btn { background: #ff4444; }
+        .error-btn:hover { background: #dd2222; }
+        .success-btn { background: #44ff44; color: #000; }
+        .success-btn:hover { background: #22dd22; }
+        #output {
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: #333;
+            border-radius: 4px;
+        }
+        .step.active { background: #004a6b; }
+        .step.success { background: #2a4a2a; }
+        .step.error { background: #4a2a2a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Upload Debug Center</h1>
+        <p>Deep debugging for the toLowerCase error in smart contract creation</p>
+
+        <div class="section">
+            <h2>🎯 Test Controls</h2>
+            <button onclick="testSmartContractOnly()">Test Smart Contract Only</button>
+            <button onclick="testMarketplaceService()">Test Marketplace Service</button>
+            <button onclick="testFullUploadFlow()" class="error-btn">Test Full Upload Flow</button>
+            <button onclick="clearOutput()">Clear Output</button>
+        </div>
+
+        <div class="section">
+            <h2>📊 Test Progress</h2>
+            <div id="steps">
+                <div class="step" id="step-1">1. Initialize Services</div>
+                <div class="step" id="step-2">2. Create Mock Upload Data</div>
+                <div class="step" id="step-3">3. Test Smart Contract Creation</div>
+                <div class="step" id="step-4">4. Execute Upload Flow</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📝 Debug Output</h2>
+            <pre id="output">Ready to debug toLowerCase error...\n\nClick any test button above to begin debugging.\n</pre>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Mock Data</h2>
+            <pre id="mockData">Will show mock data here when tests run...</pre>
+        </div>
+    </div>
+
+    <script>
+        let output = document.getElementById('output');
+        let mockDataDiv = document.getElementById('mockData');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toISOString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            output.textContent = 'Output cleared...\n';
+            mockDataDiv.textContent = 'Mock data cleared...\n';
+            resetSteps();
+        }
+
+        function setStepStatus(stepNum, status) {
+            const step = document.getElementById(`step-${stepNum}`);
+            step.classList.remove('active', 'success', 'error');
+            step.classList.add(status);
+        }
+
+        function resetSteps() {
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById(`step-${i}`);
+                step.classList.remove('active', 'success', 'error');
+            }
+        }
+
+        async function testSmartContractOnly() {
+            log('🎯 Testing Smart Contract Only (Isolated Test)');
+            setStepStatus(1, 'active');
+            
+            try {
+                // This will test the exact smart contract call that was working before
+                const response = await fetch('/api/debug/test-smart-contract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        test: 'smart-contract-only',
+                        params: {
+                            title: 'Debug Test Model',
+                            description: 'Testing toLowerCase issue',
+                            category: 'AI/ML',
+                            tags: ['debug', 'test'],
+                            modelBlobId: 'debug_blob_12345',
+                            datasetBlobId: null,
+                            encryptionPolicyId: 'debug_policy',
+                            sealMetadata: new Uint8Array([1, 2, 3]),
+                            price: '1000000000',
+                            maxDownloads: null
+                        }
+                    })
+                });
+
+                const result = await response.json();
+                setStepStatus(1, 'success');
+                
+                if (result.success) {
+                    log('✅ Smart contract test PASSED - No toLowerCase error', 'success');
+                    log(`Transaction structure: ${JSON.stringify(result.details, null, 2)}`);
+                } else {
+                    log(`❌ Smart contract test FAILED: ${result.error}`, 'error');
+                    if (result.error.includes('toLowerCase')) {
+                        log('🔍 toLowerCase error found in smart contract layer!', 'error');
+                    }
+                }
+            } catch (error) {
+                setStepStatus(1, 'error');
+                log(`💥 Smart contract test crashed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testMarketplaceService() {
+            log('🏪 Testing Marketplace Service (Isolated)');
+            setStepStatus(2, 'active');
+            
+            try {
+                const testParams = {
+                    title: 'Debug Test',
+                    description: 'Debug desc',
+                    category: 'AI/ML',
+                    tags: ['test'],
+                    modelBlobId: 'test_blob',
+                    datasetBlobId: null,
+                    encryptionPolicyId: 'test_policy',
+                    sealMetadata: new Uint8Array([1, 2, 3]),
+                    price: '1000000000',
+                    maxDownloads: null
+                };
+
+                mockDataDiv.textContent = `Marketplace Service Test Parameters:\n${JSON.stringify(testParams, null, 2)}`;
+
+                const response = await fetch('/api/debug/test-marketplace-service', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ params: testParams })
+                });
+
+                const result = await response.json();
+                setStepStatus(2, result.success ? 'success' : 'error');
+                
+                if (result.success) {
+                    log('✅ Marketplace service test PASSED', 'success');
+                } else {
+                    log(`❌ Marketplace service test FAILED: ${result.error}`, 'error');
+                    if (result.error.includes('toLowerCase')) {
+                        log('🔍 toLowerCase error found in marketplace service!', 'error');
+                        log(`Stack trace: ${result.stack || 'No stack trace available'}`);
+                    }
+                }
+            } catch (error) {
+                setStepStatus(2, 'error');
+                log(`💥 Marketplace service test crashed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFullUploadFlow() {
+            log('🚀 Testing Full Upload Flow (Complete Debug)');
+            resetSteps();
+            
+            setStepStatus(1, 'active');
+            log('Phase 1: Initializing services...');
+            
+            try {
+                // Create a small test file
+                const testFileContent = JSON.stringify({ test: 'model', version: '1.0' });
+                const testFile = new Blob([testFileContent], { type: 'application/json' });
+                testFile.name = 'debug-test-model.json';
+
+                const uploadData = {
+                    title: 'Debug Upload Test',
+                    description: 'Full flow debug test',
+                    category: 'AI/ML', 
+                    tags: ['debug', 'test', 'toLowerCase'],
+                    modelFile: testFile,
+                    datasetFile: null,
+                    price: '1.0',
+                    maxDownloads: 100,
+                    policyType: 'STANDARD',
+                    accessDuration: 30
+                };
+
+                mockDataDiv.textContent = `Full Upload Flow Test Data:\nTitle: ${uploadData.title}\nCategory: ${uploadData.category}\nPrice: ${uploadData.price}\nFile: ${testFile.name}\nSize: ${testFile.size} bytes`;
+
+                setStepStatus(1, 'success');
+                setStepStatus(2, 'active');
+                log('Phase 2: Creating upload data...');
+
+                // This would normally call the actual upload service
+                // but we're debugging, so we'll call our debug endpoint
+                const response = await fetch('/api/debug/test-full-upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        uploadData: {
+                            ...uploadData,
+                            modelFile: undefined // Can't send file in JSON
+                        },
+                        debug: true 
+                    })
+                });
+
+                const result = await response.json();
+                
+                setStepStatus(2, 'success');
+                setStepStatus(3, 'active');
+                log('Phase 3: Testing smart contract creation...');
+
+                if (result.success) {
+                    setStepStatus(3, 'success');
+                    setStepStatus(4, 'success');
+                    log('✅ FULL UPLOAD TEST PASSED! No toLowerCase error!', 'success');
+                    log(`Result: ${JSON.stringify(result, null, 2)}`);
+                } else {
+                    if (result.phase === 'contract') {
+                        setStepStatus(3, 'error');
+                    } else {
+                        setStepStatus(4, 'error');
+                    }
+                    
+                    log(`❌ Upload test FAILED at ${result.phase || 'unknown'} phase: ${result.error}`, 'error');
+                    
+                    if (result.error.includes('toLowerCase')) {
+                        log('🎯 FOUND IT! toLowerCase error in full upload flow!', 'error');
+                        log(`Error phase: ${result.phase}`);
+                        log(`Error details: ${result.details || 'No details available'}`);
+                        log(`Stack: ${result.stack || 'No stack available'}`);
+                    }
+                }
+
+            } catch (error) {
+                setStepStatus(4, 'error');
+                log(`💥 Full upload test crashed: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

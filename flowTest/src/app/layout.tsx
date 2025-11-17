@@ -8,40 +8,40 @@ import '@mysten/dapp-kit/dist/index.css'
 import './globals.css'
 
 const russo = Russo_One({
-  weight: '400',
-  subsets: ['latin'],
-  variable: '--font-russo',
+ weight: '400',
+ subsets: ['latin'],
+ variable: '--font-russo',
 })
 
 const albert = Albert_Sans({
-  weight: ['300', '400', '500'],
-  subsets: ['latin'],
-  variable: '--font-albert',
-  display: 'swap',
+ weight: ['300', '400', '500'],
+ subsets: ['latin'],
+ variable: '--font-albert',
+ display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: 'Satya Data Marketplace',
-  description: 'Secure ML model and dataset marketplace with TEE verification',
+ title: 'Satya Data Marketplace',
+ description: 'Secure ML model and dataset marketplace with TEE verification',
 }
 
 export default function RootLayout({
-  children,
+ children,
 }: {
-  children: React.ReactNode
+ children: React.ReactNode
 }) {
-  return (
-    <html lang="en" className={`${russo.variable} ${albert.variable}`}>
-      <body className="antialiased font-albert font-light">
-        <WalletProviders>
-          <UploadProvider>
-            <NautilusProvider>
-              {children}
-              <GlobalUploadProgress />
-            </NautilusProvider>
-          </UploadProvider>
-        </WalletProviders>
-      </body>
-    </html>
-  )
+ return (
+  <html lang="en" className={`${russo.variable} ${albert.variable}`}>
+   <body className="antialiased font-albert font-light">
+    <WalletProviders>
+     <UploadProvider>
+      <NautilusProvider>
+       {children}
+       <GlobalUploadProgress />
+      </NautilusProvider>
+     </UploadProvider>
+    </WalletProviders>
+   </body>
+  </html>
+ )
 }
