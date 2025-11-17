@@ -408,16 +408,13 @@ export default function DashboardPending() {
 
    {/* Empty State */}
    {!state.isLoading && state.pendingModels.length === 0 && !state.error && (
-    <div className="card p-12 text-center">
-     <div className="w-24 h-24 bg-secondary-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-      <TbCertificate className="w-12 h-12 text-secondary-400" />
-     </div>
-     <h3 className="text-2xl font-albert font-bold text-secondary-900 mb-3">No models pending verification</h3>
-     <p className="text-secondary-600 font-albert max-w-md mx-auto leading-relaxed">
+    <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+     <h3 className="text-lg font-medium text-gray-900 mb-2">No models pending verification</h3>
+     <p className="text-gray-600 text-sm max-w-md mx-auto">
       Upload a model first, then it will appear here for TEE verification before marketplace publication.
      </p>
-     <div className="mt-6">
-      <a href="/upload" className="btn btn-primary">
+     <div className="mt-4">
+      <a href="/upload" className="inline-block px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors">
        Upload Your First Model
       </a>
      </div>
