@@ -151,7 +151,7 @@ function FeaturesSection() {
  return (
   <section className="relative z-10 py-24">
    <div className="container-custom">
-    <div className="bg-[#E8F4FF] rounded-3xl mx-4 px-8 py-16">
+    <div className="bg-[#E8F4FF] rounded-3xl mx-2 px-8 py-16">
      <AnimatedSection>
       <div className="text-center mb-16">
        <h2 className="text-4xl md:text-5xl font-albert font-bold mb-4 text-gray-900">
@@ -315,7 +315,7 @@ function FAQSection() {
  return (
   <section className="relative z-10 py-24">
    <div className="container-custom">
-    <div className="bg-[#E8F4FF] rounded-3xl mx-4 px-8 py-16">
+    <div className="bg-[#E8F4FF] rounded-3xl mx-2 px-8 py-16">
      <AnimatedSection>
       <div className="text-center mb-16">
        <h2 className="text-4xl md:text-5xl font-albert font-bold mb-4 text-gray-900">
