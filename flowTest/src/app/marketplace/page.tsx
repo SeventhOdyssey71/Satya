@@ -202,7 +202,7 @@ export default function MarketplacePage() {
    </section>
    
    {/* Main Content */}
-   <main className="relative z-10 pb-16">
+   <main className="relative z-10 pb-32">
     <div className="container-custom">
      {/* Error Display */}
      {state.error && (
@@ -264,10 +264,13 @@ export default function MarketplacePage() {
       />
      )}
      
-     {/* Footer Guide */}
-     <MarketplaceGuide />
     </div>
    </main>
+   
+   {/* Fixed Footer */}
+   <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
+    <MarketplaceGuide />
+   </footer>
   </div>
  )
 }
