@@ -40,11 +40,11 @@ export default function DashboardPage() {
    {/* Hero Section */}
    <section className="relative py-8">
     <div className="container-custom">
-     <div className="text-center">
-      <h1 className="text-2xl md:text-3xl font-medium mb-3 text-gray-900">
+     <div className="max-w-2xl">
+      <h1 className="text-2xl md:text-3xl font-albert font-semibold leading-tight mb-3 text-gray-900">
        Your AI Model Dashboard
       </h1>
-      <p className="text-lg text-gray-600 max-w-xl mx-auto">
+      <p className="text-gray-600 mb-2">
        Manage your uploads, track verification status, and monitor your AI model performance
       </p>
      </div>

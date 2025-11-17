@@ -267,9 +267,13 @@ export default function MarketplacePage() {
     </div>
    </main>
    
-   {/* Simple Footer */}
-   <footer className="bg-white border-t border-gray-200 py-4 text-center text-sm text-gray-600">
-    © 2024 Satya. All rights reserved.
+   {/* Invisible Footer with Copyright Bottom Left */}
+   <footer className="bg-white py-4">
+    <div className="container-custom">
+     <div className="text-left text-sm text-gray-500">
+      © 2024 Satya. All rights reserved.
+     </div>
+    </div>
    </footer>
   </div>
  )
