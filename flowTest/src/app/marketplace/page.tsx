@@ -182,7 +182,7 @@ export default function MarketplacePage() {
  };
 
  return (
-  <div className="min-h-screen bg-white">
+  <div className="min-h-screen bg-white pt-16">
    {/* Header */}
    <Header />
    
@@ -202,7 +202,7 @@ export default function MarketplacePage() {
    </section>
    
    {/* Main Content */}
-   <main className="relative z-10 pb-32">
+   <main className="relative z-10 pb-8">
     <div className="container-custom">
      {/* Error Display */}
      {state.error && (
@@ -267,9 +267,9 @@ export default function MarketplacePage() {
     </div>
    </main>
    
-   {/* Fixed Footer */}
-   <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
-    <MarketplaceGuide />
+   {/* Simple Footer */}
+   <footer className="bg-white border-t border-gray-200 py-4 text-center text-sm text-gray-600">
+    © 2024 Satya. All rights reserved.
    </footer>
   </div>
  )
