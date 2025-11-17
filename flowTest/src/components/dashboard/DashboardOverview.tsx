@@ -29,79 +29,45 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
  return (
   <div className="space-y-12">
    {/* Status Overview Cards */}
-   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-    {/* Pending Card */}
-    <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-     <div className="flex items-center justify-between">
-      <div className="flex-1">
-       <div className="flex items-center gap-2 mb-2">
-        <IoTime className="w-5 h-5 text-blue-600" />
-        <h3 className="text-base font-medium text-gray-900">Pending</h3>
-       </div>
-       <p className="text-3xl font-semibold text-gray-900 mb-1">{statusCounts.pending}</p>
-       <p className="text-gray-600 text-sm">Processing uploads</p>
+   <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="grid grid-cols-3 gap-6">
+     {/* Pending */}
+     <div className="text-center">
+      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+       <IoTime className="w-5 h-5 text-blue-600" />
       </div>
-      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-       <IoTime className="w-6 h-6 text-blue-600" />
-      </div>
+      <h3 className="text-sm font-medium text-gray-900 mb-1">Pending</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{statusCounts.pending}</p>
+      <p className="text-xs text-gray-600">Processing uploads</p>
      </div>
-     {statusCounts.pending > 0 && (
-      <div className="mt-4 pt-4 border-t border-gray-200">
-       <div className="w-full bg-gray-200 rounded-full h-1.5">
-        <div className="bg-blue-500 h-1.5 rounded-full w-1/3 animate-pulse"></div>
-       </div>
-       <p className="text-sm text-gray-600 mt-2">Verification in progress...</p>
-      </div>
-     )}
-    </div>
 
-    {/* Completed Card */}
-    <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-     <div className="flex items-center justify-between">
-      <div className="flex-1">
-       <div className="flex items-center gap-2 mb-2">
-        <IoCheckmarkCircle className="w-5 h-5 text-blue-600" />
-        <h3 className="text-base font-medium text-gray-900">Completed</h3>
-       </div>
-       <p className="text-3xl font-semibold text-gray-900 mb-1">{statusCounts.completed}</p>
-       <p className="text-gray-600 text-sm">Available in marketplace</p>
+     {/* Completed */}
+     <div className="text-center">
+      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+       <IoCheckmarkCircle className="w-5 h-5 text-blue-600" />
       </div>
-      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-       <IoCheckmarkCircle className="w-6 h-6 text-blue-600" />
-      </div>
+      <h3 className="text-sm font-medium text-gray-900 mb-1">Completed</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{statusCounts.completed}</p>
+      <p className="text-xs text-gray-600">Available in marketplace</p>
      </div>
-     {statusCounts.completed > 0 && (
-      <div className="mt-4 pt-4 border-t border-gray-200">
-       <p className="text-sm text-gray-600">Ready for downloads</p>
-      </div>
-     )}
-    </div>
 
-    {/* Failed Card */}
-    <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-     <div className="flex items-center justify-between">
-      <div className="flex-1">
-       <div className="flex items-center gap-2 mb-2">
-        <IoCloseCircle className="w-5 h-5 text-red-500" />
-        <h3 className="text-base font-medium text-gray-900">Failed</h3>
-       </div>
-       <p className="text-3xl font-semibold text-gray-900 mb-1">{statusCounts.failed}</p>
-       <p className="text-gray-600 text-sm">Requires attention</p>
+     {/* Failed */}
+     <div className="text-center">
+      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+       <IoCloseCircle className="w-5 h-5 text-red-500" />
       </div>
-      <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-       <IoCloseCircle className="w-6 h-6 text-red-500" />
-      </div>
-     </div>
-     {statusCounts.failed > 0 && (
-      <div className="mt-4 pt-4 border-t border-gray-200">
+      <h3 className="text-sm font-medium text-gray-900 mb-1">Failed</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{statusCounts.failed}</p>
+      <p className="text-xs text-gray-600">Requires attention</p>
+      {statusCounts.failed > 0 && (
        <button 
         onClick={clearFailedTasks}
-        className="px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors"
+        className="mt-2 px-2 py-1 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors"
        >
         Clear Failed
        </button>
-      </div>
-     )}
+      )}
+     </div>
     </div>
    </div>
 
