@@ -66,7 +66,7 @@ export function usePendingModels() {
 
    console.log('Loading pending models for user:', currentAccount)
    
-   const pendingModels = await contractService.getUserPendingModels(currentAccount)
+   const pendingModels = await contractService.getUserPendingModels(currentAccount.address)
    
    console.log('Loaded pending models:', pendingModels)
 

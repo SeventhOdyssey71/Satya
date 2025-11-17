@@ -38,6 +38,9 @@ export default function DashboardPending() {
  const { allTasks } = useUploadTasks()
  const currentAccount = useCurrentAccount()
  
+ // Use the shared pending models hook
+ const { pendingModels: hookPendingModels, isLoading, error, refresh, statusCounts } = usePendingModels()
+ 
  const [state, setState] = useState<DashboardState>({
   pendingModels: [],
   isLoading: true,

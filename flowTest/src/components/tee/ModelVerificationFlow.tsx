@@ -103,13 +103,16 @@ export function ModelVerificationFlow({
    console.log('Nautilus server response:', nautilusResponse);
    
    // Transform nautilus response to expected format
-   const attestation = {
+   const requestId = `req_${Date.now()}`;
+   const enclaveId = 'enclave_test_001';
+   
+   const attestation: TEEAttestationData = {
+    request_id: requestId,
     ml_processing_result: {
      quality_score: nautilusResponse.response?.data?.quality_score || 0.85,
-     accuracy_metrics: nautilusResponse.response?.data?.accuracy_metrics || {},
-     performance_metrics: nautilusResponse.response?.data?.performance_metrics || {},
-     bias_assessment: nautilusResponse.response?.data?.bias_assessment || {},
-     request_id: `req_${Date.now()}`,
+     predictions: nautilusResponse.response?.data?.predictions || [0.95, 0.92, 0.88],
+     confidence: nautilusResponse.response?.data?.confidence || 0.92,
+     request_id: requestId,
      model_hash: `hash_${modelBlobId.slice(-12)}`,
      signature: 'deadbeef'.repeat(16) // Mock 64-byte hex signature
     },
@@ -119,7 +122,15 @@ export function ModelVerificationFlow({
      pcr2: 'deadbeef'.repeat(8), 
      pcr8: 'deadbeef'.repeat(8),
      signature: nautilusResponse.signature || 'deadbeef'.repeat(16), // Mock 64-byte hex signature
-     timestamp: nautilusResponse.response?.timestamp_ms || Date.now()
+     timestamp: String(nautilusResponse.response?.timestamp_ms || Date.now()),
+     enclave_id: enclaveId
+    },
+    verification_metadata: {
+     enclave_id: enclaveId,
+     source: 'nautilus-tee',
+     timestamp: new Date().toISOString(),
+     model_path: modelBlobId,
+     attestation_type: 'quality_analysis'
     }
    };
    
