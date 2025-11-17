@@ -32,16 +32,16 @@
 
   /* Apple-inspired typography scale - Clean and minimal */
   h1 { 
-    @apply text-5xl md:text-6xl lg:text-7xl font-russo leading-[1.05] tracking-[-0.02em] text-ocean; 
-    font-weight: 400;
+    @apply text-5xl md:text-6xl lg:text-7xl font-albert font-bold leading-[1.05] tracking-[-0.02em] text-ocean; 
+    font-weight: 700;
   }
   h2 { 
-    @apply text-4xl md:text-5xl lg:text-6xl font-russo leading-[1.1] tracking-[-0.02em] text-ocean; 
-    font-weight: 400;
+    @apply text-4xl md:text-5xl lg:text-6xl font-albert font-bold leading-[1.1] tracking-[-0.02em] text-ocean; 
+    font-weight: 700;
   }
   h3 { 
-    @apply text-3xl md:text-4xl font-russo leading-[1.15] tracking-[-0.01em] text-ocean; 
-    font-weight: 400;
+    @apply text-3xl md:text-4xl font-albert font-semibold leading-[1.15] tracking-[-0.01em] text-ocean; 
+    font-weight: 600;
   }
   h4 { 
     @apply text-2xl md:text-3xl font-albert font-light leading-[1.2] tracking-[-0.01em] text-ocean; 

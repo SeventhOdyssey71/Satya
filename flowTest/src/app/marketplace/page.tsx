@@ -250,7 +250,7 @@ export default function MarketplacePage() {
      {!state.isLoading && !state.error && filteredModels.length === 0 && (
       <div className="text-center py-12">
        <p className="text-gray-500">
-        {filteredModels.length} models found
+        No models found
        </p>
       </div>
      )}
