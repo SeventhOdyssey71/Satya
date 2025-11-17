@@ -46,7 +46,7 @@ export default function Home() {
 
 function HeroSection() {
  return (
-  <section className="relative z-10 pt-40 md:pt-48 pb-24 md:pb-32">
+  <section className="relative z-10 pt-52 md:pt-64 pb-24 md:pb-32">
    <div className="container-custom">
     <div className="text-center max-w-5xl mx-auto">
      {/* Badge */}
