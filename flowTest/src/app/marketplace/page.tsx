@@ -355,20 +355,22 @@ function EnhancedNavigation({
    </div>
 
    {/* Category Pills */}
-   <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
-    {categories.map((category) => (
-     <button
-      key={category.value}
-      className={`px-3 py-1 rounded-md text-sm transition-colors ${
-       activeCategory === category.value 
-        ? 'bg-gray-900 text-white' 
-        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-      }`}
-      onClick={() => onCategoryChange(category.value)}
-     >
-      <span>{category.label}</span>
-     </button>
-    ))}
+   <div className="bg-white border border-gray-200 rounded-lg p-2 mb-4">
+    <div className="flex items-center justify-center gap-2">
+     {categories.map((category) => (
+      <button
+       key={category.value}
+       className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+        activeCategory === category.value 
+         ? 'bg-gray-900 text-white' 
+         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+       }`}
+       onClick={() => onCategoryChange(category.value)}
+      >
+       <span>{category.label}</span>
+      </button>
+     ))}
+    </div>
    </div>
 
 
