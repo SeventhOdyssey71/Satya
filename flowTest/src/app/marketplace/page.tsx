@@ -364,15 +364,6 @@ function EnhancedNavigation({
    </div>
 
 
-   {/* Results Summary */}
-   <div className="text-center text-sm text-gray-500 mb-4">
-    {totalResults} models found
-    {isLoading && (
-     <span className="ml-2">
-      <div className="inline-block animate-spin rounded-full h-3 w-3 border-2 border-blue-500 border-t-transparent ml-1" />
-     </span>
-    )}
-   </div>
   </div>
  )
 }
