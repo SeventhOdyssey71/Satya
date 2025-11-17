@@ -200,11 +200,11 @@ export default function DashboardPending() {
    {/* Status Overview */}
    {!state.isLoading && (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-    {/* Awaiting Verification - Blue theme */}
+    {/* Awaiting Verification */}
     <div className="bg-white border border-gray-200 rounded-lg p-4">
      <div className="flex flex-col items-center text-center">
-      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
-       <TbClockHour4 className="w-6 h-6 text-blue-600" />
+      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+       <TbClockHour4 className="w-6 h-6 text-gray-600" />
       </div>
       <h3 className="text-sm text-gray-600 mb-1">Awaiting Verification</h3>
       <p className="text-2xl font-semibold text-gray-900 mb-1">{pendingVerification.length}</p>
@@ -215,8 +215,8 @@ export default function DashboardPending() {
     {/* In Verification */}
     <div className="bg-white border border-gray-200 rounded-lg p-4">
      <div className="flex flex-col items-center text-center">
-      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
-       <TbShieldX className="w-6 h-6 text-blue-600" />
+      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+       <TbShieldX className="w-6 h-6 text-gray-600" />
       </div>
       <h3 className="text-sm text-gray-600 mb-1">In Verification</h3>
       <p className="text-2xl font-semibold text-gray-900 mb-1">{inVerification.length}</p>
@@ -227,8 +227,8 @@ export default function DashboardPending() {
     {/* Processing Speed */}
     <div className="bg-white border border-gray-200 rounded-lg p-4">
      <div className="flex flex-col items-center text-center">
-      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
-       <TbRefresh className="w-6 h-6 text-blue-600" />
+      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+       <TbRefresh className="w-6 h-6 text-gray-600" />
       </div>
       <h3 className="text-sm text-gray-600 mb-1">Avg. Speed</h3>
       <p className="text-2xl font-semibold text-gray-900 mb-1">2.4</p>
@@ -239,8 +239,8 @@ export default function DashboardPending() {
     {/* Success Rate */}
     <div className="bg-white border border-gray-200 rounded-lg p-4">
      <div className="flex flex-col items-center text-center">
-      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
-       <TbShieldCheck className="w-6 h-6 text-blue-600" />
+      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+       <TbShieldCheck className="w-6 h-6 text-gray-600" />
       </div>
       <h3 className="text-sm text-gray-600 mb-1">Success Rate</h3>
       <p className="text-2xl font-semibold text-gray-900 mb-1">{verified.length > 0 ? '100' : '0'}%</p>
@@ -559,7 +559,7 @@ function EnhancedVerificationFlow({
 
  const getStepColor = () => {
   switch (verificationStep) {
-   case 'ready': return 'btn-primary';
+   case 'ready': return 'bg-gray-900 text-white hover:bg-gray-800';
    case 'submitting': 
    case 'verifying': 
    case 'listing': return 'bg-blue-500 text-white';

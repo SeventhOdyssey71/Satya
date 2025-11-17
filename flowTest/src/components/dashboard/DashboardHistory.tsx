@@ -45,7 +45,7 @@ export default function DashboardHistory() {
        onClick={() => setFilter('pending')}
        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
         filter === 'pending' 
-         ? 'bg-blue-600 text-white' 
+         ? 'bg-gray-300 text-gray-800' 
          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
        }`}
       >
@@ -55,7 +55,7 @@ export default function DashboardHistory() {
        onClick={() => setFilter('completed')}
        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
         filter === 'completed' 
-         ? 'bg-blue-600 text-white' 
+         ? 'bg-gray-300 text-gray-800' 
          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
        }`}
       >
@@ -65,7 +65,7 @@ export default function DashboardHistory() {
        onClick={() => setFilter('failed')}
        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
         filter === 'failed' 
-         ? 'bg-red-600 text-white' 
+         ? 'bg-gray-300 text-gray-800' 
          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
        }`}
       >
