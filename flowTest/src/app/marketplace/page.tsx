@@ -189,34 +189,14 @@ export default function MarketplacePage() {
    {/* Hero Banner */}
    <section className="relative py-8 md:py-12">
     <div className="container-custom">
-     <div className="text-center max-w-3xl mx-auto">
-      <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full mb-4">
-       <HiSparkles className="w-4 h-4 text-blue-600" />
-       <span className="text-sm font-medium text-blue-600">Verified AI Models</span>
-      </div>
-      
-      <h1 className="text-3xl md:text-4xl font-medium leading-tight mb-4 text-gray-900">
+     <div className="text-center max-w-2xl mx-auto">
+      <h1 className="text-2xl md:text-3xl font-medium leading-tight mb-3 text-gray-900">
        Discover Trusted AI Models
       </h1>
       
-      <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-       Browse verified AI models with TEE attestation, cryptographic proofs, and transparent pricing.
+      <p className="text-gray-600 mb-6">
+       Browse verified AI models with TEE attestation and transparent pricing.
       </p>
-
-      {/* Marketplace Stats */}
-      {!state.isLoading && (
-       <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
-        <span>{state.totalModels} Models Available</span>
-        <span>•</span>
-        <span>{filteredModels.filter(m => m.teeVerified).length} TEE Verified</span>
-        {state.lastRefresh && (
-         <>
-          <span>•</span>
-          <span>Updated {state.lastRefresh.toLocaleTimeString()}</span>
-         </>
-        )}
-       </div>
-      )}
      </div>
     </div>
    </section>
@@ -349,24 +329,24 @@ function EnhancedNavigation({
 
  return (
   <div className="mb-8">
-   {/* Search Bar - Full Width */}
-   <div className="mb-6">
-    <div className="relative max-w-xl mx-auto">
-     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+   {/* Search Bar */}
+   <div className="mb-4">
+    <div className="relative max-w-md mx-auto">
+     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
       <HiMagnifyingGlass className="h-4 w-4 text-gray-400" />
      </div>
      <input 
       type="text" 
-      placeholder="Search for AI models, datasets, or techniques..."
+      placeholder="Search models..."
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
       onKeyPress={handleKeyPress}
-      className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      className="w-full pl-9 pr-16 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
      />
-     <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+     <div className="absolute inset-y-0 right-0 flex items-center pr-1">
       <button 
        onClick={handleSearchSubmit}
-       className="px-4 py-1 bg-gray-900 text-white rounded-md hover:bg-black text-sm"
+       className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-black text-xs"
       >
        Search
       </button>
@@ -375,11 +355,11 @@ function EnhancedNavigation({
    </div>
 
    {/* Category Pills */}
-   <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+   <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
     {categories.map((category) => (
      <button
       key={category.value}
-      className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+      className={`px-3 py-1 rounded-md text-sm transition-colors ${
        activeCategory === category.value 
         ? 'bg-gray-900 text-white' 
         : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -391,45 +371,15 @@ function EnhancedNavigation({
     ))}
    </div>
 
-   {/* Verification Filter Pills */}
-   <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
-    <span className="text-sm text-gray-600 mr-2">Filter by verification:</span>
-    {verificationFilters.map((filter) => (
-     <button
-      key={filter.value}
-      className={`inline-flex items-center gap-1 px-3 py-1 rounded-md text-sm transition-colors ${
-       activeVerified === filter.value 
-        ? 'bg-blue-600 text-white' 
-        : 'bg-white text-gray-700 border border-gray-300 hover:bg-blue-50'
-      }`}
-      onClick={() => onVerifiedChange(filter.value)}
-     >
-      {filter.value === 'verified' && <span className="w-2 h-2 bg-blue-300 rounded-full"></span>}
-      {filter.value === 'unverified' && <span className="w-2 h-2 bg-gray-400 rounded-full"></span>}
-      <span>{filter.label}</span>
-     </button>
-    ))}
-   </div>
 
-   {/* Results Summary and Refresh */}
-   <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
-    <div className="flex items-center gap-3 text-sm text-gray-600">
-     <span>{totalResults} models found</span>
-     {isLoading && (
-      <div className="flex items-center gap-2">
-       <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-500 border-t-transparent" />
-       <span>Loading...</span>
-      </div>
-     )}
-    </div>
-    <button
-     onClick={onRefresh}
-     disabled={isLoading}
-     className="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md disabled:opacity-50"
-    >
-     <HiArrowPath className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-     Refresh
-    </button>
+   {/* Results Summary */}
+   <div className="text-center text-sm text-gray-500 mb-4">
+    {totalResults} models found
+    {isLoading && (
+     <span className="ml-2">
+      <div className="inline-block animate-spin rounded-full h-3 w-3 border-2 border-blue-500 border-t-transparent ml-1" />
+     </span>
+    )}
    </div>
   </div>
  )
