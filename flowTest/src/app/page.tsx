@@ -5,65 +5,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/ui/Header'
 import SealTestButton from '@/components/debug/SealTestButton'
-import { HiArrowRight, HiShieldCheck, HiBolt, HiGlobeAmericas } from 'react-icons/hi2'
+import { HiArrowRight, HiShieldCheck, HiBolt } from 'react-icons/hi2'
 import { TbShield, TbDatabase, TbNetwork, TbCloudCheck } from 'react-icons/tb'
-import { motion, useScroll, useTransform, useSpring, useInView } from 'framer-motion'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { TextPlugin } from 'gsap/TextPlugin'
-
-// Register GSAP plugins
-if (typeof window !== 'undefined') {
- gsap.registerPlugin(ScrollTrigger, TextPlugin)
-}
+import { motion, useInView } from 'framer-motion'
 
 export default function Home() {
- const containerRef = useRef<HTMLDivElement>(null)
- const { scrollYProgress } = useScroll()
- const scaleProgress = useTransform(scrollYProgress, [0, 1], [1, 0.8])
- const opacityProgress = useTransform(scrollYProgress, [0, 0.5], [1, 0])
- 
- useEffect(() => {
-  // Smooth scroll behavior
-  if (typeof window !== 'undefined') {
-   gsap.to(window, {
-    scrollTo: { y: 0, autoKill: false },
-    duration: 0.5,
-    ease: "power2.inOut"
-   })
-  }
- }, [])
-
  return (
-  <div ref={containerRef} className="relative min-h-screen bg-white overflow-x-hidden">
-   {/* Animated background */}
-   <div className="fixed inset-0 overflow-hidden pointer-events-none">
-    <motion.div 
-     className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-cyan-400/10 rounded-full blur-3xl"
-     animate={{
-      x: [0, 100, 0],
-      y: [0, -100, 0],
-     }}
-     transition={{
-      duration: 20,
-      repeat: Infinity,
-      repeatType: "reverse"
-     }}
-    />
-    <motion.div 
-     className="absolute top-1/2 right-1/4 w-80 h-80 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-3xl"
-     animate={{
-      x: [0, -100, 0],
-      y: [0, 100, 0],
-     }}
-     transition={{
-      duration: 15,
-      repeat: Infinity,
-      repeatType: "reverse"
-     }}
-    />
-   </div>
-
+  <div className="relative min-h-screen bg-white">
    <Header isHomepage={true} />
    
    <HeroSection />
@@ -80,63 +28,29 @@ export default function Home() {
 }
 
 function HeroSection() {
- const sectionRef = useRef(null)
- const headingRef = useRef(null)
- const { scrollY } = useScroll()
- const y = useTransform(scrollY, [0, 500], [0, -100])
- const opacity = useTransform(scrollY, [0, 300], [1, 0])
- 
- useEffect(() => {
-  // Split text animation
-  if (headingRef.current) {
-   gsap.from(headingRef.current, {
-    duration: 1.5,
-    text: "",
-    ease: "power2.inOut",
-   })
-  }
-  
-  // Parallax for section
-  gsap.to(sectionRef.current, {
-   scrollTrigger: {
-    trigger: sectionRef.current,
-    start: "top top",
-    end: "bottom top",
-    scrub: 1
-   },
-   y: 100,
-   ease: "none"
-  })
- }, [])
-
  return (
   <motion.section 
-   ref={sectionRef}
    className="relative z-10 pt-52 md:pt-64 pb-24 md:pb-32"
    initial={{ opacity: 0 }}
    animate={{ opacity: 1 }}
-   transition={{ duration: 0.8 }}
+   transition={{ duration: 0.6 }}
   >
    <div className="container-custom">
     <div className="text-center max-w-5xl mx-auto">
-     <motion.div
-      initial={{ y: 30, opacity: 0 }}
+     <motion.h1 
+      className="text-5xl md:text-6xl lg:text-7xl font-albert font-bold leading-tight max-w-4xl mx-auto mb-8 text-gray-900"
+      initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.8, delay: 0.2 }}
+      transition={{ duration: 0.6, delay: 0.1 }}
      >
-      <h1 
-       ref={headingRef}
-       className="text-5xl md:text-6xl lg:text-7xl font-albert font-bold leading-tight max-w-4xl mx-auto mb-8 bg-gradient-to-r from-gray-900 via-blue-900 to-gray-900 bg-clip-text text-transparent"
-      >
-       Bringing verifiable + trusted data markets
-      </h1>
-     </motion.div>
+      Bringing verifiable + trusted data markets
+     </motion.h1>
      
      <motion.p 
       className="text-xl md:text-2xl font-albert font-light text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed"
-      initial={{ y: 30, opacity: 0 }}
+      initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.8, delay: 0.4 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
      >
       Secure AI models and datasets with TEE verification, encrypted storage, and blockchain transparency. 
       Building the future of trusted machine learning.
@@ -144,68 +58,48 @@ function HeroSection() {
 
      <motion.div 
       className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
-      initial={{ y: 30, opacity: 0 }}
+      initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.8, delay: 0.6 }}
+      transition={{ duration: 0.6, delay: 0.3 }}
      >
       <Link href="/marketplace">
-       <motion.button 
-        className="px-8 py-4 bg-black text-white rounded-lg font-medium min-w-[200px] group flex items-center justify-center gap-2"
-        whileHover={{ scale: 1.05, boxShadow: "0 20px 30px -10px rgba(0,0,0,0.3)" }}
-        whileTap={{ scale: 0.95 }}
-       >
+       <button className="px-8 py-4 bg-black text-white rounded-lg font-medium min-w-[200px] hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
         Launch App
-        <HiArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-       </motion.button>
+        <HiArrowRight className="w-5 h-5" />
+       </button>
       </Link>
-      <motion.button 
-       className="px-8 py-4 bg-white text-black border-2 border-gray-200 rounded-lg font-medium min-w-[200px] group flex items-center justify-center gap-2"
-       whileHover={{ scale: 1.05, borderColor: "#000" }}
-       whileTap={{ scale: 0.95 }}
-      >
+      <button className="px-8 py-4 bg-white text-black border-2 border-gray-200 rounded-lg font-medium min-w-[200px] hover:border-black transition-colors flex items-center justify-center gap-2">
        Read Docs
-       <svg className="w-4 h-4 group-hover:rotate-45 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
        </svg>
-      </motion.button>
+      </button>
      </motion.div>
 
      <motion.div 
       className="text-center"
-      initial={{ y: 50, opacity: 0 }}
+      initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.8, delay: 0.8 }}
+      transition={{ duration: 0.6, delay: 0.4 }}
      >
       <p className="text-lg font-albert font-light text-gray-600 mb-8">Built on the Sui Stack</p>
       <div className="flex items-center justify-center gap-8 md:gap-16">
-       <motion.div 
-        className="group"
-        whileHover={{ scale: 1.1, rotate: 5 }}
-        transition={{ type: "spring", stiffness: 300 }}
-       >
-        <div className="p-4 bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-         <Image 
-          src="/images/Seal.svg" 
-          alt="SEAL"
-          width={80}
-          height={80}
-          className="h-16 w-auto"
-         />
-        </div>
-       </motion.div>
-       <motion.div 
-        className="group"
-        whileHover={{ scale: 1.1, rotate: -5 }}
-        transition={{ type: "spring", stiffness: 300 }}
-       >
-        <div className="p-4 bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-         <img 
-          src="/images/Walrus.png" 
-          alt="WALRUS"
-          className="h-16 w-auto"
-         />
-        </div>
-       </motion.div>
+       <div className="p-4 bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
+        <Image 
+         src="/images/Seal.svg" 
+         alt="SEAL"
+         width={80}
+         height={80}
+         className="h-16 w-auto"
+        />
+       </div>
+       <div className="p-4 bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
+        <img 
+         src="/images/Walrus.png" 
+         alt="WALRUS"
+         className="h-16 w-auto"
+        />
+       </div>
       </div>
      </motion.div>
     </div>
@@ -214,18 +108,16 @@ function HeroSection() {
  )
 }
 
-function AnimatedCard({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) {
+function AnimatedSection({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) {
  const ref = useRef(null)
  const isInView = useInView(ref, { once: true, margin: "-100px" })
  
  return (
   <motion.div
    ref={ref}
-   initial={{ y: 50, opacity: 0 }}
-   animate={isInView ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
-   transition={{ duration: 0.8, delay, type: "spring", stiffness: 100 }}
-   whileHover={{ y: -5, transition: { duration: 0.2 } }}
-   className="h-full"
+   initial={{ y: 30, opacity: 0 }}
+   animate={isInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
+   transition={{ duration: 0.6, delay }}
   >
    {children}
   </motion.div>
@@ -257,38 +149,30 @@ function FeaturesSection() {
  ]
 
  return (
-  <section className="relative z-10 py-24 bg-gradient-to-b from-white to-gray-50">
+  <section className="relative z-10 py-24 bg-white">
    <div className="container-custom">
-    <motion.div 
-     className="text-center mb-16"
-     initial={{ opacity: 0 }}
-     whileInView={{ opacity: 1 }}
-     transition={{ duration: 1 }}
-     viewport={{ once: true }}
-    >
-     <h2 className="text-4xl md:text-5xl font-albert font-bold mb-4">
-      Enterprise-Grade Security
-     </h2>
-     <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-      Built with cutting-edge cryptography and blockchain technology
-     </p>
-    </motion.div>
+    <AnimatedSection>
+     <div className="text-center mb-16">
+      <h2 className="text-4xl md:text-5xl font-albert font-bold mb-4 text-gray-900">
+       Enterprise-Grade Security
+      </h2>
+      <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+       Built with cutting-edge cryptography and blockchain technology
+      </p>
+     </div>
+    </AnimatedSection>
 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
      {features.map((feature, index) => (
-      <AnimatedCard key={index} delay={index * 0.1}>
-       <div className="bg-white border border-gray-200 rounded-2xl p-8 h-full hover:border-black transition-colors">
-        <motion.div 
-         className="text-blue-600 mb-4"
-         whileHover={{ scale: 1.2, rotate: 360 }}
-         transition={{ duration: 0.5 }}
-        >
+      <AnimatedSection key={index} delay={index * 0.1}>
+       <div className="bg-white border border-gray-200 rounded-lg p-8 h-full hover:shadow-lg transition-shadow">
+        <div className="text-gray-700 mb-4">
          {feature.icon}
-        </motion.div>
-        <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+        </div>
+        <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
         <p className="text-gray-600">{feature.description}</p>
        </div>
-      </AnimatedCard>
+      </AnimatedSection>
      ))}
     </div>
    </div>
@@ -297,41 +181,20 @@ function FeaturesSection() {
 }
 
 function TrustedMarketplacesSection() {
- const ref = useRef(null)
- 
- useEffect(() => {
-  gsap.from(ref.current, {
-   scrollTrigger: {
-    trigger: ref.current,
-    start: "top center",
-    end: "bottom center",
-    toggleActions: "play none none reverse"
-   },
-   scale: 0.8,
-   opacity: 0,
-   duration: 1,
-   ease: "power2.out"
-  })
- }, [])
-
  return (
-  <section ref={ref} className="relative z-10 py-24">
+  <section className="relative z-10 py-24 bg-white">
    <div className="container-custom">
     <div className="max-w-6xl mx-auto">
-     <motion.div 
-      className="text-center mb-16"
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      transition={{ duration: 1 }}
-      viewport={{ once: true }}
-     >
-      <h2 className="text-4xl md:text-5xl font-albert font-bold mb-4">
-       Trusted Marketplaces for AI
-      </h2>
-      <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-       Buy, sell, and verify AI models with complete transparency
-      </p>
-     </motion.div>
+     <AnimatedSection>
+      <div className="text-center mb-16">
+       <h2 className="text-4xl md:text-5xl font-albert font-bold mb-4 text-gray-900">
+        Trusted Marketplaces for AI
+       </h2>
+       <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+        Buy, sell, and verify AI models with complete transparency
+       </p>
+      </div>
+     </AnimatedSection>
 
      <div className="grid md:grid-cols-3 gap-8">
       {[
@@ -339,27 +202,15 @@ function TrustedMarketplacesSection() {
        { title: "Active Users", count: "10,000+", description: "Developers and researchers" },
        { title: "Total Volume", count: "$5M+", description: "In secure transactions" }
       ].map((stat, index) => (
-       <motion.div
-        key={index}
-        className="text-center p-8 bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-2xl"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: index * 0.2 }}
-        viewport={{ once: true }}
-        whileHover={{ scale: 1.05 }}
-       >
-        <motion.div 
-         className="text-4xl md:text-5xl font-bold text-transparent bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text mb-2"
-         initial={{ scale: 0 }}
-         whileInView={{ scale: 1 }}
-         transition={{ duration: 0.5, delay: 0.3 + index * 0.2, type: "spring" }}
-         viewport={{ once: true }}
-        >
-         {stat.count}
-        </motion.div>
-        <div className="text-lg font-semibold mb-1">{stat.title}</div>
-        <div className="text-gray-600 text-sm">{stat.description}</div>
-       </motion.div>
+       <AnimatedSection key={index} delay={index * 0.1}>
+        <div className="text-center p-8 bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
+         <div className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+          {stat.count}
+         </div>
+         <div className="text-lg font-semibold text-gray-900 mb-1">{stat.title}</div>
+         <div className="text-gray-600 text-sm">{stat.description}</div>
+        </div>
+       </AnimatedSection>
       ))}
      </div>
     </div>
@@ -370,49 +221,43 @@ function TrustedMarketplacesSection() {
 
 function SuiStackSection() {
  return (
-  <section className="relative z-10 py-24 bg-gradient-to-b from-gray-50 to-white">
+  <section className="relative z-10 py-24 bg-white">
    <div className="container-custom">
-    <motion.div 
-     className="text-center mb-16"
-     initial={{ opacity: 0 }}
-     whileInView={{ opacity: 1 }}
-     transition={{ duration: 1 }}
-     viewport={{ once: true }}
-    >
-     <h2 className="text-4xl md:text-5xl font-albert font-bold mb-4">
-      Powered by Sui Ecosystem
-     </h2>
-     <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-      Leveraging the best of blockchain and decentralized storage
-     </p>
-    </motion.div>
+    <AnimatedSection>
+     <div className="text-center mb-16">
+      <h2 className="text-4xl md:text-5xl font-albert font-bold mb-4 text-gray-900">
+       Powered by Sui Ecosystem
+      </h2>
+      <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+       Leveraging the best of blockchain and decentralized storage
+      </p>
+     </div>
+    </AnimatedSection>
 
     <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-     <motion.div 
-      className="bg-white border border-gray-200 rounded-2xl p-8"
-      whileHover={{ scale: 1.02, boxShadow: "0 20px 40px -15px rgba(0,0,0,0.1)" }}
-     >
-      <div className="flex items-center gap-4 mb-4">
-       <HiShieldCheck className="w-8 h-8 text-green-600" />
-       <h3 className="text-2xl font-bold">Security First</h3>
+     <AnimatedSection delay={0.1}>
+      <div className="bg-white border border-gray-200 rounded-lg p-8 hover:shadow-lg transition-shadow">
+       <div className="flex items-center gap-4 mb-4">
+        <HiShieldCheck className="w-8 h-8 text-gray-700" />
+        <h3 className="text-2xl font-bold text-gray-900">Security First</h3>
+       </div>
+       <p className="text-gray-600">
+        Multi-layer security with TEE verification, encryption, and blockchain immutability
+       </p>
       </div>
-      <p className="text-gray-600">
-       Multi-layer security with TEE verification, encryption, and blockchain immutability
-      </p>
-     </motion.div>
+     </AnimatedSection>
 
-     <motion.div 
-      className="bg-white border border-gray-200 rounded-2xl p-8"
-      whileHover={{ scale: 1.02, boxShadow: "0 20px 40px -15px rgba(0,0,0,0.1)" }}
-     >
-      <div className="flex items-center gap-4 mb-4">
-       <HiBolt className="w-8 h-8 text-yellow-600" />
-       <h3 className="text-2xl font-bold">Lightning Fast</h3>
+     <AnimatedSection delay={0.2}>
+      <div className="bg-white border border-gray-200 rounded-lg p-8 hover:shadow-lg transition-shadow">
+       <div className="flex items-center gap-4 mb-4">
+        <HiBolt className="w-8 h-8 text-gray-700" />
+        <h3 className="text-2xl font-bold text-gray-900">Lightning Fast</h3>
+       </div>
+       <p className="text-gray-600">
+        Sub-second finality with Sui blockchain and optimized storage retrieval
+       </p>
       </div>
-      <p className="text-gray-600">
-       Sub-second finality with Sui blockchain and optimized storage retrieval
-      </p>
-     </motion.div>
+     </AnimatedSection>
     </div>
    </div>
   </section>
@@ -421,45 +266,25 @@ function SuiStackSection() {
 
 function TrustEnforcedSection() {
  return (
-  <section className="relative z-10 py-24">
+  <section className="relative z-10 py-24 bg-white">
    <div className="container-custom">
-    <motion.div 
-     className="max-w-4xl mx-auto text-center"
-     initial={{ opacity: 0 }}
-     whileInView={{ opacity: 1 }}
-     transition={{ duration: 1 }}
-     viewport={{ once: true }}
-    >
-     <motion.h2 
-      className="text-4xl md:text-5xl font-albert font-bold mb-8"
-      initial={{ y: 30 }}
-      whileInView={{ y: 0 }}
-      transition={{ duration: 0.8 }}
-      viewport={{ once: true }}
-     >
-      Trust, Enforced by Technology
-     </motion.h2>
-     <motion.p 
-      className="text-xl text-gray-600 mb-12"
-      initial={{ y: 30 }}
-      whileInView={{ y: 0 }}
-      transition={{ duration: 0.8, delay: 0.2 }}
-      viewport={{ once: true }}
-     >
-      Every model is verified, every transaction is transparent, every byte is secure
-     </motion.p>
-     
-     <Link href="/marketplace">
-      <motion.button 
-       className="px-8 py-4 bg-black text-white rounded-lg font-medium text-lg"
-       whileHover={{ scale: 1.05, boxShadow: "0 20px 30px -10px rgba(0,0,0,0.3)" }}
-       whileTap={{ scale: 0.95 }}
-      >
-       Start Building Trust
-       <HiArrowRight className="inline-block ml-2 w-5 h-5" />
-      </motion.button>
-     </Link>
-    </motion.div>
+    <AnimatedSection>
+     <div className="max-w-4xl mx-auto text-center">
+      <h2 className="text-4xl md:text-5xl font-albert font-bold mb-8 text-gray-900">
+       Trust, Enforced by Technology
+      </h2>
+      <p className="text-xl text-gray-600 mb-12">
+       Every model is verified, every transaction is transparent, every byte is secure
+      </p>
+      
+      <Link href="/marketplace">
+       <button className="px-8 py-4 bg-black text-white rounded-lg font-medium text-lg hover:bg-gray-800 transition-colors">
+        Start Building Trust
+        <HiArrowRight className="inline-block ml-2 w-5 h-5" />
+       </button>
+      </Link>
+     </div>
+    </AnimatedSection>
    </div>
   </section>
  )
@@ -486,34 +311,24 @@ function FAQSection() {
  ]
 
  return (
-  <section className="relative z-10 py-24 bg-gray-50">
+  <section className="relative z-10 py-24 bg-white">
    <div className="container-custom">
-    <motion.div 
-     className="text-center mb-16"
-     initial={{ opacity: 0 }}
-     whileInView={{ opacity: 1 }}
-     transition={{ duration: 1 }}
-     viewport={{ once: true }}
-    >
-     <h2 className="text-4xl md:text-5xl font-albert font-bold mb-4">
-      Frequently Asked Questions
-     </h2>
-    </motion.div>
+    <AnimatedSection>
+     <div className="text-center mb-16">
+      <h2 className="text-4xl md:text-5xl font-albert font-bold mb-4 text-gray-900">
+       Frequently Asked Questions
+      </h2>
+     </div>
+    </AnimatedSection>
 
     <div className="max-w-3xl mx-auto space-y-4">
      {faqs.map((faq, index) => (
-      <motion.div
-       key={index}
-       className="bg-white border border-gray-200 rounded-lg p-6"
-       initial={{ opacity: 0, y: 20 }}
-       whileInView={{ opacity: 1, y: 0 }}
-       transition={{ duration: 0.5, delay: index * 0.1 }}
-       viewport={{ once: true }}
-       whileHover={{ scale: 1.02 }}
-      >
-       <h3 className="text-lg font-semibold mb-2">{faq.question}</h3>
-       <p className="text-gray-600">{faq.answer}</p>
-      </motion.div>
+      <AnimatedSection key={index} delay={index * 0.1}>
+       <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+        <h3 className="text-lg font-semibold mb-2 text-gray-900">{faq.question}</h3>
+        <p className="text-gray-600">{faq.answer}</p>
+       </div>
+      </AnimatedSection>
      ))}
     </div>
    </div>
@@ -523,10 +338,52 @@ function FAQSection() {
 
 function Footer() {
  return (
-  <footer className="relative z-10 py-12 bg-white border-t border-gray-200">
+  <footer className="relative z-10 py-16 bg-white border-t border-gray-200">
    <div className="container-custom">
-    <div className="text-center">
-     <p className="text-gray-600">© 2025 Satya. Building the future of trusted AI.</p>
+    <div className="grid md:grid-cols-4 gap-8 mb-12">
+     <div>
+      <h3 className="font-bold text-gray-900 mb-4">Satya</h3>
+      <p className="text-gray-600 text-sm">
+       Building the future of trusted AI with verifiable data markets.
+      </p>
+     </div>
+     
+     <div>
+      <h4 className="font-semibold text-gray-900 mb-4">Product</h4>
+      <ul className="space-y-2">
+       <li><Link href="/marketplace" className="text-gray-600 hover:text-gray-900 text-sm">Marketplace</Link></li>
+       <li><Link href="/upload" className="text-gray-600 hover:text-gray-900 text-sm">Upload Model</Link></li>
+       <li><Link href="/dashboard" className="text-gray-600 hover:text-gray-900 text-sm">Dashboard</Link></li>
+      </ul>
+     </div>
+     
+     <div>
+      <h4 className="font-semibold text-gray-900 mb-4">Resources</h4>
+      <ul className="space-y-2">
+       <li><a href="/docs" className="text-gray-600 hover:text-gray-900 text-sm">Documentation</a></li>
+       <li><a href="/api" className="text-gray-600 hover:text-gray-900 text-sm">API Reference</a></li>
+       <li><a href="/guides" className="text-gray-600 hover:text-gray-900 text-sm">Guides</a></li>
+      </ul>
+     </div>
+     
+     <div>
+      <h4 className="font-semibold text-gray-900 mb-4">Company</h4>
+      <ul className="space-y-2">
+       <li><a href="/about" className="text-gray-600 hover:text-gray-900 text-sm">About</a></li>
+       <li><a href="/blog" className="text-gray-600 hover:text-gray-900 text-sm">Blog</a></li>
+       <li><a href="/contact" className="text-gray-600 hover:text-gray-900 text-sm">Contact</a></li>
+      </ul>
+     </div>
+    </div>
+    
+    <div className="border-t border-gray-200 pt-8">
+     <div className="flex flex-col md:flex-row justify-between items-center">
+      <p className="text-gray-600 text-sm">© 2025 Satya. All rights reserved.</p>
+      <div className="flex gap-6 mt-4 md:mt-0">
+       <a href="/privacy" className="text-gray-600 hover:text-gray-900 text-sm">Privacy Policy</a>
+       <a href="/terms" className="text-gray-600 hover:text-gray-900 text-sm">Terms of Service</a>
+      </div>
+     </div>
     </div>
    </div>
   </footer>
