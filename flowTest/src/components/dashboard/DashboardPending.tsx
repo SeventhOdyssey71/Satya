@@ -127,9 +127,42 @@ export default function DashboardPending() {
   }
  };
 
+ // Sync hook data with local state
+ useEffect(() => {
+  if (hookPendingModels && hookPendingModels.length > 0) {
+   setState(prev => ({
+    ...prev,
+    pendingModels: hookPendingModels.map(model => ({
+     id: model.id,
+     title: model.title,
+     description: model.description,
+     category: model.category,
+     tags: model.tags,
+     creator: model.creator,
+     modelBlobId: model.modelBlobId,
+     datasetBlobId: model.datasetBlobId,
+     encryptionPolicyId: model.encryptionPolicyId,
+     price: String(model.price),
+     maxDownloads: undefined,
+     status: model.status === 'pending' ? 0 : model.status === 'verifying' ? 1 : model.status === 'verified' ? 2 : 3,
+     createdAt: model.createdAt,
+     updatedAt: model.createdAt,
+     verificationAttempts: 0
+    })),
+    isLoading: false,
+    error: null
+   }));
+  } else if (!isLoading && contractService) {
+   // Only load manually if hook isn't loading and has no data
+   loadPendingModels();
+  }
+ }, [hookPendingModels, isLoading, contractService]);
+ 
  // Load models on mount and account change
  useEffect(() => {
-  loadPendingModels();
+  if (contractService && currentAccount?.address) {
+   loadPendingModels();
+  }
  }, [contractService, currentAccount?.address]);
 
  // Categorize models by status
