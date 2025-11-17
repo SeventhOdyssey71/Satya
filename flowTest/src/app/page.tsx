@@ -165,17 +165,16 @@ function FeaturesSection() {
 
      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
       {features.map((feature, index) => (
-        <AnimatedSection key={index} delay={index * 0.1}>
-         <div className="bg-white border border-gray-200 rounded-2xl p-8 h-full hover:shadow-xl transition-shadow">
-          <div className="text-gray-700 mb-4">
-           {feature.icon}
-          </div>
-          <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
-          <p className="text-gray-600">{feature.description}</p>
+       <AnimatedSection key={index} delay={index * 0.1}>
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 h-full hover:shadow-xl transition-shadow">
+         <div className="text-gray-700 mb-4">
+          {feature.icon}
          </div>
-        </AnimatedSection>
-       ))}
-      </div>
+         <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
+         <p className="text-gray-600">{feature.description}</p>
+        </div>
+       </AnimatedSection>
+      ))}
      </div>
     </div>
    </div>
@@ -327,14 +326,13 @@ function FAQSection() {
 
      <div className="max-w-3xl mx-auto space-y-4">
       {faqs.map((faq, index) => (
-        <AnimatedSection key={index} delay={index * 0.1}>
-         <div className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-shadow">
-          <h3 className="text-lg font-semibold mb-2 text-gray-900">{faq.question}</h3>
-          <p className="text-gray-600">{faq.answer}</p>
-         </div>
-        </AnimatedSection>
-       ))}
-      </div>
+       <AnimatedSection key={index} delay={index * 0.1}>
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-shadow">
+         <h3 className="text-lg font-semibold mb-2 text-gray-900">{faq.question}</h3>
+         <p className="text-gray-600">{faq.answer}</p>
+        </div>
+       </AnimatedSection>
+      ))}
      </div>
     </div>
    </div>
