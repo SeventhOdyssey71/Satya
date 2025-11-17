@@ -205,7 +205,7 @@ export function ModelVerificationFlow({
  return (
   <div className="space-y-8">
    <div className="card p-8">
-    <h2 className="text-2xl font-russo text-secondary-900 mb-6">Model Verification</h2>
+    <h2 className="text-2xl font-albert font-bold text-secondary-900 mb-6">Model Verification</h2>
     
     <div className="space-y-6">
      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-surface-100 rounded-xl border border-border">
@@ -318,7 +318,7 @@ export function ModelVerificationFlow({
        <span className="text-white text-lg font-bold">✓</span>
       </div>
       <div className="flex-1">
-       <h4 className="font-russo text-lg text-success-800 mb-3">Blockchain Verification Complete!</h4>
+       <h4 className="font-albert font-bold text-lg text-success-800 mb-3">Blockchain Verification Complete!</h4>
        <div className="space-y-3">
         <div className="bg-surface-50 rounded-xl p-4">
          <div className="text-sm font-albert text-secondary-600 mb-1">Transaction Digest</div>

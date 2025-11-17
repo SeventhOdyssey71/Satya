@@ -253,7 +253,7 @@ export default function DashboardPending() {
    {/* Pending Verification List */}
    {!state.isLoading && pendingVerification.length > 0 && (
     <div className="card p-8">
-     <h3 className="text-2xl font-russo text-secondary-900 mb-8 flex items-center">
+     <h3 className="text-2xl font-albert font-bold text-secondary-900 mb-8 flex items-center">
       <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
        <TbCertificate className="w-5 h-5 text-amber-600" />
       </div>
@@ -371,7 +371,7 @@ export default function DashboardPending() {
    {/* Verified Models */}
    {verified.length > 0 && (
     <div className="card p-8">
-     <h3 className="text-2xl font-russo text-secondary-900 mb-8 flex items-center">
+     <h3 className="text-2xl font-albert font-bold text-secondary-900 mb-8 flex items-center">
       <div className="w-8 h-8 bg-success-100 rounded-lg flex items-center justify-center mr-3">
        <TbShieldCheck className="w-5 h-5 text-success-600" />
       </div>
@@ -412,7 +412,7 @@ export default function DashboardPending() {
      <div className="w-24 h-24 bg-secondary-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
       <TbCertificate className="w-12 h-12 text-secondary-400" />
      </div>
-     <h3 className="text-2xl font-russo text-secondary-900 mb-3">No models pending verification</h3>
+     <h3 className="text-2xl font-albert font-bold text-secondary-900 mb-3">No models pending verification</h3>
      <p className="text-secondary-600 font-albert max-w-md mx-auto leading-relaxed">
       Upload a model first, then it will appear here for TEE verification before marketplace publication.
      </p>

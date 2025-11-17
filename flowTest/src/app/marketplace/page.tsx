@@ -187,14 +187,14 @@ export default function MarketplacePage() {
    <Header />
    
    {/* Hero Banner */}
-   <section className="relative py-8 md:py-12">
+   <section className="relative py-6 md:py-8">
     <div className="container-custom">
-     <div className="text-center max-w-2xl mx-auto">
-      <h1 className="text-2xl md:text-3xl font-medium leading-tight mb-3 text-gray-900">
+     <div className="max-w-2xl">
+      <h1 className="text-2xl md:text-3xl font-albert font-semibold leading-tight mb-3 text-gray-900">
        Discover Trusted AI Models
       </h1>
       
-      <p className="text-gray-600 mb-6">
+      <p className="text-gray-600 mb-2">
        Browse verified AI models with TEE attestation and transparent pricing.
       </p>
      </div>
@@ -249,15 +249,8 @@ export default function MarketplacePage() {
      {/* Empty State */}
      {!state.isLoading && !state.error && filteredModels.length === 0 && (
       <div className="text-center py-12">
-       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-        <HiSparkles className="w-8 h-8 text-gray-400" />
-       </div>
-       <h3 className="text-xl font-medium text-gray-900 mb-2">No models found</h3>
-       <p className="text-gray-600 max-w-md mx-auto">
-        {state.models.length === 0 
-         ? "No models have been listed on the marketplace yet." 
-         : "Try adjusting your filters to see more models."
-        }
+       <p className="text-gray-500">
+        {filteredModels.length} models found
        </p>
       </div>
      )}
@@ -307,7 +300,6 @@ function EnhancedNavigation({
   { value: 'machine-learning', label: 'Machine Learning', icon: '' },
   { value: 'computer-vision', label: 'Computer Vision', icon: '' },
   { value: 'nlp', label: 'Natural Language', icon: '' },
-  { value: 'audio', label: 'Audio Processing', icon: '' },
   { value: 'other', label: 'Other', icon: '' }
  ];
 
@@ -330,33 +322,10 @@ function EnhancedNavigation({
  return (
   <div className="mb-8">
    {/* Search Bar and Category Pills Side by Side */}
-   <div className="flex items-center gap-4 mb-4">
-    {/* Search Bar */}
-    <div className="relative flex-shrink-0">
-     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-      <HiMagnifyingGlass className="h-4 w-4 text-gray-400" />
-     </div>
-     <input 
-      type="text" 
-      placeholder="Search models..."
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      onKeyPress={handleKeyPress}
-      className="w-64 pl-9 pr-16 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-     />
-     <div className="absolute inset-y-0 right-0 flex items-center pr-1">
-      <button 
-       onClick={handleSearchSubmit}
-       className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-black text-xs"
-      >
-       Search
-      </button>
-     </div>
-    </div>
-
+   <div className="flex items-center justify-between gap-4 mb-4">
     {/* Category Pills */}
-    <div className="bg-white border border-gray-200 rounded-lg p-2 flex-1">
-     <div className="flex items-center justify-center gap-2">
+    <div className="bg-white border border-gray-200 rounded-lg p-2 flex-shrink-0">
+     <div className="flex items-center gap-2">
       {categories.map((category) => (
        <button
         key={category.value}
@@ -370,6 +339,26 @@ function EnhancedNavigation({
         <span>{category.label}</span>
        </button>
       ))}
+     </div>
+    </div>
+
+    {/* Search Bar */}
+    <div className="relative w-80">
+     <input 
+      type="text" 
+      placeholder="Type in your search here..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      onKeyPress={handleKeyPress}
+      className="w-full pl-4 pr-20 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+     />
+     <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+      <button 
+       onClick={handleSearchSubmit}
+       className="p-2 bg-black text-white rounded-md hover:bg-gray-800"
+      >
+       <HiMagnifyingGlass className="h-4 w-4" />
+      </button>
      </div>
     </div>
    </div>
@@ -493,7 +482,7 @@ function EnhancedMarketplaceGrid({
     <div className="w-24 h-24 bg-secondary-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
      <HiSparkles className="w-12 h-12 text-secondary-400" />
     </div>
-    <h3 className="text-2xl font-russo text-secondary-900 mb-3">No models found</h3>
+    <h3 className="text-2xl font-albert font-semibold text-secondary-900 mb-3">No models found</h3>
     <p className="text-secondary-600 font-albert">
      No models match your current filters.
     </p>

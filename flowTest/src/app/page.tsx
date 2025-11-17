@@ -53,7 +53,7 @@ function HeroSection() {
      {/* Badge removed for cleaner look */}
 
      {/* Main Headline */}
-     <h1 className="text-5xl md:text-6xl lg:text-7xl font-russo leading-tight max-w-4xl mx-auto mb-8 animate-slide-up">
+     <h1 className="text-5xl md:text-6xl lg:text-7xl font-albert font-bold leading-tight max-w-4xl mx-auto mb-8 animate-slide-up">
       Bringing verifiable + trusted data markets
      </h1>
      
@@ -143,7 +143,7 @@ function FeaturesSection() {
   <section className="relative z-10 py-20">
    <div className="container-custom">
     <div className="text-center mb-16">
-     <h2 className="text-3xl md:text-4xl font-russo mb-6">Why Choose Satya?</h2>
+     <h2 className="text-3xl md:text-4xl font-albert font-bold mb-6">Why Choose Satya?</h2>
      <p className="text-lg font-albert font-light text-ocean/70 max-w-2xl mx-auto">
       Built with cutting-edge security and transparency features to ensure trust in AI model trading.
      </p>
@@ -177,7 +177,7 @@ function FeaturesSection() {
         <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6 group-hover:scale-105 transition-transform ${feature.color === 'warning' ? 'bg-white/20' : 'bg-white text-ocean'}`}>
          <IconComponent className="w-8 h-8" />
         </div>
-        <h3 className="text-xl font-russo mb-3">{feature.title}</h3>
+        <h3 className="text-xl font-albert font-semibold mb-3">{feature.title}</h3>
         <p className={`font-albert font-light leading-relaxed ${feature.color === 'warning' ? 'text-white/90' : 'text-ocean/80'}`}>{feature.description}</p>
        </div>
       );
@@ -193,7 +193,7 @@ function TrustedMarketplacesSection() {
   <section className="relative z-10 py-24">
    <div className="container-custom">
     <div className="text-center mb-16">
-     <h2 className="text-3xl md:text-4xl font-russo mb-6">
+     <h2 className="text-3xl md:text-4xl font-albert font-bold mb-6">
       Trusted AI Model Marketplace
      </h2>
      <p className="text-lg font-albert font-light text-ocean/70 max-w-3xl mx-auto leading-relaxed">
@@ -213,7 +213,7 @@ function TrustedMarketplacesSection() {
           <HiShieldCheck className="w-3 h-3" />
           TEE Verified
          </div>
-         <h3 className="text-3xl font-russo mb-4 text-ocean">Medical AI x129</h3>
+         <h3 className="text-3xl font-albert font-bold mb-4 text-ocean">Medical AI x129</h3>
          <p className="font-albert font-light text-ocean/80 mb-6 leading-relaxed">
           Advanced diagnostic model trained on verified hospital data with full privacy compliance and hardware security attestation.
          </p>
@@ -246,7 +246,7 @@ function TrustedMarketplacesSection() {
            Computer Vision
           </div>
          </div>
-         <h3 className="text-3xl font-russo mb-4 text-ocean">Vision Opus x229</h3>
+         <h3 className="text-3xl font-albert font-bold mb-4 text-ocean">Vision Opus x229</h3>
          <p className="font-albert font-light text-ocean/80 mb-6 leading-relaxed max-w-lg">
           State-of-the-art computer vision model with real-time processing capabilities and enterprise-grade security.
          </p>
@@ -269,7 +269,7 @@ function TrustedMarketplacesSection() {
            Real-time
           </div>
          </div>
-         <h3 className="text-3xl font-russo mb-4 text-ocean">AutoDrive Neural Net</h3>
+         <h3 className="text-3xl font-albert font-bold mb-4 text-ocean">AutoDrive Neural Net</h3>
          <p className="font-albert font-light text-ocean/80 mb-6 leading-relaxed max-w-lg">
           Advanced autonomous driving model with multi-sensor fusion and real-time decision making capabilities.
          </p>
@@ -325,7 +325,7 @@ function SuiStackSection() {
   <section className="relative z-10 py-20 bg-white border-t border-ocean/10">
    <div className="container-custom relative">
     <div className="text-center mb-20">
-     <h2 className="text-3xl md:text-5xl font-russo text-ocean tracking-tight leading-tight">
+     <h2 className="text-3xl md:text-5xl font-albert font-bold text-ocean tracking-tight leading-tight">
       Secure AI Marketplace Built on Trusted Infrastructure
      </h2>
     </div>
@@ -363,7 +363,7 @@ function TrustEnforcedSection() {
    <div className="container-custom">
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
      <div>
-      <h2 className="text-3xl md:text-4xl font-russo mb-6">
+      <h2 className="text-3xl md:text-4xl font-albert font-bold mb-6">
        Trust Enforced by Design
       </h2>
       <p className="text-xl text-ocean/70 mb-8 leading-relaxed">
@@ -495,7 +495,7 @@ function FAQItem({ question, answer, expanded }: { question: string, answer: str
   <div className={`card-hover p-8 transition-all duration-300 ${expanded ? 'bg-white border-secondary-300 shadow-card' : ''}`}>
    <div className="flex items-center justify-between">
     <div className="flex-1">
-     <h3 className="text-xl font-russo mb-4 text-ocean">
+     <h3 className="text-xl font-albert font-semibold mb-4 text-ocean">
       {question}
      </h3>
      {expanded && (
@@ -527,7 +527,7 @@ function Footer() {
         <div className="w-10 h-10 bg-ocean rounded-xl flex items-center justify-center">
          <HiSparkles className="w-6 h-6 text-white" />
         </div>
-        <h3 className="text-2xl font-russo text-ocean">Satya</h3>
+        <h3 className="text-2xl font-albert font-bold text-ocean">Satya</h3>
        </div>
        <p className="text-ocean/70 leading-relaxed mb-8 max-w-lg">
         Building the future of trusted AI with verifiable security, transparent transactions, and privacy-preserving technology.
@@ -547,7 +547,7 @@ function Footer() {
       </div>
       
       <div>
-       <h4 className="font-russo mb-6 text-ocean">Platform</h4>
+       <h4 className="font-albert font-bold mb-6 text-ocean">Platform</h4>
        <div className="space-y-4">
         <Link href="/marketplace" className="block text-ocean/70 hover:text-ocean transition-colors">Marketplace</Link>
         <Link href="/upload" className="block text-ocean/70 hover:text-ocean transition-colors">Upload Model</Link>
@@ -556,7 +556,7 @@ function Footer() {
       </div>
       
       <div>
-       <h4 className="font-russo mb-6 text-ocean">Resources</h4>
+       <h4 className="font-albert font-bold mb-6 text-ocean">Resources</h4>
        <div className="space-y-4">
         <a href="#" className="block text-ocean/70 hover:text-ocean transition-colors">Documentation</a>
         <a href="#" className="block text-ocean/70 hover:text-ocean transition-colors">API Reference</a>

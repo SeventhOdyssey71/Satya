@@ -23,7 +23,7 @@ export default function DashboardPage() {
     <main className="relative z-10 py-6">
      <div className="container max-w-7xl mx-auto px-6">
       <div className="max-w-4xl mx-auto text-center py-20">
-       <h1 className="text-3xl font-russo text-ocean mb-8">Dashboard</h1>
+       <h1 className="text-3xl font-albert font-bold text-ocean mb-8">Dashboard</h1>
        <p className="text-ocean/70 text-lg">Please connect your wallet to access your dashboard</p>
       </div>
      </div>

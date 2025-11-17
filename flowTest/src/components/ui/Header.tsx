@@ -34,10 +34,12 @@ export default function Header({ isHomepage = false }: HeaderProps) {
    <div className="container-custom">
     <div className="flex items-center justify-between py-3">
      {/* Logo */}
-     <Link href="/" className="text-ocean hover:text-ocean/80 transition-colors">
-      <h1 className="text-2xl font-russo tracking-tight">
-       Satya
-      </h1>
+     <Link href="/" className="hover:opacity-80 transition-opacity">
+      <img 
+       src="/images/SatyaNav.png" 
+       alt="Satya" 
+       className="h-8"
+      />
      </Link>
 
      {isHomepageRoute ? (
@@ -50,40 +52,42 @@ export default function Header({ isHomepage = false }: HeaderProps) {
       </Link>
      ) : (
       /* Other pages: Navigation + Wallet */
-      <div className="flex items-center gap-8">
-       <nav className="flex items-center gap-6">
+      <div className="flex items-center justify-between flex-1">
+       <div className="flex-1"></div>
+       <nav className="flex items-center gap-8">
         <Link 
          href="/marketplace"
-         className={`text-[17px] font-albert font-normal transition-colors ${
+         className={`transition-colors text-base ${
           pathname === '/marketplace' 
-           ? 'text-ocean' 
-           : 'text-ocean/60 hover:text-ocean'
+           ? 'text-black font-medium' 
+           : 'text-gray-500 font-light hover:text-gray-700'
          }`}
         >
          Marketplace
         </Link>
         <Link 
          href="/dashboard"
-         className={`text-[17px] font-albert font-normal transition-colors ${
+         className={`transition-colors text-base ${
           pathname === '/dashboard' 
-           ? 'text-ocean' 
-           : 'text-ocean/60 hover:text-ocean'
+           ? 'text-black font-medium' 
+           : 'text-gray-500 font-light hover:text-gray-700'
          }`}
         >
          Dashboard
         </Link>
         <Link 
          href="/upload"
-         className={`text-[17px] font-albert font-normal transition-colors ${
+         className={`transition-colors text-base ${
           pathname === '/upload' 
-           ? 'text-ocean' 
-           : 'text-ocean/60 hover:text-ocean'
+           ? 'text-black font-medium' 
+           : 'text-gray-500 font-light hover:text-gray-700'
          }`}
         >
          Upload
         </Link>
        </nav>
        
+       <div className="flex-1 flex justify-end">
        {/* Wallet Connection */}
        {account ? (
         <div className="relative" ref={dropdownRef}>
@@ -91,7 +95,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
           onClick={() => setShowDropdown(!showDropdown)}
           className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-light"
          >
-          <span className="text-sm">
+          <span className="text-base">
            {account.address.slice(0, 6)}...{account.address.slice(-4)}
           </span>
          </button>
@@ -111,10 +115,11 @@ export default function Header({ isHomepage = false }: HeaderProps) {
          )}
         </div>
        ) : (
-        <div className="[&>button]:!bg-black [&>button]:!text-white [&>button]:!border-black [&>button]:!px-4 [&>button]:!py-2 [&>button]:!rounded-lg [&>button]:!font-light [&>button]:!text-sm [&>button]:hover:!bg-gray-800 [&>button]:!transition-colors">
+        <div className="[&>button]:!bg-black [&>button]:!text-white [&>button]:!border-black [&>button]:!px-4 [&>button]:!py-2 [&>button]:!rounded-lg [&>button]:!font-light [&>button]:!text-base [&>button]:hover:!bg-gray-800 [&>button]:!transition-colors">
          <ConnectButton />
         </div>
        )}
+       </div>
       </div>
      )}
     </div>

@@ -31,7 +31,7 @@ export default function TestTEEPage() {
    <main className="relative z-10 py-6">
     <div className="container max-w-7xl mx-auto px-6">
      <div className="mb-8">
-      <h1 className="text-3xl font-russo text-black mb-4">TEE Integration Test</h1>
+      <h1 className="text-3xl font-albert font-bold text-black mb-4">TEE Integration Test</h1>
       <p className="text-gray-600">Test the complete TEE "Process in TEE" and "Verify on SUI Blockchain" functionality</p>
      </div>
 

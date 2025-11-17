@@ -91,7 +91,7 @@ export default function PricingStep({
   <div className="space-y-6">
    {/* Header */}
    <div>
-    <h2 className="text-2xl font-russo text-black mb-2">Set Pricing</h2>
+    <h2 className="text-2xl font-albert font-semibold text-black mb-2">Set Pricing</h2>
     <p className="text-gray-600">Configure pricing for attestation verification and model access</p>
    </div>
 

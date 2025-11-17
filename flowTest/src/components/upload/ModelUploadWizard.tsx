@@ -370,7 +370,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
  return (
   <div>
    <div className="mb-12">
-    <h1 className="text-5xl font-russo text-secondary-900 mb-3">Upload Model</h1>
+    <h1 className="text-5xl font-albert font-bold text-secondary-900 mb-3">Upload Model</h1>
     <p className="text-xl font-albert text-secondary-600">Share your AI model with the Satya marketplace</p>
    </div>
 
@@ -920,7 +920,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
  return (
   <div className="space-y-8">
    <div className="form-section">
-    <h3 className="text-2xl font-russo text-secondary-900 mb-6">Review Your Model</h3>
+    <h3 className="text-2xl font-albert font-bold text-secondary-900 mb-6">Review Your Model</h3>
     
     {/* Validation Summary */}
     {validation && (validation.hasErrors || validation.hasWarnings) && (
