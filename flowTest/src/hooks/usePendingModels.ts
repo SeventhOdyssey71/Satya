@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useWallet } from '@mysten/dapp-kit'
+import { useCurrentAccount } from '@mysten/dapp-kit'
 import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
 import { logger } from '@/lib/integrations/core/logger'
 
@@ -28,7 +28,7 @@ interface UsePendingModelsState {
 }
 
 export function usePendingModels() {
- const { currentAccount } = useWallet()
+ const currentAccount = useCurrentAccount()
  const [state, setState] = useState<UsePendingModelsState>({
   pendingModels: [],
   isLoading: false,
@@ -56,7 +56,7 @@ export function usePendingModels() {
 
  // Load user's pending models
  const loadPendingModels = async () => {
-  if (!contractService || !currentAccount?.address) {
+  if (!contractService || !currentAccount) {
    setState(prev => ({ ...prev, isLoading: false }))
    return
   }
@@ -64,9 +64,9 @@ export function usePendingModels() {
   try {
    setState(prev => ({ ...prev, isLoading: true, error: null }))
 
-   console.log('Loading pending models for user:', currentAccount.address)
+   console.log('Loading pending models for user:', currentAccount)
    
-   const pendingModels = await contractService.getUserPendingModels(currentAccount.address)
+   const pendingModels = await contractService.getUserPendingModels(currentAccount)
    
    console.log('Loaded pending models:', pendingModels)
 
@@ -104,7 +104,7 @@ export function usePendingModels() {
    console.error('Failed to load pending models:', error)
    logger.error('Failed to load pending models', {
     error: error instanceof Error ? error.message : String(error),
-    userAddress: currentAccount.address
+    userAddress: currentAccount
    })
    setState(prev => ({ 
     ...prev, 
@@ -117,7 +117,7 @@ export function usePendingModels() {
  // Auto-load on mount and when dependencies change
  useEffect(() => {
   loadPendingModels()
- }, [contractService, currentAccount?.address])
+ }, [contractService, currentAccount])
 
  // Refresh function for manual updates
  const refresh = () => {
