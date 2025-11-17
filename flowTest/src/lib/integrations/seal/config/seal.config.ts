@@ -1,16 +1,19 @@
 // Seal Network Configuration
 import { SEAL_CONFIG as MAIN_SEAL_CONFIG } from '../../../constants';
+// import type { KeyServerConfig } from '@mysten/seal'; // Commented out to avoid type conflicts
 
 export const SEAL_CONFIG = {
   testnet: {
     keyServers: MAIN_SEAL_CONFIG.KEY_SERVERS.map(server => ({
       objectId: server.OBJECT_ID,
       url: server.URL,
-      weight: 1,
-      mode: "Open" as const
+      weight: (server as any).WEIGHT || 1,
+      apiKeyName: (server as any).API_KEY_NAME,
+      apiKey: (server as any).API_KEY
     })),
     packageId: MAIN_SEAL_CONFIG.PACKAGE_ID,
-    threshold: MAIN_SEAL_CONFIG.agent.threshold
+    threshold: MAIN_SEAL_CONFIG.agent.threshold,
+    verifyKeyServers: false // Disable for testnet as recommended by SEAL SDK docs
   },
   
   agent: {

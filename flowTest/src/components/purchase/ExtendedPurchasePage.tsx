@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { SuiClient } from '@mysten/sui/client'
 import { 
   Shield, 
   Lock, 
@@ -20,9 +21,8 @@ import Header from '@/components/ui/Header'
 import PurchaseVerificationService, { VerificationStep, ModelPurchaseData } from '@/lib/services/purchase-verification-service'
 import { NautilusClient } from '@/lib/integrations/nautilus/client'
 import { SealEncryptionService } from '@/lib/integrations/seal/services/encryption-service'
-import { WalrusStorageService } from '@/lib/integrations/walrus/services/storage-service'
+// WalrusStorageService will be dynamically imported
 import { useCurrentAccount } from '@mysten/dapp-kit'
-import { SuiClient, getFullnodeUrl } from '@mysten/sui/client'
 import { useMemo } from 'react'
 
 interface ExtendedPurchasePageProps {
@@ -58,31 +58,52 @@ export default function ExtendedPurchasePage({
   const [error, setError] = useState<string>('')
   const currentAccount = useCurrentAccount()
 
-  // Initialize services
-  const services = useMemo(() => {
-    const suiClient = new SuiClient({ url: getFullnodeUrl('testnet') })
-    
-    const nautilusClient = new NautilusClient({
-      enclaveUrl: process.env.NEXT_PUBLIC_NAUTILUS_ENCLAVE_URL || 'http://localhost:8000',
-      verificationApiUrl: process.env.NEXT_PUBLIC_NAUTILUS_VERIFICATION_URL || 'http://localhost:8001',
-      attestationStorageUrl: process.env.NEXT_PUBLIC_NAUTILUS_ATTESTATION_URL || 'http://localhost:8002',
-      network: 'testnet'
-    })
+  // Initialize services with dynamic imports
+  const [services, setServices] = useState<PurchaseVerificationService | null>(null)
 
-    const sealService = new SealEncryptionService()
-    const walrusService = new WalrusStorageService()
-    
-    return new PurchaseVerificationService(
-      nautilusClient,
-      sealService,
-      walrusService,
-      suiClient
-    )
+  useEffect(() => {
+    async function initializeServices() {
+      try {
+        const suiClient = new SuiClient({ url: process.env.NEXT_PUBLIC_SUI_NETWORK_URL || 'https://fullnode.testnet.sui.io' })
+        
+        const nautilusClient = new NautilusClient({
+          enclaveUrl: process.env.NEXT_PUBLIC_NAUTILUS_ENCLAVE_URL || 'http://localhost:8000',
+          verificationApiUrl: process.env.NEXT_PUBLIC_NAUTILUS_VERIFICATION_URL || 'http://localhost:8001',
+          attestationStorageUrl: process.env.NEXT_PUBLIC_NAUTILUS_ATTESTATION_URL || 'http://localhost:8002',
+          network: 'testnet'
+        })
+
+        const sealService = new SealEncryptionService(suiClient)
+        
+        // Dynamic import for WalrusStorageService
+        const { WalrusStorageService } = await import('@/lib/integrations/walrus/services/storage-service')
+        const walrusService = new WalrusStorageService()
+        
+        const purchaseService = new PurchaseVerificationService(
+          nautilusClient,
+          sealService,
+          walrusService,
+          suiClient
+        )
+        
+        setServices(purchaseService)
+      } catch (error) {
+        console.error('Failed to initialize services:', error)
+        setError('Failed to initialize services')
+      }
+    }
+
+    initializeServices()
   }, [])
 
   const runVerification = async () => {
     if (!currentAccount) {
       setError('Please connect your wallet first')
+      return
+    }
+
+    if (!services) {
+      setError('Services not yet initialized. Please try again.')
       return
     }
 
@@ -147,7 +168,7 @@ export default function ExtendedPurchasePage({
   return (
     <div className={`min-h-screen bg-gray-50 ${className}`}>
       {/* Main Satya Navigation */}
-      <Header activeTab="marketplace" />
+      <Header />
       
       {/* Top Navigation Bar */}
       <div className="bg-white border-b border-gray-200">

@@ -1,5 +1,10 @@
 // Seal Encryption Service - High-level encryption operations
 
+import { SuiClient } from '@mysten/sui/client';
+import { createSuiClientWithFallback } from '../../sui/rpc-fallback';
+import { Transaction } from '@mysten/sui/transactions';
+import type { Signer } from '@mysten/sui/cryptography';
+import { SessionKey } from '@mysten/seal';
 import { SEAL_CONFIG } from '../config/seal.config';
 import { EncryptionCore } from '../lib/encryption-core';
 import {
@@ -14,19 +19,34 @@ import {
 import { PolicyEngine } from '../utils/policy-engine';
 import { SessionManager } from '../utils/session-manager';
 import { DEKCache } from '../utils/dek-cache';
+import { SealClientWrapper } from '../lib/seal-client';
 
 export class SealEncryptionService {
   private encryptionCore: EncryptionCore;
   private policyEngine: PolicyEngine;
   private sessionManager: SessionManager;
   private dekCache: DEKCache;
+  private sealClient: SealClientWrapper;
+  private suiClient: SuiClient;
   private policyRegistry: Map<string, PolicyMetadata> = new Map();
   
-  constructor() {
+  constructor(suiClient: SuiClient) {
+    this.suiClient = suiClient;
     this.encryptionCore = new EncryptionCore();
     this.policyEngine = new PolicyEngine();
-    this.sessionManager = new SessionManager();
+    this.sessionManager = new SessionManager(suiClient);
     this.dekCache = new DEKCache(SEAL_CONFIG.agent.cacheSize);
+    this.sealClient = this.sessionManager.getSealClient();
+  }
+
+  // Create service with fallback RPC support
+  static async createWithFallback(): Promise<SealEncryptionService> {
+    try {
+      const suiClient = await createSuiClientWithFallback();
+      return new SealEncryptionService(suiClient);
+    } catch (error) {
+      throw new SealError(`Failed to create SEAL service with fallback: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
   
   // Encrypt data with policy
@@ -82,17 +102,20 @@ export class SealEncryptionService {
     }
   }
   
-  // Decrypt data with policy verification
+  // Decrypt data with policy verification and real SEAL integration
   async decryptData(
     encryptedData: Uint8Array,
     encryptedDEK: Uint8Array,
     iv: Uint8Array,
     policyId: string,
     purchaseRecordId: string,
-    requester: string
+    requester: string,
+    signer?: Signer
   ): Promise<DecryptionResult> {
     try {
-      // 1. Verify policy
+      console.log(`Starting SEAL decryption for policy ${policyId}, requester ${requester}`);
+      
+      // 1. Verify policy conditions
       const policyMet = await this.verifyPolicy(policyId, requester, purchaseRecordId);
       if (!policyMet) {
         throw new AccessDeniedError('Policy conditions not met');
@@ -102,14 +125,24 @@ export class SealEncryptionService {
       let dek = this.dekCache.get(policyId);
       
       if (!dek) {
-        // 3. Get or create session
-        const session = await this.sessionManager.getOrCreateSession(requester);
+        // 3. Get or create SEAL session
+        const session = await this.sessionManager.getOrCreateSession(requester, signer);
         
-        // 4. Decrypt DEK with Seal (mock for now)
-        dek = await this.decryptDEKWithSeal(encryptedDEK, policyId, session);
+        // 4. Decrypt DEK with real SEAL using threshold decryption
+        dek = await this.decryptDEKWithSeal(
+          encryptedDEK, 
+          policyId, 
+          session, 
+          requester, 
+          purchaseRecordId
+        );
         
-        // 5. Cache DEK
+        // 5. Cache DEK for future use
         this.dekCache.set(policyId, dek);
+        
+        console.log(`DEK successfully decrypted and cached for policy ${policyId}`);
+      } else {
+        console.log(`Using cached DEK for policy ${policyId}`);
       }
       
       // 6. Decrypt data with DEK
@@ -119,8 +152,10 @@ export class SealEncryptionService {
         iv
       );
       
-      // 7. Clear DEK from local variable
+      // 7. Clear DEK from local variable (cache retains it)
       this.encryptionCore.secureClear(dek);
+      
+      console.log(`Data decryption successful for policy ${policyId}`);
       
       return {
         success: true,
@@ -129,6 +164,8 @@ export class SealEncryptionService {
       };
       
     } catch (error) {
+      console.error(`Decryption failed for policy ${policyId}:`, error);
+      
       if (error instanceof AccessDeniedError) {
         return {
           success: false,
@@ -209,78 +246,105 @@ export class SealEncryptionService {
     return policyId;
   }
   
-  // Mock Seal DEK encryption (replace with actual Seal SDK)
+  // Real SEAL DEK encryption with identity-based encryption
   private async encryptDEKWithSeal(
     dek: Uint8Array,
     policyId: string
   ): Promise<Uint8Array> {
-    // Generate a key derived from policy ID for SEAL simulation
-    const policyKey = await this.deriveKeyFromPolicy(policyId);
-    
-    // Encrypt DEK with the policy key
-    const result = await this.encryptionCore.encryptWithDEK(dek, policyKey);
-    
-    // Return concatenated IV + encrypted DEK for storage
-    const combined = new Uint8Array(result.iv.length + result.ciphertext.length);
-    combined.set(result.iv);
-    combined.set(result.ciphertext, result.iv.length);
-    
-    return combined;
+    try {
+      console.log(`Encrypting DEK with SEAL for policy ${policyId}`);
+      
+      // Use the policy ID as the identity for SEAL encryption
+      const identity = this.generateIdentityFromPolicy(policyId);
+      console.log(`Generated identity for policy ${policyId}:`, identity);
+      
+      // Encrypt DEK using SEAL's identity-based encryption
+      const result = await this.sealClient.encryptWithSeal(
+        dek,
+        policyId,
+        identity,
+        SEAL_CONFIG.testnet.threshold
+      );
+      
+      console.log(`DEK encrypted successfully with SEAL for policy ${policyId}`);
+      
+      // Return the encrypted object (contains all SEAL metadata)
+      return result.encryptedObject;
+    } catch (error) {
+      console.error(`SEAL DEK encryption failed for policy ${policyId}:`, error);
+      
+      // Check if this is a PTB/package ID error - these are usually unrecoverable
+      if (error instanceof Error && error.message.includes('Package ID used in PTB is invalid')) {
+        throw new SealError(`SEAL configuration error - invalid package ID: ${SEAL_CONFIG.testnet.packageId}. This may indicate the package is not deployed or has moved.`);
+      }
+      
+      throw new SealError(`Failed to encrypt DEK with SEAL: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
   
-  // Mock Seal DEK decryption (replace with actual Seal SDK)
+  // Real SEAL DEK decryption with threshold decryption
   private async decryptDEKWithSeal(
     encryptedDEK: Uint8Array,
     policyId: string,
-    _session: any
+    session: SessionKey,
+    requester: string,
+    purchaseRecordId?: string
   ): Promise<Uint8Array> {
-    // Generate the same key derived from policy ID
-    const policyKey = await this.deriveKeyFromPolicy(policyId);
-    
-    // Extract IV and encrypted data
-    const ivLength = 12; // AES-GCM IV length
-    const iv = encryptedDEK.slice(0, ivLength);
-    const ciphertext = encryptedDEK.slice(ivLength);
-    
-    // Decrypt DEK with the policy key
-    const decryptedDEK = await this.encryptionCore.decryptWithDEK(ciphertext, policyKey, iv);
-    
-    return decryptedDEK;
+    try {
+      console.log(`Decrypting DEK with SEAL for policy ${policyId}`);
+      
+      // Create authorization transaction that verifies the policy
+      const authTx = this.createAuthorizationTransaction(policyId, requester, purchaseRecordId);
+      
+      // Decrypt using SEAL's threshold decryption
+      const decryptedDEK = await this.sealClient.decryptWithSeal(
+        encryptedDEK,
+        session,
+        authTx
+      );
+      
+      console.log(`DEK decrypted successfully with SEAL for policy ${policyId}`);
+      
+      return decryptedDEK;
+    } catch (error) {
+      console.error(`SEAL DEK decryption failed for policy ${policyId}:`, error);
+      throw new SealError(`Failed to decrypt DEK with SEAL: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
   
-  // Derive encryption key from policy ID for SEAL simulation
-  private async deriveKeyFromPolicy(policyId: string): Promise<Uint8Array> {
-    // Use PBKDF2 to derive a key from the policy ID
+  // Generate a deterministic identity from policy for SEAL encryption
+  private generateIdentityFromPolicy(policyId: string): string {
+    // SEAL SDK expects a valid hex string as identity
+    // Convert policy ID to deterministic hex format
     const encoder = new TextEncoder();
-    const policyData = encoder.encode(policyId);
+    const policyBytes = encoder.encode(policyId);
     
-    // Import the policy ID as key material
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      policyData,
-      { name: 'PBKDF2' },
-      false,
-      ['deriveBits', 'deriveKey']
-    );
+    // Create a deterministic hex string from the policy ID
+    let hexString = '0x';
+    for (let i = 0; i < policyBytes.length; i++) {
+      hexString += policyBytes[i].toString(16).padStart(2, '0');
+    }
     
-    // Derive a 256-bit AES key
-    const salt = new TextEncoder().encode('SealEncryptionService');
-    const key = await crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt: salt,
-        iterations: 100000,
-        hash: 'SHA-256'
-      },
-      keyMaterial,
-      { name: 'AES-GCM', length: 256 },
-      true,
-      ['encrypt', 'decrypt']
-    );
-    
-    // Export and return the raw key
-    const exported = await crypto.subtle.exportKey('raw', key);
-    return new Uint8Array(exported);
+    return hexString;
+  }
+  
+  // Create authorization transaction for SEAL access control
+  private createAuthorizationTransaction(
+    policyId: string,
+    requester: string,
+    purchaseRecordId?: string
+  ): Transaction {
+    return this.sealClient.createAuthorizationTransaction(policyId, requester, purchaseRecordId);
+  }
+  
+  // Add utility method to get session statistics  
+  getSessionStats() {
+    return this.sessionManager.getSessionStats();
+  }
+  
+  // Add method to clear all sessions (for testing/admin)
+  clearAllSessions(): void {
+    this.sessionManager.clearAllSessions();
   }
 
   // Verify policy conditions
@@ -310,13 +374,131 @@ export class SealEncryptionService {
     }
   }
   
+  // On-chain payment policy verification
   private async verifyPaymentPolicy(
-    _policy: PolicyMetadata,
-    _requester: string,
+    policy: PolicyMetadata,
+    requester: string,
     purchaseRecordId?: string
   ): Promise<boolean> {
-    // In production, verify on-chain purchase record
-    return !!purchaseRecordId;
+    if (!purchaseRecordId) {
+      console.warn(`No purchase record ID provided for requester ${requester}`);
+      return false;
+    }
+    
+    try {
+      console.log(`Verifying payment policy for ${requester} with purchase record ${purchaseRecordId}`);
+      
+      // Query the blockchain for the purchase record
+      const purchaseRecord = await this.verifyPurchaseRecordOnChain(
+        purchaseRecordId,
+        requester,
+        policy.params.assetId || '',
+        policy.params.seller || ''
+      );
+      
+      if (!purchaseRecord) {
+        console.warn(`Purchase record ${purchaseRecordId} not found or invalid`);
+        return false;
+      }
+      
+      // Verify purchase is still valid (not expired, not refunded, etc.)
+      const isValid = await this.verifyPurchaseRecordValidity(purchaseRecord);
+      
+      console.log(`Purchase record verification result: ${isValid}`);
+      return isValid;
+      
+    } catch (error) {
+      console.error(`Payment policy verification failed for ${requester}:`, error);
+      return false;
+    }
+  }
+  
+  // Verify purchase record exists on Sui blockchain
+  private async verifyPurchaseRecordOnChain(
+    purchaseRecordId: string,
+    buyerAddress: string,
+    assetId: string,
+    sellerAddress: string
+  ): Promise<any | null> {
+    try {
+      // Query the Sui blockchain for the purchase object
+      const purchaseObject = await this.suiClient.getObject({
+        id: purchaseRecordId,
+        options: {
+          showContent: true,
+          showOwner: true,
+          showType: true
+        }
+      });
+      
+      if (!purchaseObject.data) {
+        return null;
+      }
+      
+      // Verify the purchase object structure and ownership
+      const content = purchaseObject.data.content as any;
+      if (!content || !content.fields) {
+        return null;
+      }
+      
+      // Verify buyer, seller, and asset match
+      const fields = content.fields;
+      if (
+        fields.buyer !== buyerAddress ||
+        fields.seller !== sellerAddress ||
+        fields.asset_id !== assetId
+      ) {
+        console.warn('Purchase record fields do not match expected values', {
+          expected: { buyerAddress, sellerAddress, assetId },
+          actual: { 
+            buyer: fields.buyer, 
+            seller: fields.seller, 
+            asset_id: fields.asset_id 
+          }
+        });
+        return null;
+      }
+      
+      return fields;
+      
+    } catch (error) {
+      console.error('Failed to verify purchase record on-chain:', error);
+      return null;
+    }
+  }
+  
+  // Verify purchase record is still valid
+  private async verifyPurchaseRecordValidity(purchaseRecord: any): Promise<boolean> {
+    try {
+      const now = Date.now();
+      
+      // Check if purchase has expired
+      if (purchaseRecord.expires_at && purchaseRecord.expires_at < now) {
+        console.warn('Purchase record has expired');
+        return false;
+      }
+      
+      // Check if purchase has been refunded or cancelled
+      if (purchaseRecord.status && purchaseRecord.status !== 'active') {
+        console.warn('Purchase record is not active:', purchaseRecord.status);
+        return false;
+      }
+      
+      // Check access duration limit if specified
+      if (purchaseRecord.access_duration_ms) {
+        const accessExpiry = purchaseRecord.purchase_time + purchaseRecord.access_duration_ms;
+        if (now > accessExpiry) {
+          console.warn('Purchase access duration has expired');
+          return false;
+        }
+      }
+      
+      return true;
+      
+    } catch (error) {
+      console.error('Failed to verify purchase record validity:', error);
+      return false;
+    }
   }
   
   private async verifyTimeLockPolicy(

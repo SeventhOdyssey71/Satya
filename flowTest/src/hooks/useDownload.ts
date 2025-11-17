@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
+import { SuiClient } from '@mysten/sui/client'
 import { WalrusStorageService } from '@/lib/integrations/walrus/services/storage-service'
 import { SealEncryptionService } from '@/lib/integrations/seal/services/encryption-service'
 import { logger } from '@/lib/integrations/core/logger'
@@ -57,7 +58,9 @@ export function useDownload() {
       walrusService.current = new WalrusStorageService()
     }
     if (!sealService.current) {
-      sealService.current = new SealEncryptionService()
+      // Create temporary SUI client for SEAL operations
+      const suiClient = new SuiClient({ url: process.env.NEXT_PUBLIC_SUI_NETWORK_URL || 'https://fullnode.testnet.sui.io' });
+      sealService.current = new SealEncryptionService(suiClient)
     }
   }, [])
 

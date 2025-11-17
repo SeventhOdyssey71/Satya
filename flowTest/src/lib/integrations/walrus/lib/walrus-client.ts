@@ -45,6 +45,8 @@ export class WalrusClient {
       let response: Response;
       
       try {
+        console.log('🚀 Starting Walrus upload request', { dataSize: data.length, timeout, url: uploadUrl });
+        
         response = await fetch(uploadUrl, {
           method: 'PUT',
           body: data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer,
@@ -54,6 +56,8 @@ export class WalrusClient {
           cache: 'no-cache',
           redirect: 'follow'
         });
+        
+        console.log('✅ Walrus upload request completed', { status: response.status });
         
         logger.debug('Walrus upload response received', {
           status: response.status,
@@ -92,16 +96,24 @@ export class WalrusClient {
       
       const result = await response.json() as any;
       
+      // Extract blobId from the correct Walrus response format
+      const blobId = result.newlyCreated?.blobObject?.blobId || result.alreadyCertified?.blobId;
+      
+      if (!blobId) {
+        logger.error('Walrus upload succeeded but no blob ID found in response', { result });
+        throw new WalrusError('Upload successful but no blob ID returned', 500);
+      }
+      
       logger.info('Walrus upload successful', {
-        blobId: result.blob_id || result.blobId,
+        blobId,
         dataSize: data.length,
         epochs
       });
 
       return {
         success: true,
-        blobId: result.blob_id || result.blobId,
-        certificate: result.certificate
+        blobId,
+        certificate: result.newlyCreated ? 'newly_certified' : 'already_certified'
       };
       
     } catch (error) {

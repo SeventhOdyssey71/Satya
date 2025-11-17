@@ -1,10 +1,12 @@
 // Upload Service Layer - Handles file uploads with encryption
 
+import { SuiClient } from '@mysten/sui/client';
 import { SealEncryptionService } from '../integrations/seal/services/encryption-service';
 import { WalrusStorageService } from '../integrations/walrus/services/storage-service';
 import { logger } from '../integrations/core/logger';
 import { PolicyType, EncryptionResult } from '../integrations/seal/types';
 import { UploadResult } from '../integrations/walrus/types';
+import { SUI_CONFIG } from '../constants';
 
 export interface FileUploadRequest {
   file: File;
@@ -45,8 +47,31 @@ export class UploadService {
   private activeUploads = new Map<string, AbortController>();
 
   constructor() {
-    this.sealService = new SealEncryptionService();
-    this.walrusService = new WalrusStorageService();
+    try {
+      // Initialize SUI client first 
+      const suiClient = new SuiClient({
+        url: SUI_CONFIG.RPC_URL
+      });
+      
+      this.sealService = new SealEncryptionService(suiClient);
+      this.walrusService = new WalrusStorageService();
+    } catch (error) {
+      console.error('Failed to initialize UploadService:', error);
+      throw error;
+    }
+  }
+
+  // Create upload service with fallback RPC support
+  static async createWithFallback(): Promise<UploadService> {
+    try {
+      const uploadService = new UploadService();
+      // Replace the SEAL service with fallback-enabled version
+      uploadService.sealService = await SealEncryptionService.createWithFallback();
+      return uploadService;
+    } catch (error) {
+      console.error('Failed to create UploadService with fallback:', error);
+      throw error;
+    }
   }
 
   // Upload file with optional encryption
@@ -107,12 +132,15 @@ export class UploadService {
         }
 
         processedData = new Uint8Array(encryptionResult.encryptedData);
-        logger.debug('File encrypted successfully', {
-          fileId,
-          policyId: encryptionResult.policyId,
-          originalSize: fileData.length,
-          encryptedSize: processedData.length
-        });
+        
+        if (encryptionResult) {
+          logger.debug('File encrypted successfully', {
+            fileId,
+            policyId: encryptionResult.policyId,
+            originalSize: fileData.length,
+            encryptedSize: processedData.length
+          });
+        }
       }
 
       if (controller.signal.aborted) {
@@ -130,22 +158,17 @@ export class UploadService {
         }
       });
 
+      const isActuallyEncrypted = request.encrypt && encryptionResult?.success;
       const uploadFile = new File(
         [processedData],
-        request.encrypt ? `${request.file.name}.encrypted` : request.file.name,
-        { type: request.encrypt ? 'application/octet-stream' : request.file.type }
+        isActuallyEncrypted ? `${request.file.name}.encrypted` : request.file.name,
+        { type: isActuallyEncrypted ? 'application/octet-stream' : request.file.type }
       );
 
-      // Import Ed25519Keypair for SDK upload
-      const { Ed25519Keypair } = await import('@mysten/sui/keypairs/ed25519');
-      
-      // Use a test keypair for SDK upload to avoid direct API issues
-      const testPrivateKey = 'suiprivkey1qr4ms6vljlawapq0f8clc50epw3z27kclmfn6mwrfhljx7wpks7yuf0eaws';
-      const signer = Ed25519Keypair.fromSecretKey(testPrivateKey);
-
+      // Use HTTP API for upload instead of SDK to avoid private key requirement
       const uploadResult = await this.walrusService.uploadFile(uploadFile, {
         ...request.storageOptions,
-        signer, // Pass signer to use SDK client instead of direct API
+        // Remove signer - use HTTP API instead
         onProgress: (uploadProgress) => {
           onProgress?.({
             phase: 'upload',
@@ -189,7 +212,7 @@ export class UploadService {
       logger.info('File upload completed successfully', {
         fileId,
         blobId: uploadResult.blobId,
-        encrypted: !!request.encrypt,
+        encrypted: isActuallyEncrypted,
         size: request.file.size
       });
 
@@ -298,14 +321,7 @@ export class UploadService {
     let canEncrypt = true;
 
     try {
-      // Test storage connectivity
-      const storageConnected = await this.walrusService.testConnectivity();
-      if (!storageConnected) {
-        canUpload = false;
-        issues.push('Storage service unavailable');
-      }
-
-      // Test encryption service
+      // Test encryption service first - now required
       try {
         const testData = new Uint8Array([1, 2, 3, 4]);
         const encResult = await this.sealService.encryptData(
@@ -315,11 +331,22 @@ export class UploadService {
         );
         if (!encResult.success) {
           canEncrypt = false;
-          issues.push('Encryption service unavailable');
+          canUpload = false; // Upload requires encryption
+          issues.push('Encryption service unavailable - uploads require SEAL encryption');
         }
       } catch (error) {
         canEncrypt = false;
-        issues.push('Encryption test failed');
+        canUpload = false; // Upload requires encryption
+        issues.push('Encryption test failed - uploads require SEAL encryption');
+      }
+
+      // Test storage connectivity only if encryption works
+      if (canEncrypt) {
+        const storageConnected = await this.walrusService.testConnectivity();
+        if (!storageConnected) {
+          canUpload = false;
+          issues.push('Storage service unavailable');
+        }
       }
 
     } catch (error) {
@@ -347,15 +374,22 @@ export class UploadService {
     }
 
     // Validate file type (basic check)
-    if (file.name.length > 255) {
+    if (file.name && file.name.length > 255) {
       throw new Error('File name is too long (maximum 255 characters)');
     }
 
     // Check for potentially dangerous file extensions
     const dangerousExtensions = ['.exe', '.bat', '.cmd', '.scr', '.com', '.pif'];
-    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-    if (dangerousExtensions.includes(fileExtension)) {
-      throw new Error(`File type ${fileExtension} is not allowed`);
+    
+    // Safe file extension extraction with null checks
+    if (file.name && typeof file.name === 'string') {
+      const dotIndex = file.name.lastIndexOf('.');
+      if (dotIndex !== -1) {
+        const fileExtension = file.name.toLowerCase().substring(dotIndex);
+        if (dangerousExtensions.includes(fileExtension)) {
+          throw new Error(`File type ${fileExtension} is not allowed`);
+        }
+      }
     }
   }
 

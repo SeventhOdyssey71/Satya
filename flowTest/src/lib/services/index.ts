@@ -76,7 +76,36 @@ export function getUploadService(): UploadService {
   }
   
   if (!uploadService) {
-    uploadService = new UploadService();
+    try {
+      uploadService = new UploadService();
+    } catch (error) {
+      console.error('Failed to create UploadService:', error);
+      // Return a mock service in case of initialization failure
+      return {
+        uploadFile: async () => { throw new Error('Upload service not available'); },
+        getHealthStatus: async () => ({ overall: 'failed' as const })
+      } as unknown as UploadService;
+    }
+  }
+  return uploadService;
+}
+
+// Get upload service with fallback RPC support
+export async function getUploadServiceWithFallback(): Promise<UploadService> {
+  if (typeof window === 'undefined') {
+    return {} as UploadService;
+  }
+  
+  if (!uploadService) {
+    try {
+      console.log('🔄 Creating upload service with RPC fallback...');
+      uploadService = await UploadService.createWithFallback();
+      console.log('✅ Upload service with fallback created successfully');
+    } catch (error) {
+      console.error('❌ Failed to create UploadService with fallback:', error);
+      // Fallback to regular upload service
+      uploadService = new UploadService();
+    }
   }
   return uploadService;
 }

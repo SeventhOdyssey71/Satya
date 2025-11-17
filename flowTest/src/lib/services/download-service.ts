@@ -44,13 +44,15 @@ export class DownloadService {
   private activeDownloads = new Map<string, AbortController>();
 
   constructor() {
-    this.sealService = new SealEncryptionService();
-    this.walrusService = new WalrusStorageService();
+    // Initialize SUI client first
     this.suiClient = new SuiMarketplaceClient({
       network: SUI_CONFIG.NETWORK,
       packageId: MARKETPLACE_CONFIG.PACKAGE_ID,
-      marketplaceObjectId: MARKETPLACE_CONFIG.OBJECT_ID
+      marketplaceObjectId: MARKETPLACE_CONFIG.REGISTRY_ID
     });
+    
+    this.sealService = new SealEncryptionService(this.suiClient.suiClient);
+    this.walrusService = new WalrusStorageService();
   }
 
   // Download purchased file with decryption

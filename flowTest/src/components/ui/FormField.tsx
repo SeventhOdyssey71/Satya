@@ -8,7 +8,7 @@ interface FormFieldProps {
 export function FormField({ label, children }: FormFieldProps) {
   return (
     <div>
-      <label className="block text-gray-700 text-lg font-russo mb-3">
+      <label className="block text-secondary-700 text-lg font-russo mb-3">
         {label}
       </label>
       {children}
@@ -28,7 +28,7 @@ interface FormInputProps {
 }
 
 export function FormInput({ placeholder, type = 'text', value, onChange }: FormInputProps) {
-  const baseClasses = "w-full h-14 bg-white rounded-lg shadow-sm border border-gray-300 px-4 text-gray-600 text-base font-light font-albert outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-200"
+  const baseClasses = "w-full h-14 bg-white rounded-lg shadow-sm border border-secondary-300 px-4 text-secondary-600 text-base font-light font-albert outline-none focus:border-secondary-400 focus:ring-1 focus:ring-secondary-200"
   
   return (
     <input 
@@ -52,7 +52,7 @@ export function FormSelect({
 }) {
   return (
     <select 
-      className="w-full h-14 bg-white rounded-lg shadow-sm border border-gray-300 px-4 text-gray-600 text-base font-light font-albert outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-200"
+      className="w-full h-14 bg-white rounded-lg shadow-sm border border-secondary-300 px-4 text-secondary-600 text-base font-light font-albert outline-none focus:border-secondary-400 focus:ring-1 focus:ring-secondary-200"
       value={value}
       onChange={onChange}
     >
@@ -76,7 +76,7 @@ export function FormTextarea({
       value={value}
       onChange={onChange}
       rows={8}
-      className="w-full bg-white rounded-lg shadow-sm border border-gray-300 px-4 py-4 text-gray-600 text-base font-light font-albert outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-200 resize-none"
+      className="w-full bg-white rounded-lg shadow-sm border border-secondary-300 px-4 py-4 text-secondary-600 text-base font-light font-albert outline-none focus:border-secondary-400 focus:ring-1 focus:ring-secondary-200 resize-none"
     />
   )
 }

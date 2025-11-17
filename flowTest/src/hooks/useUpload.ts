@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
-import { getUploadService, getMarketplaceService } from '@/lib/services'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { getUploadService, getUploadServiceWithFallback, getMarketplaceService } from '@/lib/services'
 import { 
   UploadRequest as FileUploadRequest, 
   UploadProgress as FileUploadProgress, 
@@ -31,7 +31,7 @@ interface ModelUploadData {
   modelFile?: File
   thumbnailFile?: File
   sampleFile?: File
-  enableEncryption: boolean
+  enableEncryption?: boolean
   policyType: string
   accessDuration?: number
   isPrivate: boolean
@@ -57,9 +57,24 @@ export function useUpload() {
   const [result, setResult] = useState<UploadResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   
-  const uploadService = getUploadService()
+  const [uploadService, setUploadService] = useState<any>(getUploadService())
   const marketplaceService = getMarketplaceService()
   const abortController = useRef<AbortController | null>(null)
+  
+  // Initialize upload service with fallback RPC support
+  useEffect(() => {
+    const initializeUploadService = async () => {
+      try {
+        const fallbackService = await getUploadServiceWithFallback();
+        setUploadService(fallbackService);
+      } catch (error) {
+        console.warn('Could not initialize fallback upload service:', error);
+        // Keep using the regular upload service
+      }
+    };
+    
+    initializeUploadService();
+  }, [])
   
   // Upload context actions for global state management
   const { 
@@ -70,26 +85,20 @@ export function useUpload() {
     cancelUploadTask
   } = useUploadActions()
 
-  const initializePhases = useCallback((includeEncryption: boolean = true) => {
+  const initializePhases = useCallback(() => {
     const defaultPhases: UploadPhase[] = [
       {
         id: 'validation',
         name: 'File Validation',
         description: 'Validating file format, size, and metadata',
         status: 'pending'
-      }
-    ]
-
-    if (includeEncryption) {
-      defaultPhases.push({
+      },
+      {
         id: 'encryption',
         name: 'SEAL Encryption',
         description: 'Encrypting model with policy-based access control',
         status: 'pending'
-      })
-    }
-
-    defaultPhases.push(
+      },
       {
         id: 'upload',
         name: 'Walrus Storage',
@@ -102,7 +111,7 @@ export function useUpload() {
         description: 'Creating on-chain listing and finalizing',
         status: 'pending'
       }
-    )
+    ]
 
     setPhases(defaultPhases)
     return defaultPhases // Return phases synchronously
@@ -143,7 +152,7 @@ export function useUpload() {
   ): Promise<FileUploadResult> => {
     const request: FileUploadRequest = {
       file,
-      encrypt: options.encrypt,
+      encrypt: true, // Always encrypt with SEAL
       policyType: options.policyType,
       policyParams: options.policyParams
     }
@@ -189,7 +198,7 @@ export function useUpload() {
       setUploadProgress(0)
       
       // Initialize phases and get them synchronously
-      const currentPhases = initializePhases(data.enableEncryption)
+      const currentPhases = initializePhases()
       
       // Add task to global upload context
       taskId = addUploadTask({
@@ -229,13 +238,11 @@ export function useUpload() {
         expiryDays: data.expiryDays
       }
 
-      // Phase 2: Encryption (if enabled)
-      if (data.enableEncryption) {
-        setCurrentPhase('encryption')
-        updatedPhases = updatePhase('encryption', { status: 'in-progress', progress: 30 }, taskId, updatedPhases)
-        // Encryption happens inside marketplace service
-        updatedPhases = updatePhase('encryption', { status: 'completed', progress: 100 }, taskId, updatedPhases)
-      }
+      // Phase 2: Encryption (always enabled)
+      setCurrentPhase('encryption')
+      updatedPhases = updatePhase('encryption', { status: 'in-progress', progress: 30 }, taskId, updatedPhases)
+      // Encryption happens inside marketplace service
+      updatedPhases = updatePhase('encryption', { status: 'completed', progress: 100 }, taskId, updatedPhases)
 
       // Phase 3: Upload to Walrus
       setCurrentPhase('upload')
@@ -277,9 +284,6 @@ export function useUpload() {
         successResult.warnings?.push('Consider adding more tags for better discoverability')
       }
 
-      if (!data.enableEncryption) {
-        successResult.warnings?.push('Model is not encrypted - consider enabling SEAL encryption for better security')
-      }
 
       setResult(successResult)
       

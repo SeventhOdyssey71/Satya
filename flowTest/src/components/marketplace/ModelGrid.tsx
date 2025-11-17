@@ -246,7 +246,7 @@ function ModelCardComponent({ model, viewMode, isSelected, onClick }: ModelCardC
                     <Verified className="w-4 h-4 text-blue-500 flex-shrink-0" />
                   )}
                   {model.teeVerified && (
-                    <BadgeCheck className="w-4 h-4 text-purple-500 flex-shrink-0" title="TEE Verified" />
+                    <BadgeCheck className="w-4 h-4 text-purple-500 flex-shrink-0" />
                   )}
                   {model.isEncrypted && (
                     <Lock className="w-4 h-4 text-green-500 flex-shrink-0" />

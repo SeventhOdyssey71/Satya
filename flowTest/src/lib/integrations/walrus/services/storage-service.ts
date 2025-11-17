@@ -1,6 +1,6 @@
 // Walrus Storage Service - High-level storage operations
 
-import { WalrusSDKClient } from '../lib/walrus-sdk-client';
+// Conditional imports based on environment
 import { WalrusClient } from '../lib/walrus-client';
 import { WALRUS_CONFIG } from '../config/walrus.config';
 import { walrusEnvironment } from '../config/environment-specific';
@@ -20,15 +20,15 @@ import { RetryManager } from '../utils/retry-manager';
 import { logger } from '../../core/logger';
 
 export class WalrusStorageService {
-  private sdkClient: WalrusSDKClient;
+  private sdkClient: any; // WalrusSDKClient - dynamically loaded
   private legacyClient: WalrusClient;
   private cache: CacheManager;
   private retryManager: RetryManager;
   private chunkingUtils: ChunkingUtils;
   private blobRegistry: Map<string, BlobMetadata> = new Map();
+  private sdkClientInitialized = false;
   
   constructor() {
-    this.sdkClient = new WalrusSDKClient('testnet');
     this.legacyClient = new WalrusClient('testnet');
     this.cache = new CacheManager(WALRUS_CONFIG.agent.cacheSizeMB);
     
@@ -42,6 +42,27 @@ export class WalrusStorageService {
 
     // Start connectivity monitoring if not already started
     this.initializeMonitoring();
+  }
+
+  // Dynamically initialize SDK client in browser only
+  private async initializeSDKClient(): Promise<void> {
+    if (this.sdkClientInitialized || typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      // Dynamic import to prevent SSR issues
+      const { WalrusSDKClient } = await import('../lib/walrus-sdk-client');
+      this.sdkClient = new WalrusSDKClient('testnet');
+      this.sdkClientInitialized = true;
+      
+      logger.info('Walrus SDK client initialized for storage service');
+    } catch (error) {
+      logger.warn('Failed to initialize Walrus SDK client, falling back to HTTP-only client', {
+        error: error instanceof Error ? error.message : String(error)
+      });
+      this.sdkClientInitialized = false;
+    }
   }
 
   // Initialize connectivity monitoring
@@ -128,7 +149,14 @@ export class WalrusStorageService {
     options: UploadOptions & { signer: any }
   ): Promise<UploadResult> {
     try {
-      const result = await this.sdkClient.uploadFile(file, options.signer, {
+      // Initialize SDK client if needed
+      await this.initializeSDKClient();
+      
+      if (!this.sdkClientInitialized || !this.sdkClient) {
+        throw new WalrusError('Walrus SDK client not available, falling back to HTTP API');
+      }
+      
+      const result = await this.sdkClient.uploadFile(file, {
         epochs: options.epochs || WALRUS_CONFIG.agent.defaultEpochs,
         deletable: true,
         onProgress: options.onProgress
@@ -289,14 +317,25 @@ export class WalrusStorageService {
     try {
       // Try SDK download first, fallback to legacy
       let data: Uint8Array;
-      try {
-        data = await this.sdkClient.downloadBlob(blobId);
-      } catch (sdkError) {
-        logger.warn('SDK download failed, trying legacy client', {
-          blobId,
-          error: sdkError instanceof Error ? sdkError.message : String(sdkError)
-        });
-        
+      
+      // Initialize SDK client if needed and try SDK download
+      await this.initializeSDKClient();
+      
+      if (this.sdkClientInitialized && this.sdkClient) {
+        try {
+          data = await this.sdkClient.downloadBlob(blobId);
+        } catch (sdkError) {
+          logger.warn('SDK download failed, trying legacy client', {
+            blobId,
+            error: sdkError instanceof Error ? sdkError.message : String(sdkError)
+          });
+          
+          data = await this.retryManager.executeWithRetry(async () => {
+            return await this.legacyClient.downloadBlob(blobId);
+          });
+        }
+      } else {
+        // SDK client not available, use legacy client directly
         data = await this.retryManager.executeWithRetry(async () => {
           return await this.legacyClient.downloadBlob(blobId);
         });

@@ -14,9 +14,10 @@ const russo = Russo_One({
 })
 
 const albert = Albert_Sans({
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['300', '400', '500'],
   subsets: ['latin'],
   variable: '--font-albert',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -31,7 +32,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${russo.variable} ${albert.variable}`}>
-      <body className="antialiased font-albert">
+      <body className="antialiased font-albert font-light">
         <WalletProviders>
           <UploadProvider>
             <NautilusProvider>

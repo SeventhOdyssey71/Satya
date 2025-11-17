@@ -28,8 +28,8 @@ const ENVIRONMENT_CONFIGS: Record<string, EnvironmentConfig> = {
       'Content-Type': 'application/octet-stream'
     },
     timeoutAdjustments: {
-      upload: 30000,   // 30s for dev
-      download: 20000, // 20s for dev  
+      upload: 120000,  // 120s for dev (increased for large files)
+      download: 60000, // 60s for dev  
       health: 10000    // 10s for dev
     },
     retryPolicy: {

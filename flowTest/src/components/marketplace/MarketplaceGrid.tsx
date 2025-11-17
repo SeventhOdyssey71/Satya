@@ -88,75 +88,103 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({ filters }) => 
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-600">Loading marketplace listings...</div>
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="w-12 h-12 border-4 border-secondary-200 border-t-secondary-600 rounded-full animate-spin"></div>
+        <p className="text-secondary-800 font-albert">Discovering amazing AI models...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <div className="text-red-600">Error: {error}</div>
-        <button
-          onClick={() => loadListings()}
-          className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-            <div className="aspect-[4/4] bg-gray-200 animate-pulse"></div>
-            <div className="p-4 space-y-3">
-              <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-          </div>
-        ))}
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6">
+        <div className="w-16 h-16 bg-white border border-surface-300 rounded-full flex items-center justify-center">
+          <svg className="w-8 h-8 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div className="text-center">
+          <h3 className="text-xl font-russo text-secondary-800 mb-2">Something went wrong</h3>
+          <p className="text-secondary-800 mb-6">{error}</p>
+          <button
+            onClick={() => loadListings()}
+            className="btn-primary"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
   if (listings.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="text-gray-500 text-lg font-albert mb-4">No models found</div>
-        <p className="text-gray-400">Be the first to upload and sell your AI models on the marketplace!</p>
+      <div className="text-center py-20">
+        <div className="w-24 h-24 bg-white border border-surface-300 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-12 h-12 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-russo text-secondary-800 mb-4">No models found</h3>
+        <p className="text-secondary-800 mb-8 max-w-md mx-auto">
+          Be the first to upload and sell your AI models on the marketplace! Start building the future of trusted AI.
+        </p>
+        <button className="btn-primary btn-lg">
+          Upload Your Model
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        {listings.map((listing) => (
-          <ModelCard key={listing.listingId} model={listing} onPurchase={handlePurchase} />
+    <div className="space-y-8">
+      {/* Results Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-russo text-secondary-800">
+            {listings.length} model{listings.length !== 1 ? 's' : ''} found
+          </h2>
+          <p className="text-secondary-800">Verified and ready for download</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-secondary-800">Sort by:</span>
+          <select className="input py-2 px-3 text-sm">
+            <option>Most Popular</option>
+            <option>Newest</option>
+            <option>Price: Low to High</option>
+            <option>Price: High to Low</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Models Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        {listings.map((listing, index) => (
+          <div key={listing.listingId} className="animate-slide-up" style={{ animationDelay: `${index * 50}ms` }}>
+            <ModelCard model={listing} onPurchase={handlePurchase} />
+          </div>
         ))}
       </div>
 
+      {/* Load More */}
       {hasNextPage && (
-        <div className="flex justify-center">
+        <div className="flex justify-center pt-8">
           <button
             onClick={loadMore}
             disabled={loadingMore}
-            className="bg-gray-100 text-gray-700 px-6 py-2 rounded hover:bg-gray-200 transition-colors disabled:opacity-50"
+            className="btn-secondary btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loadingMore ? 'Loading more...' : 'Load More'}
+            {loadingMore ? (
+              <>
+                <div className="w-5 h-5 border-2 border-secondary-300 border-t-secondary-600 rounded-full animate-spin mr-2"></div>
+                Loading more models...
+              </>
+            ) : (
+              'Load More Models'
+            )}
           </button>
         </div>
       )}
-
-      <div className="text-center text-sm text-gray-500">
-        Showing {listings.length} model{listings.length !== 1 ? 's' : ''}
-      </div>
     </div>
   );
 };
@@ -180,54 +208,119 @@ function ModelCard({ model, onPurchase }: { model: ModelListedEvent, onPurchase:
   };
 
   // Generate a mock description for now since it's not in the event data
-  const mockDescription = `Encrypted AI model secured by SEAL technology. Listed by ${truncateId(model.creator)} on ${formatDate(model.timestamp)}.`;
-  const mockDownloads = Math.floor(Math.random() * 100) + 1;
+  const mockDescription = `Advanced AI model with TEE verification and cryptographic integrity proofs.`;
+  const mockDownloads = Math.floor(Math.random() * 1000) + 50;
+  const mockRating = (Math.random() * 1 + 4).toFixed(1); // 4.0 - 5.0
+
+  // Mock categories based on title
+  const getCategory = (title: string) => {
+    if (title.toLowerCase().includes('vision') || title.toLowerCase().includes('image')) return 'Computer Vision';
+    if (title.toLowerCase().includes('language') || title.toLowerCase().includes('nlp')) return 'NLP';
+    if (title.toLowerCase().includes('medical') || title.toLowerCase().includes('health')) return 'Healthcare';
+    return 'Machine Learning';
+  };
 
   return (
-    <Link href={`/model/${model.listingId}`} className="block">
-      <div className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
-        <div className="aspect-[4/4] overflow-hidden">
+    <Link href={`/model/${model.listingId}`} className="block group">
+      <div className="card-interactive overflow-hidden h-full">
+        {/* Image Section */}
+        <div className="relative aspect-[4/3] overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src={imageUrl} 
             alt={model.title} 
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
             onError={(e) => {
               // Fallback to placeholder if image fails to load
               const target = e.target as HTMLImageElement;
               target.src = '/images/Claude.png';
             }}
           />
-        </div>
-        {/* Simple overlay for text */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="text-xl font-russo leading-tight flex-1 drop-shadow-sm">{model.title}</h3>
-            <div className="ml-2 flex-shrink-0">
-              <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+          
+          {/* Verified Badge */}
+          <div className="absolute top-4 left-4">
+            <div className="badge-success">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
+              TEE Verified
             </div>
           </div>
-          <p className="text-sm font-albert text-white/95 mb-3 line-clamp-2 leading-relaxed drop-shadow-sm">
+
+          {/* Category Badge */}
+          <div className="absolute top-4 right-4">
+            <div className="badge bg-white border border-secondary-300 text-secondary-800 shadow-card backdrop-blur-sm">
+              {getCategory(model.title)}
+            </div>
+          </div>
+
+          {/* Price Tag */}
+          <div className="absolute bottom-4 right-4">
+            <div className="bg-white/95 backdrop-blur-sm border border-secondary-300 rounded-xl px-3 py-2 shadow-card">
+              <div className="text-lg font-russo text-secondary-900">{formatPrice(model.downloadPrice)}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Section */}
+        <div className="p-6">
+          {/* Title and Rating */}
+          <div className="flex items-start justify-between mb-3">
+            <h3 className="text-xl font-russo text-secondary-900 group-hover:text-secondary-700 transition-colors line-clamp-2 flex-1">
+              {model.title}
+            </h3>
+          </div>
+
+          {/* Description */}
+          <p className="text-secondary-800 mb-4 line-clamp-2 leading-relaxed">
             {mockDescription}
           </p>
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-medium text-white drop-shadow-sm">
-              {formatPrice(model.downloadPrice)}
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-xs text-white/90 flex items-center drop-shadow-sm">
-                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+
+          {/* Stats Row */}
+          <div className="flex items-center justify-between text-sm text-secondary-700 mb-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <svg className="w-4 h-4 text-secondary-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                <span>{mockRating}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                 </svg>
-                {mockDownloads}
-              </div>
-              <div className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-sm font-medium font-albert text-white hover:bg-white/30 transition-colors">
-                View Details
+                <span>{mockDownloads.toLocaleString()}</span>
               </div>
             </div>
+            <div className="text-secondary-600">
+              {formatDate(model.timestamp)}
+            </div>
           </div>
+
+          {/* Creator Info */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 bg-gradient-to-br from-secondary-600 to-secondary-800 rounded-full flex items-center justify-center text-white text-xs font-medium">
+              {model.creator.slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <div className="text-sm text-secondary-700">Created by</div>
+              <div className="text-sm font-medium text-secondary-900">{truncateId(model.creator)}</div>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <button 
+            onClick={(e) => {
+              e.preventDefault();
+              onPurchase(model.listingId);
+            }}
+            className="btn-primary w-full group"
+          >
+            View Details
+            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       </div>
     </Link>

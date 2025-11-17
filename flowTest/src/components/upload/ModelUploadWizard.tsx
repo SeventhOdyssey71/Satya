@@ -11,22 +11,11 @@ import FileUploadZone from './FileUploadZone'
 import ProgressIndicator from './ProgressIndicator'
 import UploadProgress from './UploadProgress'
 import UploadStatus from './UploadStatus'
-import { TEEVerificationStep } from './TEEVerificationStep'
 import { useUpload, useUploadValidation } from '@/hooks'
 import { PolicyType } from '@/lib/integrations/seal/types'
+import { ModelUploadService, type ModelUploadData as ServiceModelUploadData, type ModelUploadProgress } from '@/lib/services/model-upload.service'
 
-interface ModelUploadData {
-  // Basic Info
-  title: string
-  description: string
-  category: string
-  tags: string[]
-  
-  // Pricing
-  price: string
-  enableSample: boolean
-  maxDownloads?: number
-  
+interface ModelUploadData extends Omit<ServiceModelUploadData, 'modelFile' | 'datasetFile' | 'thumbnailFile'> {
   // Files
   modelFile?: File
   datasetFile?: File
@@ -35,15 +24,14 @@ interface ModelUploadData {
   modelBlobId?: string
   datasetBlobId?: string
   
-  // Security
+  // Additional UI fields
+  enableSample: boolean
   enableEncryption: boolean
-  policyType: string
-  accessDuration?: number
   
-  // TEE Verification
+  // TEE Verification (handled in Dashboard)
   teeAttestation?: any
   blockchainTxDigest?: string
-  verificationStatus?: 'pending' | 'verified' | 'failed'
+  verificationStatus: 'pending' | 'verified' | 'failed'
   
   // Advanced
   isPrivate: boolean
@@ -96,9 +84,10 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     price: '',
     enableSample: false,
     enableEncryption: true,
-    policyType: 'payment-gated',
+    policyType: PolicyType.PAYMENT_GATED,
     accessDuration: 30,
-    isPrivate: false
+    isPrivate: false,
+    verificationStatus: 'pending' // Default to pending - verification happens in Dashboard
   })
 
   // Hooks for business logic
@@ -116,52 +105,165 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
   const walletAddress = currentAccount?.address || ''
 
 
-  // Handle complete upload flow: SEAL + Walrus + Blockchain
+  // State for upload progress
+  const [uploadProgress, setUploadProgress] = useState<ModelUploadProgress | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadResult, setUploadResult] = useState<any>(null)
+
+  // Handle complete upload flow: SEAL + Walrus + Smart Contract
   const handleUpload = async () => {
     if (!isWalletConnected) {
       alert('Please connect your wallet first')
       return
     }
 
+    if (!data.modelFile) {
+      alert('Please select a model file first')
+      return
+    }
+
     try {
-      // TEMPORARY: Create keypair for testing Walrus SDK integration
-      // Use connected wallet for transaction signing
-      if (!currentAccount?.address) {
-        throw new Error('Wallet not connected')
-      }
-      
-      // Create wallet object that can sign transactions
-      const walletObject = {
-        address: currentAccount.address,
-        signAndExecuteTransaction,
-        toSuiAddress: () => currentAccount.address
+      setIsUploading(true)
+      setUploadProgress({
+        phase: 'validation',
+        progress: 0,
+        message: 'Starting upload...'
+      })
+
+      // Create wallet adapter that matches the expected interface
+      const walletSigner = {
+        toSuiAddress: async () => currentAccount!.address,
+        executeTransaction: async (tx: any) => {
+          console.log('🔐 Wallet signing transaction...');
+          const result = await signAndExecuteTransaction({ 
+            transaction: tx
+          });
+          console.log('✅ Transaction signed and executed:', result);
+          return result;
+        }
       }
 
-      console.log('Starting complete upload flow...')
+      // Prepare upload data for service with safe string handling
+      const uploadData: ServiceModelUploadData = {
+        title: String(data.title || '').trim(),
+        description: String(data.description || '').trim(),
+        category: String(data.category || 'AI/ML').trim(),
+        tags: Array.isArray(data.tags) ? data.tags.filter(tag => typeof tag === 'string' && tag.trim().length > 0) : [],
+        modelFile: data.modelFile,
+        datasetFile: data.datasetFile,
+        thumbnailFile: data.thumbnailFile,
+        price: String(data.price || '1.0'),
+        maxDownloads: data.maxDownloads,
+        policyType: PolicyType.PAYMENT_GATED,
+        accessDuration: data.accessDuration || 30
+      }
 
-      // Step 1: TbUpload file and encrypt with SEAL, upload to Walrus
-      console.log('Step 1: SEAL encryption and Walrus upload...')
-      const uploadResult = await upload.uploadModel(data, walletObject)
-      
+      console.log('Starting comprehensive upload flow...', uploadData)
+
+      // Create upload service instance
+      const modelUploadService = await ModelUploadService.createWithFallback()
+
+      // Execute upload
+      const uploadResult = await modelUploadService.uploadModel(
+        uploadData,
+        walletSigner,
+        (progress: ModelUploadProgress) => {
+          console.log('Upload progress:', progress)
+          setUploadProgress(progress)
+        }
+      )
+
       if (!uploadResult.success) {
-        throw new Error(`TbUpload failed: ${uploadResult.error}`)
+        const errorMsg = uploadResult.error || 'Upload failed';
+        
+        // Handle toLowerCase errors gracefully
+        if (errorMsg.includes('toLowerCase')) {
+          console.log('🔧 toLowerCase error detected and handled safely');
+          throw new Error('Upload processing error. Please check your input data and try again.');
+        }
+        
+        throw new Error(errorMsg);
       }
 
-      console.log('✅ Model uploaded successfully!')
-      console.log('TbUpload result:', uploadResult)
+      console.log('✅ Model uploaded successfully!', uploadResult)
+
+      // Update data with results
+      const updatedData = {
+        ...data,
+        blockchainTxDigest: uploadResult.transactionDigest,
+        verificationStatus: 'pending' as const,
+        modelBlobId: uploadResult.blobIds.model,
+        datasetBlobId: uploadResult.blobIds.dataset
+      }
+
+      // Update local state
+      updateData(updatedData)
+
+      // Set the success result for proper UI state
+      const successResult = {
+        success: true,
+        modelId: uploadResult.pendingModelId,
+        listingId: uploadResult.pendingModelId, 
+        blobId: uploadResult.blobIds.model,
+        transactionHash: uploadResult.transactionDigest,
+        warnings: []
+      };
+
+      // Store the result in our local state
+      setUploadResult(successResult);
       
-      alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• TbUploaded to Walrus storage ✓\n• Marketplace listing created ✓\n\nListing ID: ${uploadResult.listingId || 'completed'}`)
+      alert(`✅ Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Smart contract record created ✓\n\nPending Model ID: ${uploadResult.pendingModelId}\n\nYour model is now pending TEE verification. You can track its progress in the Dashboard.`)
+      
       setCurrentStep(steps.length) // Go to result step
       
       // Call the callback if provided
       if (onUploadComplete) {
-        onUploadComplete(uploadResult)
+        onUploadComplete({
+          success: true,
+          pendingModelId: uploadResult.pendingModelId,
+          transactionDigest: uploadResult.transactionDigest,
+          blobIds: uploadResult.blobIds
+        })
       }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      console.error('Complete upload flow failed:', error)
-      alert(`❌ TbUpload failed: ${errorMessage}`)
+      
+      // Enhanced error logging for debugging
+      console.log('🚨 Upload error details:', {
+        message: errorMessage,
+        type: typeof error,
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      // User-friendly error messages
+      let userMessage = errorMessage;
+      if (errorMessage.includes('toLowerCase')) {
+        userMessage = 'Upload processing error. Your data may contain invalid characters. Please check your inputs and try again.';
+        console.log('🔧 toLowerCase error handled gracefully');
+      } else if (errorMessage.includes('wallet')) {
+        userMessage = 'Wallet connection error. Please reconnect your wallet and try again.';
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        userMessage = 'Network error. Please check your connection and try again.';
+      }
+      
+      // Store the error result in our local state
+      const errorResult = {
+        success: false,
+        error: userMessage
+      };
+      setUploadResult(errorResult);
+      
+      setUploadProgress({
+        phase: 'error',
+        progress: 0,
+        message: `Upload failed: ${userMessage}`,
+        details: { error: errorMessage }
+      })
+
+      alert(`❌ Upload failed: ${userMessage}\n\nPlease try again or contact support if the issue persists.`)
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -189,12 +291,6 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
       description: 'Configure encryption and privacy settings',
       component: SecurityStep,
       validate: () => validation.isStepValid('security')
-    },
-    {
-      title: 'TEE Verification',
-      description: 'Verify model integrity with trusted execution environment',
-      component: TEEVerificationStep,
-      validate: () => data.verificationStatus === 'verified'
     },
     {
       title: 'Review & Submit',
@@ -237,13 +333,14 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     )
   }
 
-  if (upload.result || currentStep >= steps.length) {
+  if (uploadResult || (upload.result && !uploadResult) || currentStep >= steps.length) {
     return (
       <div className="max-w-4xl mx-auto">
         <UploadStatus
-          result={upload.result || { success: false, error: 'Unknown error' }}
+          result={uploadResult || upload.result || { success: false, error: 'Unknown error' }}
           onReset={() => {
             upload.reset()
+            setUploadResult(null)
             setCurrentStep(0)
             setData({
               title: '',
@@ -253,9 +350,10 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
               price: '',
               enableSample: false,
               enableEncryption: true,
-              policyType: 'payment-gated',
+              policyType: PolicyType.PAYMENT_GATED,
               accessDuration: 30,
-              isPrivate: false
+              isPrivate: false,
+              verificationStatus: 'pending'
             })
           }}
           onViewListing={(listingId) => {
@@ -271,9 +369,9 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-russo text-black mb-2">Upload Model</h1>
-        <p className="text-gray-500">Share your AI model with the Satya marketplace</p>
+      <div className="mb-12">
+        <h1 className="text-5xl font-russo text-secondary-900 mb-3">Upload Model</h1>
+        <p className="text-xl font-albert text-secondary-600">Share your AI model with the Satya marketplace</p>
       </div>
 
       {/* Progress Indicator */}
@@ -297,12 +395,10 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
           isValid={steps[currentStep].validate()}
           validation={validation}
           isWalletConnected={isWalletConnected}
-          onTbUpload={handleUpload}
-          uploadedFiles={{
-            modelBlobId: data.modelBlobId,
-            datasetBlobId: data.datasetBlobId
-          }}
           onCancel={onCancel}
+          onTbUpload={handleUpload}
+          uploadProgress={uploadProgress}
+          isUploading={isUploading}
         />
       </div>
     </div>
@@ -324,49 +420,51 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <TbTag className="h-5 w-5 mr-2 text-gray-600" />
+    <div className="space-y-8">
+      <div className="form-section">
+        <h3 className="text-xl font-albert font-semibold text-secondary-900 mb-6 flex items-center">
+          <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+            <TbTag className="h-5 w-5 text-primary-600" />
+          </div>
           Model Information
         </h3>
         
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-6">
+          <div className="form-group">
+            <label className="form-label">
               Model Title *
             </label>
             <input
               type="text"
               value={data.title}
               onChange={(e) => onChange({ title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+              className="input"
               placeholder="Enter a descriptive title for your model"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="form-group">
+            <label className="form-label">
               Description *
             </label>
             <textarea
               value={data.description}
               onChange={(e) => onChange({ description: e.target.value })}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+              className="input min-h-[120px] resize-none"
               placeholder="Describe what your model does, its accuracy, use cases, etc."
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="form-group">
+              <label className="form-label">
                 Category *
               </label>
               <select
                 value={data.category}
                 onChange={(e) => onChange({ category: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+                className="input"
               >
                 <option value="">Select a category</option>
                 {CATEGORIES.map(category => (
@@ -375,9 +473,9 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Add TbTags
+            <div className="form-group">
+              <label className="form-label">
+                Add Tags
               </label>
               <div className="flex">
                 <input
@@ -385,12 +483,12 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
                   value={newTbTag}
                   onChange={(e) => setNewTbTag(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTbTag())}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+                  className="flex-1 input rounded-r-none border-r-0"
                   placeholder="Add a tag"
                 />
                 <button
                   onClick={addTbTag}
-                  className="px-4 py-2 bg-black text-white rounded-r-md hover:bg-gray-800 transition-colors"
+                  className="btn btn-primary px-6 rounded-l-none"
                 >
                   Add
                 </button>
@@ -399,18 +497,18 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
           </div>
 
           {data.tags.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">TbTags</label>
-              <div className="flex flex-wrap gap-2">
+            <div className="form-group">
+              <label className="form-label">Tags</label>
+              <div className="flex flex-wrap gap-3">
                 {data.tags.map(tag => (
                   <span
                     key={tag}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                    className="badge bg-primary-100 text-primary-800 flex items-center gap-2"
                   >
                     {tag}
                     <button
                       onClick={() => removeTbTag(tag)}
-                      className="ml-2 text-gray-600 hover:text-gray-800"
+                      className="text-primary-600 hover:text-primary-800 font-bold"
                     >
                       ×
                     </button>
@@ -483,18 +581,12 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
     }
   }
 
-  const handleThumbnailSelect = (files: File[]) => {
-    if (files.length > 0) {
-      onChange({ thumbnailFile: files[0] })
-    }
-  }
-
   const handleDatasetFileSelect = async (files: File[]) => {
     if (files.length > 0) {
       const file = files[0]
       onChange({ datasetFile: file })
       
-      // Upload to Walrus with Seal encryption
+      // Upload to Walrus WITHOUT encryption (dataset is not encrypted)
       setIsUploading(true)
       setUploadProgress(0)
       
@@ -504,9 +596,7 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
         const uploadResult = await uploadService.uploadFile(
           {
             file,
-            encrypt: true,
-            policyType: PolicyType.PAYMENT_GATED,
-            policyParams: {},
+            encrypt: false, // Dataset is NOT encrypted
             storageOptions: {
               epochs: 5
             }
@@ -534,24 +624,21 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
     }
   }
 
-  const handleSampleSelect = (files: File[]) => {
-    if (files.length > 0) {
-      onChange({ sampleFile: files[0] })
-    }
-  }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <TbUpload className="h-5 w-5 mr-2 text-gray-600" />
+    <div className="space-y-8">
+      <div className="form-section">
+        <h3 className="text-xl font-albert font-semibold text-secondary-900 mb-6 flex items-center">
+          <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+            <TbUpload className="h-5 w-5 text-primary-600" />
+          </div>
           Upload Files
         </h3>
         
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Model File */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="form-group">
+            <label className="form-label">
               Model File * (Required)
             </label>
             <FileUploadZone
@@ -569,14 +656,14 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
             />
             
             {isUploading && (
-              <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
-                  <span className="text-sm font-medium text-blue-900">Uploading to Walrus storage...</span>
+              <div className="mt-4 bg-primary-50 border border-primary-200 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-500 border-t-transparent"></div>
+                  <span className="font-albert font-medium text-primary-900">Uploading to Walrus storage...</span>
                 </div>
-                <div className="w-full bg-blue-200 rounded-full h-2">
+                <div className="w-full bg-primary-200 rounded-full h-3">
                   <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-200" 
+                    className="bg-primary-600 h-3 rounded-full transition-all duration-200" 
                     style={{ width: `${uploadProgress}%` }}
                   ></div>
                 </div>
@@ -584,26 +671,26 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
             )}
             
             {data.modelBlobId && !isUploading && (
-              <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs">✓</span>
+              <div className="mt-4 bg-success-50 border border-success-200 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">✓</span>
                   </div>
-                  <span className="text-sm font-medium text-green-900">File uploaded successfully!</span>
+                  <span className="font-albert font-medium text-success-900">File uploaded successfully!</span>
                 </div>
-                <p className="text-xs text-green-700 mt-1">
+                <code className="text-xs bg-success-200 px-2 py-1 rounded text-success-700 font-mono mt-2 inline-block">
                   Blob ID: {data.modelBlobId.substring(0, 20)}...
-                </p>
+                </code>
               </div>
             )}
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="form-help mt-3">
               Supported formats: .pkl, .pt, .pth, .h5, .onnx, .pb, .zip, .tar
             </p>
           </div>
 
           {/* Dataset File */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="form-group">
+            <label className="form-label">
               Dataset File * (Required)
             </label>
             <FileUploadZone
@@ -623,63 +710,23 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
             />
             
             {data.datasetBlobId && !isUploading && (
-              <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs">✓</span>
+              <div className="mt-4 bg-success-50 border border-success-200 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">✓</span>
                   </div>
-                  <span className="text-sm font-medium text-green-900">Dataset uploaded successfully!</span>
+                  <span className="font-albert font-medium text-success-900">Dataset uploaded successfully!</span>
                 </div>
-                <p className="text-xs text-green-700 mt-1">
+                <code className="text-xs bg-success-200 px-2 py-1 rounded text-success-700 font-mono mt-2 inline-block">
                   Blob ID: {data.datasetBlobId.substring(0, 20)}...
-                </p>
+                </code>
               </div>
             )}
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="form-help mt-3">
               Supported formats: .csv, .json, .parquet, .pkl, .zip, .tar
             </p>
           </div>
 
-          {/* Thumbnail */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Thumbnail Image (Optional)
-            </label>
-            <FileUploadZone
-              accept={{ 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'] }}
-              maxSize={10 * 1024 * 1024} // 10MB
-              onFileSelect={handleThumbnailSelect}
-              placeholder="Drop thumbnail image here or click to browse"
-              files={data.thumbnailFile ? [data.thumbnailFile] : []}
-              onFileRemove={() => onChange({ thumbnailFile: undefined })}
-            />
-          </div>
-
-          {/* Sample File */}
-          <div>
-            <label className="flex items-center space-x-2 mb-2">
-              <input
-                type="checkbox"
-                checked={data.enableSample}
-                onChange={(e) => onChange({ enableSample: e.target.checked })}
-                className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Include Sample File
-              </span>
-            </label>
-            
-            {data.enableSample && (
-              <FileUploadZone
-                accept={{ '*/*': [] }}
-                maxSize={100 * 1024 * 1024} // 100MB
-                onFileSelect={handleSampleSelect}
-                placeholder="Drop sample file here or click to browse"
-                files={data.sampleFile ? [data.sampleFile] : []}
-                onFileRemove={() => onChange({ sampleFile: undefined })}
-              />
-            )}
-          </div>
         </div>
       </div>
 
@@ -697,16 +744,18 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
 
 function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <HiCurrencyDollar className="h-5 w-5 mr-2 text-gray-600" />
+    <div className="space-y-8">
+      <div className="form-section">
+        <h3 className="text-xl font-albert font-semibold text-secondary-900 mb-6 flex items-center">
+          <div className="w-8 h-8 bg-accent-100 rounded-lg flex items-center justify-center mr-3">
+            <HiCurrencyDollar className="h-5 w-5 text-accent-600" />
+          </div>
           Pricing & Access
         </h3>
         
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-6">
+          <div className="form-group">
+            <label className="form-label">
               Price (SUI) *
             </label>
             <input
@@ -715,17 +764,17 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCance
               onChange={(e) => onChange({ price: e.target.value })}
               min="0"
               step="0.001"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+              className="input"
               placeholder="0.001"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="form-help mt-2">
               Minimum price: 0.001 SUI
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="form-group">
+              <label className="form-label">
                 Maximum Downloads (Optional)
               </label>
               <input
@@ -733,13 +782,13 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCance
                 value={data.maxDownloads || ''}
                 onChange={(e) => onChange({ maxDownloads: e.target.value ? parseInt(e.target.value) : undefined })}
                 min="1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+                className="input"
                 placeholder="Unlimited"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="form-group">
+              <label className="form-label">
                 Access Duration (Days)
               </label>
               <input
@@ -748,7 +797,7 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCance
                 onChange={(e) => onChange({ accessDuration: parseInt(e.target.value) })}
                 min="1"
                 max="365"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-900"
+                className="input"
               />
             </div>
           </div>
@@ -769,70 +818,71 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCance
 
 function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-          <TbShield className="h-5 w-5 mr-2 text-gray-600" />
+    <div className="space-y-8">
+      <div className="form-section">
+        <h3 className="text-xl font-albert font-semibold text-secondary-900 mb-6 flex items-center">
+          <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+            <TbShield className="h-5 w-5 text-primary-600" />
+          </div>
           Security & Privacy
         </h3>
         
-        <div className="space-y-6">
-          <div>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={data.enableEncryption}
-                onChange={(e) => onChange({ enableEncryption: e.target.checked })}
-                className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Enable SEAL Encryption
-              </span>
-            </label>
-            <p className="text-xs text-gray-500 mt-1 ml-6">
-              Recommended: Encrypts your model with policy-based access control
-            </p>
+        <div className="space-y-8">
+          <div className="form-group">
+            <div className="flex items-center space-x-3 p-4 bg-primary-50 rounded-xl border border-primary-200">
+              <div className="w-5 h-5 rounded bg-primary-600 flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <span className="form-label mb-0">
+                  SEAL Encryption Enabled
+                </span>
+                <p className="form-help mt-1">
+                  Your model will be encrypted with policy-based access control for maximum security
+                </p>
+              </div>
+            </div>
           </div>
 
-          {data.enableEncryption && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="form-group">
+              <label className="form-label">
                 Access Policy
               </label>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {POLICY_TYPES.map(policy => (
-                  <label key={policy.value} className="flex items-start space-x-3">
+                  <label key={policy.value} className="flex items-start space-x-4 p-4 border border-border rounded-xl hover:bg-surface-100 transition-colors cursor-pointer">
                     <input
                       type="radio"
                       name="policyType"
                       value={policy.value}
                       checked={data.policyType === policy.value}
-                      onChange={(e) => onChange({ policyType: e.target.value })}
-                      className="mt-1 border-gray-300 text-gray-600 focus:ring-gray-500"
+                      onChange={(e) => onChange({ policyType: e.target.value as PolicyType })}
+                      className="mt-1 w-5 h-5 border-border text-primary-600 focus:ring-primary-500/20"
                     />
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{policy.label}</div>
-                      <div className="text-xs text-gray-500">{policy.description}</div>
+                      <div className="font-albert font-medium text-secondary-900">{policy.label}</div>
+                      <div className="form-help">{policy.description}</div>
                     </div>
                   </label>
                 ))}
               </div>
             </div>
-          )}
 
-          <div className="border-t pt-4">
-            <label className="flex items-center space-x-2">
+          <div className="form-group border-t border-border pt-6">
+            <label className="flex items-center space-x-3">
               <input
                 type="checkbox"
                 checked={data.isPrivate}
                 onChange={(e) => onChange({ isPrivate: e.target.checked })}
-                className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
+                className="w-5 h-5 rounded border-border text-primary-600 focus:ring-primary-500/20"
               />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="form-label mb-0">
                 Private Listing
               </span>
             </label>
-            <p className="text-xs text-gray-500 mt-1 ml-6">
+            <p className="form-help mt-2 ml-8">
               Only visible to specified addresses or through direct link
             </p>
           </div>
@@ -851,7 +901,7 @@ function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCanc
   )
 }
 
-function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTbUpload }: StepProps) {
+function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTbUpload, uploadProgress, isUploading }: StepProps & { uploadProgress?: ModelUploadProgress | null; isUploading?: boolean }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async () => {
@@ -861,36 +911,38 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
     try {
       await onTbUpload()
     } catch (error) {
-      console.error('TbUpload failed:', error)
+      console.error('Upload failed:', error)
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Review Your Model</h3>
+    <div className="space-y-8">
+      <div className="form-section">
+        <h3 className="text-2xl font-russo text-secondary-900 mb-6">Review Your Model</h3>
         
         {/* Validation Summary */}
         {validation && (validation.hasErrors || validation.hasWarnings) && (
-          <div className={`mb-4 p-4 rounded-lg border ${
+          <div className={`mb-6 p-6 rounded-xl border ${
             validation.hasErrors 
-              ? 'bg-red-50 border-red-200' 
-              : 'bg-yellow-50 border-yellow-200'
+              ? 'bg-danger-50 border-danger-200' 
+              : 'bg-warning-50 border-warning-200'
           }`}>
             <div className="flex items-start">
-              <IoWarning className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${
-                validation.hasErrors ? 'text-red-500' : 'text-yellow-500'
-              }`} />
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 ${
+                validation.hasErrors ? 'bg-danger-500' : 'bg-warning-500'
+              }`}>
+                <IoWarning className="h-4 w-4 text-white" />
+              </div>
               <div>
-                <p className={`text-sm font-medium ${
-                  validation.hasErrors ? 'text-red-800' : 'text-yellow-800'
+                <p className={`font-albert font-semibold ${
+                  validation.hasErrors ? 'text-danger-800' : 'text-warning-800'
                 }`}>
                   {validation.hasErrors ? 'Fix Required Issues' : 'Review Warnings'}
                 </p>
-                <div className={`text-sm mt-1 ${
-                  validation.hasErrors ? 'text-red-700' : 'text-yellow-700'
+                <div className={`font-albert mt-2 ${
+                  validation.hasErrors ? 'text-danger-700' : 'text-warning-700'
                 }`}>
                   {validation.hasErrors && <p>• {validation.overallValidation.errorCount} errors must be fixed</p>}
                   {validation.hasWarnings && <p>• {validation.overallValidation.warningCount} warnings to review</p>}
@@ -902,48 +954,50 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
 
         {/* Wallet Connection Check */}
         {!isWalletConnected && (
-          <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
+          <div className="mb-6 p-6 bg-danger-50 rounded-xl border border-danger-200">
             <div className="flex items-start">
-              <IoWarning className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+              <div className="w-6 h-6 bg-danger-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 mr-3">
+                <IoWarning className="h-4 w-4 text-white" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-red-800">Wallet Not Connected</p>
-                <p className="text-sm text-red-700 mt-1">Connect your wallet in the header to upload the model</p>
+                <p className="font-albert font-semibold text-danger-800">Wallet Not Connected</p>
+                <p className="font-albert text-danger-700 mt-1">Connect your wallet in the header to upload the model</p>
               </div>
             </div>
           </div>
         )}
         
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-6">
             <div>
-              <p className="text-sm font-medium text-gray-500">Title</p>
-              <p className="text-sm text-gray-900">{data.title || 'Not specified'}</p>
+              <p className="form-label">Title</p>
+              <p className="font-albert text-secondary-800">{data.title || 'Not specified'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Category</p>
-              <p className="text-sm text-gray-900">{data.category || 'Not specified'}</p>
+              <p className="form-label">Category</p>
+              <p className="font-albert text-secondary-800">{data.category || 'Not specified'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Price</p>
-              <p className="text-sm text-gray-900">{data.price ? `${data.price} SUI` : 'Not specified'}</p>
+              <p className="form-label">Price</p>
+              <p className="font-albert text-secondary-800">{data.price ? `${data.price} SUI` : 'Not specified'}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Encryption</p>
-              <p className="text-sm text-gray-900">{data.enableEncryption ? 'Enabled' : 'Disabled'}</p>
+              <p className="form-label">Encryption</p>
+              <p className="font-albert text-secondary-800 text-green-600">✓ SEAL Encryption Enabled</p>
             </div>
           </div>
           
           <div>
-            <p className="text-sm font-medium text-gray-500">Description</p>
-            <p className="text-sm text-gray-900">{data.description || 'Not specified'}</p>
+            <p className="form-label">Description</p>
+            <p className="font-albert text-secondary-800 leading-relaxed">{data.description || 'Not specified'}</p>
           </div>
 
           {data.tags.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-gray-500">TbTags</p>
-              <div className="flex flex-wrap gap-1 mt-1">
+              <p className="form-label">Tags</p>
+              <div className="flex flex-wrap gap-2 mt-3">
                 {data.tags.map(tag => (
-                  <span key={tag} className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">
+                  <span key={tag} className="badge bg-primary-100 text-primary-800">
                     {tag}
                   </span>
                 ))}
@@ -951,23 +1005,128 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
             </div>
           )}
 
-          <div>
-            <p className="text-sm font-medium text-gray-500">Files</p>
-            <div className="text-sm text-gray-900 space-y-1">
-              {data.modelFile ? (
-                <p>• Model: {data.modelFile.name} ({(data.modelFile.size / 1024 / 1024).toFixed(1)} MB)</p>
-              ) : (
-                <p className="text-red-600">• Model file: Not selected</p>
-              )}
-              {data.thumbnailFile && <p>• Thumbnail: {data.thumbnailFile.name}</p>}
-              {data.sampleFile && <p>• Sample: {data.sampleFile.name}</p>}
+          {/* Upload Information & File Sizes */}
+          <div className="bg-surface-100 border border-border rounded-2xl p-6">
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 bg-secondary-100 rounded-lg flex items-center justify-center mr-3">
+                <span className="text-lg">💾</span>
+              </div>
+              <h4 className="font-albert font-semibold text-secondary-900">Upload Information & File Sizes</h4>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+              <div>
+                <div className="form-help mb-2">Model Size:</div>
+                <div className="font-albert font-semibold text-secondary-900">
+                  {data.modelFile ? `${(data.modelFile.size / 1024 / 1024).toFixed(2)} MB` : 'N/A'}
+                </div>
+              </div>
+              <div>
+                <div className="form-help mb-2">Dataset Size:</div>
+                <div className="font-albert font-semibold text-secondary-900">
+                  {data.datasetFile ? `${(data.datasetFile.size / 1024 / 1024).toFixed(2)} MB` : 'N/A'}
+                </div>
+              </div>
+              <div>
+                <div className="form-help mb-2">Total Size:</div>
+                <div className="font-albert font-semibold text-secondary-900">
+                  {(data.modelFile && data.datasetFile) ? 
+                    `${((data.modelFile.size + data.datasetFile.size) / 1024 / 1024).toFixed(2)} MB` : 'N/A'}
+                </div>
+              </div>
+              <div>
+                <div className="form-help mb-2">Created:</div>
+                <div className="font-albert font-semibold text-secondary-900">
+                  {new Date().toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3 mt-6">
+              <span className="badge bg-primary-100 text-primary-800">🤖 AI</span>
+              <span className="badge bg-success-100 text-success-800">🔒 SEAL Encrypted</span>
+              <span className="badge bg-accent-100 text-accent-800">⛓️ Blockchain</span>
+              <span className="badge bg-warning-100 text-warning-800">🌍 Decentralized</span>
             </div>
           </div>
 
+          {/* Blob Info */}
+          {(data.modelBlobId || data.datasetBlobId) && (
+            <div>
+              <p className="form-label">Blob Info</p>
+              <div className="font-albert text-secondary-800 space-y-2 mt-3">
+                {data.modelBlobId && (
+                  <p>• Model Blob ID (Encrypted): <code className="bg-white border border-secondary-300 px-2 py-1 rounded text-secondary-700 font-mono text-xs">{data.modelBlobId}</code></p>
+                )}
+                {data.datasetBlobId && (
+                  <p>• Dataset Blob ID (Unencrypted): <code className="bg-white border border-secondary-300 px-2 py-1 rounded text-secondary-700 font-mono text-xs">{data.datasetBlobId}</code></p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Upload Progress */}
+          {uploadProgress && isUploading && (
+            <div>
+              <p className="form-label">Upload Progress</p>
+              <div className="mt-3">
+                <div className="bg-primary-50 border border-primary-200 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    </div>
+                    <span className="font-albert font-semibold text-primary-900">
+                      {uploadProgress.phase === 'validation' ? 'Validating' :
+                       uploadProgress.phase === 'encryption' ? 'Encrypting' :
+                       uploadProgress.phase === 'storage' ? 'Storing' :
+                       uploadProgress.phase === 'contract' ? 'Creating Record' :
+                       uploadProgress.phase === 'completed' ? 'Completed' :
+                       uploadProgress.phase === 'error' ? 'Error' : 'Processing'}
+                    </span>
+                  </div>
+                  <div className="mb-2">
+                    <div className="bg-white rounded-full h-2 overflow-hidden">
+                      <div 
+                        className="h-2 bg-primary-500 transition-all duration-300 ease-out"
+                        style={{ width: `${uploadProgress.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                  <p className="font-albert text-primary-700 text-sm">{uploadProgress.message}</p>
+                  {uploadProgress.pendingModelId && (
+                    <p className="font-albert text-primary-600 text-xs mt-2">
+                      Model ID: <code className="font-mono">{uploadProgress.pendingModelId}</code>
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Verification Status */}
+          {!isUploading && (
+            <div>
+              <p className="form-label">Next Steps</p>
+              <div className="mt-3">
+                <div className="bg-warning-50 border border-warning-200 rounded-xl p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-warning-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">⏳</span>
+                    </div>
+                    <span className="font-albert font-semibold text-warning-900">Ready for TEE Verification</span>
+                  </div>
+                  <p className="font-albert text-warning-700 mt-2">
+                    After upload, your model will be pending until you verify it in your Dashboard using TEE attestation.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {(data.maxDownloads || data.accessDuration || data.expiryDays) && (
             <div>
-              <p className="text-sm font-medium text-gray-500">Access Settings</p>
-              <div className="text-sm text-gray-900 space-y-1">
+              <p className="form-label">Access Settings</p>
+              <div className="font-albert text-secondary-800 space-y-2 mt-3">
                 {data.maxDownloads && <p>• Max downloads: {data.maxDownloads}</p>}
                 {data.accessDuration && <p>• Access duration: {data.accessDuration} days</p>}
                 {data.expiryDays && <p>• Expires in: {data.expiryDays} days</p>}
@@ -978,38 +1137,42 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
         </div>
       </div>
 
-      <div className="flex justify-between">
+      <div className="flex justify-between pt-8">
         <button
           onClick={onPrev}
-          className="flex items-center px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+          className="btn btn-secondary"
         >
-          <RiArrowLeftLine className="h-4 w-4 mr-2" />
+          <RiArrowLeftLine className="h-5 w-5 mr-2" />
           Back
         </button>
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || (validation?.hasErrors) || !isWalletConnected}
-          className="flex items-center px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className={`btn btn-lg ${
+            isSubmitting || validation?.hasErrors || !isWalletConnected
+              ? 'opacity-50 cursor-not-allowed bg-secondary-400'
+              : 'btn-primary'
+          }`}
         >
           {isSubmitting ? (
             <>
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-              Uploading...
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3" />
+              <span className="font-albert font-medium">Uploading...</span>
             </>
           ) : !isWalletConnected ? (
             <>
-              <IoWarning className="h-4 w-4 mr-2" />
-              Connect Wallet First
+              <IoWarning className="h-5 w-5 mr-3" />
+              <span className="font-albert font-medium">Connect Wallet First</span>
             </>
           ) : validation?.hasErrors ? (
             <>
-              <IoWarning className="h-4 w-4 mr-2" />
-              Fix Errors First
+              <IoWarning className="h-5 w-5 mr-3" />
+              <span className="font-albert font-medium">Fix Errors First</span>
             </>
           ) : (
             <>
-              Upload Model
-              <RiArrowRightLine className="h-4 w-4 ml-2" />
+              <span className="font-albert font-medium">🚀 Upload Model</span>
+              <RiArrowRightLine className="h-5 w-5 ml-3" />
             </>
           )}
         </button>
@@ -1034,20 +1197,20 @@ function StepNavigation({
   onCancel?: () => void
 }) {
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between pt-8">
       <div className="flex space-x-3">
         <button
           onClick={onPrev}
           disabled={isFirst}
-          className="flex items-center px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <RiArrowLeftLine className="h-4 w-4 mr-2" />
+          <RiArrowLeftLine className="h-5 w-5 mr-2" />
           Back
         </button>
         {onCancel && (
           <button
             onClick={onCancel}
-            className="px-6 py-2 border border-red-300 rounded-md text-red-700 hover:bg-red-50 transition-colors"
+            className="btn btn-ghost text-danger-600 hover:bg-danger-50 border-danger-300"
           >
             Cancel
           </button>
@@ -1056,10 +1219,10 @@ function StepNavigation({
       <button
         onClick={onNext}
         disabled={!isValid}
-        className="flex items-center px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="btn btn-primary btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {nextLabel}
-        <RiArrowRightLine className="h-4 w-4 ml-2" />
+        <span className="font-albert font-medium">{nextLabel}</span>
+        <RiArrowRightLine className="h-5 w-5 ml-2" />
       </button>
     </div>
   )
