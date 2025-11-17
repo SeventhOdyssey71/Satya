@@ -196,7 +196,7 @@ export default function MarketplacePage() {
       </div>
       
       <h1 className="text-4xl md:text-5xl font-russo leading-tight mb-6 animate-slide-up">
-       Discover <span className="text-gradient">Trusted</span> AI Models
+       Discover Trusted AI Models
       </h1>
       
       <p className="text-xl text-ocean/70 mb-8 leading-relaxed animate-slide-up">

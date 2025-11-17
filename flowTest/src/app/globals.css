@@ -209,9 +209,7 @@
 
 @layer utilities {
   /* Text utilities */
-  .text-gradient {
-    @apply bg-gradient-to-r from-ocean via-ocean/80 to-aqua bg-clip-text text-transparent;
-  }
+  /* Gradient text removed for cleaner look */
 
   /* Layout utilities */
   .content-auto {

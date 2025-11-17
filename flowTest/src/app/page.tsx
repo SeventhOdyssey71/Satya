@@ -50,14 +50,11 @@ function HeroSection() {
    <div className="container-custom">
     <div className="text-center max-w-5xl mx-auto">
      {/* Badge */}
-     <div className="inline-flex items-center gap-2 px-4 py-2 bg-aqua/10 border border-aqua/20 rounded-full mb-8 animate-fade-in">
-      <HiShieldCheck className="w-4 h-4 text-ocean" />
-      <span className="text-[15px] font-albert font-normal text-ocean">Trusted AI Marketplace</span>
-     </div>
+     {/* Badge removed for cleaner look */}
 
      {/* Main Headline */}
      <h1 className="text-5xl md:text-6xl lg:text-7xl font-russo leading-tight max-w-4xl mx-auto mb-8 animate-slide-up">
-      Bringing <span className="text-gradient">verifiable</span> + trusted data markets
+      Bringing verifiable + trusted data markets
      </h1>
      
      {/* Subtitle */}
@@ -530,7 +527,7 @@ function Footer() {
         <div className="w-10 h-10 bg-ocean rounded-xl flex items-center justify-center">
          <HiSparkles className="w-6 h-6 text-white" />
         </div>
-        <h3 className="text-2xl font-russo text-gradient">Satya</h3>
+        <h3 className="text-2xl font-russo text-ocean">Satya</h3>
        </div>
        <p className="text-ocean/70 leading-relaxed mb-8 max-w-lg">
         Building the future of trusted AI with verifiable security, transparent transactions, and privacy-preserving technology.

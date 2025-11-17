@@ -42,7 +42,7 @@ export default function DashboardPage() {
     <div className="container-custom">
      <div className="text-center">
       <h1 className="text-4xl md:text-5xl font-russo mb-4 animate-slide-up">
-       Your <span className="text-gradient">AI Model</span> Dashboard
+       Your AI Model Dashboard
       </h1>
       <p className="text-xl text-ocean/70 max-w-2xl mx-auto animate-slide-up">
        Manage your uploads, track verification status, and monitor your AI model performance
