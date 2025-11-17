@@ -25,7 +25,7 @@ export default function DashboardHistory() {
  })
 
  return (
-  <div className="space-y-6">
+  <div className="max-w-4xl space-y-6">
    {/* Filter Controls */}
    <div className="flex items-center justify-between">
     <div className="flex items-center gap-4">
@@ -99,29 +99,29 @@ export default function DashboardHistory() {
     ) : (
      <div className="divide-y divide-gray-200">
       {filteredTasks.map((task) => (
-       <div key={task.id} className="p-4 hover:bg-gray-50 transition-colors">
-        <div className="flex items-center justify-between">
-         <div className="flex items-center gap-4">
+       <div key={task.id} className="p-3 hover:bg-gray-50 transition-colors">
+        <div className="flex items-start justify-between">
+         <div className="flex items-start gap-3 flex-1 min-w-0">
           {/* Status Icon */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 pt-0.5">
            {task.status === 'completed' && (
-            <IoCheckmarkCircle className="w-6 h-6 text-green-600" />
+            <IoCheckmarkCircle className="w-5 h-5 text-green-600" />
            )}
            {(task.status === 'pending' || task.status === 'uploading') && (
-            <IoTime className="w-6 h-6 text-yellow-600" />
+            <IoTime className="w-5 h-5 text-yellow-600" />
            )}
            {task.status === 'cancelled' && (
-            <IoCloseCircle className="w-6 h-6 text-red-600" />
+            <IoCloseCircle className="w-5 h-5 text-red-600" />
            )}
           </div>
 
           {/* Task Details */}
-          <div>
-           <h3 className="font-medium text-gray-900">{task.fileName}</h3>
-           <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+          <div className="min-w-0 flex-1">
+           <h3 className="font-medium text-gray-900 text-sm truncate">{task.fileName}</h3>
+           <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
             <span>{formatFileSize(task.fileSize)}</span>
             <span>•</span>
-            <span>{new Date().toLocaleString()}</span>
+            <span>{new Date().toLocaleDateString()}</span>
             {task.status === 'completed' && (
              <>
               <span>•</span>
@@ -130,12 +130,12 @@ export default function DashboardHistory() {
             )}
            </div>
            {task.status === 'completed' && (
-            <div className="mt-1 text-sm text-gray-600">
+            <div className="mt-1 text-xs text-gray-600">
              <span className="font-medium">Blob ID:</span> {task.id?.slice(0, 8)}...
             </div>
            )}
            {task.error && (
-            <div className="mt-1 text-sm text-red-600">
+            <div className="mt-1 text-xs text-red-600 truncate">
              Error: {task.error}
             </div>
            )}
@@ -143,7 +143,7 @@ export default function DashboardHistory() {
          </div>
 
          {/* Actions */}
-         <div className="flex items-center gap-2">
+         <div className="flex items-center gap-1 flex-shrink-0">
           {task.status === 'completed' && (
            <button
             onClick={() => window.open(`/model/${task.id}`, '_blank')}
@@ -176,14 +176,14 @@ export default function DashboardHistory() {
 
         {/* Progress Bar for Active Uploads */}
         {(task.status === 'uploading' && task.progress !== undefined) && (
-         <div className="mt-3">
-          <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+         <div className="mt-2 pl-8">
+          <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
            <span>Uploading...</span>
            <span>{Math.round(task.progress)}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
            <div 
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
             style={{ width: `${task.progress}%` }}
            />
           </div>
