@@ -33,18 +33,18 @@ export default function DashboardPage() {
  }
 
  return (
-  <div className="min-h-screen bg-white">
+  <div className="min-h-screen bg-gray-50">
    {/* Header */}
    <Header />
    
    {/* Hero Section */}
-   <section className="relative py-12">
+   <section className="relative py-8">
     <div className="container-custom">
      <div className="text-center">
-      <h1 className="text-4xl md:text-5xl font-russo mb-4 animate-slide-up">
+      <h1 className="text-2xl md:text-3xl font-medium mb-3 text-gray-900">
        Your AI Model Dashboard
       </h1>
-      <p className="text-xl text-ocean/70 max-w-2xl mx-auto animate-slide-up">
+      <p className="text-lg text-gray-600 max-w-xl mx-auto">
        Manage your uploads, track verification status, and monitor your AI model performance
       </p>
      </div>
@@ -55,46 +55,46 @@ export default function DashboardPage() {
    <main className="relative z-10 pb-16">
     <div className="container-custom">
      {/* Dashboard Tabs */}
-     <div className="mb-12">
+     <div className="mb-8">
       <div className="flex items-center justify-center">
-       <div className="bg-white rounded-2xl p-2 border border-ocean/10 shadow-card">
+       <div className="bg-white rounded-lg p-1 border border-gray-200">
         <nav className="flex space-x-1">
          <button
           onClick={() => setActiveTab('overview')}
-          className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
+          className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
            activeTab === 'overview'
-            ? 'bg-ocean text-white shadow-soft'
-            : 'text-ocean/60 hover:text-ocean hover:bg-aqua/10'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
          >
           Overview
          </button>
          <button
           onClick={() => setActiveTab('pending')}
-          className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
+          className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
            activeTab === 'pending'
-            ? 'bg-ocean text-white shadow-soft'
-            : 'text-ocean/60 hover:text-ocean hover:bg-aqua/10'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
          >
           Pending
          </button>
          <button
           onClick={() => setActiveTab('history')}
-          className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
+          className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
            activeTab === 'history'
-            ? 'bg-ocean text-white shadow-soft'
-            : 'text-ocean/60 hover:text-ocean hover:bg-aqua/10'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
          >
           History
          </button>
          <button
           onClick={() => setActiveTab('downloads')}
-          className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
+          className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
            activeTab === 'downloads'
-            ? 'bg-ocean text-white shadow-soft'
-            : 'text-ocean/60 hover:text-ocean hover:bg-aqua/10'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
          >
           Downloads
@@ -105,7 +105,7 @@ export default function DashboardPage() {
      </div>
 
      {/* Tab Content */}
-     <div className="animate-fade-in">
+     <div>
       {activeTab === 'overview' && <DashboardOverview onNewUpload={() => router.push('/upload')} />}
       {activeTab === 'pending' && <DashboardPending />}
       {activeTab === 'history' && <DashboardHistory />}
