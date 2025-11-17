@@ -54,6 +54,13 @@ export class MarketplaceContractService {
   return new MarketplaceContractService(suiClient);
  }
 
+ // Initialize the service (for compatibility with existing hooks)
+ async initialize(): Promise<void> {
+  // Service is ready to use immediately after construction
+  // This method exists for compatibility with existing code
+  logger.info('MarketplaceContractService initialized');
+ }
+
  /**
   * Phase 1: Upload model to pending state
   */

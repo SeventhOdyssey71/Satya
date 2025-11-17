@@ -5,6 +5,7 @@ import { TbShieldX, TbShieldCheck, TbClockHour4, TbCertificate, TbRefresh } from
 import { ModelVerificationFlow } from '@/components/tee'
 import { useUploadTasks } from '@/contexts/UploadContext'
 import { useCurrentAccount } from '@mysten/dapp-kit'
+import { usePendingModels } from '@/hooks/usePendingModels'
 import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
 import { ModelUploadService } from '@/lib/services/model-upload.service'
 
@@ -164,11 +165,14 @@ export default function DashboardPending() {
       </span>
      )}
      <button
-      onClick={loadPendingModels}
-      disabled={state.isLoading}
+      onClick={() => {
+       refresh(); // Use hook's refresh
+       loadPendingModels(); // Also refresh local state
+      }}
+      disabled={state.isLoading || isLoading}
       className="flex items-center gap-2 px-3 py-1 text-gray-600 hover:text-gray-900 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
      >
-      <TbRefresh className={`h-4 w-4 ${state.isLoading ? 'animate-spin' : ''}`} />
+      <TbRefresh className={`h-4 w-4 ${(state.isLoading || isLoading) ? 'animate-spin' : ''}`} />
       Refresh
      </button>
     </div>
