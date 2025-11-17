@@ -89,10 +89,9 @@ export default function Header({ isHomepage = false }: HeaderProps) {
         <div className="relative" ref={dropdownRef}>
          <button 
           onClick={() => setShowDropdown(!showDropdown)}
-          className="flex items-center gap-2 px-4 py-2 hover:bg-aqua/10 active:bg-aqua/20 transition-colors rounded-full"
+          className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-light"
          >
-          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-          <span className="text-[15px] text-ocean font-mono font-normal">
+          <span className="text-sm">
            {account.address.slice(0, 6)}...{account.address.slice(-4)}
           </span>
          </button>
@@ -112,11 +111,9 @@ export default function Header({ isHomepage = false }: HeaderProps) {
          )}
         </div>
        ) : (
-        <ConnectButton 
-         className="px-4 py-2 border border-ocean/20 text-ocean hover:bg-aqua/10 active:bg-aqua/20 transition-all duration-200 rounded-full font-albert font-normal text-[17px]"
-        >
-         Connect Wallet
-        </ConnectButton>
+        <div className="[&>button]:!bg-black [&>button]:!text-white [&>button]:!border-black [&>button]:!px-4 [&>button]:!py-2 [&>button]:!rounded-lg [&>button]:!font-light [&>button]:!text-sm [&>button]:hover:!bg-gray-800 [&>button]:!transition-colors">
+         <ConnectButton />
+        </div>
        )}
       </div>
      )}
