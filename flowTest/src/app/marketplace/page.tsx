@@ -329,9 +329,10 @@ function EnhancedNavigation({
 
  return (
   <div className="mb-8">
-   {/* Search Bar */}
-   <div className="mb-4">
-    <div className="relative max-w-md mx-auto">
+   {/* Search Bar and Category Pills Side by Side */}
+   <div className="flex items-center gap-4 mb-4">
+    {/* Search Bar */}
+    <div className="relative flex-shrink-0">
      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
       <HiMagnifyingGlass className="h-4 w-4 text-gray-400" />
      </div>
@@ -341,7 +342,7 @@ function EnhancedNavigation({
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
       onKeyPress={handleKeyPress}
-      className="w-full pl-9 pr-16 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+      className="w-64 pl-9 pr-16 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
      />
      <div className="absolute inset-y-0 right-0 flex items-center pr-1">
       <button 
@@ -352,24 +353,24 @@ function EnhancedNavigation({
       </button>
      </div>
     </div>
-   </div>
 
-   {/* Category Pills */}
-   <div className="bg-white border border-gray-200 rounded-lg p-2 mb-4">
-    <div className="flex items-center justify-center gap-2">
-     {categories.map((category) => (
-      <button
-       key={category.value}
-       className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-        activeCategory === category.value 
-         ? 'bg-gray-900 text-white' 
-         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-       }`}
-       onClick={() => onCategoryChange(category.value)}
-      >
-       <span>{category.label}</span>
-      </button>
-     ))}
+    {/* Category Pills */}
+    <div className="bg-white border border-gray-200 rounded-lg p-2 flex-1">
+     <div className="flex items-center justify-center gap-2">
+      {categories.map((category) => (
+       <button
+        key={category.value}
+        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+         activeCategory === category.value 
+          ? 'bg-gray-900 text-white' 
+          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        }`}
+        onClick={() => onCategoryChange(category.value)}
+       >
+        <span>{category.label}</span>
+       </button>
+      ))}
+     </div>
     </div>
    </div>
 
