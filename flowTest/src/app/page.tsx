@@ -149,7 +149,7 @@ function FeaturesSection() {
  ]
 
  return (
-  <section className="relative z-10 py-24 bg-[#C0E6FF]">
+  <section className="relative z-10 py-24 bg-[#E8F4FF]">
    <div className="container-custom">
     <AnimatedSection>
      <div className="text-center mb-16">
@@ -221,7 +221,7 @@ function TrustedMarketplacesSection() {
 
 function SuiStackSection() {
  return (
-  <section className="relative z-10 py-24 bg-[#C0E6FF]">
+  <section className="relative z-10 py-24 bg-white">
    <div className="container-custom">
     <AnimatedSection>
      <div className="text-center mb-16">
@@ -311,7 +311,7 @@ function FAQSection() {
  ]
 
  return (
-  <section className="relative z-10 py-24 bg-[#C0E6FF]">
+  <section className="relative z-10 py-24 bg-[#E8F4FF]">
    <div className="container-custom">
     <AnimatedSection>
      <div className="text-center mb-16">
