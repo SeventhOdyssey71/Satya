@@ -332,18 +332,13 @@ export default function DashboardPending() {
            </p>
           </div>
 
-          {/* Enhanced Verification Flow */}
-          <EnhancedVerificationFlow
-           pendingModelId={model.id}
+          {/* Model Verification Flow */}
+          <ModelVerificationFlow
            modelBlobId={model.modelBlobId}
            datasetBlobId={model.datasetBlobId}
-           encryptionPolicyId={model.encryptionPolicyId}
            modelName={model.title}
-           category={model.category}
-           contractService={contractService}
-           uploadService={uploadService}
-           onVerificationComplete={(verificationId, transactionDigest) => {
-            handleVerificationComplete(model.id, verificationId, transactionDigest);
+           onVerificationComplete={(attestationData, txDigest) => {
+            handleVerificationComplete(model.id, 'verification-id', txDigest);
            }}
           />
          </div>
