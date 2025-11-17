@@ -33,8 +33,8 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
     <div className="grid grid-cols-3 gap-6">
      {/* Pending */}
      <div className="text-center">
-      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-       <IoTime className="w-5 h-5 text-blue-600" />
+      <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+       <IoTime className="w-5 h-5 text-yellow-700" />
       </div>
       <h3 className="text-sm font-medium text-gray-900 mb-1">Pending</h3>
       <p className="text-2xl font-semibold text-gray-900 mb-1">{statusCounts.pending}</p>
@@ -43,8 +43,8 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
 
      {/* Completed */}
      <div className="text-center">
-      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-       <IoCheckmarkCircle className="w-5 h-5 text-blue-600" />
+      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+       <IoCheckmarkCircle className="w-5 h-5 text-green-700" />
       </div>
       <h3 className="text-sm font-medium text-gray-900 mb-1">Completed</h3>
       <p className="text-2xl font-semibold text-gray-900 mb-1">{statusCounts.completed}</p>
@@ -142,7 +142,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
       )}
       <button
        onClick={onNewUpload}
-       className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+       className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
       >
        <IoCloudUpload className="w-4 h-4" />
        New Upload
@@ -161,7 +161,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
       </p>
       <button 
        onClick={onNewUpload}
-       className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+       className="px-6 py-3 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
       >
        Upload Your First Model
       </button>
