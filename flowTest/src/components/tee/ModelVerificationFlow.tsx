@@ -77,26 +77,9 @@ export function ModelVerificationFlow({
   setError(null);
 
   try {
-   console.log('Starting real TEE verification for blobs:', { modelBlobId, datasetBlobId });
+   console.log('Starting TEE verification for blobs:', { modelBlobId, datasetBlobId });
 
-   // Step 1: Decrypt blobs and process in TEE using real blob IDs
-   const decryptResponse = await fetch('/api/decrypt-blobs', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-     model_blob_id: modelBlobId,
-     dataset_blob_id: datasetBlobId
-    }),
-   });
-
-   if (!decryptResponse.ok) {
-    throw new Error('Failed to decrypt blobs from Walrus storage');
-   }
-
-   const { decrypted_model_data, decrypted_dataset_data } = await decryptResponse.json();
-   console.log('Successfully decrypted blobs');
-
-   // Step 2: Process data in TEE using nautilus server
+   // Step 1: Process data in TEE using nautilus server (it handles blob access internally)
    const teeResponse = await fetch('http://localhost:3333/process_data', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -144,7 +127,7 @@ export function ModelVerificationFlow({
    setAttestationData(attestation);
 
   } catch (err) {
-   console.error('Attestation generation failed:', err);
+   console.warn('Attestation generation failed:', err);
    setError(err instanceof Error ? err.message : 'Unknown error');
   } finally {
    setIsGeneratingAttestation(false);
@@ -208,13 +191,13 @@ export function ModelVerificationFlow({
      
      setIsVerifyingOnChain(false);
     } catch (error) {
-     console.error('Marketplace upload failed:', error);
+     console.warn('Marketplace upload failed:', error);
      setError(`Verification successful, but marketplace upload failed: ${error instanceof Error ? error.message : String(error)}`);
      setIsVerifyingOnChain(false);
     }
    }, 2000); // 2 second delay to simulate transaction
   } catch (err) {
-   console.error('Error preparing transaction:', err);
+   console.warn('Error preparing transaction:', err);
    setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
   } finally {
    setIsVerifyingOnChain(false);
