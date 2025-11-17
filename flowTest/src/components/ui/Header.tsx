@@ -30,7 +30,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
  }, [])
 
  return (
-  <header className="bg-white/95 backdrop-blur-xl sticky top-0 z-50">
+  <header className="bg-white/95 backdrop-blur-xl sticky top-0 z-50 pt-2">
    <div className="container-custom">
     <div className="flex items-center justify-between py-3">
      {/* Logo */}
