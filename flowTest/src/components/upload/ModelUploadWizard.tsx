@@ -1207,7 +1207,7 @@ function StepNavigation({
    <button
     onClick={onNext}
     disabled={!isValid}
-    className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
+    className="flex items-center px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
    >
     <span className="font-medium">{nextLabel}</span>
     <RiArrowRightLine className="h-5 w-5 ml-2" />
