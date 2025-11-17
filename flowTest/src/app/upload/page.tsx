@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 export default function UploadPage() {
  return (
-  <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-white">
    <Header />
    <main className="relative z-10 py-6">
     <div className="container max-w-4xl mx-auto px-6">
