@@ -182,44 +182,38 @@ export default function MarketplacePage() {
  };
 
  return (
-  <div className="min-h-screen bg-white">
+  <div className="min-h-screen bg-gray-50">
    {/* Header */}
    <Header />
    
    {/* Hero Banner */}
-   <section className="relative py-12 md:py-16">
+   <section className="relative py-8 md:py-12">
     <div className="container-custom">
-     <div className="text-center max-w-4xl mx-auto">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-aqua/10 border border-aqua/20 rounded-full mb-6 animate-fade-in">
-       <HiSparkles className="w-4 h-4 text-ocean" />
-       <span className="text-sm font-albert font-medium text-ocean">Verified AI Models</span>
+     <div className="text-center max-w-3xl mx-auto">
+      <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full mb-4">
+       <HiSparkles className="w-4 h-4 text-blue-600" />
+       <span className="text-sm font-medium text-blue-600">Verified AI Models</span>
       </div>
       
-      <h1 className="text-4xl md:text-5xl font-russo leading-tight mb-6 animate-slide-up">
+      <h1 className="text-3xl md:text-4xl font-medium leading-tight mb-4 text-gray-900">
        Discover Trusted AI Models
       </h1>
       
-      <p className="text-xl text-ocean/70 mb-8 leading-relaxed animate-slide-up">
-       Browse verified AI models with TEE attestation, cryptographic proofs, and transparent pricing. 
-       Every model is secured by hardware-level guarantees.
+      <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+       Browse verified AI models with TEE attestation, cryptographic proofs, and transparent pricing.
       </p>
 
       {/* Marketplace Stats */}
       {!state.isLoading && (
-       <div className="flex items-center justify-center gap-8 text-sm text-ocean/60 animate-slide-up">
-        <div className="flex items-center gap-2">
-         <HiSparkles className="w-4 h-4" />
-         <span>{state.totalModels} Models Available</span>
-        </div>
-        <div className="flex items-center gap-2">
-         <span>•</span>
-         <span>{filteredModels.filter(m => m.teeVerified).length} TEE Verified</span>
-        </div>
+       <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+        <span>{state.totalModels} Models Available</span>
+        <span>•</span>
+        <span>{filteredModels.filter(m => m.teeVerified).length} TEE Verified</span>
         {state.lastRefresh && (
-         <div className="flex items-center gap-2">
+         <>
           <span>•</span>
           <span>Updated {state.lastRefresh.toLocaleTimeString()}</span>
-         </div>
+         </>
         )}
        </div>
       )}
@@ -232,21 +226,21 @@ export default function MarketplacePage() {
     <div className="container-custom">
      {/* Error Display */}
      {state.error && (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
        <div className="flex items-center gap-3">
-        <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+        <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
          <span className="text-white text-sm font-bold">!</span>
         </div>
         <div>
-         <h5 className="font-albert font-semibold text-red-800">Error Loading Marketplace</h5>
-         <p className="font-albert text-red-700">{state.error}</p>
+         <p className="font-medium text-red-800">Error Loading Marketplace</p>
+         <p className="text-red-700 text-sm">{state.error}</p>
         </div>
        </div>
        <button
         onClick={loadMarketplaceModels}
-        className="btn btn-sm btn-secondary mt-4"
+        className="mt-3 px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700"
        >
-        <HiArrowPath className="w-4 h-4 mr-2" />
+        <HiArrowPath className="w-4 h-4 mr-1 inline" />
         Retry
        </button>
       </div>
@@ -266,20 +260,20 @@ export default function MarketplacePage() {
      
      {/* Loading State */}
      {state.isLoading && (
-      <div className="text-center py-16">
-       <div className="animate-spin rounded-full h-12 w-12 border-2 border-primary-500 border-t-transparent mx-auto mb-4" />
-       <p className="text-secondary-600 font-albert">Loading marketplace models...</p>
+      <div className="text-center py-12">
+       <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent mx-auto mb-3" />
+       <p className="text-gray-600">Loading marketplace models...</p>
       </div>
      )}
 
      {/* Empty State */}
      {!state.isLoading && !state.error && filteredModels.length === 0 && (
-      <div className="text-center py-16">
-       <div className="w-24 h-24 bg-secondary-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-        <HiSparkles className="w-12 h-12 text-secondary-400" />
+      <div className="text-center py-12">
+       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+        <HiSparkles className="w-8 h-8 text-gray-400" />
        </div>
-       <h3 className="text-2xl font-russo text-secondary-900 mb-3">No models found</h3>
-       <p className="text-secondary-600 font-albert max-w-md mx-auto">
+       <h3 className="text-xl font-medium text-gray-900 mb-2">No models found</h3>
+       <p className="text-gray-600 max-w-md mx-auto">
         {state.models.length === 0 
          ? "No models have been listed on the marketplace yet." 
          : "Try adjusting your filters to see more models."
@@ -354,12 +348,12 @@ function EnhancedNavigation({
  }
 
  return (
-  <div className="mb-12">
+  <div className="mb-8">
    {/* Search Bar - Full Width */}
-   <div className="mb-8">
-    <div className="relative max-w-2xl mx-auto">
-     <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
-      <HiMagnifyingGlass className="h-5 w-5 text-secondary-400" />
+   <div className="mb-6">
+    <div className="relative max-w-xl mx-auto">
+     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+      <HiMagnifyingGlass className="h-4 w-4 text-gray-400" />
      </div>
      <input 
       type="text" 
@@ -367,12 +361,12 @@ function EnhancedNavigation({
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
       onKeyPress={handleKeyPress}
-      className="input pl-14 pr-6 py-4 text-lg shadow-soft focus:shadow-medium transition-shadow"
+      className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
      />
-     <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+     <div className="absolute inset-y-0 right-0 flex items-center pr-2">
       <button 
        onClick={handleSearchSubmit}
-       className="btn-primary btn-sm rounded-lg"
+       className="px-4 py-1 bg-gray-900 text-white rounded-md hover:bg-black text-sm"
       >
        Search
       </button>
@@ -381,37 +375,36 @@ function EnhancedNavigation({
    </div>
 
    {/* Category Pills */}
-   <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+   <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
     {categories.map((category) => (
      <button
       key={category.value}
-      className={`inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-albert font-medium transition-all duration-200 ${
+      className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
        activeCategory === category.value 
-        ? 'bg-gray-900 text-white shadow-soft' 
-        : 'bg-white text-secondary-900 border border-secondary-300 hover:bg-surface-50 hover:border-secondary-500 hover:text-secondary-900'
+        ? 'bg-gray-900 text-white' 
+        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
       }`}
       onClick={() => onCategoryChange(category.value)}
      >
-      <span className="text-lg">{category.icon}</span>
       <span>{category.label}</span>
      </button>
     ))}
    </div>
 
    {/* Verification Filter Pills */}
-   <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
-    <span className="text-sm font-albert font-medium text-secondary-600 mr-2">Filter by verification:</span>
+   <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+    <span className="text-sm text-gray-600 mr-2">Filter by verification:</span>
     {verificationFilters.map((filter) => (
      <button
       key={filter.value}
-      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-albert font-medium text-sm transition-all duration-200 ${
+      className={`inline-flex items-center gap-1 px-3 py-1 rounded-md text-sm transition-colors ${
        activeVerified === filter.value 
-        ? 'bg-emerald-600 text-white shadow-soft' 
-        : 'bg-white text-secondary-700 border border-secondary-300 hover:bg-emerald-50 hover:border-emerald-300'
+        ? 'bg-blue-600 text-white' 
+        : 'bg-white text-gray-700 border border-gray-300 hover:bg-blue-50'
       }`}
       onClick={() => onVerifiedChange(filter.value)}
      >
-      {filter.value === 'verified' && <span className="w-2 h-2 bg-emerald-400 rounded-full"></span>}
+      {filter.value === 'verified' && <span className="w-2 h-2 bg-blue-300 rounded-full"></span>}
       {filter.value === 'unverified' && <span className="w-2 h-2 bg-gray-400 rounded-full"></span>}
       <span>{filter.label}</span>
      </button>
@@ -419,12 +412,12 @@ function EnhancedNavigation({
    </div>
 
    {/* Results Summary and Refresh */}
-   <div className="flex items-center justify-between bg-white rounded-xl p-4 border border-secondary-200 shadow-sm">
-    <div className="flex items-center gap-4 text-sm text-secondary-600">
+   <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
+    <div className="flex items-center gap-3 text-sm text-gray-600">
      <span>{totalResults} models found</span>
      {isLoading && (
       <div className="flex items-center gap-2">
-       <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-500 border-t-transparent" />
+       <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-500 border-t-transparent" />
        <span>Loading...</span>
       </div>
      )}
@@ -432,9 +425,9 @@ function EnhancedNavigation({
     <button
      onClick={onRefresh}
      disabled={isLoading}
-     className="btn btn-sm btn-ghost hover:bg-surface-50 disabled:opacity-50"
+     className="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md disabled:opacity-50"
     >
-     <HiArrowPath className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+     <HiArrowPath className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
      Refresh
     </button>
    </div>
@@ -444,25 +437,22 @@ function EnhancedNavigation({
 
 function MarketplaceGuide() {
  return (
-  <div className="mt-16 pt-12 border-t border-border">
-   <div className="card p-8 text-center bg-gradient-to-r from-white to-surface-50 border-secondary-200">
-    <div className="inline-flex items-center justify-center w-16 h-16 bg-white border border-secondary-300 text-secondary-700 rounded-2xl mb-4">
-     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <div className="mt-12 pt-8 border-t border-gray-200">
+   <div className="bg-white p-6 text-center border border-gray-200 rounded-lg">
+    <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 text-gray-600 rounded-lg mb-3">
+     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
      </svg>
     </div>
-    <h3 className="text-xl font-russo mb-4 text-secondary-800">Need Help Getting Started?</h3>
-    <p className="text-secondary-800 mb-6 leading-relaxed max-w-2xl mx-auto">
-     Learn how to verify AI models, understand TEE attestations, and make secure purchases in our comprehensive marketplace guide.
+    <h3 className="text-lg font-medium mb-3 text-gray-900">Need Help Getting Started?</h3>
+    <p className="text-gray-600 mb-4 leading-relaxed max-w-xl mx-auto">
+     Learn how to verify AI models, understand TEE attestations, and make secure purchases.
     </p>
-    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-     <button className="btn-primary group">
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+     <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
       View Marketplace Guide
-      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-      </svg>
      </button>
-     <button className="btn-ghost">
+     <button className="px-4 py-2 text-gray-600 hover:text-gray-900">
       Watch Tutorial Videos
      </button>
     </div>
@@ -562,15 +552,15 @@ function EnhancedMarketplaceGrid({
   <div className="space-y-6">
    {/* Purchase Error */}
    {purchaseError && (
-    <div className="bg-danger-50 border border-danger-200 rounded-xl p-4">
-     <div className="flex items-center gap-3">
-      <div className="w-5 h-5 bg-danger-500 rounded-full flex items-center justify-center">
+    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+     <div className="flex items-center gap-2">
+      <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
        <span className="text-white text-xs font-bold">!</span>
       </div>
-      <p className="font-albert text-danger-700">{purchaseError}</p>
+      <p className="text-red-700 text-sm">{purchaseError}</p>
       <button
        onClick={() => setPurchaseError(null)}
-       className="ml-auto text-danger-600 hover:text-danger-800"
+       className="ml-auto text-red-600 hover:text-red-800"
       >
        ×
       </button>
@@ -579,27 +569,27 @@ function EnhancedMarketplaceGrid({
    )}
 
    {/* Models Grid */}
-   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {models.map((model) => (
      <div
       key={model.id}
-      className="card group hover:shadow-medium transition-all duration-300"
+      className="bg-white border border-gray-200 rounded-lg group hover:shadow-lg transition-shadow duration-200"
      >
       {/* Model Header */}
-      <div className="p-6 border-b border-border">
-       <div className="flex items-start justify-between mb-3">
-        <h3 className="text-xl font-russo text-secondary-900 group-hover:text-primary-600 transition-colors">
+      <div className="p-4 border-b border-gray-200">
+       <div className="flex items-start justify-between mb-2">
+        <h3 className="text-lg font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
          {model.title}
         </h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
          {model.teeVerified && (
-          <div className="flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-albert font-medium">
+          <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
            <HiCheckBadge className="w-3 h-3" />
            TEE
           </div>
          )}
          {model.featured && (
-          <div className="flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs font-albert font-medium">
+          <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
            <HiSparkles className="w-3 h-3" />
            Featured
           </div>
@@ -607,21 +597,21 @@ function EnhancedMarketplaceGrid({
         </div>
        </div>
        
-       <p className="text-secondary-700 font-albert text-sm leading-relaxed mb-4 line-clamp-2">
+       <p className="text-gray-600 text-sm leading-relaxed mb-3 line-clamp-2">
         {model.description}
        </p>
 
-       <div className="flex flex-wrap items-center gap-2 mb-4">
-        <span className="inline-flex items-center gap-1 px-3 py-1 bg-surface-100 text-secondary-700 rounded-full text-xs font-albert">
+       <div className="flex flex-wrap items-center gap-1 mb-3">
+        <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs">
          {model.category}
         </span>
         {model.tags.slice(0, 2).map((tag, index) => (
-         <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-secondary-100 text-secondary-600 rounded-full text-xs font-albert">
+         <span key={index} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs">
           {tag}
          </span>
         ))}
         {model.tags.length > 2 && (
-         <span className="text-xs text-secondary-500 font-albert">
+         <span className="text-xs text-gray-500">
           +{model.tags.length - 2} more
          </span>
         )}
@@ -629,29 +619,29 @@ function EnhancedMarketplaceGrid({
       </div>
 
       {/* Model Stats */}
-      <div className="p-6 space-y-4">
-       <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="p-4 space-y-3">
+       <div className="grid grid-cols-2 gap-3 text-sm">
         <div className="space-y-1">
-         <span className="text-secondary-600 font-albert">Quality Score</span>
+         <span className="text-gray-600">Quality Score</span>
          <div className="flex items-center gap-2">
-          <div className="flex-1 bg-secondary-200 rounded-full h-2">
+          <div className="flex-1 bg-gray-200 rounded-full h-1.5">
            <div 
-            className={`h-2 rounded-full ${
-             model.qualityScore >= 8500 ? 'bg-emerald-500' :
-             model.qualityScore >= 7000 ? 'bg-amber-500' : 'bg-orange-500'
+            className={`h-1.5 rounded-full ${
+             model.qualityScore >= 8500 ? 'bg-blue-500' :
+             model.qualityScore >= 7000 ? 'bg-blue-400' : 'bg-blue-300'
             }`}
             style={{ width: `${(model.qualityScore / 10000) * 100}%` }}
            />
           </div>
-          <span className="font-russo text-secondary-900">
+          <span className="font-medium text-gray-900">
            {(model.qualityScore / 100).toFixed(0)}%
           </span>
          </div>
         </div>
         
         <div className="space-y-1">
-         <span className="text-secondary-600 font-albert">Downloads</span>
-         <p className="font-russo text-secondary-900">
+         <span className="text-gray-600">Downloads</span>
+         <p className="font-medium text-gray-900">
           {model.currentDownloads}
           {model.maxDownloads && ` / ${model.maxDownloads}`}
          </p>
@@ -660,14 +650,14 @@ function EnhancedMarketplaceGrid({
 
        <div className="flex items-center justify-between text-sm">
         <div className="space-y-1">
-         <span className="text-secondary-600 font-albert">Listed</span>
-         <p className="font-albert text-secondary-800">
+         <span className="text-gray-600">Listed</span>
+         <p className="text-gray-800">
           {formatDate(model.listedAt)}
          </p>
         </div>
         <div className="text-right space-y-1">
-         <span className="text-secondary-600 font-albert">Earnings</span>
-         <p className="font-russo text-secondary-900">
+         <span className="text-gray-600">Earnings</span>
+         <p className="font-medium text-gray-900">
           {formatPrice(model.totalEarnings)}
          </p>
         </div>
@@ -675,14 +665,14 @@ function EnhancedMarketplaceGrid({
       </div>
 
       {/* Purchase Section */}
-      <div className="p-6 border-t border-border">
+      <div className="p-4 border-t border-gray-200">
        <div className="flex items-center justify-between">
         <div>
-         <span className="text-2xl font-russo text-secondary-900">
+         <span className="text-xl font-semibold text-gray-900">
           {formatPrice(model.price)}
          </span>
          {model.maxDownloads && model.currentDownloads >= model.maxDownloads && (
-          <p className="text-xs text-orange-600 font-albert mt-1">
+          <p className="text-xs text-orange-600 mt-1">
            Limited availability
           </p>
          )}
@@ -696,11 +686,11 @@ function EnhancedMarketplaceGrid({
           model.creator === currentAccount?.address ||
           !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads)
          }
-         className="btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
+         className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
          {purchasingModel === model.id ? (
           <>
-           <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+           <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
            Purchasing...
           </>
          ) : model.creator === currentAccount?.address ? (
@@ -709,7 +699,7 @@ function EnhancedMarketplaceGrid({
           'Sold Out'
          ) : (
           <>
-           <HiShoppingCart className="w-4 h-4 mr-2" />
+           <HiShoppingCart className="w-4 h-4" />
            Purchase
           </>
          )}
