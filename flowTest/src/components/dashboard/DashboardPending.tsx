@@ -152,21 +152,21 @@ export default function DashboardPending() {
    {/* Header with Refresh */}
    <div className="flex items-center justify-between">
     <div>
-     <h2 className="text-3xl font-russo text-secondary-900">Pending Verification</h2>
-     <p className="text-secondary-600 font-albert mt-1">
+     <h2 className="text-2xl font-medium text-gray-900">Pending Verification</h2>
+     <p className="text-gray-600 text-sm mt-1">
       Manage your models awaiting TEE verification
      </p>
     </div>
     <div className="flex items-center gap-3">
      {state.lastRefresh && (
-      <span className="text-sm text-secondary-500">
+      <span className="text-sm text-gray-500">
        Last updated: {state.lastRefresh.toLocaleTimeString()}
       </span>
      )}
      <button
       onClick={loadPendingModels}
       disabled={state.isLoading}
-      className="btn btn-secondary btn-sm flex items-center gap-2"
+      className="flex items-center gap-2 px-3 py-1 text-gray-600 hover:text-gray-900 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
      >
       <TbRefresh className={`h-4 w-4 ${state.isLoading ? 'animate-spin' : ''}`} />
       Refresh
@@ -176,14 +176,14 @@ export default function DashboardPending() {
 
    {/* Error Display */}
    {state.error && (
-    <div className="bg-danger-50 border border-danger-200 rounded-xl p-4">
+    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
      <div className="flex items-center gap-3">
-      <div className="w-6 h-6 bg-danger-500 rounded-full flex items-center justify-center">
+      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
        <span className="text-white text-sm font-bold">!</span>
       </div>
       <div>
-       <h5 className="font-albert font-semibold text-danger-800">Error Loading Models</h5>
-       <p className="font-albert text-danger-700">{state.error}</p>
+       <h5 className="font-medium text-red-800">Error Loading Models</h5>
+       <p className="text-red-700 text-sm">{state.error}</p>
       </div>
      </div>
     </div>
@@ -191,60 +191,60 @@ export default function DashboardPending() {
 
    {/* Loading State */}
    {state.isLoading && (
-    <div className="card p-8 text-center">
-     <div className="animate-spin rounded-full h-12 w-12 border-2 border-primary-500 border-t-transparent mx-auto mb-4" />
-     <p className="text-secondary-600 font-albert">Loading your pending models...</p>
+    <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+     <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent mx-auto mb-3" />
+     <p className="text-gray-600">Loading your pending models...</p>
     </div>
    )}
 
    {/* Status Overview */}
    {!state.isLoading && (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
     {/* Awaiting Verification - Blue theme */}
-    <div className="rounded-3xl p-6 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
      <div className="flex flex-col items-center text-center">
-      <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl flex items-center justify-center mb-4">
-       <TbClockHour4 className="w-8 h-8 text-white" />
+      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+       <TbClockHour4 className="w-6 h-6 text-blue-600" />
       </div>
-      <h3 className="font-albert text-sm text-blue-600 mb-2">Awaiting Verification</h3>
-      <p className="text-3xl font-russo font-bold text-blue-700 mb-1">{pendingVerification.length}</p>
-      <p className="text-xs text-blue-500">Models pending</p>
+      <h3 className="text-sm text-gray-600 mb-1">Awaiting Verification</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{pendingVerification.length}</p>
+      <p className="text-xs text-gray-500">Models pending</p>
      </div>
     </div>
 
-    {/* In Verification - Purple theme */}
-    <div className="rounded-3xl p-6 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200">
+    {/* In Verification */}
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
      <div className="flex flex-col items-center text-center">
-      <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-500 rounded-2xl flex items-center justify-center mb-4">
-       <TbShieldX className="w-8 h-8 text-white" />
+      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+       <TbShieldX className="w-6 h-6 text-blue-600" />
       </div>
-      <h3 className="font-albert text-sm text-purple-600 mb-2">In Verification</h3>
-      <p className="text-3xl font-russo font-bold text-purple-700 mb-1">{inVerification.length}</p>
-      <p className="text-xs text-purple-500">Currently processing</p>
+      <h3 className="text-sm text-gray-600 mb-1">In Verification</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{inVerification.length}</p>
+      <p className="text-xs text-gray-500">Currently processing</p>
      </div>
     </div>
 
-    {/* Processing Speed - Orange theme */}
-    <div className="rounded-3xl p-6 bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200">
+    {/* Processing Speed */}
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
      <div className="flex flex-col items-center text-center">
-      <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl flex items-center justify-center mb-4">
-       <TbRefresh className="w-8 h-8 text-white" />
+      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+       <TbRefresh className="w-6 h-6 text-blue-600" />
       </div>
-      <h3 className="font-albert text-sm text-orange-600 mb-2">Avg. Speed</h3>
-      <p className="text-3xl font-russo font-bold text-orange-700 mb-1">2.4</p>
-      <p className="text-xs text-orange-500">Minutes per verification</p>
+      <h3 className="text-sm text-gray-600 mb-1">Avg. Speed</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">2.4</p>
+      <p className="text-xs text-gray-500">Minutes per verification</p>
      </div>
     </div>
 
-    {/* Verified - Green theme */}
-    <div className="rounded-3xl p-6 bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200">
+    {/* Success Rate */}
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
      <div className="flex flex-col items-center text-center">
-      <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl flex items-center justify-center mb-4">
-       <TbShieldCheck className="w-8 h-8 text-white" />
+      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+       <TbShieldCheck className="w-6 h-6 text-blue-600" />
       </div>
-      <h3 className="font-albert text-sm text-emerald-600 mb-2">Success Rate</h3>
-      <p className="text-3xl font-russo font-bold text-emerald-700 mb-1">{verified.length > 0 ? '100' : '0'}%</p>
-      <p className="text-xs text-emerald-500">Verification rate</p>
+      <h3 className="text-sm text-gray-600 mb-1">Success Rate</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{verified.length > 0 ? '100' : '0'}%</p>
+      <p className="text-xs text-gray-500">Verification rate</p>
      </div>
     </div>
    </div>
@@ -253,7 +253,7 @@ export default function DashboardPending() {
    {/* Pending Verification List */}
    {!state.isLoading && pendingVerification.length > 0 && (
     <div className="card p-8">
-     <h3 className="text-2xl font-russo text-secondary-900 mb-8 flex items-center">
+     <h3 className="text-2xl font-albert font-bold text-secondary-900 mb-8 flex items-center">
       <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
        <TbCertificate className="w-5 h-5 text-amber-600" />
       </div>
@@ -371,7 +371,7 @@ export default function DashboardPending() {
    {/* Verified Models */}
    {verified.length > 0 && (
     <div className="card p-8">
-     <h3 className="text-2xl font-russo text-secondary-900 mb-8 flex items-center">
+     <h3 className="text-2xl font-albert font-bold text-secondary-900 mb-8 flex items-center">
       <div className="w-8 h-8 bg-success-100 rounded-lg flex items-center justify-center mr-3">
        <TbShieldCheck className="w-5 h-5 text-success-600" />
       </div>
@@ -412,7 +412,7 @@ export default function DashboardPending() {
      <div className="w-24 h-24 bg-secondary-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
       <TbCertificate className="w-12 h-12 text-secondary-400" />
      </div>
-     <h3 className="text-2xl font-russo text-secondary-900 mb-3">No models pending verification</h3>
+     <h3 className="text-2xl font-albert font-bold text-secondary-900 mb-3">No models pending verification</h3>
      <p className="text-secondary-600 font-albert max-w-md mx-auto leading-relaxed">
       Upload a model first, then it will appear here for TEE verification before marketplace publication.
      </p>

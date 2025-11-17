@@ -30,81 +30,84 @@ export default function Header({ isHomepage = false }: HeaderProps) {
  }, [])
 
  return (
-  <header className="backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50" style={{ backgroundColor: 'rgba(245, 249, 239, 0.8)' }}>
+  <header className="bg-white/95 backdrop-blur-xl fixed top-0 left-0 right-0 z-50 pt-2">
    <div className="container-custom">
     <div className="flex items-center justify-between py-3">
      {/* Logo */}
-     <Link href="/" className="text-gray-900 hover:text-gray-700 transition-colors">
-      <h1 className="text-2xl font-russo tracking-tight">
-       Satya
-      </h1>
+     <Link href="/" className="hover:opacity-80 transition-opacity">
+      <img 
+       src="/images/SatyaNav.png" 
+       alt="Satya" 
+       className="h-8"
+      />
      </Link>
 
      {isHomepageRoute ? (
       /* Homepage: Get Started Button */
       <Link 
        href="/marketplace" 
-       className="px-6 py-2 bg-gray-900 text-white hover:bg-gray-800 active:bg-gray-700 transition-all duration-200 rounded-full font-albert font-normal text-[17px]"
+       className="px-6 py-2 bg-ocean text-white hover:bg-deep-ocean active:bg-deep-ocean/90 transition-all duration-200 rounded-full font-albert font-normal text-[17px]"
       >
        Get Started
       </Link>
      ) : (
       /* Other pages: Navigation + Wallet */
-      <div className="flex items-center gap-8">
-       <nav className="flex items-center gap-6">
+      <div className="flex items-center justify-between flex-1">
+       <div className="flex-1"></div>
+       <nav className="flex items-center gap-8">
         <Link 
          href="/marketplace"
-         className={`text-[17px] font-albert font-normal transition-colors ${
+         className={`transition-colors text-base ${
           pathname === '/marketplace' 
-           ? 'text-gray-900' 
-           : 'text-gray-600 hover:text-gray-900'
+           ? 'text-black font-medium' 
+           : 'text-gray-500 font-light hover:text-gray-700'
          }`}
         >
          Marketplace
         </Link>
         <Link 
          href="/dashboard"
-         className={`text-[17px] font-albert font-normal transition-colors ${
+         className={`transition-colors text-base ${
           pathname === '/dashboard' 
-           ? 'text-gray-900' 
-           : 'text-gray-600 hover:text-gray-900'
+           ? 'text-black font-medium' 
+           : 'text-gray-500 font-light hover:text-gray-700'
          }`}
         >
          Dashboard
         </Link>
         <Link 
          href="/upload"
-         className={`text-[17px] font-albert font-normal transition-colors ${
+         className={`transition-colors text-base ${
           pathname === '/upload' 
-           ? 'text-gray-900' 
-           : 'text-gray-600 hover:text-gray-900'
+           ? 'text-black font-medium' 
+           : 'text-gray-500 font-light hover:text-gray-700'
          }`}
         >
          Upload
         </Link>
        </nav>
        
+       <div className="flex-1 flex justify-end">
        {/* Wallet Connection */}
        {account ? (
         <div className="relative" ref={dropdownRef}>
          <button 
           onClick={() => setShowDropdown(!showDropdown)}
-          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100/50 active:bg-gray-100 transition-colors rounded-full"
+          className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-light"
          >
-          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-          <span className="text-[15px] text-gray-900 font-mono font-normal">
+          <span className="text-base">
            {account.address.slice(0, 6)}...{account.address.slice(-4)}
           </span>
          </button>
          
          {showDropdown && (
-          <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-2xl shadow-lg z-10 overflow-hidden">
+          <div className="absolute right-0 mt-2 w-48 bg-white border border-ocean/10 rounded-2xl shadow-lg z-10 overflow-hidden">
            <button
             onClick={() => {
              disconnect()
              setShowDropdown(false)
             }}
-            className="w-full text-left px-4 py-2.5 text-[15px] font-albert font-normal text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full text-left px-4 py-2.5 text-[15px] font-albert font-normal text-ocean hover:bg-aqua/10 transition-colors"
            >
             Disconnect Wallet
            </button>
@@ -112,12 +115,11 @@ export default function Header({ isHomepage = false }: HeaderProps) {
          )}
         </div>
        ) : (
-        <ConnectButton 
-         className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 rounded-full font-albert font-normal text-[17px]"
-        >
-         Connect Wallet
-        </ConnectButton>
+        <div className="[&>button]:!bg-black [&>button]:!text-white [&>button]:!border-black [&>button]:!px-4 [&>button]:!py-2 [&>button]:!rounded-lg [&>button]:!font-light [&>button]:!text-base [&>button]:hover:!bg-gray-800 [&>button]:!transition-colors">
+         <ConnectButton />
+        </div>
        )}
+       </div>
       </div>
      )}
     </div>

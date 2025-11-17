@@ -23,8 +23,8 @@ export default function DashboardPage() {
     <main className="relative z-10 py-6">
      <div className="container max-w-7xl mx-auto px-6">
       <div className="max-w-4xl mx-auto text-center py-20">
-       <h1 className="text-3xl font-russo text-black mb-8">Dashboard</h1>
-       <p className="text-gray-600 text-lg">Please connect your wallet to access your dashboard</p>
+       <h1 className="text-3xl font-albert font-bold text-ocean mb-8">Dashboard</h1>
+       <p className="text-ocean/70 text-lg">Please connect your wallet to access your dashboard</p>
       </div>
      </div>
     </main>
@@ -33,18 +33,18 @@ export default function DashboardPage() {
  }
 
  return (
-  <div className="min-h-screen bg-gradient-to-br from-surface-50 via-surface-100/50 to-secondary-100/30">
+  <div className="min-h-screen bg-white pt-16">
    {/* Header */}
    <Header />
    
    {/* Hero Section */}
-   <section className="relative py-12">
+   <section className="relative py-8">
     <div className="container-custom">
-     <div className="text-center">
-      <h1 className="text-4xl md:text-5xl font-russo mb-4 animate-slide-up">
-       Your <span className="text-gradient">AI Model</span> Dashboard
+     <div className="max-w-2xl">
+      <h1 className="text-2xl md:text-3xl font-albert font-semibold leading-tight mb-3 text-gray-900">
+       Your AI Model Dashboard
       </h1>
-      <p className="text-xl text-secondary-600 max-w-2xl mx-auto animate-slide-up">
+      <p className="text-gray-600 mb-2">
        Manage your uploads, track verification status, and monitor your AI model performance
       </p>
      </div>
@@ -52,49 +52,49 @@ export default function DashboardPage() {
    </section>
    
    {/* Main Content */}
-   <main className="relative z-10 pb-16">
+   <main className="relative z-10 pb-20">
     <div className="container-custom">
      {/* Dashboard Tabs */}
-     <div className="mb-12">
+     <div className="mb-8">
       <div className="flex items-center justify-center">
-       <div className="bg-white rounded-2xl p-2 border border-secondary-300 shadow-card">
+       <div className="bg-white rounded-lg p-1 border border-gray-200">
         <nav className="flex space-x-1">
          <button
           onClick={() => setActiveTab('overview')}
-          className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
+          className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
            activeTab === 'overview'
-            ? 'bg-black text-white shadow-soft'
-            : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
          >
           Overview
          </button>
          <button
           onClick={() => setActiveTab('pending')}
-          className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
+          className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
            activeTab === 'pending'
-            ? 'bg-black text-white shadow-soft'
-            : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
          >
           Pending
          </button>
          <button
           onClick={() => setActiveTab('history')}
-          className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
+          className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
            activeTab === 'history'
-            ? 'bg-black text-white shadow-soft'
-            : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
          >
           History
          </button>
          <button
           onClick={() => setActiveTab('downloads')}
-          className={`px-6 py-3 rounded-xl font-albert font-medium transition-all duration-200 ${
+          className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
            activeTab === 'downloads'
-            ? 'bg-black text-white shadow-soft'
-            : 'text-secondary-600 hover:text-secondary-900 hover:bg-surface-100'
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
          >
           Downloads
@@ -105,7 +105,7 @@ export default function DashboardPage() {
      </div>
 
      {/* Tab Content */}
-     <div className="animate-fade-in">
+     <div>
       {activeTab === 'overview' && <DashboardOverview onNewUpload={() => router.push('/upload')} />}
       {activeTab === 'pending' && <DashboardPending />}
       {activeTab === 'history' && <DashboardHistory />}
@@ -113,6 +113,19 @@ export default function DashboardPage() {
      </div>
     </div>
    </main>
+   
+   {/* Fixed Footer */}
+   <footer className="fixed bottom-0 left-0 right-0 bg-white py-3">
+    <div className="container-custom">
+     <div className="flex justify-between items-center text-sm text-gray-500">
+      <div>© 2025 Satya. All rights reserved.</div>
+      <div className="flex gap-4">
+       <a href="/docs" className="hover:text-gray-700 transition-colors">Docs</a>
+       <a href="/help" className="hover:text-gray-700 transition-colors">Help</a>
+      </div>
+     </div>
+    </div>
+   </footer>
   </div>
  )
 }
