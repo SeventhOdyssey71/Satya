@@ -119,6 +119,17 @@ export function usePendingModels() {
   loadPendingModels()
  }, [contractService, currentAccount])
 
+ // Set up polling for automatic refresh every 10 seconds
+ useEffect(() => {
+  if (!contractService || !currentAccount) return
+
+  const interval = setInterval(() => {
+   loadPendingModels()
+  }, 10000) // 10 seconds
+
+  return () => clearInterval(interval)
+ }, [contractService, currentAccount])
+
  // Refresh function for manual updates
  const refresh = () => {
   loadPendingModels()

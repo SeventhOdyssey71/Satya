@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Header from '@/components/ui/Header'
 import DashboardOverview from '@/components/dashboard/DashboardOverview'
 import DashboardPending from '@/components/dashboard/DashboardPending'
@@ -14,7 +14,22 @@ export const dynamic = 'force-dynamic'
 export default function DashboardPage() {
  const [isConnected] = useState(true) // Simplified for now
  const [activeTab, setActiveTab] = useState<'overview' | 'pending' | 'history' | 'downloads'>('overview')
+ const [pendingRefresh, setPendingRefresh] = useState(false)
  const router = useRouter()
+ const searchParams = useSearchParams()
+
+ // Handle refresh parameter from upload redirect
+ useEffect(() => {
+  const refresh = searchParams.get('refresh')
+  if (refresh === 'true') {
+   // Switch to pending tab and trigger refresh
+   setActiveTab('pending')
+   setPendingRefresh(true)
+   
+   // Clean up URL parameter
+   router.replace('/dashboard', { scroll: false })
+  }
+ }, [searchParams, router])
 
  if (!isConnected) {
   return (
@@ -107,7 +122,12 @@ export default function DashboardPage() {
      {/* Tab Content */}
      <div>
       {activeTab === 'overview' && <DashboardOverview onNewUpload={() => router.push('/upload')} />}
-      {activeTab === 'pending' && <DashboardPending />}
+      {activeTab === 'pending' && (
+       <DashboardPending 
+        triggerRefresh={pendingRefresh}
+        onRefreshComplete={() => setPendingRefresh(false)}
+       />
+      )}
       {activeTab === 'history' && <DashboardHistory />}
       {activeTab === 'downloads' && <DashboardDownloads />}
      </div>

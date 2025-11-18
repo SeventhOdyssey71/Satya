@@ -34,7 +34,12 @@ interface DashboardState {
  lastRefresh: Date | null;
 }
 
-export default function DashboardPending() {
+interface DashboardPendingProps {
+ triggerRefresh?: boolean;
+ onRefreshComplete?: () => void;
+}
+
+export default function DashboardPending({ triggerRefresh, onRefreshComplete }: DashboardPendingProps = {}) {
  const { allTasks } = useUploadTasks()
  const currentAccount = useCurrentAccount()
  
@@ -164,6 +169,16 @@ export default function DashboardPending() {
    loadPendingModels();
   }
  }, [contractService, currentAccount?.address]);
+
+ // Handle external refresh trigger (e.g., from upload completion)
+ useEffect(() => {
+  if (triggerRefresh && contractService && currentAccount?.address) {
+   console.log('External refresh triggered - refreshing pending models');
+   refresh(); // Use hook's refresh
+   loadPendingModels(); // Also refresh local state
+   onRefreshComplete?.(); // Signal completion
+  }
+ }, [triggerRefresh, contractService, currentAccount?.address, refresh, onRefreshComplete]);
 
  // Categorize models by status
  const pendingVerification = state.pendingModels.filter(model => model.status === 0); // STATUS_PENDING
@@ -341,39 +356,12 @@ export default function DashboardPending() {
          </div>
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-         <div className="flex items-start gap-3">
-          <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-           <span className="text-white text-xs font-bold">!</span>
-          </div>
-          <div>
-           <h5 className="font-medium text-amber-800 mb-1 text-sm">Action Required</h5>
-           <p className="text-amber-700 leading-relaxed text-sm">
-            Your model has been successfully uploaded to Walrus storage. 
-            To publish it to the marketplace, you must complete TEE attestation verification.
-           </p>
-          </div>
-         </div>
-        </div>
-
         {model.modelBlobId ? (
          <div>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-             <TbShieldCheck className="h-3 w-3 text-white" />
-            </div>
-            <p className="text-blue-700 font-medium text-sm">
-             TEE Verification Ready
-            </p>
-           </div>
-           <p className="text-blue-600 text-xs mt-1">
-            Click "Start Verification" to begin secure TEE attestation process
-           </p>
-          </div>
 
           {/* Model Verification Flow */}
           <ModelVerificationFlow
+           pendingModelId={model.id}
            modelBlobId={model.modelBlobId}
            datasetBlobId={model.datasetBlobId}
            modelName={model.title}

@@ -689,7 +689,7 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
       </label>
       <FileUploadZone
        accept={{
-        'application/octet-stream': ['.csv', '.json', '.parquet', '.pkl'],
+        'application/octet-stream': ['.csv', '.json', '.parquet', '.pkl', '.npy'],
         'text/csv': ['.csv'],
         'application/json': ['.json'],
         'application/zip': ['.zip'],
@@ -717,7 +717,7 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
        </div>
       )}
       <p className="form-help mt-3">
-       Supported formats: .csv, .json, .parquet, .pkl, .zip, .tar
+       Supported formats: .csv, .json, .parquet, .pkl, .npy, .zip, .tar
       </p>
      </div>
 

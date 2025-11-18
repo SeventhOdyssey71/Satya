@@ -455,6 +455,8 @@ fn validate_and_process_dataset(data: &[u8], _format_hint: &Option<String>) -> R
         process_json_dataset(data)?
     } else if is_parquet_dataset(data) {
         process_parquet_dataset(data)?
+    } else if is_npy_dataset(data) {
+        process_npy_dataset(data)?
     } else if is_image_dataset(data) {
         process_image_dataset(data)?
     } else {
@@ -494,6 +496,12 @@ fn is_json_dataset(data: &[u8]) -> bool {
 /// Check if data is Parquet format
 fn is_parquet_dataset(data: &[u8]) -> bool {
     data.starts_with(b"PAR1") // Parquet magic number
+}
+
+/// Check if data is NPY format (NumPy array)
+fn is_npy_dataset(data: &[u8]) -> bool {
+    // NPY files start with the magic string "\x93NUMPY"
+    data.len() >= 6 && data.starts_with(b"\x93NUMPY")
 }
 
 /// Check if data is image dataset (ZIP archive with images)
@@ -591,6 +599,69 @@ fn process_parquet_dataset(_data: &[u8]) -> Result<DatasetInfo, EnclaveError> {
         data_types: HashMap::from([
             ("col1".to_string(), "numeric".to_string()),
             ("col2".to_string(), "text".to_string()),
+        ]),
+    })
+}
+
+/// Process NPY dataset (NumPy array)
+fn process_npy_dataset(data: &[u8]) -> Result<DatasetInfo, EnclaveError> {
+    // Parse NPY header to get array dimensions and dtype
+    // NPY format: magic_string + major_version + minor_version + header_len + header + data
+    
+    if data.len() < 10 {
+        return Err(EnclaveError::GenericError("NPY file too small".to_string()));
+    }
+    
+    // Skip magic string (6 bytes), major/minor version (2 bytes)
+    let header_len_bytes = &data[8..10];
+    let header_len = u16::from_le_bytes([header_len_bytes[0], header_len_bytes[1]]) as usize;
+    
+    if data.len() < 10 + header_len {
+        return Err(EnclaveError::GenericError("NPY file header incomplete".to_string()));
+    }
+    
+    let header_bytes = &data[10..10 + header_len];
+    let header_str = std::str::from_utf8(header_bytes)
+        .map_err(|_| EnclaveError::GenericError("NPY header not valid UTF-8".to_string()))?;
+    
+    // Parse basic info from header (simplified parsing)
+    let rows = if header_str.contains("shape") {
+        // Try to extract shape information (simplified)
+        if header_str.contains("(") && header_str.contains(",") {
+            // Multi-dimensional array
+            1000 // Estimated for now
+        } else {
+            // 1D array
+            (data.len() - 10 - header_len) / 8 // Estimate assuming float64
+        }
+    } else {
+        1000 // Default estimate
+    };
+    
+    let data_type = if header_str.contains("'f") {
+        "numeric".to_string()
+    } else if header_str.contains("'i") || header_str.contains("'u") {
+        "integer".to_string()
+    } else if header_str.contains("'b") {
+        "boolean".to_string()
+    } else {
+        "numeric".to_string() // Default to numeric
+    };
+    
+    // For multi-dimensional arrays, columns represent features
+    let columns = if header_str.contains("shape") && header_str.contains(",") {
+        // Try to extract second dimension as feature count
+        10 // Estimated for now
+    } else {
+        1 // 1D array has 1 column
+    };
+    
+    Ok(DatasetInfo {
+        format: "npy".to_string(),
+        rows: rows as u64,
+        columns: columns as u64,
+        data_types: HashMap::from([
+            ("array_data".to_string(), data_type),
         ]),
     })
 }
@@ -828,6 +899,32 @@ mod tests {
         assert_eq!(dataset_info.format, "csv");
         assert_eq!(dataset_info.columns, 4);
         assert_eq!(dataset_info.rows, 1000);
+    }
+
+    #[test]
+    fn test_npy_dataset_validation() {
+        // Create a simple mock NPY file header
+        let mut npy_data = Vec::new();
+        npy_data.extend_from_slice(b"\x93NUMPY"); // Magic string
+        npy_data.push(0x01); // Major version
+        npy_data.push(0x00); // Minor version
+        
+        // Mock header (simplified)
+        let header = "{'descr': '<f8', 'fortran_order': False, 'shape': (100, 10), }";
+        let header_len = header.len() as u16;
+        npy_data.extend_from_slice(&header_len.to_le_bytes()); // Header length
+        npy_data.extend_from_slice(header.as_bytes());
+        
+        // Add some mock array data
+        npy_data.resize(npy_data.len() + 8000, 0); // 100*10*8 bytes for float64
+        
+        let result = validate_and_process_dataset(&npy_data, &None);
+        assert!(result.is_ok());
+        
+        let dataset_info = result.unwrap();
+        assert_eq!(dataset_info.format, "npy");
+        assert!(dataset_info.rows > 0);
+        assert!(dataset_info.columns > 0);
     }
 
     #[test]
