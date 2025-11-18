@@ -30,12 +30,12 @@ pub struct MLQualityResponse {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AccuracyMetrics {
-    pub precision: f64,
-    pub recall: f64,
-    pub f1_score: f64,
-    pub auc: Option<f64>,       // For classification models
-    pub rmse: Option<f64>,      // For regression models
-    pub mae: Option<f64>,       // For regression models
+    pub precision: u64,         // Scaled by 10000 (e.g., 9500 = 95.00%)
+    pub recall: u64,           // Scaled by 10000
+    pub f1_score: u64,         // Scaled by 10000
+    pub auc: Option<u64>,      // Scaled by 10000, for classification models
+    pub rmse: Option<u64>,     // Scaled by 10000, for regression models 
+    pub mae: Option<u64>,      // Scaled by 10000, for regression models
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -44,7 +44,7 @@ pub struct PerformanceMetrics {
     pub memory_usage_mb: u64,
     pub model_size_mb: u64,
     pub dataset_size_mb: u64,
-    pub throughput_samples_per_second: f64,
+    pub throughput_samples_per_second: u64,  // Scaled by 100 (e.g., 667 = 6.67 samples/sec)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -52,8 +52,8 @@ pub struct BiasAssessment {
     pub fairness_score: u64,    // 0-100, higher is better
     pub bias_detected: bool,
     pub bias_type: Option<String>,
-    pub demographic_parity: Option<f64>,
-    pub equalized_odds: Option<f64>,
+    pub demographic_parity: Option<u64>,  // Scaled by 10000
+    pub equalized_odds: Option<u64>,     // Scaled by 10000
 }
 
 /// Request for ML model quality assessment
@@ -86,8 +86,8 @@ pub async fn process_data(
     let start_time = std::time::Instant::now();
     
     // Step 1: Download model and dataset from Walrus
-    let (model_data, model_hash) = download_and_hash_blob(&request.payload.model_blob_id).await?;
-    let (dataset_data, dataset_hash) = download_and_hash_blob(&request.payload.dataset_blob_id).await?;
+    let (model_data, model_hash) = download_and_hash_blob(&request.payload.model_blob_id, "model").await?;
+    let (dataset_data, dataset_hash) = download_and_hash_blob(&request.payload.dataset_blob_id, "dataset").await?;
     
     info!("Downloaded model ({}MB) and dataset ({}MB)", 
                model_data.len() / 1_048_576, 
@@ -157,7 +157,7 @@ pub async fn process_data(
 }
 
 /// Download blob from Walrus storage and compute hash
-async fn download_and_hash_blob(blob_id: &str) -> Result<(Vec<u8>, String), EnclaveError> {
+async fn download_and_hash_blob(blob_id: &str, data_type: &str) -> Result<(Vec<u8>, String), EnclaveError> {
     info!("Downloading blob from Walrus: {}", blob_id);
     
     // Check environment variable for enabling real downloads
@@ -171,7 +171,7 @@ async fn download_and_hash_blob(blob_id: &str) -> Result<(Vec<u8>, String), Encl
     } else {
         // Fallback to mock data for development
         info!("Using mock data for blob: {} (set WALRUS_REAL_DOWNLOADS=true for real downloads)", blob_id);
-        generate_mock_data_for_blob(blob_id)?
+        generate_mock_data_for_blob(blob_id, data_type)?
     };
     
     // Compute SHA-256 hash
@@ -220,19 +220,24 @@ async fn download_from_walrus(blob_id: &str) -> Result<Vec<u8>, EnclaveError> {
 }
 
 /// Generate mock data for development/testing
-fn generate_mock_data_for_blob(blob_id: &str) -> Result<Vec<u8>, EnclaveError> {
-    debug!("Generating mock data for blob: {}", blob_id);
+fn generate_mock_data_for_blob(blob_id: &str, data_type: &str) -> Result<Vec<u8>, EnclaveError> {
+    debug!("Generating mock {} data for blob: {}", data_type, blob_id);
     
-    if blob_id.contains("model") {
-        // Generate mock model data (could be serialized PyTorch/TensorFlow model)
-        let mock_model = create_mock_model_data();
-        Ok(mock_model)
-    } else if blob_id.contains("dataset") {
-        // Generate mock dataset (CSV, JSON, etc.)
-        let mock_dataset = create_mock_dataset_data();
-        Ok(mock_dataset)
-    } else {
-        Err(EnclaveError::GenericError(format!("Unknown blob type: {}", blob_id)))
+    match data_type {
+        "model" => {
+            let mock_model = create_mock_model_data();
+            Ok(mock_model)
+        },
+        "dataset" => {
+            let mock_dataset = create_mock_dataset_data();
+            Ok(mock_dataset)
+        },
+        _ => {
+            // Default to model data
+            info!("Unknown data type '{}' for blob '{}', defaulting to model", data_type, blob_id);
+            let mock_model = create_mock_model_data();
+            Ok(mock_model)
+        }
     }
 }
 
@@ -306,7 +311,7 @@ struct AssessmentResult {
     accuracy: AccuracyMetrics,
     inference_time_ms: u64,
     memory_usage_mb: u64,
-    throughput: f64,
+    throughput: u64,
     data_integrity_score: u64,
     bias_assessment: BiasAssessment,
 }
@@ -655,10 +660,10 @@ fn perform_quality_assessment(
     let base_accuracy = data_quality_factor * model_quality_factor;
     
     let accuracy_metrics = AccuracyMetrics {
-        precision: base_accuracy + 0.02,
-        recall: base_accuracy - 0.01,
-        f1_score: base_accuracy,
-        auc: Some(base_accuracy + 0.05),
+        precision: ((base_accuracy + 0.02) * 10000.0) as u64,
+        recall: ((base_accuracy - 0.01) * 10000.0) as u64,
+        f1_score: (base_accuracy * 10000.0) as u64,
+        auc: Some(((base_accuracy + 0.05) * 10000.0) as u64),
         rmse: None,
         mae: None,
     };
@@ -668,7 +673,7 @@ fn perform_quality_assessment(
     
     // Performance metrics
     let memory_usage = (model_info.parameters * 4 / 1_048_576).max(10); // 4 bytes per param, min 10MB
-    let throughput = 1000.0 / inference_time_ms as f64; // samples per second
+    let throughput = (100000 / inference_time_ms.max(1)).max(1); // Scaled by 100, samples per second
     
     // Data integrity assessment
     let data_integrity_score = if dataset_info.columns > 5 && dataset_info.rows > 500 {
@@ -682,8 +687,8 @@ fn perform_quality_assessment(
         fairness_score: 85, // Mock fairness score
         bias_detected: false,
         bias_type: None,
-        demographic_parity: Some(0.95),
-        equalized_odds: Some(0.93),
+        demographic_parity: Some(9500), // 95.00% scaled by 10000
+        equalized_odds: Some(9300),     // 93.00% scaled by 10000
     };
     
     let processing_time = start.elapsed().as_millis() as u64;
@@ -835,10 +840,10 @@ mod tests {
             dataset_hash: "def456".to_string(),
             quality_score: 85,
             accuracy_metrics: AccuracyMetrics {
-                precision: 0.90,
-                recall: 0.88,
-                f1_score: 0.89,
-                auc: Some(0.92),
+                precision: 9000,  // 90.00%
+                recall: 8800,     // 88.00%
+                f1_score: 8900,   // 89.00%
+                auc: Some(9200),  // 92.00%
                 rmse: None,
                 mae: None,
             },
@@ -847,15 +852,15 @@ mod tests {
                 memory_usage_mb: 64,
                 model_size_mb: 5,
                 dataset_size_mb: 10,
-                throughput_samples_per_second: 6.67,
+                throughput_samples_per_second: 667,  // 6.67 scaled by 100
             },
             data_integrity_score: 90,
             bias_assessment: BiasAssessment {
                 fairness_score: 85,
                 bias_detected: false,
                 bias_type: None,
-                demographic_parity: Some(0.95),
-                equalized_odds: Some(0.93),
+                demographic_parity: Some(9500),  // 95.00%
+                equalized_odds: Some(9300),     // 93.00%
             },
             model_type: "neural_network".to_string(),
             dataset_format: "csv".to_string(),
