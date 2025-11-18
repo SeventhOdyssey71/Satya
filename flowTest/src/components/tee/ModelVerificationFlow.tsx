@@ -217,6 +217,15 @@ export function ModelVerificationFlow({
    });
 
    // Step 1: Complete verification on blockchain
+   console.log('Calling completeVerification with parameters:', {
+    pendingModelId,
+    enclaveId: attestationData.tee_attestation.enclave_id,
+    qualityScore: qualityScoreBP,
+    securityAssessment: 'PASSED',
+    attestationHashLength: attestationHash.length,
+    verifierSignatureLength: verifierSignature.length
+   });
+
    const verificationResult = await contractService.completeVerification(
     pendingModelId,
     {
@@ -229,6 +238,8 @@ export function ModelVerificationFlow({
     },
     walletSigner
    );
+
+   console.log('Raw verification result:', verificationResult);
 
    if (!verificationResult.success) {
     throw new Error(verificationResult.error || 'Blockchain verification failed');

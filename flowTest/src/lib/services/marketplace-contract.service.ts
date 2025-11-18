@@ -464,11 +464,25 @@ export class MarketplaceContractService {
     qualityScore: params.qualityScore
    });
 
+   // First, check if we need to submit the model for verification
+   // Some models might need to be submitted before completion
+   logger.info('Preparing verification transaction for model', { pendingModelId });
+
    const tx = new Transaction();
 
    const pendingModel = tx.object(pendingModelId);
 
-   // Use the shared clock object for testnet
+   // First submit for verification if not already submitted
+   tx.moveCall({
+    target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::submit_for_verification`,
+    arguments: [
+     pendingModel,
+     tx.object(MARKETPLACE_CONFIG.REGISTRY_ID),
+     tx.object('0x6'), // Clock
+    ],
+   });
+
+   // Then complete the verification
    const verificationResult = tx.moveCall({
     target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::complete_verification`,
     arguments: [
@@ -487,8 +501,10 @@ export class MarketplaceContractService {
    tx.transferObjects([verificationResult], senderAddress);
 
    const txResult = await signer.executeTransaction(tx);
+   
+   console.log('Complete verification transaction result:', txResult);
 
-   if (txResult.effects?.status?.status === 'success') {
+   if (txResult && txResult.effects?.status?.status === 'success') {
     const createdObjects = txResult.objectChanges?.filter(
      (change: any) => change.type === 'created'
     );
@@ -509,7 +525,12 @@ export class MarketplaceContractService {
      objectId: verificationObj?.objectId
     };
    } else {
-    const error = txResult.effects?.status?.error || 'Transaction failed';
+    const error = txResult?.effects?.status?.error || 'Transaction failed or returned undefined result';
+    logger.error('Complete verification failed', {
+     error,
+     txResult,
+     modelId: pendingModelId
+    });
     return {
      success: false,
      error: `Verification completion failed: ${error}`
