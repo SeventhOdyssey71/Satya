@@ -11,6 +11,9 @@ import {
  IoRefresh
 } from 'react-icons/io5'
 import { usePendingModels } from '@/hooks/usePendingModels'
+import { useCurrentAccount } from '@mysten/dapp-kit'
+import { useState, useEffect } from 'react'
+import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
 
 interface DashboardOverviewProps {
  onNewUpload?: () => void
@@ -18,11 +21,48 @@ interface DashboardOverviewProps {
 
 export default function DashboardOverview({ onNewUpload }: DashboardOverviewProps) {
  const { pendingModels, statusCounts, isLoading, refresh } = usePendingModels()
+ const currentAccount = useCurrentAccount()
+ const [completedCount, setCompletedCount] = useState(0)
+
+ // Load completed models (marketplace models) count
+ const loadCompletedCount = async () => {
+  if (!currentAccount?.address) return
+  
+  try {
+   const contractService = new MarketplaceContractService()
+   await contractService.initialize()
+   
+   const marketplaceModels = await contractService.getMarketplaceModels()
+   const userModels = marketplaceModels.filter(model => 
+    model.data?.content?.fields?.creator === currentAccount.address
+   )
+   
+   setCompletedCount(userModels.length)
+   console.log('User completed models count:', userModels.length)
+  } catch (error) {
+   console.error('Failed to load completed models count:', error)
+  }
+ }
+
+ useEffect(() => {
+  loadCompletedCount()
+ }, [currentAccount?.address])
+
+ // Set up periodic refresh for completed count
+ useEffect(() => {
+  if (!currentAccount?.address) return
+
+  const interval = setInterval(() => {
+   loadCompletedCount()
+  }, 15000) // 15 seconds
+
+  return () => clearInterval(interval)
+ }, [currentAccount?.address])
 
  // Calculate status counts based on pending models from smart contract
  const displayCounts = {
   pending: statusCounts.pending + statusCounts.verifying, // Combine pending and verifying
-  completed: statusCounts.verified,
+  completed: completedCount, // Use marketplace models count
   failed: statusCounts.failed
  }
 

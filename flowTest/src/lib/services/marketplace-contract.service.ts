@@ -831,6 +831,16 @@ export class MarketplaceContractService {
   try {
    console.log('Querying pending models for user:', userAddress);
 
+   // First, get all marketplace models to see which pending models have been listed
+   const marketplaceModels = await this.getMarketplaceModels();
+   const listedModelIds = new Set(
+    marketplaceModels
+     .map(model => model.data?.content?.fields?.pending_model_id)
+     .filter(Boolean)
+   );
+
+   console.log('Found listed models:', Array.from(listedModelIds));
+
    // Query all objects owned by the user
    const ownedObjects = await this.suiClient.getOwnedObjects({
     owner: userAddress,
@@ -842,20 +852,26 @@ export class MarketplaceContractService {
 
    console.log('Total owned objects:', ownedObjects.data.length);
 
-   // Filter for PendingModel objects
+   // Filter for PendingModel objects that haven't been listed on marketplace
    const pendingModels = ownedObjects.data.filter(obj => {
     const objectType = obj.data?.type;
     const isPendingModel = objectType?.includes('PendingModel');
+    const objectId = obj.data?.objectId;
+    
+    // Exclude models that have been listed on marketplace
+    const isListed = listedModelIds.has(objectId);
     
     if (isPendingModel) {
      console.log('Found PendingModel:', {
-      objectId: obj.data?.objectId,
+      objectId: objectId,
       type: objectType,
-      content: obj.data?.content
+      isListed: isListed,
+      willInclude: !isListed
      });
     }
     
-    return isPendingModel;
+    // Only include pending models that haven't been listed on marketplace
+    return isPendingModel && !isListed;
    });
 
    console.log(`Found ${pendingModels.length} pending models for user`);
