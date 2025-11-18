@@ -155,6 +155,18 @@ export default function MarketplacePage() {
   }
  }, [contractService]);
 
+ // Set up periodic refresh for new marketplace listings
+ useEffect(() => {
+  if (!contractService) return;
+
+  const interval = setInterval(() => {
+   console.log('Auto-refreshing marketplace models...');
+   loadMarketplaceModels();
+  }, 30000); // 30 seconds
+
+  return () => clearInterval(interval);
+ }, [contractService]);
+
  // Filter models based on current filters
  const filteredModels = state.models.filter(model => {
   const matchesCategory = filters.category === 'all' || model.category.toLowerCase() === filters.category.toLowerCase();
@@ -359,6 +371,20 @@ function EnhancedNavigation({
       </button>
      </div>
     </div>
+
+    {/* Refresh Button */}
+    <button
+     onClick={onRefresh}
+     disabled={isLoading}
+     className={`px-4 py-2 border border-gray-300 rounded-lg flex items-center gap-2 text-sm font-medium ${
+      isLoading 
+       ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-500' 
+       : 'bg-white text-gray-700 hover:bg-gray-50'
+     }`}
+    >
+     <HiArrowPath className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+     {isLoading ? 'Loading...' : 'Refresh'}
+    </button>
    </div>
 
 
