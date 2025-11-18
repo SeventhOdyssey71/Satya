@@ -742,20 +742,87 @@ export class MarketplaceContractService {
   try {
    logger.info('Querying marketplace models', { limit });
 
-   // Query all MarketplaceModel objects from the contract
-   const response = await this.client.getOwnedObjects({
-    owner: MARKETPLACE_CONFIG.REGISTRY_ID, // Models are owned by the marketplace registry
-    filter: {
-     StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::MarketplaceModel`
-    },
-    options: {
-     showContent: true,
-     showType: true,
-     showOwner: true,
-     showDisplay: true,
-    },
-    limit,
-   });
+   // Try multiple approaches to find MarketplaceModel objects
+   let response;
+   
+   // Approach 1: Query by registry ownership
+   try {
+    response = await this.client.getOwnedObjects({
+     owner: MARKETPLACE_CONFIG.REGISTRY_ID,
+     filter: {
+      StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::MarketplaceModel`
+     },
+     options: {
+      showContent: true,
+      showType: true,
+      showOwner: true,
+      showDisplay: true,
+     },
+     limit,
+    });
+    
+    if (response.data && response.data.length > 0) {
+     console.log('Found marketplace models via registry ownership:', response.data.length);
+    }
+   } catch (registryError) {
+    console.log('Registry ownership query failed, trying alternative approach');
+   }
+
+   // Approach 2: Event-based query if no direct results
+   if (!response || !response.data || response.data.length === 0) {
+    console.log('No direct results, using event-based query');
+    
+    // Query ModelListed events to get marketplace model IDs
+    const eventsResponse = await this.client.queryEvents({
+     query: {
+      MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelListed`
+     },
+     limit,
+     order: 'descending'
+    });
+
+    if (eventsResponse.data && eventsResponse.data.length > 0) {
+     console.log('Found ModelListed events:', eventsResponse.data.length);
+     
+     // Extract model IDs from events and fetch the actual objects
+     const modelPromises = eventsResponse.data.map(async (event) => {
+      try {
+       const eventData = event.parsedJson as any;
+       const modelId = eventData?.model_id;
+       
+       if (modelId) {
+        console.log('Fetching marketplace model:', modelId);
+        return await this.client.getObject({
+         id: modelId,
+         options: {
+          showContent: true,
+          showType: true,
+          showOwner: true,
+          showDisplay: true,
+         }
+        });
+       }
+       return null;
+      } catch (err) {
+       console.warn('Failed to fetch model object', { modelId: event.parsedJson, error: err });
+       return null;
+      }
+     });
+
+     const models = await Promise.all(modelPromises);
+     const validModels = models.filter(model => model && model.data);
+     
+     console.log('Successfully fetched marketplace models from events:', validModels.length);
+     
+     // Transform to expected format
+     response = {
+      data: validModels.map(model => ({ data: model!.data }))
+     };
+    } else {
+     console.log('No ModelListed events found');
+     response = { data: [] };
+    }
+   }
 
    if (!response.data) {
     logger.warn('No marketplace models found');
@@ -764,10 +831,25 @@ export class MarketplaceContractService {
 
    logger.info('Found marketplace models', { 
     count: response.data.length,
-    objects: response.data.map(obj => obj.data?.objectId)
+    objects: response.data.map(obj => ({
+     id: obj.data?.objectId,
+     type: obj.data?.type,
+     hasContent: !!obj.data?.content
+    }))
    });
 
-   return response.data.filter(obj => obj.data !== null);
+   const filteredData = response.data.filter(obj => obj.data !== null);
+   
+   console.log('Marketplace models raw data:', {
+    total: filteredData.length,
+    sample: filteredData[0] ? {
+     objectId: filteredData[0].data?.objectId,
+     type: filteredData[0].data?.type,
+     content: filteredData[0].data?.content
+    } : null
+   });
+
+   return filteredData;
 
   } catch (error) {
    logger.error('Failed to query marketplace models', {
