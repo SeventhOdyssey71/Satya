@@ -163,6 +163,10 @@ export function ModelVerificationFlow({
    return;
   }
 
+  // Check if wallet is connected to the right network
+  const currentNetwork = process.env.NEXT_PUBLIC_SUI_NETWORK || 'testnet';
+  console.log(`App is configured for ${currentNetwork} network`);
+
   setIsVerifyingOnChain(true);
   setError(null);
 
@@ -191,6 +195,9 @@ export function ModelVerificationFlow({
     toSuiAddress: async () => account.address,
     executeTransaction: async (tx: Transaction) => {
      try {
+      console.log('Requesting transaction signature from user...');
+      
+      // This will show the wallet popup and wait for user to sign
       const result = await signAndExecuteTransaction({ 
        transaction: tx,
        options: {
@@ -200,11 +207,18 @@ export function ModelVerificationFlow({
         showBalanceChanges: true,
        }
       });
-      console.log('Transaction execution result:', result);
+      
+      console.log('User signed transaction successfully:', result);
       return result;
      } catch (error) {
-      console.error('Transaction execution failed:', error);
-      throw error;
+      // Only log error if it's not a user rejection
+      if (error instanceof Error && error.message.includes('User rejected')) {
+       console.log('User rejected transaction signing');
+       throw new Error('Transaction was cancelled by user');
+      } else {
+       console.error('Transaction execution failed:', error);
+       throw error;
+      }
      }
     }
    };
@@ -276,7 +290,20 @@ export function ModelVerificationFlow({
 
   } catch (err) {
    console.error('Real blockchain verification failed:', err);
-   setError(err instanceof Error ? err.message : 'Blockchain verification failed');
+   
+   // Handle different types of errors appropriately
+   let errorMessage = 'Blockchain verification failed';
+   if (err instanceof Error) {
+    if (err.message.includes('User rejected') || err.message.includes('cancelled')) {
+     errorMessage = 'Transaction was cancelled by user';
+    } else if (err.message.includes('MoveAbort')) {
+     errorMessage = 'Smart contract execution failed. Please check if the model is in the correct state.';
+    } else {
+     errorMessage = err.message;
+    }
+   }
+   
+   setError(errorMessage);
   } finally {
    setIsVerifyingOnChain(false);
   }
@@ -330,7 +357,7 @@ export function ModelVerificationFlow({
       {isVerifyingOnChain ? (
        <div className="flex items-center gap-2">
         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-        <span>Verifying...</span>
+        <span>Please sign in wallet...</span>
        </div>
       ) : !account ? (
        <span>Connect Wallet</span>
