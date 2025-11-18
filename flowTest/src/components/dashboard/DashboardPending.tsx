@@ -193,7 +193,8 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
    // Refresh models to get updated status
    await loadPendingModels();
    
-   alert(`Model verification completed!\nVerification ID: ${verificationId}\nTransaction: ${transactionDigest.slice(0, 20)}...`);
+   // Show success notification
+   alert(`🎉 Model verification completed successfully!\n\n✅ Your model has been verified and listed on the marketplace\n📈 Users can now discover and purchase your model\n🔗 Transaction: ${transactionDigest.slice(0, 20)}...\n\n👉 Visit the Marketplace tab to see your model!`);
   } catch (error) {
    console.error('Failed to handle verification completion:', error);
   }

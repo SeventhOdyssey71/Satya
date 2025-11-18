@@ -740,15 +740,87 @@ export class MarketplaceContractService {
   */
  async getMarketplaceModels(limit = 50): Promise<any[]> {
   try {
-   // TODO: Implement proper querying when SuiClient API is stable
-   logger.warn('getMarketplaceModels not implemented yet');
-   return [];
+   logger.info('Querying marketplace models', { limit });
+
+   // Query all MarketplaceModel objects from the contract
+   const response = await this.client.getOwnedObjects({
+    owner: MARKETPLACE_CONFIG.REGISTRY_ID, // Models are owned by the marketplace registry
+    filter: {
+     StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::MarketplaceModel`
+    },
+    options: {
+     showContent: true,
+     showType: true,
+     showOwner: true,
+     showDisplay: true,
+    },
+    limit,
+   });
+
+   if (!response.data) {
+    logger.warn('No marketplace models found');
+    return [];
+   }
+
+   logger.info('Found marketplace models', { 
+    count: response.data.length,
+    objects: response.data.map(obj => obj.data?.objectId)
+   });
+
+   return response.data.filter(obj => obj.data !== null);
 
   } catch (error) {
    logger.error('Failed to query marketplace models', {
     error: error instanceof Error ? error.message : String(error)
    });
-   return [];
+   
+   // Fallback: Try querying by package type without owner filter
+   try {
+    logger.info('Trying fallback query for marketplace models');
+    
+    const response = await this.client.queryEvents({
+     query: {
+      MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelListed`
+     },
+     limit,
+     order: 'descending'
+    });
+
+    if (response.data && response.data.length > 0) {
+     logger.info('Found marketplace models via events', { count: response.data.length });
+     
+     // Extract model IDs from events and fetch the actual objects
+     const modelPromises = response.data.map(async (event) => {
+      try {
+       const modelId = (event.parsedJson as any)?.model_id;
+       if (modelId) {
+        return await this.client.getObject({
+         id: modelId,
+         options: {
+          showContent: true,
+          showType: true,
+          showOwner: true,
+          showDisplay: true,
+         }
+        });
+       }
+      } catch (err) {
+       logger.warn('Failed to fetch model object', { modelId: modelId, error: err });
+       return null;
+      }
+     });
+
+     const models = await Promise.all(modelPromises);
+     return models.filter(model => model && model.data).map(model => ({ data: model!.data }));
+    }
+    
+    return [];
+   } catch (fallbackError) {
+    logger.error('Fallback query also failed', {
+     error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
+    });
+    return [];
+   }
   }
  }
 
