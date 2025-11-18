@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Header from '@/components/ui/Header'
 import DashboardOverview from '@/components/dashboard/DashboardOverview'
@@ -11,7 +11,7 @@ import DashboardDownloads from '@/components/dashboard/DashboardDownloads'
 // Disable static generation to avoid service initialization issues during build
 export const dynamic = 'force-dynamic'
 
-export default function DashboardPage() {
+function DashboardContent() {
  const [isConnected] = useState(true) // Simplified for now
  const [activeTab, setActiveTab] = useState<'overview' | 'pending' | 'history' | 'downloads'>('overview')
  const [pendingRefresh, setPendingRefresh] = useState(false)
@@ -134,5 +134,13 @@ export default function DashboardPage() {
     </div>
    </main>
   </div>
+ )
+}
+
+export default function DashboardPage() {
+ return (
+  <Suspense fallback={<div>Loading dashboard...</div>}>
+   <DashboardContent />
+  </Suspense>
  )
 }

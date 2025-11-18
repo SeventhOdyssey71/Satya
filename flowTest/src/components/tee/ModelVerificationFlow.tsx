@@ -6,7 +6,7 @@ import { useSignAndExecuteTransaction, useCurrentAccount } from '@mysten/dapp-ki
 import { Transaction } from '@mysten/sui/transactions';
 
 interface ModelVerificationFlowProps {
- pendingModelId: string;
+ pendingModelId?: string;
  modelBlobId: string;
  datasetBlobId?: string;
  modelName: string;
@@ -158,6 +158,11 @@ export function ModelVerificationFlow({
    return;
   }
 
+  if (!pendingModelId) {
+   setError('No pending model ID provided - blockchain verification not available');
+   return;
+  }
+
   setIsVerifyingOnChain(true);
   setError(null);
 
@@ -281,8 +286,8 @@ export function ModelVerificationFlow({
     </button>
    </div>
 
-   {/* Blockchain verification section */}
-   {attestationData && !verificationResult && (
+   {/* Blockchain verification section - only show if we have a pending model ID */}
+   {attestationData && !verificationResult && pendingModelId && (
     <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
      <div className="flex items-center gap-3">
       <span className="text-sm font-medium text-green-900">Blockchain Verification</span>
