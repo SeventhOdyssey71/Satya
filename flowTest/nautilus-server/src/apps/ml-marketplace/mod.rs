@@ -111,8 +111,8 @@ pub async fn process_data(
     
     // Step 5: Create comprehensive quality response
     let quality_response = MLQualityResponse {
-        model_hash,
-        dataset_hash,
+        model_hash: model_hash.clone(),
+        dataset_hash: dataset_hash.clone(),
         quality_score: assessment_result.overall_quality_score,
         accuracy_metrics: assessment_result.accuracy,
         performance_metrics: PerformanceMetrics {
@@ -136,6 +136,18 @@ pub async fn process_data(
     info!("Quality assessment completed in {}ms. Overall score: {}", 
                processing_time, quality_response.quality_score);
 
+    // Generate additional integrity signatures for the assessment
+    let assessment_hash = generate_assessment_integrity_hash(&quality_response, current_timestamp);
+    let model_verification_signature = generate_model_verification_signature(
+        &model_hash, 
+        &dataset_hash, 
+        quality_response.quality_score,
+        &state.eph_kp
+    );
+    
+    info!("Generated assessment hash: {}", &assessment_hash[..16]);
+    info!("Generated model verification signature: {}", &model_verification_signature[..16]);
+
     Ok(Json(to_signed_response(
         &state.eph_kp,
         quality_response,
@@ -146,28 +158,65 @@ pub async fn process_data(
 
 /// Download blob from Walrus storage and compute hash
 async fn download_and_hash_blob(blob_id: &str) -> Result<(Vec<u8>, String), EnclaveError> {
-    // In production, this would download from Walrus aggregator
-    // For now, we'll simulate with mock data based on blob_id
-    info!("Downloading blob: {}", blob_id);
+    info!("Downloading blob from Walrus: {}", blob_id);
     
-    // TODO: Replace with actual Walrus integration
-    // let url = format!("https://aggregator-devnet.walrus.space/v1/{}", blob_id);
-    // let response = reqwest::get(&url).await.map_err(|e| {
-    //     EnclaveError::GenericError(format!("Failed to download blob {}: {}", blob_id, e))
-    // })?;
-    // let data = response.bytes().await.map_err(|e| {
-    //     EnclaveError::GenericError(format!("Failed to read blob data: {}", e))
-    // })?.to_vec();
+    // Check environment variable for enabling real downloads
+    let use_real_downloads = std::env::var("WALRUS_REAL_DOWNLOADS")
+        .map(|v| v.to_lowercase() == "true" || v == "1")
+        .unwrap_or(false);
     
-    // Mock implementation for development
-    let data = generate_mock_data_for_blob(blob_id)?;
+    let data = if use_real_downloads {
+        // Real Walrus blob download
+        download_from_walrus(blob_id).await?
+    } else {
+        // Fallback to mock data for development
+        info!("Using mock data for blob: {} (set WALRUS_REAL_DOWNLOADS=true for real downloads)", blob_id);
+        generate_mock_data_for_blob(blob_id)?
+    };
     
     // Compute SHA-256 hash
     let mut hasher = Sha256::new();
     hasher.update(&data);
     let hash = format!("{:x}", hasher.finalize());
     
+    info!("Blob downloaded: {} bytes, hash: {}", data.len(), &hash[..16]);
     Ok((data, hash))
+}
+
+/// Download blob from actual Walrus aggregator
+async fn download_from_walrus(blob_id: &str) -> Result<Vec<u8>, EnclaveError> {
+    let aggregator_url = std::env::var("WALRUS_AGGREGATOR_URL")
+        .unwrap_or_else(|_| "https://aggregator-devnet.walrus.space".to_string());
+    
+    let url = format!("{}/v1/{}", aggregator_url, blob_id);
+    info!("Fetching from Walrus: {}", url);
+    
+    let client = reqwest::Client::new();
+    let response = client.get(&url)
+        .timeout(std::time::Duration::from_secs(30))
+        .send()
+        .await
+        .map_err(|e| EnclaveError::GenericError(format!("Failed to download blob {}: {}", blob_id, e)))?;
+    
+    if !response.status().is_success() {
+        return Err(EnclaveError::GenericError(format!(
+            "Walrus returned status {}: {}", 
+            response.status(),
+            response.text().await.unwrap_or_else(|_| "unknown error".to_string())
+        )));
+    }
+    
+    let data = response.bytes()
+        .await
+        .map_err(|e| EnclaveError::GenericError(format!("Failed to read blob data: {}", e)))?
+        .to_vec();
+    
+    if data.is_empty() {
+        return Err(EnclaveError::GenericError("Downloaded blob is empty".to_string()));
+    }
+    
+    info!("Successfully downloaded {} bytes from Walrus", data.len());
+    Ok(data)
 }
 
 /// Generate mock data for development/testing
@@ -263,46 +312,214 @@ struct AssessmentResult {
 }
 
 /// Validate and load model from binary data
-fn validate_and_load_model(data: &[u8], type_hint: &Option<String>) -> Result<ModelInfo, EnclaveError> {
+fn validate_and_load_model(data: &[u8], _type_hint: &Option<String>) -> Result<ModelInfo, EnclaveError> {
     info!("Validating model data ({} bytes)", data.len());
     
-    // Parse mock model metadata
-    let metadata_end = data.iter().position(|&b| b == b'}').unwrap_or(200);
-    let metadata_str = std::str::from_utf8(&data[..metadata_end + 1])
-        .map_err(|e| EnclaveError::GenericError(format!("Invalid UTF-8 in model metadata: {}", e)))?;
+    // Try to detect model format based on file headers and content
+    let model_info = if is_onnx_model(data) {
+        analyze_onnx_model(data)?
+    } else if is_pytorch_model(data) {
+        analyze_pytorch_model(data)?
+    } else if is_tensorflow_model(data) {
+        analyze_tensorflow_model(data)?
+    } else {
+        // Fallback: try to parse as JSON metadata (for mock models)
+        parse_json_model_metadata(data)?
+    };
     
-    let metadata: serde_json::Value = serde_json::from_str(metadata_str)
-        .map_err(|e| EnclaveError::GenericError(format!("Invalid JSON metadata: {}", e)))?;
+    // Validate model structure
+    if model_info.parameters == 0 {
+        return Err(EnclaveError::GenericError("Model has no parameters".to_string()));
+    }
+    
+    if model_info.input_shape.is_empty() || model_info.output_shape.is_empty() {
+        return Err(EnclaveError::GenericError("Invalid model input/output shapes".to_string()));
+    }
+    
+    info!("Validated {} model with {} parameters", model_info.framework, model_info.parameters);
+    Ok(model_info)
+}
+
+/// Check if data represents an ONNX model
+fn is_onnx_model(data: &[u8]) -> bool {
+    // ONNX models start with protobuf magic bytes
+    data.len() > 8 && data.starts_with(&[0x08, 0x01, 0x12]) // Simplified check
+}
+
+/// Check if data represents a PyTorch model
+fn is_pytorch_model(data: &[u8]) -> bool {
+    // PyTorch models often contain pickle magic number
+    data.len() > 4 && (data.starts_with(b"\x80\x03") || data.starts_with(b"PK\x03\x04")) // Pickle or ZIP
+}
+
+/// Check if data represents a TensorFlow model
+fn is_tensorflow_model(data: &[u8]) -> bool {
+    // TensorFlow SavedModel contains specific directory structure when zipped
+    data.len() > 4 && data.starts_with(b"PK\x03\x04") && 
+    std::str::from_utf8(data).unwrap_or("").contains("saved_model.pb")
+}
+
+/// Analyze ONNX model (simplified analysis)
+fn analyze_onnx_model(data: &[u8]) -> Result<ModelInfo, EnclaveError> {
+    info!("Analyzing ONNX model");
+    
+    // In a real implementation, you'd parse the ONNX protobuf
+    // For now, estimate based on file size
+    let estimated_params = estimate_parameters_from_size(data.len());
     
     Ok(ModelInfo {
-        model_type: metadata["model_type"].as_str().unwrap_or("unknown").to_string(),
-        framework: metadata["framework"].as_str().unwrap_or("unknown").to_string(),
-        parameters: metadata["parameters"].as_u64().unwrap_or(0),
-        input_shape: vec![1, 784], // Mock shape
-        output_shape: vec![1, 10], // Mock shape
+        model_type: "deep_neural_network".to_string(),
+        framework: "onnx".to_string(),
+        parameters: estimated_params,
+        input_shape: vec![1, 3, 224, 224], // Common image input
+        output_shape: vec![1, 1000], // ImageNet classes
     })
 }
 
+/// Analyze PyTorch model (simplified analysis)
+fn analyze_pytorch_model(data: &[u8]) -> Result<ModelInfo, EnclaveError> {
+    info!("Analyzing PyTorch model");
+    
+    let estimated_params = estimate_parameters_from_size(data.len());
+    
+    Ok(ModelInfo {
+        model_type: "neural_network".to_string(),
+        framework: "pytorch".to_string(),
+        parameters: estimated_params,
+        input_shape: vec![1, 784], // MNIST-like input
+        output_shape: vec![1, 10], // Classification output
+    })
+}
+
+/// Analyze TensorFlow model (simplified analysis)
+fn analyze_tensorflow_model(data: &[u8]) -> Result<ModelInfo, EnclaveError> {
+    info!("Analyzing TensorFlow model");
+    
+    let estimated_params = estimate_parameters_from_size(data.len());
+    
+    Ok(ModelInfo {
+        model_type: "neural_network".to_string(),
+        framework: "tensorflow".to_string(),
+        parameters: estimated_params,
+        input_shape: vec![1, 28, 28, 1], // MNIST input
+        output_shape: vec![1, 10], // Classification output
+    })
+}
+
+/// Estimate number of parameters based on model file size
+fn estimate_parameters_from_size(file_size: usize) -> u64 {
+    // Rough estimate: 4 bytes per float32 parameter, plus overhead
+    let estimated_params = file_size / 6; // Account for some overhead
+    estimated_params.max(1000).min(1_000_000_000) as u64 // Reasonable bounds
+}
+
+/// Parse JSON model metadata (fallback for mock models)
+fn parse_json_model_metadata(data: &[u8]) -> Result<ModelInfo, EnclaveError> {
+    let metadata_end = data.iter().position(|&b| b == b'}').unwrap_or(200.min(data.len()));
+    let metadata_str = std::str::from_utf8(&data[..metadata_end])
+        .map_err(|e| EnclaveError::GenericError(format!("Invalid UTF-8 in model metadata: {}", e)))?;
+    
+    if let Ok(metadata) = serde_json::from_str::<serde_json::Value>(metadata_str) {
+        Ok(ModelInfo {
+            model_type: metadata["model_type"].as_str().unwrap_or("unknown").to_string(),
+            framework: metadata["framework"].as_str().unwrap_or("unknown").to_string(),
+            parameters: metadata["parameters"].as_u64().unwrap_or(estimate_parameters_from_size(data.len())),
+            input_shape: vec![1, 784],
+            output_shape: vec![1, 10],
+        })
+    } else {
+        // Binary model without metadata - make educated guesses
+        Ok(ModelInfo {
+            model_type: "neural_network".to_string(),
+            framework: "unknown".to_string(),
+            parameters: estimate_parameters_from_size(data.len()),
+            input_shape: vec![1, 784],
+            output_shape: vec![1, 10],
+        })
+    }
+}
+
 /// Validate and process dataset
-fn validate_and_process_dataset(data: &[u8], format_hint: &Option<String>) -> Result<DatasetInfo, EnclaveError> {
+fn validate_and_process_dataset(data: &[u8], _format_hint: &Option<String>) -> Result<DatasetInfo, EnclaveError> {
     info!("Validating dataset ({} bytes)", data.len());
     
-    let data_str = std::str::from_utf8(data)
-        .map_err(|e| EnclaveError::GenericError(format!("Invalid UTF-8 in dataset: {}", e)))?;
+    // Detect dataset format
+    let dataset_info = if is_csv_dataset(data) {
+        process_csv_dataset(data)?
+    } else if is_json_dataset(data) {
+        process_json_dataset(data)?
+    } else if is_parquet_dataset(data) {
+        process_parquet_dataset(data)?
+    } else if is_image_dataset(data) {
+        process_image_dataset(data)?
+    } else {
+        return Err(EnclaveError::GenericError("Unsupported dataset format".to_string()));
+    };
     
-    // Parse CSV data
-    let lines: Vec<&str> = data_str.lines().collect();
-    if lines.is_empty() {
-        return Err(EnclaveError::GenericError("Empty dataset".to_string()));
+    // Validate dataset quality
+    if dataset_info.rows == 0 {
+        return Err(EnclaveError::GenericError("Dataset contains no data rows".to_string()));
     }
     
+    if dataset_info.columns == 0 {
+        return Err(EnclaveError::GenericError("Dataset contains no columns".to_string()));
+    }
+    
+    info!("Validated {} dataset with {} rows and {} columns", 
+          dataset_info.format, dataset_info.rows, dataset_info.columns);
+    
+    Ok(dataset_info)
+}
+
+/// Check if data is CSV format
+fn is_csv_dataset(data: &[u8]) -> bool {
+    if let Ok(text) = std::str::from_utf8(data) {
+        let first_line = text.lines().next().unwrap_or("");
+        first_line.contains(',') && first_line.split(',').count() > 1
+    } else {
+        false
+    }
+}
+
+/// Check if data is JSON format
+fn is_json_dataset(data: &[u8]) -> bool {
+    data.starts_with(b"{") || data.starts_with(b"[")
+}
+
+/// Check if data is Parquet format
+fn is_parquet_dataset(data: &[u8]) -> bool {
+    data.starts_with(b"PAR1") // Parquet magic number
+}
+
+/// Check if data is image dataset (ZIP archive with images)
+fn is_image_dataset(data: &[u8]) -> bool {
+    data.starts_with(b"PK\x03\x04") // ZIP magic number
+}
+
+/// Process CSV dataset
+fn process_csv_dataset(data: &[u8]) -> Result<DatasetInfo, EnclaveError> {
+    let data_str = std::str::from_utf8(data)
+        .map_err(|e| EnclaveError::GenericError(format!("Invalid UTF-8 in CSV: {}", e)))?;
+    
+    let lines: Vec<&str> = data_str.lines().filter(|line| !line.trim().is_empty()).collect();
+    if lines.is_empty() {
+        return Err(EnclaveError::GenericError("Empty CSV dataset".to_string()));
+    }
+    
+    // Parse header
     let header = lines[0];
-    let columns: Vec<&str> = header.split(',').collect();
+    let columns: Vec<&str> = header.split(',').map(|s| s.trim()).collect();
     let rows = lines.len() - 1; // Exclude header
     
+    // Analyze data types by sampling first few rows
     let mut data_types = HashMap::new();
-    for column in &columns {
-        data_types.insert(column.to_string(), "numeric".to_string());
+    for (i, column) in columns.iter().enumerate() {
+        let column_type = if lines.len() > 1 {
+            analyze_csv_column_type(&lines[1..], i)
+        } else {
+            "unknown".to_string()
+        };
+        data_types.insert(column.to_string(), column_type);
     }
     
     Ok(DatasetInfo {
@@ -311,6 +528,105 @@ fn validate_and_process_dataset(data: &[u8], format_hint: &Option<String>) -> Re
         columns: columns.len() as u64,
         data_types,
     })
+}
+
+/// Process JSON dataset
+fn process_json_dataset(data: &[u8]) -> Result<DatasetInfo, EnclaveError> {
+    let json_str = std::str::from_utf8(data)
+        .map_err(|e| EnclaveError::GenericError(format!("Invalid UTF-8 in JSON: {}", e)))?;
+    
+    let json_value: serde_json::Value = serde_json::from_str(json_str)
+        .map_err(|e| EnclaveError::GenericError(format!("Invalid JSON: {}", e)))?;
+    
+    match &json_value {
+        serde_json::Value::Array(array) => {
+            let rows = array.len() as u64;
+            let columns = if let Some(first_obj) = array.first() {
+                if let serde_json::Value::Object(obj) = first_obj {
+                    obj.len() as u64
+                } else {
+                    1
+                }
+            } else {
+                0
+            };
+            
+            let mut data_types = HashMap::new();
+            if let Some(serde_json::Value::Object(first_obj)) = array.first() {
+                for (key, value) in first_obj {
+                    let type_name = match value {
+                        serde_json::Value::Number(_) => "numeric",
+                        serde_json::Value::String(_) => "text",
+                        serde_json::Value::Bool(_) => "boolean",
+                        _ => "mixed",
+                    };
+                    data_types.insert(key.clone(), type_name.to_string());
+                }
+            }
+            
+            Ok(DatasetInfo {
+                format: "json".to_string(),
+                rows,
+                columns,
+                data_types,
+            })
+        },
+        _ => Err(EnclaveError::GenericError("JSON must be an array of objects".to_string())),
+    }
+}
+
+/// Process Parquet dataset (simplified)
+fn process_parquet_dataset(_data: &[u8]) -> Result<DatasetInfo, EnclaveError> {
+    // In a real implementation, you'd use the parquet crate
+    // For now, return estimated information
+    Ok(DatasetInfo {
+        format: "parquet".to_string(),
+        rows: 1000, // Estimated
+        columns: 10, // Estimated
+        data_types: HashMap::from([
+            ("col1".to_string(), "numeric".to_string()),
+            ("col2".to_string(), "text".to_string()),
+        ]),
+    })
+}
+
+/// Process image dataset (ZIP archive)
+fn process_image_dataset(_data: &[u8]) -> Result<DatasetInfo, EnclaveError> {
+    // In a real implementation, you'd extract and analyze images
+    // For now, return estimated information
+    Ok(DatasetInfo {
+        format: "image_archive".to_string(),
+        rows: 1000, // Number of images
+        columns: 3, // RGB channels typically
+        data_types: HashMap::from([
+            ("image_data".to_string(), "image".to_string()),
+            ("label".to_string(), "categorical".to_string()),
+        ]),
+    })
+}
+
+/// Analyze CSV column type by sampling values
+fn analyze_csv_column_type(lines: &[&str], column_index: usize) -> String {
+    let mut numeric_count = 0;
+    let mut total_count = 0;
+    
+    for line in lines.iter().take(10) { // Sample first 10 rows
+        let values: Vec<&str> = line.split(',').collect();
+        if let Some(value) = values.get(column_index) {
+            total_count += 1;
+            if value.trim().parse::<f64>().is_ok() {
+                numeric_count += 1;
+            }
+        }
+    }
+    
+    if total_count == 0 {
+        "unknown".to_string()
+    } else if numeric_count as f64 / total_count as f64 > 0.8 {
+        "numeric".to_string()
+    } else {
+        "text".to_string()
+    }
 }
 
 /// Perform comprehensive quality assessment
@@ -382,6 +698,64 @@ fn perform_quality_assessment(
         data_integrity_score,
         bias_assessment,
     })
+}
+
+/// Generate integrity hash for the assessment result
+fn generate_assessment_integrity_hash(response: &MLQualityResponse, timestamp: u64) -> String {
+    use sha2::{Sha256, Digest};
+    
+    let mut hasher = Sha256::new();
+    
+    // Hash key components of the assessment
+    hasher.update(response.model_hash.as_bytes());
+    hasher.update(response.dataset_hash.as_bytes());
+    hasher.update(&response.quality_score.to_be_bytes());
+    hasher.update(&response.accuracy_metrics.precision.to_be_bytes());
+    hasher.update(&response.accuracy_metrics.recall.to_be_bytes());
+    hasher.update(&response.accuracy_metrics.f1_score.to_be_bytes());
+    hasher.update(&response.performance_metrics.inference_time_ms.to_be_bytes());
+    hasher.update(&response.performance_metrics.memory_usage_mb.to_be_bytes());
+    hasher.update(&response.data_integrity_score.to_be_bytes());
+    hasher.update(&response.bias_assessment.fairness_score.to_be_bytes());
+    hasher.update(&timestamp.to_be_bytes());
+    hasher.update(response.model_type.as_bytes());
+    hasher.update(response.dataset_format.as_bytes());
+    
+    format!("{:x}", hasher.finalize())
+}
+
+/// Generate cryptographic signature for model verification
+fn generate_model_verification_signature(
+    model_hash: &str, 
+    dataset_hash: &str, 
+    quality_score: u64,
+    keypair: &fastcrypto::ed25519::Ed25519KeyPair
+) -> String {
+    use fastcrypto::traits::Signer;
+    
+    // Create a verification message to sign
+    let mut hasher = Sha256::new();
+    hasher.update(b"MODEL_VERIFICATION_V1:");
+    hasher.update(model_hash.as_bytes());
+    hasher.update(b":");
+    hasher.update(dataset_hash.as_bytes());
+    hasher.update(b":");
+    hasher.update(&quality_score.to_be_bytes());
+    hasher.update(b":");
+    hasher.update(&std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
+        .to_be_bytes());
+    
+    let message_hash = hasher.finalize();
+    
+    // Sign the hash with the ephemeral keypair
+    let signature = keypair.sign(&message_hash);
+    
+    // Return base64-encoded signature
+    use base64::{Engine, engine::general_purpose::STANDARD};
+    STANDARD.encode(signature.as_ref())
 }
 
 #[cfg(test)]
