@@ -190,8 +190,22 @@ export function ModelVerificationFlow({
    const walletSigner = {
     toSuiAddress: async () => account.address,
     executeTransaction: async (tx: Transaction) => {
-     const result = await signAndExecuteTransaction({ transaction: tx });
-     return result;
+     try {
+      const result = await signAndExecuteTransaction({ 
+       transaction: tx,
+       options: {
+        showEffects: true,
+        showEvents: true,
+        showObjectChanges: true,
+        showBalanceChanges: true,
+       }
+      });
+      console.log('Transaction execution result:', result);
+      return result;
+     } catch (error) {
+      console.error('Transaction execution failed:', error);
+      throw error;
+     }
     }
    };
 

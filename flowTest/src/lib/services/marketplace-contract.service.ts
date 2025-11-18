@@ -468,11 +468,7 @@ export class MarketplaceContractService {
 
    const pendingModel = tx.object(pendingModelId);
 
-   tx.moveCall({
-    target: `0x2::clock::create_for_testing`,
-    arguments: [tx.pure.u64(Date.now())]
-   });
-
+   // Use the shared clock object for testnet
    const verificationResult = tx.moveCall({
     target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::complete_verification`,
     arguments: [
@@ -483,7 +479,7 @@ export class MarketplaceContractService {
      tx.pure.string(params.securityAssessment),
      tx.pure.vector('u8', Array.from(params.attestationHash)),
      tx.pure.vector('u8', Array.from(params.verifierSignature)),
-     tx.object('0x6'), // Clock
+     tx.object('0x6'), // Clock shared object on testnet
     ],
    });
 
@@ -552,18 +548,14 @@ export class MarketplaceContractService {
    const pendingModel = tx.object(pendingModelId);
    const verification = tx.object(verificationId);
 
-   tx.moveCall({
-    target: `0x2::clock::create_for_testing`,
-    arguments: [tx.pure.u64(Date.now())]
-   });
-
+   // Use the shared clock object for testnet
    const marketplaceModel = tx.moveCall({
     target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::list_on_marketplace`,
     arguments: [
      pendingModel,
      verification,
      tx.object(MARKETPLACE_CONFIG.REGISTRY_ID),
-     tx.object('0x6'), // Clock
+     tx.object('0x6'), // Clock shared object on testnet
     ],
    });
 
