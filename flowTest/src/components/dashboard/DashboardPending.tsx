@@ -166,9 +166,23 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
  // Load models on mount and account change
  useEffect(() => {
   if (contractService && currentAccount?.address) {
+   console.log('Loading pending models on mount/account change');
    loadPendingModels();
   }
  }, [contractService, currentAccount?.address]);
+
+ // Auto-refresh every 30 seconds when component is active
+ useEffect(() => {
+  if (!contractService || !currentAccount?.address) return;
+
+  const interval = setInterval(() => {
+   console.log('Auto-refreshing pending models...');
+   loadPendingModels();
+   refresh();
+  }, 30000); // 30 seconds
+
+  return () => clearInterval(interval);
+ }, [contractService, currentAccount?.address, refresh]);
 
  // Handle external refresh trigger (e.g., from upload completion)
  useEffect(() => {
@@ -229,17 +243,33 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
        Last updated: {state.lastRefresh.toLocaleTimeString()}
       </span>
      )}
-     <button
-      onClick={() => {
-       refresh(); // Use hook's refresh
-       loadPendingModels(); // Also refresh local state
-      }}
-      disabled={state.isLoading || isLoading}
-      className="flex items-center gap-2 px-3 py-1 text-gray-600 hover:text-gray-900 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
-     >
-      <TbRefresh className={`h-4 w-4 ${(state.isLoading || isLoading) ? 'animate-spin' : ''}`} />
-      Refresh
-     </button>
+     <div className="flex gap-2">
+      <button
+       onClick={() => {
+        refresh(); // Use hook's refresh
+        loadPendingModels(); // Also refresh local state
+       }}
+       disabled={state.isLoading || isLoading}
+       className="flex items-center gap-2 px-3 py-1 text-gray-600 hover:text-gray-900 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+      >
+       <TbRefresh className={`h-4 w-4 ${(state.isLoading || isLoading) ? 'animate-spin' : ''}`} />
+       Refresh
+      </button>
+      
+      <button
+       onClick={() => {
+        console.log('Force refreshing - clearing cache and reloading...');
+        setState(prev => ({ ...prev, pendingModels: [] })); // Clear state
+        refresh(); // Use hook's refresh
+        loadPendingModels(); // Also refresh local state
+       }}
+       disabled={state.isLoading || isLoading}
+       className="flex items-center gap-2 px-3 py-1 text-red-600 hover:text-red-900 text-sm border border-red-300 rounded-md hover:bg-red-50"
+      >
+       <TbRefresh className={`h-4 w-4 ${(state.isLoading || isLoading) ? 'animate-spin' : ''}`} />
+       Force Refresh
+      </button>
+     </div>
     </div>
    </div>
 

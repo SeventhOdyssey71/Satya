@@ -973,6 +973,13 @@ export class MarketplaceContractService {
    });
 
    console.log('Total owned objects:', ownedObjects.data.length);
+   
+   // Debug: Log all owned object types to see what we have
+   const objectTypes = ownedObjects.data.map(obj => ({
+    id: obj.data?.objectId?.slice(0, 8),
+    type: obj.data?.type
+   }));
+   console.log('Owned object types sample:', objectTypes.slice(0, 10));
 
    // Filter for PendingModel objects that haven't been listed on marketplace
    const allPendingModels = ownedObjects.data.filter(obj => {
@@ -987,16 +994,23 @@ export class MarketplaceContractService {
     if (!objectId) return false;
     const isListed = listedModelIds.has(objectId);
     
+    // Check age - exclude models older than 24 hours to clean up stale entries
+    const content = obj.data?.content as any;
+    const createdAt = content?.fields?.created_at;
+    const now = Date.now();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    const isOld = createdAt && (now - parseInt(createdAt)) > twentyFourHours;
+    
     console.log('Pending model check:', {
-     objectId: objectId,
+     objectId: objectId?.slice(0, 8),
      isListed: isListed,
-     willInclude: !isListed,
-     listedModelIdsHas: listedModelIds.has(objectId),
-     listedModelIdsSize: listedModelIds.size
+     isOld: isOld,
+     createdAt: createdAt ? new Date(parseInt(createdAt)).toISOString() : 'unknown',
+     willInclude: !isListed && !isOld
     });
     
-    // Only include pending models that haven't been listed on marketplace
-    return !isListed;
+    // Only include pending models that haven't been listed and aren't too old
+    return !isListed && !isOld;
    });
 
    console.log(`Found ${pendingModels.length} pending models for user`);
