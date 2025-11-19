@@ -29,6 +29,7 @@ interface PendingModel {
 
 interface DashboardState {
  pendingModels: PendingModel[];
+ completedModels: PendingModel[]; // Reuse same interface for completed models
  isLoading: boolean;
  error: string | null;
  lastRefresh: Date | null;
@@ -48,6 +49,7 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
  
  const [state, setState] = useState<DashboardState>({
   pendingModels: [],
+  completedModels: [],
   isLoading: true,
   error: null,
   lastRefresh: null
@@ -132,6 +134,25 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
   }
  };
 
+ const loadCompletedModels = async () => {
+  if (!contractService || !currentAccount?.address) return;
+
+  try {
+   console.log('Loading completed models...');
+   
+   const models = await contractService.getUserCompletedModels(currentAccount.address);
+   console.log('Loaded completed models:', models);
+   
+   setState(prev => ({
+    ...prev,
+    completedModels: models
+   }));
+   
+  } catch (error) {
+   console.error('Error loading completed models:', error);
+  }
+ };
+
  // Sync hook data with local state
  useEffect(() => {
   if (hookPendingModels && hookPendingModels.length > 0) {
@@ -166,8 +187,9 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
  // Load models on mount and account change
  useEffect(() => {
   if (contractService && currentAccount?.address) {
-   console.log('Loading pending models on mount/account change');
+   console.log('Loading models on mount/account change');
    loadPendingModels();
+   loadCompletedModels();
   }
  }, [contractService, currentAccount?.address]);
 
@@ -176,8 +198,9 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
   if (!contractService || !currentAccount?.address) return;
 
   const interval = setInterval(() => {
-   console.log('Auto-refreshing pending models...');
+   console.log('Auto-refreshing models...');
    loadPendingModels();
+   loadCompletedModels();
    refresh();
   }, 30000); // 30 seconds
 
@@ -187,9 +210,10 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
  // Handle external refresh trigger (e.g., from upload completion)
  useEffect(() => {
   if (triggerRefresh && contractService && currentAccount?.address) {
-   console.log('External refresh triggered - refreshing pending models');
+   console.log('External refresh triggered - refreshing models');
    refresh(); // Use hook's refresh
    loadPendingModels(); // Also refresh local state
+   loadCompletedModels(); // Also refresh completed models
    onRefreshComplete?.(); // Signal completion
   }
  }, [triggerRefresh, contractService, currentAccount?.address, refresh, onRefreshComplete]);
@@ -210,13 +234,14 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
    // Wait a bit for blockchain state to update, then refresh
    setTimeout(async () => {
     try {
-     console.log('Refreshing pending models after verification completion...');
+     console.log('Refreshing models after verification completion...');
      // Use both refresh methods to ensure update
      await Promise.all([
       loadPendingModels(),
+      loadCompletedModels(),
       refresh()
      ]);
-     console.log('Pending models refreshed successfully');
+     console.log('Models refreshed successfully');
     } catch (refreshError) {
      console.error('Failed to refresh after verification:', refreshError);
     }
@@ -248,6 +273,7 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
        onClick={() => {
         refresh(); // Use hook's refresh
         loadPendingModels(); // Also refresh local state
+        loadCompletedModels(); // Also refresh completed models
        }}
        disabled={state.isLoading || isLoading}
        className="flex items-center gap-2 px-3 py-1 text-gray-600 hover:text-gray-900 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
@@ -259,9 +285,10 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
       <button
        onClick={() => {
         console.log('Force refreshing - clearing cache and reloading...');
-        setState(prev => ({ ...prev, pendingModels: [] })); // Clear state
+        setState(prev => ({ ...prev, pendingModels: [], completedModels: [] })); // Clear state
         refresh(); // Use hook's refresh
         loadPendingModels(); // Also refresh local state
+        loadCompletedModels(); // Also refresh completed models
        }}
        disabled={state.isLoading || isLoading}
        className="flex items-center gap-2 px-3 py-1 text-red-600 hover:text-red-900 text-sm border border-red-300 rounded-md hover:bg-red-50"

@@ -1159,4 +1159,59 @@ export class MarketplaceContractService {
    return [];
   }
  }
+
+ /**
+  * Get completed models (models that have been verified and listed on marketplace)
+  */
+ async getUserCompletedModels(userAddress: string): Promise<any[]> {
+  try {
+   console.log('Querying completed models for user:', userAddress);
+
+   // Get all marketplace models created by this user
+   const marketplaceModels = await this.getMarketplaceModels();
+   console.log('Total marketplace models found:', marketplaceModels.length);
+   
+   const userModels = marketplaceModels.filter(model => {
+    const creator = model.data?.content?.fields?.creator;
+    return creator === userAddress;
+   });
+
+   console.log(`Found ${userModels.length} completed models for user ${userAddress}`);
+   
+   return userModels.map(obj => this.transformMarketplaceModelObject(obj));
+
+  } catch (error) {
+   logger.error('Failed to fetch completed models', { error, userAddress });
+   return [];
+  }
+ }
+
+ /**
+  * Transform marketplace model object for dashboard display
+  */
+ private transformMarketplaceModelObject(obj: any): any {
+  const content = obj.data?.content as any;
+  const fields = content?.fields || {};
+
+  return {
+   id: obj.data?.objectId || '',
+   title: fields.title || 'Untitled Model',
+   description: fields.description || '',
+   category: fields.category || 'Uncategorized',
+   tags: Array.isArray(fields.tags) ? fields.tags : [],
+   creator: fields.creator || '',
+   modelBlobId: fields.model_blob_id || '',
+   datasetBlobId: fields.dataset_blob_id || null,
+   price: fields.price || '0',
+   maxDownloads: fields.max_downloads || null,
+   qualityScore: fields.quality_score || 0,
+   teeVerified: fields.tee_verified || false,
+   currentDownloads: fields.current_downloads || 0,
+   totalEarnings: fields.total_earnings || '0',
+   listedAt: fields.listed_at || Date.now(),
+   pendingModelId: fields.pending_model_id || '',
+   verificationId: fields.verification_id || '',
+   status: 3 // STATUS_MARKETPLACE (completed)
+  };
+ }
 }

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Storage</title>
+</head>
+<body>
+    <h1>Clearing Browser Storage...</h1>
+    <p id="status">Processing...</p>
+    
+    <script>
+        // Clear all browser storage
+        try {
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Clear IndexedDB
+            if ('indexedDB' in window) {
+                indexedDB.databases().then(databases => {
+                    databases.forEach(db => {
+                        indexedDB.deleteDatabase(db.name);
+                    });
+                });
+            }
+            
+            // Clear cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            document.getElementById('status').innerHTML = 'Storage cleared! Please restart your browser and go back to the app.';
+        } catch (error) {
+            document.getElementById('status').innerHTML = 'Error clearing storage: ' + error.message;
+        }
+    </script>
+</body>
+</html>
