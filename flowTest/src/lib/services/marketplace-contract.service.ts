@@ -915,13 +915,24 @@ export class MarketplaceContractService {
 
    // First, get all marketplace models to see which pending models have been listed
    const marketplaceModels = await this.getMarketplaceModels();
+   console.log('Marketplace models found:', marketplaceModels.length);
+   
+   // Debug marketplace model structure
+   if (marketplaceModels.length > 0) {
+    console.log('Sample marketplace model:', {
+     id: marketplaceModels[0].data?.objectId,
+     fields: marketplaceModels[0].data?.content?.fields,
+     pendingModelId: marketplaceModels[0].data?.content?.fields?.pending_model_id
+    });
+   }
+   
    const listedModelIds = new Set(
     marketplaceModels
      .map(model => model.data?.content?.fields?.pending_model_id)
      .filter(Boolean)
    );
 
-   console.log('Found listed models:', Array.from(listedModelIds));
+   console.log('Listed model IDs extracted:', Array.from(listedModelIds));
 
    // Query all objects owned by the user
    const ownedObjects = await this.suiClient.getOwnedObjects({
@@ -935,25 +946,27 @@ export class MarketplaceContractService {
    console.log('Total owned objects:', ownedObjects.data.length);
 
    // Filter for PendingModel objects that haven't been listed on marketplace
-   const pendingModels = ownedObjects.data.filter(obj => {
+   const allPendingModels = ownedObjects.data.filter(obj => {
     const objectType = obj.data?.type;
-    const isPendingModel = objectType?.includes('PendingModel');
+    return objectType?.includes('PendingModel');
+   });
+   
+   console.log(`Found ${allPendingModels.length} total pending models for user`);
+   
+   const pendingModels = allPendingModels.filter(obj => {
     const objectId = obj.data?.objectId;
-    
-    // Exclude models that have been listed on marketplace
     const isListed = listedModelIds.has(objectId);
     
-    if (isPendingModel) {
-     console.log('Found PendingModel:', {
-      objectId: objectId,
-      type: objectType,
-      isListed: isListed,
-      willInclude: !isListed
-     });
-    }
+    console.log('Pending model check:', {
+     objectId: objectId,
+     isListed: isListed,
+     willInclude: !isListed,
+     listedModelIdsHas: listedModelIds.has(objectId),
+     listedModelIdsSize: listedModelIds.size
+    });
     
     // Only include pending models that haven't been listed on marketplace
-    return isPendingModel && !isListed;
+    return !isListed;
    });
 
    console.log(`Found ${pendingModels.length} pending models for user`);
