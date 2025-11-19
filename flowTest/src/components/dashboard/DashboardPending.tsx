@@ -181,9 +181,9 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
  }, [triggerRefresh, contractService, currentAccount?.address, refresh, onRefreshComplete]);
 
  // Categorize models by status
+ // Note: Verified models should no longer appear here as they are moved to marketplace
  const pendingVerification = state.pendingModels.filter(model => model.status === 0); // STATUS_PENDING
- const inVerification = state.pendingModels.filter(model => model.status === 1); // STATUS_VERIFYING 
- const verified = state.pendingModels.filter(model => model.status === 2); // STATUS_VERIFIED
+ const inVerification = state.pendingModels.filter(model => model.status === 1); // STATUS_VERIFYING
 
  // Handle verification completion
  const handleVerificationComplete = async (modelId: string, verificationId: string, transactionDigest: string) => {
@@ -392,43 +392,6 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
     </div>
    )}
 
-   {/* Verified Models */}
-   {verified.length > 0 && (
-    <div className="card p-8">
-     <h3 className="text-2xl font-albert font-bold text-secondary-900 mb-8 flex items-center">
-      <div className="w-8 h-8 bg-success-100 rounded-lg flex items-center justify-center mr-3">
-       <TbShieldCheck className="w-5 h-5 text-success-600" />
-      </div>
-      Verified Models
-     </h3>
-     
-     <div className="space-y-6">
-      {verified.map((task) => (
-       <div key={task.id} className="card-hover p-6 bg-gradient-to-r from-success-50 to-success-100 border-success-200">
-        <div className="flex items-center justify-between">
-         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-success-500 rounded-xl flex items-center justify-center">
-           <TbShieldCheck className="w-6 h-6 text-white" />
-          </div>
-          <div>
-           <p className="font-albert font-semibold text-success-900 text-lg">{task.title}</p>
-           <p className="text-success-700 font-albert">
-            {task.category} • Verified • Ready for marketplace
-           </p>
-           <code className="text-xs bg-success-200 px-2 py-1 rounded text-success-800 font-mono mt-2 inline-block">
-            Model ID: {task.id.substring(0, 20)}...
-           </code>
-          </div>
-         </div>
-         <span className="badge badge-success">
-          Verified
-         </span>
-        </div>
-       </div>
-      ))}
-     </div>
-    </div>
-   )}
 
    {/* Empty State */}
    {!state.isLoading && state.pendingModels.length === 0 && !state.error && (
