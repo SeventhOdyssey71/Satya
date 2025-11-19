@@ -136,7 +136,7 @@ export function ModelVerificationFlow({
      enclave_id: nautilusResponse.response.data?.enclave_id || 'real_enclave_001',
      source: 'nautilus-tee-real',
      timestamp: new Date().toISOString(),
-     model_path: modelBlobId,
+     model_path: modelBlobId || '',
      attestation_type: 'real_quality_analysis'
     }
    };
@@ -145,7 +145,7 @@ export function ModelVerificationFlow({
    setAttestationData(attestation);
 
   } catch (err) {
-   console.error('Real TEE attestation generation failed:', err);
+   console.log('Real TEE attestation generation failed:', err);
    setError(err instanceof Error ? err.message : 'TEE verification failed');
   } finally {
    setIsGeneratingAttestation(false);
@@ -160,6 +160,12 @@ export function ModelVerificationFlow({
 
   if (!pendingModelId) {
    setError('No pending model ID provided - blockchain verification not available');
+   return;
+  }
+
+  // Validate object ID format
+  if (!/^0x[0-9a-fA-F]{64}$/.test(pendingModelId)) {
+   setError(`Invalid pending model ID format: ${pendingModelId}`);
    return;
   }
 
@@ -194,26 +200,27 @@ export function ModelVerificationFlow({
    const walletSigner = {
     toSuiAddress: async () => account.address,
     executeTransaction: async (tx: Transaction) => {
-     try {
+     return new Promise((resolve, reject) => {
       console.log('Requesting transaction signature from user...');
       
-      // This will show the wallet popup and wait for user to sign
-      const result = await signAndExecuteTransaction({ 
-       transaction: tx
-      });
-      
-      console.log('User signed transaction successfully:', result);
-      return result;
-     } catch (error) {
-      // Only log error if it's not a user rejection
-      if (error instanceof Error && error.message.includes('User rejected')) {
-       console.log('User rejected transaction signing');
-       throw new Error('Transaction was cancelled by user');
-      } else {
-       console.error('Transaction execution failed:', error);
-       throw error;
-      }
-     }
+      signAndExecuteTransaction(
+       { transaction: tx },
+       {
+        onSuccess: (result) => {
+         console.log('Transaction successful:', result);
+         resolve(result);
+        },
+        onError: (error) => {
+         console.error('Transaction failed:', error);
+         if (error.message?.includes('User rejected')) {
+          reject(new Error('Transaction was cancelled by user'));
+         } else {
+          reject(error);
+         }
+        }
+       }
+      );
+     });
     }
    };
 

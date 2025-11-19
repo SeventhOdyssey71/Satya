@@ -459,41 +459,93 @@ export class MarketplaceContractService {
   signer: any
  ): Promise<ContractResult> {
   try {
+   // Validate inputs
+   if (!pendingModelId || typeof pendingModelId !== 'string') {
+    throw new Error('Invalid pending model ID provided');
+   }
+   
+   // Validate object ID format (Sui object IDs are 32 bytes = 64 hex chars)
+   if (!/^0x[0-9a-fA-F]{64}$/.test(pendingModelId)) {
+    throw new Error(`Invalid object ID format: ${pendingModelId}`);
+   }
+
    logger.info('Completing TEE verification', {
     modelId: pendingModelId,
     qualityScore: params.qualityScore
    });
 
-   // First, check if we need to submit the model for verification
-   // Some models might need to be submitted before completion
+   console.log('=== VERIFICATION DEBUG ===');
+   console.log('Pending Model ID:', pendingModelId);
+   console.log('Enclave ID:', params.enclaveId);
+   console.log('Quality Score:', params.qualityScore);
+   console.log('Security Assessment:', params.securityAssessment);
+   console.log('Package ID:', MARKETPLACE_CONFIG.PACKAGE_ID);
+   console.log('Registry ID:', MARKETPLACE_CONFIG.REGISTRY_ID);
+
+   // Validate the object exists and is accessible
+   try {
+    const userAddress = await signer.toSuiAddress();
+    console.log('User address:', userAddress);
+    
+    const objectInfo = await this.suiClient.getObject({
+     id: pendingModelId,
+     options: { showContent: true, showType: true, showOwner: true }
+    });
+    
+    console.log('Object info:', {
+     id: objectInfo.data?.objectId,
+     type: objectInfo.data?.type,
+     owner: objectInfo.data?.owner,
+     hasContent: !!objectInfo.data?.content
+    });
+
+    if (!objectInfo.data) {
+     throw new Error('Object not found or not accessible');
+    }
+
+    if (objectInfo.data?.owner && typeof objectInfo.data.owner === 'object' && 'AddressOwner' in objectInfo.data.owner) {
+     const objectOwner = (objectInfo.data.owner as any).AddressOwner;
+     if (objectOwner !== userAddress) {
+      throw new Error(`Object is not owned by current user. Owner: ${objectOwner}, User: ${userAddress}`);
+     }
+    }
+   } catch (objectError) {
+    console.error('Object validation failed:', objectError);
+    throw new Error(`Cannot access pending model: ${objectError instanceof Error ? objectError.message : String(objectError)}`);
+   }
+
+   // Two-step approach: first ensure submission, then complete verification
    logger.info('Preparing verification transaction for model', { pendingModelId });
 
+   // Create single transaction with both operations
+   console.log('Creating verification transaction...');
    const tx = new Transaction();
-
+   
+   // Create object references
    const pendingModel = tx.object(pendingModelId);
+   const registry = tx.object(MARKETPLACE_CONFIG.REGISTRY_ID);
+   const clock = tx.object('0x6');
 
-   // First submit for verification if not already submitted
+   // Step 1: Submit for verification (changes PENDING -> VERIFYING)
+   console.log('Adding submit_for_verification to transaction...');
    tx.moveCall({
     target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::submit_for_verification`,
-    arguments: [
-     pendingModel,
-     tx.object(MARKETPLACE_CONFIG.REGISTRY_ID),
-     tx.object('0x6'), // Clock
-    ],
+    arguments: [pendingModel, registry, clock],
    });
 
-   // Then complete the verification
+   // Step 2: Complete verification (changes VERIFYING -> VERIFIED) 
+   console.log('Adding complete_verification to transaction...');
    const verificationResult = tx.moveCall({
     target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::complete_verification`,
     arguments: [
      pendingModel,
-     tx.object(MARKETPLACE_CONFIG.REGISTRY_ID),
+     registry,
      tx.pure.string(params.enclaveId),
      tx.pure.u64(params.qualityScore),
      tx.pure.string(params.securityAssessment),
      tx.pure.vector('u8', Array.from(params.attestationHash)),
      tx.pure.vector('u8', Array.from(params.verifierSignature)),
-     tx.object('0x6'), // Clock shared object on testnet
+     clock
     ],
    });
 
@@ -502,10 +554,24 @@ export class MarketplaceContractService {
 
    const txResult = await signer.executeTransaction(tx);
    
-   console.log('Complete verification transaction result:', txResult);
+   console.log('Complete verification transaction result:', JSON.stringify(txResult, null, 2));
 
-   if (txResult && txResult.effects?.status?.status === 'success') {
-    const createdObjects = txResult.objectChanges?.filter(
+   // Check if txResult is defined and has the expected structure
+   if (!txResult) {
+    logger.error('Transaction result is undefined', { modelId: pendingModelId });
+    return {
+     success: false,
+     error: 'Transaction execution failed: No result returned'
+    };
+   }
+
+   // Handle both direct result and nested result structures
+   const effects = txResult.effects || txResult.result?.effects;
+   const objectChanges = txResult.objectChanges || txResult.result?.objectChanges;
+   const digest = txResult.digest || txResult.result?.digest;
+
+   if (effects?.status?.status === 'success') {
+    const createdObjects = objectChanges?.filter(
      (change: any) => change.type === 'created'
     );
     const verificationObj = createdObjects?.find(
@@ -514,18 +580,18 @@ export class MarketplaceContractService {
     );
 
     logger.info('TEE verification completed', {
-     digest: txResult.digest,
+     digest: digest,
      verificationId: verificationObj?.objectId,
      qualityScore: params.qualityScore
     });
 
     return {
      success: true,
-     transactionDigest: txResult.digest,
+     transactionDigest: digest,
      objectId: verificationObj?.objectId
     };
    } else {
-    const error = txResult?.effects?.status?.error || 'Transaction failed or returned undefined result';
+    const error = effects?.status?.error || 'Transaction failed or returned undefined result';
     logger.error('Complete verification failed', {
      error,
      txResult,
@@ -585,8 +651,27 @@ export class MarketplaceContractService {
 
    const txResult = await signer.executeTransaction(tx);
 
-   if (txResult.effects?.status?.status === 'success') {
-    const createdObjects = txResult.objectChanges?.filter(
+   console.log('List on marketplace transaction result:', JSON.stringify(txResult, null, 2));
+
+   // Check if txResult is defined
+   if (!txResult) {
+    logger.error('Transaction result is undefined', { 
+     pendingModelId, 
+     verificationId 
+    });
+    return {
+     success: false,
+     error: 'Transaction execution failed: No result returned'
+    };
+   }
+
+   // Handle both direct result and nested result structures
+   const effects = txResult.effects || txResult.result?.effects;
+   const objectChanges = txResult.objectChanges || txResult.result?.objectChanges;
+   const digest = txResult.digest || txResult.result?.digest;
+
+   if (effects?.status?.status === 'success') {
+    const createdObjects = objectChanges?.filter(
      (change: any) => change.type === 'created'
     );
     const marketplaceObj = createdObjects?.find(
@@ -595,17 +680,17 @@ export class MarketplaceContractService {
     );
 
     logger.info('Model listed on marketplace', {
-     digest: txResult.digest,
+     digest: digest,
      marketplaceId: marketplaceObj?.objectId
     });
 
     return {
      success: true,
-     transactionDigest: txResult.digest,
+     transactionDigest: digest,
      objectId: marketplaceObj?.objectId
     };
    } else {
-    const error = txResult.effects?.status?.error || 'Transaction failed';
+    const error = effects?.status?.error || 'Transaction failed';
     return {
      success: false,
      error: `Marketplace listing failed: ${error}`
@@ -980,6 +1065,16 @@ export class MarketplaceContractService {
     type: obj.data?.type
    }));
    console.log('Owned object types sample:', objectTypes.slice(0, 10));
+   
+   // Debug: Log all PendingModel objects specifically
+   const allPendingModelIds = ownedObjects.data
+    .filter(obj => obj.data?.type?.includes('PendingModel'))
+    .map(obj => ({
+     id: obj.data?.objectId,
+     type: obj.data?.type,
+     createdAt: (obj.data?.content as any)?.fields?.created_at
+    }));
+   console.log('ALL PENDING MODELS FOUND:', allPendingModelIds);
 
    // Filter for PendingModel objects that haven't been listed on marketplace
    const allPendingModels = ownedObjects.data.filter(obj => {
@@ -994,23 +1089,28 @@ export class MarketplaceContractService {
     if (!objectId) return false;
     const isListed = listedModelIds.has(objectId);
     
-    // Check age - exclude models older than 24 hours to clean up stale entries
+    // Check age and validity - exclude models with invalid dates or older than 7 days
     const content = obj.data?.content as any;
     const createdAt = content?.fields?.created_at;
     const now = Date.now();
-    const twentyFourHours = 24 * 60 * 60 * 1000;
-    const isOld = createdAt && (now - parseInt(createdAt)) > twentyFourHours;
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    
+    // Filter out models with invalid timestamps (0 or invalid values)
+    const createdTimestamp = parseInt(createdAt || '0');
+    const hasValidDate = createdTimestamp > 0 && createdTimestamp < now;
+    const isOld = hasValidDate && (now - createdTimestamp) > sevenDays;
     
     console.log('Pending model check:', {
      objectId: objectId?.slice(0, 8),
      isListed: isListed,
      isOld: isOld,
-     createdAt: createdAt ? new Date(parseInt(createdAt)).toISOString() : 'unknown',
-     willInclude: !isListed && !isOld
+     hasValidDate: hasValidDate,
+     createdAt: hasValidDate ? new Date(createdTimestamp).toISOString() : 'invalid',
+     willInclude: !isListed && !isOld && hasValidDate
     });
     
-    // Only include pending models that haven't been listed and aren't too old
-    return !isListed && !isOld;
+    // Only include pending models that haven't been listed, aren't too old, and have valid dates
+    return !isListed && !isOld && hasValidDate;
    });
 
    console.log(`Found ${pendingModels.length} pending models for user`);
