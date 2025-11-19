@@ -913,26 +913,54 @@ export class MarketplaceContractService {
   try {
    console.log('Querying pending models for user:', userAddress);
 
-   // First, get all marketplace models to see which pending models have been listed
+   // Approach 1: Get marketplace models to see which pending models have been listed
    const marketplaceModels = await this.getMarketplaceModels();
    console.log('Marketplace models found:', marketplaceModels.length);
    
-   // Debug marketplace model structure
+   const listedModelIds = new Set<string>();
+   
+   // Extract pending model IDs from marketplace models
    if (marketplaceModels.length > 0) {
     console.log('Sample marketplace model:', {
      id: marketplaceModels[0].data?.objectId,
-     fields: marketplaceModels[0].data?.content?.fields,
-     pendingModelId: marketplaceModels[0].data?.content?.fields?.pending_model_id
+     fields: marketplaceModels[0].data?.content?.fields
+    });
+    
+    marketplaceModels.forEach(model => {
+     const pendingId = model.data?.content?.fields?.pending_model_id;
+     if (pendingId) {
+      listedModelIds.add(pendingId);
+     }
     });
    }
-   
-   const listedModelIds = new Set(
-    marketplaceModels
-     .map(model => model.data?.content?.fields?.pending_model_id)
-     .filter(Boolean)
-   );
 
-   console.log('Listed model IDs extracted:', Array.from(listedModelIds));
+   // Approach 2: Also check ModelListed events to get recently listed models
+   try {
+    const eventsResponse = await this.client.queryEvents({
+     query: {
+      MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelListed`
+     },
+     limit: 100,
+     order: 'descending'
+    });
+
+    if (eventsResponse.data) {
+     console.log('Found ModelListed events:', eventsResponse.data.length);
+     
+     eventsResponse.data.forEach(event => {
+      const eventData = event.parsedJson as any;
+      const pendingModelId = eventData?.pending_model_id;
+      if (pendingModelId) {
+       listedModelIds.add(pendingModelId);
+       console.log('Found listed model from event:', pendingModelId);
+      }
+     });
+    }
+   } catch (eventError) {
+    console.log('Failed to query events:', eventError);
+   }
+
+   console.log('All listed model IDs (from models + events):', Array.from(listedModelIds));
 
    // Query all objects owned by the user
    const ownedObjects = await this.suiClient.getOwnedObjects({
