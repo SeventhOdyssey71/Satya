@@ -299,7 +299,7 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
        <TbShieldCheck className="w-6 h-6 text-gray-600" />
       </div>
       <h3 className="text-sm text-gray-600 mb-1">Success Rate</h3>
-      <p className="text-2xl font-semibold text-gray-900 mb-1">{verified.length > 0 ? '100' : '0'}%</p>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{inVerification.length > 0 ? '100' : '0'}%</p>
       <p className="text-xs text-gray-500">Verification rate</p>
      </div>
     </div>

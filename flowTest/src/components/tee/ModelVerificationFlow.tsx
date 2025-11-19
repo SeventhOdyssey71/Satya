@@ -199,13 +199,7 @@ export function ModelVerificationFlow({
       
       // This will show the wallet popup and wait for user to sign
       const result = await signAndExecuteTransaction({ 
-       transaction: tx,
-       options: {
-        showEffects: true,
-        showEvents: true,
-        showObjectChanges: true,
-        showBalanceChanges: true,
-       }
+       transaction: tx
       });
       
       console.log('User signed transaction successfully:', result);
@@ -310,54 +304,47 @@ export function ModelVerificationFlow({
  };
 
  return (
-  <div className="space-y-3">
-   <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
-    <div className="flex items-center gap-3">
-     <span className="text-sm font-medium text-blue-900">TEE Verification</span>
-    </div>
-    
+  <div className="space-y-2">
+   <div className="flex items-center justify-between px-3 py-2 border-l-4 border-blue-500 bg-blue-50 rounded">
+    <span className="text-sm font-medium text-blue-900">TEE Verification</span>
     <button
      onClick={generateTEEAttestation}
      disabled={isGeneratingAttestation || !!attestationData}
-     className={`px-4 py-2 text-sm font-medium rounded-md ${
+     className={`px-3 py-1 text-xs font-medium rounded ${
       isGeneratingAttestation || !!attestationData
        ? 'opacity-50 cursor-not-allowed bg-gray-400 text-white'
        : 'bg-blue-600 text-white hover:bg-blue-700'
      }`}
     >
      {isGeneratingAttestation ? (
-      <div className="flex items-center gap-2">
-       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex items-center gap-1">
+       <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
        <span>Processing...</span>
       </div>
      ) : attestationData ? (
-      <span>✓ Complete</span>
+      <span>✓ Verified</span>
      ) : (
       <span>Verify</span>
      )}
     </button>
    </div>
 
-   {/* Blockchain verification section - only show if we have a pending model ID */}
    {attestationData && !verificationResult && pendingModelId && (
-    <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
-     <div className="flex items-center gap-3">
-      <span className="text-sm font-medium text-green-900">Blockchain Verification</span>
-     </div>
-     
+    <div className="flex items-center justify-between px-3 py-2 border-l-4 border-green-500 bg-green-50 rounded">
+     <span className="text-sm font-medium text-green-900">Blockchain Verification</span>
      <button
       onClick={verifyOnChain}
       disabled={isVerifyingOnChain || !account}
-      className={`px-4 py-2 text-sm font-medium rounded-md ${
+      className={`px-3 py-1 text-xs font-medium rounded ${
        isVerifyingOnChain || !account
         ? 'opacity-50 cursor-not-allowed bg-gray-400 text-white'
         : 'bg-green-600 text-white hover:bg-green-700'
       }`}
      >
       {isVerifyingOnChain ? (
-       <div className="flex items-center gap-2">
-        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-        <span>Please sign in wallet...</span>
+       <div className="flex items-center gap-1">
+        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        <span>Signing...</span>
        </div>
       ) : !account ? (
        <span>Connect Wallet</span>
@@ -369,23 +356,21 @@ export function ModelVerificationFlow({
    )}
 
    {verificationResult && (
-    <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
-     <div className="flex items-center gap-3">
-      <span className="text-sm font-medium text-green-900">Verification Complete</span>
-     </div>
+    <div className="flex items-center justify-between px-3 py-2 border-l-4 border-green-500 bg-green-50 rounded">
+     <span className="text-sm font-medium text-green-900">✓ Complete</span>
      <a 
       href={`https://explorer.sui.io/txblock/${verificationResult.digest}?network=testnet`}
       target="_blank"
       rel="noopener noreferrer"
-      className="px-3 py-1 text-xs font-medium bg-green-600 text-white rounded hover:bg-green-700"
+      className="px-2 py-1 text-xs font-medium bg-green-600 text-white rounded hover:bg-green-700"
      >
-      View on Explorer
+      View
      </a>
     </div>
    )}
 
    {error && (
-    <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+    <div className="px-3 py-2 border-l-4 border-red-500 bg-red-50 rounded">
      <span className="text-sm text-red-700">{error}</span>
     </div>
    )}
