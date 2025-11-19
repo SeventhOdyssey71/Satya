@@ -747,7 +747,7 @@ export class MarketplaceContractService {
    
    // Approach 1: Query by registry ownership
    try {
-    response = await this.client.getOwnedObjects({
+    response = await this.suiClient.getOwnedObjects({
      owner: MARKETPLACE_CONFIG.REGISTRY_ID,
      filter: {
       StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::MarketplaceModel`
@@ -773,7 +773,7 @@ export class MarketplaceContractService {
     console.log('No direct results, using event-based query');
     
     // Query ModelListed events to get marketplace model IDs
-    const eventsResponse = await this.client.queryEvents({
+    const eventsResponse = await this.suiClient.queryEvents({
      query: {
       MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelListed`
      },
@@ -792,7 +792,7 @@ export class MarketplaceContractService {
        
        if (modelId) {
         console.log('Fetching marketplace model:', modelId);
-        return await this.client.getObject({
+        return await this.suiClient.getObject({
          id: modelId,
          options: {
           showContent: true,
@@ -860,7 +860,7 @@ export class MarketplaceContractService {
    try {
     logger.info('Trying fallback query for marketplace models');
     
-    const response = await this.client.queryEvents({
+    const response = await this.suiClient.queryEvents({
      query: {
       MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelListed`
      },
@@ -876,7 +876,7 @@ export class MarketplaceContractService {
       try {
        const modelId = (event.parsedJson as any)?.model_id;
        if (modelId) {
-        return await this.client.getObject({
+        return await this.suiClient.getObject({
          id: modelId,
          options: {
           showContent: true,
@@ -887,6 +887,7 @@ export class MarketplaceContractService {
         });
        }
       } catch (err) {
+       const modelId = (event.parsedJson as any)?.model_id;
        logger.warn('Failed to fetch model object', { modelId: modelId, error: err });
        return null;
       }
@@ -936,7 +937,7 @@ export class MarketplaceContractService {
 
    // Approach 2: Also check ModelListed events to get recently listed models
    try {
-    const eventsResponse = await this.client.queryEvents({
+    const eventsResponse = await this.suiClient.queryEvents({
      query: {
       MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelListed`
      },
@@ -983,6 +984,7 @@ export class MarketplaceContractService {
    
    const pendingModels = allPendingModels.filter(obj => {
     const objectId = obj.data?.objectId;
+    if (!objectId) return false;
     const isListed = listedModelIds.has(objectId);
     
     console.log('Pending model check:', {

@@ -190,11 +190,24 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
   try {
    console.log('Verification completed for model:', { modelId, verificationId, transactionDigest });
    
-   // Refresh models to get updated status
-   await loadPendingModels();
-   
-   // Show success notification
+   // Show success notification immediately
    alert(`🎉 Model verification completed successfully!\n\n✅ Your model has been verified and listed on the marketplace\n📈 Users can now discover and purchase your model\n🔗 Transaction: ${transactionDigest.slice(0, 20)}...\n\n👉 Visit the Marketplace tab to see your model!`);
+   
+   // Wait a bit for blockchain state to update, then refresh
+   setTimeout(async () => {
+    try {
+     console.log('Refreshing pending models after verification completion...');
+     // Use both refresh methods to ensure update
+     await Promise.all([
+      loadPendingModels(),
+      refresh()
+     ]);
+     console.log('Pending models refreshed successfully');
+    } catch (refreshError) {
+     console.error('Failed to refresh after verification:', refreshError);
+    }
+   }, 2000); // 2 second delay to allow blockchain state to propagate
+   
   } catch (error) {
    console.error('Failed to handle verification completion:', error);
   }
