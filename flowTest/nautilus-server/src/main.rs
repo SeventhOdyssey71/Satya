@@ -35,7 +35,10 @@ async fn main() -> Result<()> {
     }
 
     // Define your own restricted CORS policy here if needed.
-    let cors = CorsLayer::new().allow_methods(Any).allow_headers(Any);
+    let cors = CorsLayer::new()
+        .allow_origin(Any) // Allow all origins for development
+        .allow_methods(Any)
+        .allow_headers(Any);
 
     let app = Router::new()
         .route("/", get(ping))
@@ -45,7 +48,7 @@ async fn main() -> Result<()> {
         .with_state(state)
         .layer(cors);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3333").await?;
     info!("listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, app.into_make_service())
         .await

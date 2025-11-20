@@ -7,23 +7,63 @@ import {
  IoCloseCircle,
  IoCloudUpload,
  IoStatsChart,
- IoDownload
+ IoDownload,
+ IoRefresh
 } from 'react-icons/io5'
-import { useUploadTasks, useUploadActions } from '@/contexts/UploadContext'
+import { usePendingModels } from '@/hooks/usePendingModels'
+import { useCurrentAccount } from '@mysten/dapp-kit'
+import { useState, useEffect } from 'react'
+import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
 
 interface DashboardOverviewProps {
  onNewUpload?: () => void
 }
 
 export default function DashboardOverview({ onNewUpload }: DashboardOverviewProps) {
- const { allTasks } = useUploadTasks()
- const { clearFailedTasks } = useUploadActions()
+ const { pendingModels, statusCounts, isLoading, refresh } = usePendingModels()
+ const currentAccount = useCurrentAccount()
+ const [completedCount, setCompletedCount] = useState(0)
 
- // Calculate status counts based on the new flow requirements
- const statusCounts = {
-  pending: allTasks.filter(task => task.status === 'pending' || task.status === 'uploading').length,
-  completed: allTasks.filter(task => task.status === 'completed').length,
-  failed: allTasks.filter(task => task.status === 'cancelled').length
+ // Load completed models (marketplace models) count
+ const loadCompletedCount = async () => {
+  if (!currentAccount?.address) return
+  
+  try {
+   const contractService = new MarketplaceContractService()
+   await contractService.initialize()
+   
+   const marketplaceModels = await contractService.getMarketplaceModels()
+   const userModels = marketplaceModels.filter(model => 
+    model.data?.content?.fields?.creator === currentAccount.address
+   )
+   
+   setCompletedCount(userModels.length)
+   console.log('User completed models count:', userModels.length)
+  } catch (error) {
+   console.error('Failed to load completed models count:', error)
+  }
+ }
+
+ useEffect(() => {
+  loadCompletedCount()
+ }, [currentAccount?.address])
+
+ // Set up periodic refresh for completed count
+ useEffect(() => {
+  if (!currentAccount?.address) return
+
+  const interval = setInterval(() => {
+   loadCompletedCount()
+  }, 15000) // 15 seconds
+
+  return () => clearInterval(interval)
+ }, [currentAccount?.address])
+
+ // Calculate status counts based on pending models from smart contract
+ const displayCounts = {
+  pending: statusCounts.pending + statusCounts.verifying, // Combine pending and verifying
+  completed: completedCount, // Use marketplace models count
+  failed: statusCounts.failed
  }
 
  return (
@@ -37,8 +77,8 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
        <IoTime className="w-5 h-5 text-yellow-700" />
       </div>
       <h3 className="text-sm font-medium text-gray-900 mb-1">Pending</h3>
-      <p className="text-2xl font-semibold text-gray-900 mb-1">{statusCounts.pending}</p>
-      <p className="text-xs text-gray-600">Processing uploads</p>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{displayCounts.pending}</p>
+      <p className="text-xs text-gray-600">Awaiting verification</p>
      </div>
 
      {/* Completed */}
@@ -47,7 +87,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
        <IoCheckmarkCircle className="w-5 h-5 text-green-700" />
       </div>
       <h3 className="text-sm font-medium text-gray-900 mb-1">Completed</h3>
-      <p className="text-2xl font-semibold text-gray-900 mb-1">{statusCounts.completed}</p>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{displayCounts.completed}</p>
       <p className="text-xs text-gray-600">Available in marketplace</p>
      </div>
 
@@ -57,14 +97,15 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
        <IoCloseCircle className="w-5 h-5 text-red-500" />
       </div>
       <h3 className="text-sm font-medium text-gray-900 mb-1">Failed</h3>
-      <p className="text-2xl font-semibold text-gray-900 mb-1">{statusCounts.failed}</p>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{displayCounts.failed}</p>
       <p className="text-xs text-gray-600">Requires attention</p>
-      {statusCounts.failed > 0 && (
+      {displayCounts.failed > 0 && (
        <button 
-        onClick={clearFailedTasks}
+        onClick={refresh}
         className="mt-2 px-2 py-1 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors"
        >
-        Clear Failed
+        <IoRefresh className="w-3 h-3 inline mr-1" />
+        Refresh
        </button>
       )}
      </div>
@@ -77,10 +118,10 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
       <IoStatsChart className="w-5 h-5 text-gray-600" />
      </div>
-     <p className="text-sm text-gray-600 mb-1">Total Uploads</p>
-     <p className="text-2xl font-semibold text-gray-900 mb-1">{allTasks.length}</p>
+     <p className="text-sm text-gray-600 mb-1">Total Models</p>
+     <p className="text-2xl font-semibold text-gray-900 mb-1">{statusCounts.total}</p>
      <div className="text-xs text-gray-500">
-      {allTasks.length > 0 ? '+2 this week' : 'Get started!'}
+      {statusCounts.total > 0 ? 'In your dashboard' : 'Get started!'}
      </div>
     </div>
 
@@ -88,12 +129,12 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
       <IoDownload className="w-5 h-5 text-gray-600" />
      </div>
-     <p className="text-sm text-gray-600 mb-1">Total Size</p>
+     <p className="text-sm text-gray-600 mb-1">Verification Rate</p>
      <p className="text-2xl font-semibold text-gray-900 mb-1">
-      {formatFileSize(allTasks.reduce((sum, task) => sum + task.fileSize, 0))}
+      {statusCounts.total ? Math.round((statusCounts.verified / statusCounts.total) * 100) : 0}%
      </p>
      <div className="text-xs text-gray-500">
-      Across all models
+      Models verified
      </div>
     </div>
 
@@ -104,9 +145,9 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
       </svg>
      </div>
      <p className="text-sm text-gray-600 mb-1">Avg. Speed</p>
-     <p className="text-2xl font-semibold text-gray-900 mb-1">2.4 MB/s</p>
+     <p className="text-2xl font-semibold text-gray-900 mb-1">2.4</p>
      <div className="text-xs text-gray-500">
-      Upload speed
+      Minutes per verification
      </div>
     </div>
 
@@ -116,7 +157,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
      </div>
      <p className="text-sm text-gray-600 mb-1">Success Rate</p>
      <p className="text-2xl font-semibold text-gray-900 mb-1">
-      {allTasks.length ? Math.round((statusCounts.completed / allTasks.length) * 100) : 0}%
+      {statusCounts.total ? Math.round((statusCounts.verified / statusCounts.total) * 100) : 0}%
      </p>
      <div className="text-xs text-gray-500">
       Verification rate
@@ -132,14 +173,13 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
       <p className="text-gray-600 text-sm">Track your latest model uploads and verifications</p>
      </div>
      <div className="flex items-center gap-2">
-      {statusCounts.failed > 0 && (
-       <button
-        onClick={clearFailedTasks}
-        className="px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors"
-       >
-        Clear Failed ({statusCounts.failed})
-       </button>
-      )}
+      <button
+       onClick={refresh}
+       className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+      >
+       <IoRefresh className="w-4 h-4" />
+       Refresh
+      </button>
       <button
        onClick={onNewUpload}
        className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
@@ -150,7 +190,7 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
      </div>
     </div>
     
-    {allTasks.length === 0 ? (
+    {pendingModels.length === 0 ? (
      <div className="text-center py-12">
       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
        <IoCloudUpload className="w-8 h-8 text-gray-400" />
@@ -168,32 +208,38 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
      </div>
     ) : (
      <div className="space-y-3">
-      {allTasks.slice(0, 5).map((task, index) => (
-       <div key={task.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group">
+      {pendingModels.slice(0, 5).map((model) => (
+       <div key={model.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group">
         <div className="flex items-center gap-3 flex-1">
-         <div className={`w-2 h-2 rounded-full ${getStatusColor(task.status)} ${task.status === 'pending' || task.status === 'uploading' ? 'animate-pulse' : ''}`} />
+         <div className={`w-2 h-2 rounded-full ${getStatusColor(model.status)} ${model.status === 'pending' || model.status === 'verifying' ? 'animate-pulse' : ''}`} />
          <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-           <p className="font-medium text-gray-900">{task.fileName}</p>
-           {task.status === 'completed' && (
-            <div className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs">
+           <p className="font-medium text-gray-900">{model.title}</p>
+           {model.status === 'verified' && (
+            <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs">
              <IoCheckmarkCircle className="w-3 h-3" />
              Verified
             </div>
            )}
+           {model.status === 'failed' && (
+            <div className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs">
+             <IoCloseCircle className="w-3 h-3" />
+             Failed
+            </div>
+           )}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500">
-           <span>{formatFileSize(task.fileSize)}</span>
+           <span>{model.category}</span>
            <span>•</span>
-           <span>{new Date().toLocaleDateString()}</span>
-           {task.status === 'uploading' && (
+           <span>{new Date(model.createdAt).toLocaleDateString()}</span>
+           {model.status === 'verifying' && (
             <>
              <span>•</span>
              <div className="flex items-center gap-2">
               <div className="w-12 h-1 bg-gray-200 rounded-full overflow-hidden">
                <div className="h-full bg-blue-500 rounded-full w-2/3 animate-pulse"></div>
               </div>
-              <span>67%</span>
+              <span>Verifying...</span>
              </div>
             </>
            )}
@@ -201,11 +247,11 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
          </div>
         </div>
         <div className="flex items-center gap-2">
-         <span className={`px-3 py-1 rounded-md text-sm font-medium ${getStatusBadge(task.status)}`}>
-          {task.status === 'uploading' ? 'uploading' : 
-           task.status === 'pending' ? 'verifying' : 
-           task.status === 'completed' ? 'completed' : 
-           task.status}
+         <span className={`px-3 py-1 rounded-md text-sm font-medium ${getStatusBadge(model.status)}`}>
+          {model.status === 'verifying' ? 'verifying' : 
+           model.status === 'pending' ? 'pending' : 
+           model.status === 'verified' ? 'verified' : 
+           model.status}
          </span>
          <button className="p-1 rounded-md border border-gray-300 hover:bg-gray-100 transition-colors">
           <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,10 +262,10 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
        </div>
       ))}
       
-      {allTasks.length > 5 && (
+      {pendingModels.length > 5 && (
        <div className="pt-3 text-center">
         <button className="px-4 py-2 text-gray-600 hover:text-gray-900 text-sm">
-         View All {allTasks.length} Uploads
+         View All {pendingModels.length} Models
         </button>
        </div>
       )}
@@ -240,13 +286,12 @@ function formatFileSize(bytes: number): string {
 
 function getStatusColor(status: string): string {
  switch (status) {
-  case 'completed':
-   return 'bg-blue-500'
+  case 'verified':
+   return 'bg-green-500'
   case 'pending':
-  case 'uploading':
-   return 'bg-blue-400'
+  case 'verifying':
+   return 'bg-yellow-500'
   case 'failed':
-  case 'error':
    return 'bg-red-500'
   default:
    return 'bg-gray-500'
@@ -255,13 +300,13 @@ function getStatusColor(status: string): string {
 
 function getStatusBadge(status: string): string {
  switch (status) {
-  case 'completed':
-   return 'bg-blue-100 text-blue-800'
+  case 'verified':
+   return 'bg-green-100 text-green-800'
   case 'pending':
-  case 'uploading':
+   return 'bg-yellow-100 text-yellow-800'
+  case 'verifying':
    return 'bg-blue-100 text-blue-700'
   case 'failed':
-  case 'error':
    return 'bg-red-100 text-red-800'
   default:
    return 'bg-gray-100 text-gray-700'
