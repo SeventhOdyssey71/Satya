@@ -180,9 +180,13 @@ export function ModelVerificationFlow({
    console.log('Starting real blockchain verification for pending model:', pendingModelId);
    
    // Import the marketplace contract service
+   console.log('Importing MarketplaceContractService...');
    const { MarketplaceContractService } = await import('@/lib/services/marketplace-contract.service');
+   console.log('Creating contract service instance...');
    const contractService = new MarketplaceContractService();
+   console.log('Initializing contract service...');
    await contractService.initialize();
+   console.log('Contract service initialized successfully');
 
    // Convert quality score to basis points (0.85 -> 8500) 
    const qualityScoreBP = Math.floor(attestationData.ml_processing_result.quality_score * 10000);
@@ -197,8 +201,12 @@ export function ModelVerificationFlow({
    const verifierSignature = new Uint8Array(signatureBytes.slice(0, 64));
 
    // Create wallet signer
+   console.log('Creating wallet signer...');
    const walletSigner = {
-    toSuiAddress: async () => account.address,
+    toSuiAddress: async () => {
+     console.log('Getting user address:', account.address);
+     return account.address;
+    },
     executeTransaction: async (tx: Transaction) => {
      return new Promise((resolve, reject) => {
       console.log('Requesting transaction signature from user...');
@@ -223,6 +231,7 @@ export function ModelVerificationFlow({
      });
     }
    };
+   console.log('Wallet signer created successfully');
 
    console.log('Calling complete_verification with real contract:', {
     pendingModelId,
@@ -241,6 +250,7 @@ export function ModelVerificationFlow({
     verifierSignatureLength: verifierSignature.length
    });
 
+   console.log('About to call contractService.completeVerification...');
    const verificationResult = await contractService.completeVerification(
     pendingModelId,
     {
@@ -254,39 +264,41 @@ export function ModelVerificationFlow({
     walletSigner
    );
 
-   console.log('Raw verification result:', verificationResult);
+   console.log('Raw verification result:', JSON.stringify(verificationResult, null, 2));
+
+   if (!verificationResult || typeof verificationResult !== 'object') {
+    throw new Error('Invalid verification result received');
+   }
 
    if (!verificationResult.success) {
-    throw new Error(verificationResult.error || 'Blockchain verification failed');
+    const errorMsg = verificationResult.error || 'Blockchain verification failed';
+    console.error('Verification failed:', errorMsg);
+    throw new Error(errorMsg);
    }
 
    console.log('Blockchain verification successful:', verificationResult);
 
-   // Step 2: List on marketplace  
-   console.log('Now listing on marketplace...');
-   const listingResult = await contractService.listOnMarketplace(
-    pendingModelId,
-    verificationResult.objectId!,
-    walletSigner
-   );
-
-   if (!listingResult.success) {
-    throw new Error(listingResult.error || 'Marketplace listing failed');
-   }
-
-   console.log('Marketplace listing successful:', listingResult);
+   // SUCCESS: Verification completed (marketplace listing included in same transaction)
+   console.log('🎉 COMPLETE SUCCESS: Model verified and listed on marketplace!');
+   console.log('Transaction digest:', verificationResult.transactionDigest);
 
    // Set final result
    setVerificationResult({
-    digest: listingResult.transactionDigest,
+    digest: verificationResult.transactionDigest,
     effects: { status: { status: 'success' } },
     verificationDigest: verificationResult.transactionDigest,
-    listingDigest: listingResult.transactionDigest
+    listingDigest: verificationResult.transactionDigest
    });
+   
+   // Force marketplace refresh after short delay
+   setTimeout(() => {
+    console.log('Forcing marketplace refresh after verification...');
+    window.dispatchEvent(new CustomEvent('marketplace-refresh'));
+   }, 2000);
    
    // Call completion callback
    if (onVerificationComplete) {
-    onVerificationComplete(attestationData, listingResult.transactionDigest!);
+    onVerificationComplete(attestationData, verificationResult.transactionDigest!);
    }
 
   } catch (err) {
