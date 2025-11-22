@@ -10,6 +10,11 @@ import { MarketplaceContractService } from '@/lib/services/marketplace-contract.
 // Disable static generation to avoid service initialization issues during build
 export const dynamic = 'force-dynamic'
 
+// Helper function to normalize category for comparison
+const normalizeCategory = (category: string) => {
+ return category.toLowerCase().replace(/\s+/g, '-');
+};
+
 interface MarketplaceModel {
  id: string;
  title: string;
@@ -47,6 +52,11 @@ export default function MarketplacePage() {
   search: '',
   verified: 'all',
   priceRange: 'all'
+ });
+
+ const [pagination, setPagination] = useState({
+  currentPage: 1,
+  itemsPerPage: 6
  });
 
  const [state, setState] = useState<MarketplaceState>({
@@ -169,7 +179,9 @@ export default function MarketplacePage() {
 
  // Filter models based on current filters
  const filteredModels = state.models.filter(model => {
-  const matchesCategory = filters.category === 'all' || model.category.toLowerCase() === filters.category.toLowerCase();
+  const matchesCategory = filters.category === 'all' || 
+   normalizeCategory(model.category) === filters.category ||
+   model.category.toLowerCase() === filters.category.toLowerCase();
   const matchesSearch = !filters.search || 
    model.title.toLowerCase().includes(filters.search.toLowerCase()) ||
    model.description.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -181,16 +193,36 @@ export default function MarketplacePage() {
   return matchesCategory && matchesSearch && matchesVerified;
  });
 
+ // Pagination calculations
+ const totalPages = Math.ceil(filteredModels.length / pagination.itemsPerPage);
+ const startIndex = (pagination.currentPage - 1) * pagination.itemsPerPage;
+ const endIndex = startIndex + pagination.itemsPerPage;
+ const paginatedModels = filteredModels.slice(startIndex, endIndex);
+
+ // Reset to first page when filters change
+ const resetPagination = () => {
+  setPagination(prev => ({ ...prev, currentPage: 1 }));
+ };
+
  const handleCategoryChange = (category: string) => {
   setFilters(prev => ({ ...prev, category }));
+  resetPagination();
  };
 
  const handleSearch = (searchQuery: string) => {
   setFilters(prev => ({ ...prev, search: searchQuery }));
+  resetPagination();
  };
 
  const handleVerifiedFilter = (verified: string) => {
   setFilters(prev => ({ ...prev, verified }));
+  resetPagination();
+ };
+
+ const handlePageChange = (page: number) => {
+  setPagination(prev => ({ ...prev, currentPage: page }));
+  // Scroll to top of marketplace section
+  window.scrollTo({ top: 200, behavior: 'smooth' });
  };
 
  return (
@@ -247,6 +279,7 @@ export default function MarketplacePage() {
       onSearch={handleSearch}
       isLoading={state.isLoading}
       totalResults={filteredModels.length}
+      models={state.models}
      />
      
      {/* Loading State */}
@@ -304,11 +337,24 @@ export default function MarketplacePage() {
      
      {/* Marketplace Grid - Real Data */}
      {!state.isLoading && !state.error && filteredModels.length > 0 && (
-      <EnhancedMarketplaceGrid 
-       models={filteredModels}
-       contractService={contractService}
-       onPurchase={loadMarketplaceModels} // Refresh after purchase
-      />
+      <>
+       <EnhancedMarketplaceGrid 
+        models={paginatedModels}
+        contractService={contractService}
+        onPurchase={loadMarketplaceModels} // Refresh after purchase
+       />
+       
+       {/* Pagination */}
+       {totalPages > 1 && (
+        <PaginationControls
+         currentPage={pagination.currentPage}
+         totalPages={totalPages}
+         onPageChange={handlePageChange}
+         totalItems={filteredModels.length}
+         itemsPerPage={pagination.itemsPerPage}
+        />
+       )}
+      </>
      )}
      
     </div>
@@ -326,7 +372,8 @@ function EnhancedNavigation({
  onVerifiedChange,
  onSearch,
  isLoading,
- totalResults
+ totalResults,
+ models
 }: { 
  activeCategory: string
  activeVerified: string
@@ -335,6 +382,7 @@ function EnhancedNavigation({
  onSearch: (query: string) => void
  isLoading: boolean
  totalResults: number
+ models: MarketplaceModel[]
 }) {
  const [searchQuery, setSearchQuery] = useState('')
  
@@ -342,9 +390,28 @@ function EnhancedNavigation({
   { value: 'all', label: 'All Models', icon: '' },
   { value: 'machine-learning', label: 'Machine Learning', icon: '' },
   { value: 'computer-vision', label: 'Computer Vision', icon: '' },
-  { value: 'nlp', label: 'Natural Language', icon: '' },
+  { value: 'natural-language', label: 'Natural Language', icon: '' },
+  { value: 'nlp', label: 'NLP', icon: '' },
   { value: 'other', label: 'Other', icon: '' }
  ];
+
+ // Get unique categories from actual model data
+ const modelCategories = [...new Set(models.map(model => model.category))]
+  .filter(Boolean)
+  .map(category => ({
+   value: normalizeCategory(category),
+   label: category,
+   icon: ''
+  }));
+
+ // Combine predefined categories with dynamic ones
+ const allCategories = [
+  { value: 'all', label: 'All Models', icon: '' },
+  ...modelCategories
+ ];
+
+ // Use dynamic categories if available, fallback to predefined
+ const displayCategories = modelCategories.length > 0 ? allCategories : categories;
 
  const verificationFilters = [
   { value: 'all', label: 'All Models' },
@@ -369,7 +436,7 @@ function EnhancedNavigation({
     {/* Category Pills */}
     <div className="bg-white border border-gray-200 rounded-lg p-2 flex-shrink-0">
      <div className="flex items-center gap-2">
-      {categories.map((category) => (
+      {displayCategories.map((category) => (
        <button
         key={category.value}
         className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -668,6 +735,115 @@ function EnhancedMarketplaceGrid({
       </div>
      </div>
     ))}
+   </div>
+  </div>
+ )
+}
+
+// Pagination Controls Component
+function PaginationControls({ 
+ currentPage, 
+ totalPages, 
+ onPageChange, 
+ totalItems, 
+ itemsPerPage 
+}: {
+ currentPage: number
+ totalPages: number
+ onPageChange: (page: number) => void
+ totalItems: number
+ itemsPerPage: number
+}) {
+ const startItem = (currentPage - 1) * itemsPerPage + 1;
+ const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+ const getPageNumbers = () => {
+  const pages = [];
+  
+  if (totalPages <= 7) {
+   // Show all pages if 7 or fewer
+   for (let i = 1; i <= totalPages; i++) {
+    pages.push(i);
+   }
+  } else {
+   // Show smart pagination with ellipsis
+   if (currentPage <= 4) {
+    // Near the beginning
+    for (let i = 1; i <= 5; i++) pages.push(i);
+    pages.push("...");
+    pages.push(totalPages);
+   } else if (currentPage >= totalPages - 3) {
+    // Near the end
+    pages.push(1);
+    pages.push("...");
+    for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
+   } else {
+    // In the middle
+    pages.push(1);
+    pages.push("...");
+    for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+    pages.push("...");
+    pages.push(totalPages);
+   }
+  }
+  
+  return pages;
+ };
+
+ return (
+  <div className="mt-8 pt-6 border-t border-gray-200">
+   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+    {/* Results Info */}
+    <div className="text-sm text-gray-600">
+     Showing {startItem}-{endItem} of {totalItems} models
+    </div>
+    
+    {/* Page Controls */}
+    <div className="flex items-center gap-2">
+     {/* Previous Button */}
+     <button
+      onClick={() => onPageChange(currentPage - 1)}
+      disabled={currentPage === 1}
+      className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+     >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      </svg>
+      Previous
+     </button>
+     
+     {/* Page Numbers */}
+     <div className="flex items-center gap-1">
+      {getPageNumbers().map((page, index) => (
+       <button
+        key={index}
+        onClick={() => typeof page === "number" ? onPageChange(page) : undefined}
+        disabled={typeof page !== "number"}
+        className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+         page === currentPage
+          ? "bg-blue-600 text-white"
+          : typeof page === "number"
+          ? "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+          : "text-gray-400 cursor-default"
+        }`}
+       >
+        {page}
+       </button>
+      ))}
+     </div>
+     
+     {/* Next Button */}
+     <button
+      onClick={() => onPageChange(currentPage + 1)}
+      disabled={currentPage === totalPages}
+      className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+     >
+      Next
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
+     </button>
+    </div>
    </div>
   </div>
  )
