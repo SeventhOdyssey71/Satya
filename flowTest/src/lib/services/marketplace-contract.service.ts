@@ -1112,8 +1112,58 @@ export class MarketplaceContractService {
     // Only include pending models that haven't been listed, aren't too old, and have valid dates
     return !isListed && !isOld && hasValidDate;
    });
+   
+   const pendingModels = allPendingModels.filter(obj => {
+    const objectId = obj.data?.objectId;
+    if (!objectId) return false;
+    const isListed = listedModelIds.has(objectId);
+    return !isListed;
+   });
 
-   console.log(`Found ${pendingModels.length} pending models for user`);
+   // Event-based fallback for recently created models
+   if (allPendingModels.length === 0) {
+    try {
+     const recentEvents = await this.suiClient.queryEvents({
+      query: {
+       MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelUploaded`
+      },
+      limit: 10,
+      order: 'descending'
+     });
+
+     for (const event of recentEvents.data || []) {
+      const eventData = event.parsedJson as any;
+      const modelId = eventData?.model_id;
+      const eventSender = event.sender;
+
+      if (modelId && eventSender === userAddress) {
+       try {
+        const recentObject = await this.suiClient.getObject({
+         id: modelId,
+         options: {
+          showContent: true,
+          showType: true,
+          showOwner: true
+         }
+        });
+
+        if (recentObject.data && recentObject.data.type === expectedPendingModelType) {
+         console.log('✓ Found recent model via events:', modelId.slice(0, 10) + '...');
+         pendingModels.push({
+          data: recentObject.data
+         });
+        }
+       } catch (objectError) {
+        // Silent fail for cleaner logs
+       }
+      }
+     }
+    } catch (eventError) {
+     // Silent fail for cleaner logs
+    }
+   }
+
+   console.log(`✓ Found ${pendingModels.length} pending models`);
 
    // Return the raw object data for the dashboard to transform
    return pendingModels.map(obj => ({
@@ -1123,7 +1173,6 @@ export class MarketplaceContractService {
    }));
 
   } catch (error) {
-   console.error('Failed to query user pending models:', error);
    logger.error('Failed to query user pending models', {
     error: error instanceof Error ? error.message : String(error),
     userAddress
