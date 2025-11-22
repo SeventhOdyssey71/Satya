@@ -10,6 +10,11 @@ import { MarketplaceContractService } from '@/lib/services/marketplace-contract.
 // Disable static generation to avoid service initialization issues during build
 export const dynamic = 'force-dynamic'
 
+// Helper function to normalize category for comparison
+const normalizeCategory = (category: string) => {
+ return category.toLowerCase().replace(/\s+/g, '-');
+};
+
 interface MarketplaceModel {
  id: string;
  title: string;
@@ -174,7 +179,9 @@ export default function MarketplacePage() {
 
  // Filter models based on current filters
  const filteredModels = state.models.filter(model => {
-  const matchesCategory = filters.category === 'all' || model.category.toLowerCase() === filters.category.toLowerCase();
+  const matchesCategory = filters.category === 'all' || 
+   normalizeCategory(model.category) === filters.category ||
+   model.category.toLowerCase() === filters.category.toLowerCase();
   const matchesSearch = !filters.search || 
    model.title.toLowerCase().includes(filters.search.toLowerCase()) ||
    model.description.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -380,9 +387,28 @@ function EnhancedNavigation({
   { value: 'all', label: 'All Models', icon: '' },
   { value: 'machine-learning', label: 'Machine Learning', icon: '' },
   { value: 'computer-vision', label: 'Computer Vision', icon: '' },
-  { value: 'nlp', label: 'Natural Language', icon: '' },
+  { value: 'natural-language', label: 'Natural Language', icon: '' },
+  { value: 'nlp', label: 'NLP', icon: '' },
   { value: 'other', label: 'Other', icon: '' }
  ];
+
+ // Get unique categories from actual model data
+ const modelCategories = [...new Set(state.models.map(model => model.category))]
+  .filter(Boolean)
+  .map(category => ({
+   value: normalizeCategory(category),
+   label: category,
+   icon: ''
+  }));
+
+ // Combine predefined categories with dynamic ones
+ const allCategories = [
+  { value: 'all', label: 'All Models', icon: '' },
+  ...modelCategories
+ ];
+
+ // Use dynamic categories if available, fallback to predefined
+ const displayCategories = modelCategories.length > 0 ? allCategories : categories;
 
  const verificationFilters = [
   { value: 'all', label: 'All Models' },
@@ -407,7 +433,7 @@ function EnhancedNavigation({
     {/* Category Pills */}
     <div className="bg-white border border-gray-200 rounded-lg p-2 flex-shrink-0">
      <div className="flex items-center gap-2">
-      {categories.map((category) => (
+      {displayCategories.map((category) => (
        <button
         key={category.value}
         className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
