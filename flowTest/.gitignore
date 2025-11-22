@@ -90,3 +90,6 @@ debug_*.js
 
 # Test output
 test-results/
+
+# Gemi-fren knowledge base (agent enhancement files)
+gemi-fren/
