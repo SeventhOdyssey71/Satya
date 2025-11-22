@@ -3,11 +3,15 @@
 import { useState } from 'react'
 import Header from '@/components/ui/Header'
 import { geminiModel } from '@/lib/gemini-client'
+import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
+import { EventService } from '@/lib/services/event-service'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
+  isAction?: boolean
+  actionData?: any
 }
 
 export default function AgentPage() {
@@ -15,12 +19,62 @@ export default function AgentPage() {
  const [isLoading, setIsLoading] = useState(false)
  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
  const [showUploadMenu, setShowUploadMenu] = useState(false)
+ 
+ const marketplaceService = new MarketplaceContractService()
+ const eventService = new EventService()
 
  const suggestedQueries = [
-  "Show me computer vision models with 90%+ quality scores",
-  "Find cheap AI models under $10", 
-  "Help me upload and verify my neural network model"
+  "Upload my AI model and start TEE verification",
+  "Show me all pending models in my dashboard", 
+  "Find the best computer vision models under $20 and purchase one"
  ]
+
+ const executeAction = async (action: string, params?: any) => {
+  try {
+   switch (action) {
+    case 'check_pending_models':
+     const pendingModels = await marketplaceService.getPendingModels(20)
+     return {
+      success: true,
+      data: pendingModels,
+      message: `Found ${pendingModels.length} pending models`
+     }
+    
+    case 'check_marketplace':
+     const marketplaceModels = await eventService.getModelListings(10)
+     return {
+      success: true,
+      data: marketplaceModels.events,
+      message: `Found ${marketplaceModels.events.length} models in marketplace`
+     }
+    
+    case 'redirect_upload':
+     window.location.href = '/upload'
+     return {
+      success: true,
+      message: 'Redirecting to upload page...'
+     }
+    
+    case 'redirect_dashboard':
+     window.location.href = '/dashboard'
+     return {
+      success: true,
+      message: 'Redirecting to dashboard...'
+     }
+    
+    default:
+     return {
+      success: false,
+      message: `Action "${action}" not implemented yet`
+     }
+   }
+  } catch (error) {
+   return {
+    success: false,
+    message: `Error executing action: ${error instanceof Error ? error.message : 'Unknown error'}`
+   }
+  }
+ }
 
  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
   const file = event.target.files?.[0]
@@ -51,15 +105,30 @@ export default function AgentPage() {
     throw new Error('Gemini API key not configured');
    }
 
-   // Create Satya-specific context for the AI
-   const satyaContext = `You are Satya AI Assistant with ACCURATE knowledge of the Satya platform's real architecture and implementation.
+   // Create Satya Agent context
+   const satyaContext = `You are the Satya Agent - an AI agent that can perform actions on the Satya platform, not just answer questions.
+
+   AGENT CAPABILITIES:
+   - Execute platform actions (upload models, check marketplace, verify TEE)
+   - Access real-time platform data (pending models, marketplace listings, user dashboard)
+   - Perform transactions (purchase models, list on marketplace)
+   - Manage user workflows (upload → verify → list → sell)
+   - Integrate with platform services (Walrus storage, SUI blockchain, TEE verification)
 
    RESPONSE GUIDELINES:
-   - Give SHORT answers for simple questions (1-2 sentences)
-   - Give DETAILED answers for complex topics (multiple paragraphs)
-   - Be contextual - match response length to question complexity
-   - Focus on actionable guidance over generic information
-   - ONLY provide accurate information about Satya's actual implementation
+   - When users request actions, explain what you'll do AND suggest execution
+   - Give SHORT responses for simple queries, DETAILED for complex workflows
+   - Focus on actionable next steps and actual execution
+   - When detecting action requests, respond with: "I can help you [action]. Would you like me to [execute/check/do] this now?"
+   
+   ACTION DETECTION:
+   Detect these action intents and suggest execution:
+   - "show/check pending models" → check_pending_models
+   - "upload/add model" → redirect_upload  
+   - "check marketplace/browse models" → check_marketplace
+   - "go to dashboard/show dashboard" → redirect_dashboard
+   - "purchase/buy model" → coming soon message
+   - "verify TEE" → coming soon message
 
    🏗️ SATYA TECHNICAL ARCHITECTURE (ACCURATE):
 
@@ -164,25 +233,15 @@ export default function AgentPage() {
     {chatHistory.length === 0 ? (
      /* Initial State - Centered */
      <div className="flex items-center justify-center flex-1 px-6">
-      <div className="w-full max-w-2xl mx-auto text-center">
-       {/* AI Icon */}
-       <div className="mb-8">
-        <img 
-         src="/images/AI-Icon.png" 
-         alt="AI Assistant Icon" 
-         className="w-12 h-12 mx-auto animate-spin"
-         style={{ animationDuration: '8s' }}
-        />
-       </div>
-       
+      <div className="w-full max-w-2xl mx-auto text-center">       
        {/* Title */}
        <h1 className="text-5xl font-normal text-gray-900 mb-4">
-        Satya AI Assistant
+        Satya Agent
        </h1>
        
        {/* Subtitle */}
        <p className="text-gray-500 text-lg mb-12">
-        Ask questions about AI models, TEE verification, and blockchain security
+        Your AI agent that can perform actions on the Satya platform - upload models, check marketplace, verify TEE, and more
        </p>
        
        {/* Search Form */}
