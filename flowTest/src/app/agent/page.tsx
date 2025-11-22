@@ -76,17 +76,10 @@ export default function AgentPage() {
    if (queryLower.includes('architecture') || queryLower.includes('technical') || queryLower.includes('how does')) {
      enhancedKnowledge += `
 ADVANCED TECHNICAL CONTEXT:
-- SUI Blockchain: Proof-of-Stake consensus with validator network, 100M-1B gas limits
-- Walrus Storage: Multi-node replication with automatic failover, content-addressed storage
-- TEE Security: Intel SGX secure enclaves via Nautilus, zero-knowledge proofs for integrity
-- SEAL Encryption: Homomorphic computation enabling secure processing on encrypted models
-- Performance Targets: <2s response time, 99.5% upload success rate, <10min verification
+SUI Blockchain uses Proof-of-Stake consensus with validator network and 100M-1B gas limits. Walrus Storage provides multi-node replication with automatic failover and content-addressed storage. TEE Security utilizes Intel SGX secure enclaves via Nautilus with zero-knowledge proofs for integrity. SEAL Encryption enables homomorphic computation for secure processing on encrypted models. Performance Targets include response time under 2 seconds, 99.5% upload success rate, and verification under 10 minutes.
 
 INTEGRATION PATTERNS:
-- Event-driven architecture with WebSocket real-time updates
-- Parallel data fetching with Promise.allSettled error isolation  
-- Intelligent caching with dependency tracking and smart invalidation
-- Exponential backoff retry logic for network resilience
+Event-driven architecture with WebSocket real-time updates. Parallel data fetching with Promise.allSettled error isolation. Intelligent caching with dependency tracking and smart invalidation. Exponential backoff retry logic for network resilience.
 `
    }
    
@@ -94,16 +87,10 @@ INTEGRATION PATTERNS:
    if (queryLower.includes('help') || queryLower.includes('guide') || queryLower.includes('how to')) {
      enhancedKnowledge += `
 USER INTERACTION OPTIMIZATION:
-- Adaptive technical depth based on user expertise (detected from vocabulary)
-- Context preservation across conversation turns with intelligent memory
-- Multi-turn conversation support maintaining workflow state
-- Proactive assistance with predictive error prevention
+Adaptive technical depth based on user expertise detected from vocabulary. Context preservation across conversation turns with intelligent memory. Multi-turn conversation support maintaining workflow state. Proactive assistance with predictive error prevention.
 
 RESPONSE PERSONALIZATION:
-- Beginner: Conceptual explanations with analogies and step-by-step guidance
-- Intermediate: Process explanations with practical examples and best practices  
-- Expert: Implementation details with technical specifics and optimization techniques
-- Power users: Bulk operations, API-level control, and automation capabilities
+For beginners: Conceptual explanations with analogies and step-by-step guidance. For intermediate users: Process explanations with practical examples and best practices. For experts: Implementation details with technical specifics and optimization techniques. For power users: Bulk operations, API-level control, and automation capabilities.
 `
    }
    
@@ -111,16 +98,10 @@ RESPONSE PERSONALIZATION:
    if (queryLower.includes('error') || queryLower.includes('failed') || queryLower.includes('problem')) {
      enhancedKnowledge += `
 INTELLIGENT ERROR RESOLUTION:
-- Graduated response: Auto-retry → Guided troubleshooting → Alternative approach → Escalation
-- Context-preserving recovery maintaining user workflow state and progress
-- Predictive error prevention based on usage patterns and platform metrics
-- Root cause analysis with specific solutions for each error category
+Graduated response follows this pattern: Auto-retry then guided troubleshooting then alternative approach then escalation. Context-preserving recovery maintains user workflow state and progress. Predictive error prevention based on usage patterns and platform metrics. Root cause analysis with specific solutions for each error category.
 
 COMMON ISSUE PATTERNS:
-- Upload failures: File format validation, size optimization, network stability
-- Verification delays: Queue analysis, complexity assessment, resource allocation  
-- Transaction errors: Gas estimation, balance validation, contract interaction
-- Performance issues: Caching strategies, parallel processing, load balancing
+Upload failures require file format validation, size optimization, and network stability checks. Verification delays need queue analysis, complexity assessment, and resource allocation review. Transaction errors involve gas estimation, balance validation, and contract interaction debugging. Performance issues require caching strategies, parallel processing optimization, and load balancing adjustments.
 `
    }
    
@@ -128,16 +109,10 @@ COMMON ISSUE PATTERNS:
    if (intent === 'pending_models' || intent === 'marketplace_models' || intent === 'platform_stats') {
      enhancedKnowledge += `
 WORKFLOW INTELLIGENCE:
-- Multi-step task orchestration with conditional branching and error recovery
-- Parallel operation coordination with resource conflict resolution
-- State-based decision making adapting to platform and user context
-- Automated monitoring with proactive recommendations and insights
+Multi-step task orchestration with conditional branching and error recovery. Parallel operation coordination with resource conflict resolution. State-based decision making adapting to platform and user context. Automated monitoring with proactive recommendations and insights.
 
 DATA INTEGRATION EXCELLENCE:
-- Real-time data synchronization with confidence indicators
-- Intelligent filtering based on user intent and historical patterns
-- Progressive disclosure from overview to detailed analysis
-- Contextual memory utilization for conversation continuity
+Real-time data synchronization with confidence indicators. Intelligent filtering based on user intent and historical patterns. Progressive disclosure from overview to detailed analysis. Contextual memory utilization for conversation continuity.
 `
    }
    
@@ -323,38 +298,24 @@ ${JSON.stringify(fetchedData, null, 2)}
 
 ${advancedKnowledge}
 
-🎯 ENHANCED RESPONSE GUIDELINES:
+CRITICAL FORMATTING INSTRUCTION: Respond with clean, clear text only. Do NOT use any markdown formatting, bullet points, asterisks, hashtags, or special symbols. Write in plain text with natural paragraphs and clear sentences.
 
-📋 INTELLIGENT RESPONSE ADAPTATION:
-- DETECT user expertise level from vocabulary and question complexity
-- MATCH technical depth to user's demonstrated knowledge level
-- PROVIDE context-aware responses that build on conversation history  
-- ANTICIPATE follow-up questions and provide comprehensive initial responses
-- USE progressive disclosure: overview → details → implementation specifics
+ENHANCED RESPONSE GUIDELINES:
 
-🔍 ADVANCED QUERY PROCESSING:
-- ANALYZE multi-faceted queries and address all components systematically
-- IDENTIFY underlying user goals beyond surface-level questions
-- PROVIDE proactive suggestions based on detected user patterns and platform state
-- OFFER alternative approaches when primary solutions may have limitations
+INTELLIGENT RESPONSE ADAPTATION:
+Detect user expertise level from vocabulary and question complexity. Match technical depth to user's demonstrated knowledge level. Provide context-aware responses that build on conversation history. Anticipate follow-up questions and provide comprehensive initial responses. Use progressive disclosure: overview then details then implementation specifics.
 
-⚡ INTELLIGENT ACTION EXECUTION:
-- SUGGEST specific next steps with clear, actionable guidance
-- PREDICT potential issues and provide preventive recommendations  
-- INTEGRATE real-time data seamlessly into conversational responses
-- MAINTAIN conversation context while executing platform operations
+ADVANCED QUERY PROCESSING:
+Analyze multi-faceted queries and address all components systematically. Identify underlying user goals beyond surface-level questions. Provide proactive suggestions based on detected user patterns and platform state. Offer alternative approaches when primary solutions may have limitations.
 
-🎨 SOPHISTICATED DATA PRESENTATION:
-- ORGANIZE information using visual hierarchies and progressive disclosure
-- HIGHLIGHT key insights and actionable items prominently
-- PROVIDE comparative analysis when multiple options exist
-- USE contextual examples that match user's specific situation
+INTELLIGENT ACTION EXECUTION:
+Suggest specific next steps with clear, actionable guidance. Predict potential issues and provide preventive recommendations. Integrate real-time data seamlessly into conversational responses. Maintain conversation context while executing platform operations.
 
-🛡️ PROACTIVE ERROR PREVENTION:
-- IDENTIFY potential issues before they occur based on usage patterns
-- SUGGEST optimizations and best practices contextually
-- PROVIDE graduated guidance from simple fixes to advanced solutions
-- MAINTAIN conversation continuity even when services are degraded
+SOPHISTICATED DATA PRESENTATION:
+Organize information using visual hierarchies and progressive disclosure. Highlight key insights and actionable items prominently. Provide comparative analysis when multiple options exist. Use contextual examples that match user's specific situation.
+
+PROACTIVE ERROR PREVENTION:
+Identify potential issues before they occur based on usage patterns. Suggest optimizations and best practices contextually. Provide graduated guidance from simple fixes to advanced solutions. Maintain conversation continuity even when services are degraded.
 
    🏗️ SATYA TECHNICAL ARCHITECTURE (ACCURATE):
 
@@ -402,8 +363,19 @@ ${advancedKnowledge}
     throw new Error('Empty response from Gemini API');
    }
 
-   // Remove markdown formatting like **bold** text
-   const cleanResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '$1');
+   // Remove all markdown formatting for clean, clear text
+   let cleanResponse = aiResponse
+     .replace(/\*\*(.*?)\*\*/g, '$1')  // Remove **bold**
+     .replace(/\*(.*?)\*/g, '$1')     // Remove *italic*  
+     .replace(/#{1,6}\s+/g, '')       // Remove headers (# ## ###)
+     .replace(/^\s*[\*\-\+]\s+/gm, '') // Remove bullet points (*, -, +)
+     .replace(/^\s*\d+\.\s+/gm, '')   // Remove numbered lists (1. 2. 3.)
+     .replace(/`([^`]+)`/g, '$1')     // Remove `code` backticks
+     .replace(/```[\s\S]*?```/g, '')  // Remove code blocks
+     .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Remove links [text](url)
+     .replace(/^\s*>/gm, '')          // Remove blockquotes
+     .replace(/\n{3,}/g, '\n\n')      // Reduce multiple newlines
+     .trim();
 
    const assistantMessage: ChatMessage = {
     role: 'assistant',
