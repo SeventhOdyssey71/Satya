@@ -19,6 +19,7 @@ export default function AgentPage() {
  const [isLoading, setIsLoading] = useState(false)
  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
  const [showUploadMenu, setShowUploadMenu] = useState(false)
+ const [lastSuggestedAction, setLastSuggestedAction] = useState<string | null>(null)
  const messagesEndRef = useRef<HTMLDivElement>(null)
  
  const marketplaceService = new MarketplaceContractService()
@@ -102,6 +103,57 @@ export default function AgentPage() {
 
   setChatHistory(prev => [...prev, userMessage])
   setIsLoading(true)
+  
+  // Check if user is confirming a previous suggestion
+  const confirmationWords = ['yes', 'yeah', 'yep', 'do it', 'proceed', 'go ahead', 'execute', 'run it', 'ok', 'okay']
+  const isConfirmation = confirmationWords.some(word => 
+    query.trim().toLowerCase() === word || 
+    query.trim().toLowerCase() === word + '.' ||
+    query.trim().toLowerCase() === word + '!'
+  )
+
+  // If user is confirming and we have a suggested action, execute it immediately
+  if (isConfirmation && lastSuggestedAction) {
+    try {
+      const actionResult = await executeAction(lastSuggestedAction)
+      
+      let formattedContent = ''
+      if (actionResult.success) {
+        formattedContent = `✅ ${actionResult.message}`
+        
+        if (actionResult.data && Array.isArray(actionResult.data)) {
+          formattedContent += `\n\nResults:\n`
+          actionResult.data.slice(0, 5).forEach((item: any, index: number) => {
+            formattedContent += `\n${index + 1}. ${item.title || item.name || 'Model'} - ${item.price || 'Price not set'}`
+          })
+          if (actionResult.data.length > 5) {
+            formattedContent += `\n\n...and ${actionResult.data.length - 5} more models`
+          }
+        } else if (actionResult.data) {
+          formattedContent += `\n\nData: ${JSON.stringify(actionResult.data, null, 2)}`
+        }
+      } else {
+        formattedContent = `❌ Action failed: ${actionResult.message}`
+      }
+
+      const actionMessage: ChatMessage = {
+        role: 'assistant',
+        content: formattedContent,
+        timestamp: new Date(),
+        isAction: true,
+        actionData: actionResult.data
+      }
+
+      setChatHistory(prev => [...prev, actionMessage])
+      setLastSuggestedAction(null)
+      setIsLoading(false)
+      setQuery('')
+      return
+    } catch (error) {
+      console.error('Action execution failed:', error)
+    }
+  }
+  
   setQuery('')
 
   try {
@@ -111,30 +163,52 @@ export default function AgentPage() {
     throw new Error('Gemini API key not configured');
    }
 
-   // Create Satya Agent context
-   const satyaContext = `You are the Satya Agent - an AI agent that can perform actions on the Satya platform, not just answer questions.
+   // Create Satya Agent context with comprehensive training
+   const satyaContext = `You are the Satya Agent - an intelligent assistant that EXECUTES actions on the Satya platform. You don't just answer questions - you take action.
 
-   AGENT CAPABILITIES:
-   - Execute platform actions (upload models, check marketplace, verify TEE)
-   - Access real-time platform data (pending models, marketplace listings, user dashboard)
-   - Perform transactions (purchase models, list on marketplace)
-   - Manage user workflows (upload → verify → list → sell)
-   - Integrate with platform services (Walrus storage, SUI blockchain, TEE verification)
-
-   RESPONSE GUIDELINES:
-   - When users request actions, explain what you'll do AND suggest execution
-   - Give SHORT responses for simple queries, DETAILED for complex workflows
-   - Focus on actionable next steps and actual execution
-   - When detecting action requests, respond with: "I can help you [action]. Would you like me to [execute/check/do] this now?"
+   CRITICAL BEHAVIOR PATTERNS:
    
-   ACTION DETECTION:
-   Detect these action intents and suggest execution:
-   - "show/check pending models" → check_pending_models
-   - "upload/add model" → redirect_upload  
-   - "check marketplace/browse models" → check_marketplace
-   - "go to dashboard/show dashboard" → redirect_dashboard
-   - "purchase/buy model" → coming soon message
-   - "verify TEE" → coming soon message
+   1. PROGRESSIVE ACTION EXECUTION:
+   When user says "yes" or "do it" or confirms action:
+   → IMMEDIATELY execute the action they agreed to
+   → Don't ask for clarification again
+   → Show the results with "Executing..." then display data
+   
+   2. RESPONSE STRUCTURE (ALWAYS FOLLOW):
+   → Brief confirmation of what you're doing
+   → Execute the actual action if user confirmed
+   → Show real results with data
+   → Suggest logical next steps
+   
+   3. CONVERSATION FLOW EXAMPLES:
+   
+   User: "How many models are in the marketplace?"
+   Agent: "I'll check the marketplace for you right now. Let me fetch the current data..."
+   [Immediately execute check_marketplace action]
+   "Found 47 models in the marketplace. Here are the details: [show data]
+   Would you like me to filter these by category or show pricing information?"
+   
+   User: "Yes"  
+   Agent: "I'll show you the marketplace data organized by category..."
+   [Execute the action, don't ask again]
+   
+   4. NEVER ask "What would you like me to proceed with" when user says "yes"
+   → User "yes" means execute the last suggested action
+   → Remember the context and proceed immediately
+   
+   5. ACTION EXECUTION MAP:
+   - "check/show marketplace" → EXECUTE check_marketplace immediately
+   - "check/show pending models" → EXECUTE check_pending_models immediately  
+   - "upload model" → EXECUTE redirect_upload immediately
+   - "dashboard" → EXECUTE redirect_dashboard immediately
+   - User confirms with "yes/do it/proceed" → Execute the last suggested action
+   
+   6. RESPONSE TONE:
+   - Confident and action-oriented
+   - "I'll check that for you now..."
+   - "Let me pull up your data..."
+   - "Executing marketplace scan..."
+   - Show progress then results
 
    🏗️ SATYA TECHNICAL ARCHITECTURE (ACCURATE):
 
@@ -167,6 +241,26 @@ export default function AgentPage() {
 
    When answering technical questions, reference these ACTUAL implementation details, not generic blockchain concepts.
 
+   SMART ACTION DETECTION & EXECUTION:
+   
+   If user query contains:
+   - "how many models" + "marketplace" → Suggest "check_marketplace" action
+   - "pending models" or "my models" → Suggest "check_pending_models" action
+   - "upload" or "add model" → Suggest "redirect_upload" action  
+   - "dashboard" → Suggest "redirect_dashboard" action
+   
+   For action suggestions, end response with: "Would you like me to do this now?"
+   Then remember the action for when user confirms.
+   
+   RESPONSE EXAMPLES:
+   
+   User: "How many models exist in the marketplace?"
+   Agent: "I can check the marketplace to find out how many models are listed. Would you like me to do this now?"
+   [Remember: check_marketplace action]
+   
+   User: "Yes"
+   Agent: "Checking marketplace data now..." [Execute check_marketplace]
+   
    User question: ${query}`
 
    const result = await geminiModel.generateContent(satyaContext)
@@ -184,6 +278,32 @@ export default function AgentPage() {
 
    // Remove markdown formatting like **bold** text
    const cleanResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '$1');
+
+   // Detect if response suggests an action
+   const actionSuggestions = {
+    'check_marketplace': ['check the marketplace', 'marketplace to find', 'scan the marketplace'],
+    'check_pending_models': ['check your pending', 'pending models', 'your models'],
+    'redirect_upload': ['upload page', 'upload your model', 'start uploading'],
+    'redirect_dashboard': ['dashboard', 'your dashboard', 'go to dashboard']
+   }
+
+   let detectedAction = null
+   for (const [action, patterns] of Object.entries(actionSuggestions)) {
+     if (patterns.some(pattern => cleanResponse.toLowerCase().includes(pattern))) {
+       detectedAction = action
+       break
+     }
+   }
+
+   // If response ends with "Would you like me to do this now?" or similar, store the action
+   if (detectedAction && (
+     cleanResponse.includes('Would you like me to do this now?') ||
+     cleanResponse.includes('Would you like me to') ||
+     cleanResponse.includes('Should I proceed') ||
+     cleanResponse.includes('Shall I')
+   )) {
+     setLastSuggestedAction(detectedAction)
+   }
 
    const assistantMessage: ChatMessage = {
     role: 'assistant',
