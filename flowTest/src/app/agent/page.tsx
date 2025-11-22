@@ -1,13 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Header from '@/components/ui/Header'
 import { geminiModel } from '@/lib/gemini-client'
+import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
+import { EventService } from '@/lib/services/event-service'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
+  data?: any
+  dataType?: 'pending_models' | 'marketplace_models' | 'model_details' | 'dashboard_stats'
 }
 
 export default function AgentPage() {
@@ -15,12 +19,56 @@ export default function AgentPage() {
  const [isLoading, setIsLoading] = useState(false)
  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
  const [showUploadMenu, setShowUploadMenu] = useState(false)
+ 
+ const marketplaceService = new MarketplaceContractService()
+ const eventService = new EventService()
 
  const suggestedQueries = [
-  "Show me computer vision models with 90%+ quality scores",
-  "Find cheap AI models under $10", 
-  "Help me upload and verify my neural network model"
+  "Show me my pending models",
+  "What models are available in the marketplace?", 
+  "How many models have been uploaded today?"
  ]
+ 
+ // Data fetching functions
+ const fetchPendingModels = async () => {
+  try {
+   const pendingModels = await marketplaceService.getUserPendingModels('0x1234567890abcdef')
+   return pendingModels
+  } catch (error) {
+   console.error('Error fetching pending models:', error)
+   return []
+  }
+ }
+ 
+ const fetchMarketplaceModels = async () => {
+  try {
+   const result = await eventService.getModelListings(20)
+   return result.events
+  } catch (error) {
+   console.error('Error fetching marketplace models:', error)
+   return []
+  }
+ }
+ 
+ // Intent detection function
+ const detectIntent = (userQuery: string) => {
+  const query = userQuery.toLowerCase()
+  
+  if (query.includes('pending') || query.includes('my models') || query.includes('dashboard')) {
+   return 'pending_models'
+  }
+  if (query.includes('marketplace') || query.includes('available models') || query.includes('browse')) {
+   return 'marketplace_models'
+  }
+  if (query.includes('upload') || query.includes('add model')) {
+   return 'upload_guidance'
+  }
+  if (query.includes('stats') || query.includes('how many') || query.includes('count')) {
+   return 'platform_stats'
+  }
+  
+  return 'general_query'
+ }
 
  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
   const file = event.target.files?.[0]
@@ -42,9 +90,35 @@ export default function AgentPage() {
 
   setChatHistory(prev => [...prev, userMessage])
   setIsLoading(true)
+  const currentQuery = query
   setQuery('')
 
   try {
+   // Detect user intent
+   const intent = detectIntent(currentQuery)
+   let fetchedData = null
+   let dataType = undefined
+   
+   // Fetch relevant data based on intent
+   if (intent === 'pending_models') {
+    fetchedData = await fetchPendingModels()
+    dataType = 'pending_models'
+   } else if (intent === 'marketplace_models') {
+    fetchedData = await fetchMarketplaceModels()
+    dataType = 'marketplace_models'
+   } else if (intent === 'platform_stats') {
+    const [pending, marketplace] = await Promise.all([
+     fetchPendingModels(),
+     fetchMarketplaceModels()
+    ])
+    fetchedData = {
+     pendingCount: pending.length,
+     marketplaceCount: marketplace.length,
+     totalModels: pending.length + marketplace.length
+    }
+    dataType = 'dashboard_stats'
+   }
+
    // Check if API key is available
    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
    if (!apiKey) {
@@ -53,6 +127,10 @@ export default function AgentPage() {
 
    // Create Satya-specific context for the AI
    const satyaContext = `You are Satya AI Assistant with ACCURATE knowledge of the Satya platform's real architecture and implementation.
+   
+   ${fetchedData ? `CURRENT PLATFORM DATA: ${JSON.stringify(fetchedData, null, 2)}` : ''}
+   
+   Use this real-time data to answer the user's questions accurately. If data is provided, reference specific numbers and details.
 
    RESPONSE GUIDELINES:
    - Give SHORT answers for simple questions (1-2 sentences)
@@ -92,7 +170,7 @@ export default function AgentPage() {
 
    When answering technical questions, reference these ACTUAL implementation details, not generic blockchain concepts.
 
-   User question: ${query}`
+   User question: ${currentQuery}`
 
    const result = await geminiModel.generateContent(satyaContext)
    
@@ -113,7 +191,9 @@ export default function AgentPage() {
    const assistantMessage: ChatMessage = {
     role: 'assistant',
     content: cleanResponse,
-    timestamp: new Date()
+    timestamp: new Date(),
+    data: fetchedData,
+    dataType: dataType as any
    }
 
    setChatHistory(prev => [...prev, assistantMessage])
@@ -287,6 +367,84 @@ export default function AgentPage() {
           <p className={`whitespace-pre-wrap ${
            message.role === 'user' ? 'text-white' : 'text-gray-900'
           }`}>{message.content}</p>
+          
+          {/* Data Visualization for Assistant Messages */}
+          {message.role === 'assistant' && message.data && (
+           <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+            {message.dataType === 'pending_models' && (
+             <div>
+              <h4 className="font-semibold text-gray-900 mb-3">Your Pending Models ({message.data.length})</h4>
+              {message.data.length > 0 ? (
+               <div className="space-y-2 max-h-60 overflow-y-auto">
+                {message.data.slice(0, 5).map((model: any, idx: number) => (
+                 <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div>
+                   <p className="font-medium text-sm">Model {model.id?.slice(0, 8)}...</p>
+                   <p className="text-xs text-gray-600">Status: Pending Verification</p>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                   {new Date().toLocaleDateString()}
+                  </div>
+                 </div>
+                ))}
+                {message.data.length > 5 && (
+                 <p className="text-xs text-gray-500 text-center">+ {message.data.length - 5} more models</p>
+                )}
+               </div>
+              ) : (
+               <p className="text-gray-600 text-sm">No pending models found.</p>
+              )}
+             </div>
+            )}
+            
+            {message.dataType === 'marketplace_models' && (
+             <div>
+              <h4 className="font-semibold text-gray-900 mb-3">Marketplace Models ({message.data.length})</h4>
+              {message.data.length > 0 ? (
+               <div className="space-y-2 max-h-60 overflow-y-auto">
+                {message.data.slice(0, 5).map((model: any, idx: number) => (
+                 <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div>
+                   <p className="font-medium text-sm">{model.title || `Model ${model.listingId?.slice(0, 8)}...`}</p>
+                   <p className="text-xs text-gray-600">Price: {((parseFloat(model.downloadPrice || '0') / 1e9).toFixed(4))} SUI</p>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                   Listed: {new Date(model.timestamp).toLocaleDateString()}
+                  </div>
+                 </div>
+                ))}
+                {message.data.length > 5 && (
+                 <p className="text-xs text-gray-500 text-center">+ {message.data.length - 5} more models</p>
+                )}
+               </div>
+              ) : (
+               <p className="text-gray-600 text-sm">No models found in marketplace.</p>
+              )}
+             </div>
+            )}
+            
+            {message.dataType === 'dashboard_stats' && (
+             <div>
+              <h4 className="font-semibold text-gray-900 mb-3">Platform Statistics</h4>
+              <div className="grid grid-cols-3 gap-4">
+               <div className="text-center p-3 bg-blue-50 rounded">
+                <p className="text-2xl font-bold text-blue-600">{message.data.pendingCount}</p>
+                <p className="text-xs text-blue-700">Pending Models</p>
+               </div>
+               <div className="text-center p-3 bg-green-50 rounded">
+                <p className="text-2xl font-bold text-green-600">{message.data.marketplaceCount}</p>
+                <p className="text-xs text-green-700">Live Models</p>
+               </div>
+               <div className="text-center p-3 bg-purple-50 rounded">
+                <p className="text-2xl font-bold text-purple-600">{message.data.totalModels}</p>
+                <p className="text-xs text-purple-700">Total Models</p>
+               </div>
+              </div>
+             </div>
+            )}
+           </div>
+          )}
+          
           <p className={`text-xs mt-2 ${
            message.role === 'user' ? 'text-gray-300' : 'text-gray-500'
           }`}>
