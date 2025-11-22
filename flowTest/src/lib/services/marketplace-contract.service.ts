@@ -136,6 +136,7 @@ export class MarketplaceContractService {
     ],
    });
    } catch (moveCallError) {
+    const errorMessage = moveCallError instanceof Error ? moveCallError.message : String(moveCallError);
     
     if (errorMessage && errorMessage.includes('toLowerCase')) {
      throw new Error(`moveCall failed with toLowerCase error: ${errorMessage}`);
@@ -407,12 +408,6 @@ export class MarketplaceContractService {
      id: pendingModelId,
      options: { showContent: true, showType: true, showOwner: true }
     });
-    
-     id: objectInfo.data?.objectId,
-     type: objectInfo.data?.type,
-     owner: objectInfo.data?.owner,
-     hasContent: !!objectInfo.data?.content
-    });
 
     if (!objectInfo.data) {
      throw new Error('Object not found or not accessible');
@@ -541,13 +536,6 @@ export class MarketplaceContractService {
 
    // Check for success - transaction with digest and rawEffects is successful
    const isSuccessful = !!(digest && (effects?.status?.status === 'success' || rawEffects));
-   
-    hasDigest: !!digest,
-    hasEffects: !!effects,
-    hasRawEffects: !!rawEffects,
-    effectsStatus: effects?.status?.status,
-    isSuccessful
-   });
 
    if (isSuccessful) {
     // Try to find the verification object from objectChanges
@@ -699,13 +687,6 @@ export class MarketplaceContractService {
 
    // Check for success - transaction with digest and rawEffects is successful
    const isSuccessful = !!(digest && (effects?.status?.status === 'success' || rawEffects));
-   
-    hasDigest: !!digest,
-    hasEffects: !!effects,
-    hasRawEffects: !!rawEffects,
-    effectsStatus: effects?.status?.status,
-    isSuccessful
-   });
 
    if (isSuccessful) {
     // Try to find the marketplace object from objectChanges
@@ -1000,14 +981,6 @@ export class MarketplaceContractService {
    });
 
    const filteredData = response.data.filter(obj => obj.data !== null);
-   
-    total: filteredData.length,
-    sample: filteredData[0] ? {
-     objectId: filteredData[0].data?.objectId,
-     type: filteredData[0].data?.type,
-     content: filteredData[0].data?.content
-    } : null
-   });
 
    return filteredData;
 
@@ -1080,10 +1053,6 @@ export class MarketplaceContractService {
    
    // Extract pending model IDs from marketplace models
    if (marketplaceModels.length > 0) {
-     id: marketplaceModels[0].data?.objectId,
-     fields: marketplaceModels[0].data?.content?.fields
-    });
-    
     marketplaceModels.forEach(model => {
      const pendingId = model.data?.content?.fields?.pending_model_id;
      if (pendingId) {
@@ -1137,7 +1106,7 @@ export class MarketplaceContractService {
     
     allOwnedObjects.push(...page.data);
     
-    cursor = page.nextCursor;
+    cursor = page.nextCursor || null;
     
     // Safety check to prevent infinite loops
     if (pageCount >= maxPages) {
@@ -1189,7 +1158,7 @@ export class MarketplaceContractService {
 
    // If no current package models found, try to query recent events to find newly created models
    // that might not be indexed yet in getOwnedObjects
-   if (currentPackageModels.length === 0) {
+   if (allPendingModels.length === 0) {
      try {
      const recentEvents = await this.suiClient.queryEvents({
       query: {
@@ -1273,10 +1242,7 @@ export class MarketplaceContractService {
     const isOldPackage = isPendingModel && objectType !== currentPackageType;
     
     if (isOldPackage) {
-      objectId: obj.data?.objectId,
-      type: objectType,
-      currentExpected: currentPackageType
-     });
+      // Found old package model
     }
     
     return isOldPackage;
@@ -1291,11 +1257,7 @@ export class MarketplaceContractService {
    oldPackagePendingModels.forEach(obj => {
     const content = obj.data?.content as any;
     const fields = content?.fields || {};
-     objectId: obj.data?.objectId,
-     title: fields.title,
-     type: obj.data?.type,
-     createdAt: fields.created_at ? new Date(parseInt(fields.created_at)).toISOString() : 'no date'
-    });
+    // Log model being removed (old package)
    });
 
    return { removed: oldPackagePendingModels.length, errors: [] };
@@ -1353,10 +1315,7 @@ export class MarketplaceContractService {
     
     if (hasInvalidDate || isOld) {
      modelsToRemove.push(objectId);
-      objectId: objectId.slice(0, 8),
-      reason: hasInvalidDate ? 'invalid_date' : 'too_old',
-      createdAt: hasInvalidDate ? 'invalid' : new Date(createdTimestamp).toISOString()
-     });
+     // Log removal reason
     }
    });
 

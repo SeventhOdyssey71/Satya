@@ -232,20 +232,7 @@ export function ModelVerificationFlow({
     }
    };
 
-    pendingModelId,
-    qualityScore: qualityScoreBP,
-    attestationHashLength: attestationHash.length,
-    signatureLength: verifierSignature.length
-   });
-
    // Step 1: Complete verification on blockchain
-    pendingModelId,
-    enclaveId: attestationData.tee_attestation.enclave_id,
-    qualityScore: qualityScoreBP,
-    securityAssessment: 'PASSED',
-    attestationHashLength: attestationHash.length,
-    verifierSignatureLength: verifierSignature.length
-   });
 
    
    // Add a small delay to ensure wallet is ready
