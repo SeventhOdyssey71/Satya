@@ -73,9 +73,12 @@ export default function AgentPage() {
     throw new Error('Empty response from Gemini API');
    }
 
+   // Remove markdown formatting like **bold** text
+   const cleanResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '$1');
+
    const assistantMessage: ChatMessage = {
     role: 'assistant',
-    content: aiResponse,
+    content: cleanResponse,
     timestamp: new Date()
    }
 
@@ -197,7 +200,9 @@ export default function AgentPage() {
            ? 'bg-black text-white' 
            : 'bg-gray-100 text-gray-900'
          }`}>
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          <p className={`whitespace-pre-wrap ${
+           message.role === 'user' ? 'text-white' : 'text-gray-900'
+          }`}>{message.content}</p>
           <p className={`text-xs mt-2 ${
            message.role === 'user' ? 'text-gray-300' : 'text-gray-500'
           }`}>
