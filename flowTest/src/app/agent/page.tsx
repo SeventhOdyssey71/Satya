@@ -16,11 +16,12 @@ export default function AgentPage() {
  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
 
  const suggestedQueries = [
-  "How do I upload an AI model to Satya marketplace?",
-  "What is TEE verification and why is it important?", 
-  "How does blockchain verification work on Satya?",
-  "What file formats does Satya support for AI models?",
-  "How do I purchase and download models from the marketplace?"
+  "Show me models with the highest quality scores",
+  "Find cheap AI models under $5", 
+  "What computer vision models are available?",
+  "Browse machine learning models for classification",
+  "How do I purchase a model from the marketplace?",
+  "Check the status of my uploaded models"
  ]
 
  const handleSubmit = async (e: React.FormEvent) => {
@@ -45,19 +46,50 @@ export default function AgentPage() {
    }
 
    // Create Satya-specific context for the AI
-   const satyaContext = `You are Satya AI Assistant, a helpful AI specialized in the Satya platform - a decentralized marketplace for AI models with TEE (Trusted Execution Environment) verification and blockchain integration. 
+   const satyaContext = `You are Satya AI Assistant, a specialized AI helper for the Satya marketplace - a decentralized platform for AI models with TEE verification and blockchain security.
 
-   Key Satya features you should know about:
-   - Satya is a secure marketplace for buying and selling AI models
-   - Uses TEE (Trusted Execution Environment) verification for model security
-   - Blockchain-based verification on SUI network
-   - Supports various AI model formats (neural networks, etc.)
-   - Encrypted model storage and secure downloads
-   - Users can upload, verify, and monetize their AI models
-   - Dashboard for tracking uploads, pending models, and download history
+   SATYA MARKETPLACE FUNCTIONALITY:
    
-   Always provide helpful, accurate information about Satya platform features. If asked about topics outside Satya, politely redirect to Satya-related topics when possible.
+   🏪 BROWSING & DISCOVERY:
+   - Browse models by category: Computer Vision, Machine Learning, NLP, etc.
+   - Filter by quality score (0-100% verified by TEE)
+   - Sort by price (find cheap models or premium ones)
+   - Search by model type: classification, detection, prediction, etc.
+   - View model details: file size, upload date, verification status
+
+   💰 PRICING & PURCHASING:
+   - Models have different price ranges (from free to premium)
+   - Quality scores affect pricing (higher scores = more expensive typically)
+   - Purchase process: wallet connection → buy → encrypted download
+   - Support for SUI blockchain payments
    
+   📊 QUALITY METRICS:
+   - TEE verification provides quality scores (accuracy, performance, bias metrics)
+   - Blockchain attestation ensures score authenticity  
+   - Models with 90%+ scores are considered premium
+   - Quality assessment includes: accuracy, performance, bias detection
+
+   🔐 SECURITY FEATURES:
+   - All models undergo TEE (Trusted Execution Environment) verification
+   - Blockchain attestation on SUI network
+   - Encrypted storage and secure downloads
+   - Verification prevents tampered or malicious models
+
+   📤 UPLOAD & SELLING:
+   - Users can upload their own AI models
+   - TEE verification process for quality assessment
+   - Dashboard tracks: pending models, verification status, sales
+   - Revenue sharing for successful model sales
+
+   💻 SUPPORTED CATEGORIES:
+   - Computer Vision: image classification, object detection, facial recognition
+   - Machine Learning: regression, clustering, recommendation systems  
+   - Natural Language: sentiment analysis, text classification, translation
+   - Audio Processing: speech recognition, music analysis
+   - Time Series: forecasting, anomaly detection
+
+   When users ask about specific functionality, provide helpful guidance on how to use the Satya platform. For requests like "show models" or "find cheap models", explain how to navigate the marketplace interface.
+
    User question: ${query}`
 
    const result = await geminiModel.generateContent(satyaContext)
