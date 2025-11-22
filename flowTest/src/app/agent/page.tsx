@@ -38,6 +38,12 @@ export default function AgentPage() {
   setQuery('')
 
   try {
+   // Check if API key is available
+   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+   if (!apiKey) {
+    throw new Error('Gemini API key not configured');
+   }
+
    // Create Satya-specific context for the AI
    const satyaContext = `You are Satya AI Assistant, a helpful AI specialized in the Satya platform - a decentralized marketplace for AI models with TEE (Trusted Execution Environment) verification and blockchain integration. 
 
@@ -55,8 +61,17 @@ export default function AgentPage() {
    User question: ${query}`
 
    const result = await geminiModel.generateContent(satyaContext)
+   
+   if (!result || !result.response) {
+    throw new Error('No response from Gemini API');
+   }
+
    const response = result.response
-   const aiResponse = response.text()
+   const aiResponse = await response.text()
+
+   if (!aiResponse || aiResponse.trim() === '') {
+    throw new Error('Empty response from Gemini API');
+   }
 
    const assistantMessage: ChatMessage = {
     role: 'assistant',
@@ -66,9 +81,19 @@ export default function AgentPage() {
 
    setChatHistory(prev => [...prev, assistantMessage])
   } catch (error) {
+   let errorDetails = 'Unknown error occurred';
+   
+   if (error instanceof Error) {
+    errorDetails = error.message;
+   } else if (typeof error === 'string') {
+    errorDetails = error;
+   } else if (error && typeof error === 'object') {
+    errorDetails = JSON.stringify(error);
+   }
+
    const errorMessage: ChatMessage = {
     role: 'assistant',
-    content: 'Sorry, I encountered an error. Please try again or contact support if the issue persists.',
+    content: `Sorry, I encountered an error: ${errorDetails}. Please try again or contact support if the issue persists.`,
     timestamp: new Date()
    }
    setChatHistory(prev => [...prev, errorMessage])
