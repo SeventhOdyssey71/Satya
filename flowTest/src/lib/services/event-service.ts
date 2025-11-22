@@ -79,6 +79,42 @@ export class EventService {
  }
 
  /**
+  * Fetch marketplace model details from blockchain
+  */
+ private async getMarketplaceModelDetails(marketplaceId: string): Promise<any> {
+  try {
+   const response = await this.client.getObject({
+    id: marketplaceId,
+    options: {
+     showContent: true,
+     showType: true,
+    }
+   });
+
+   if (!response.data?.content) {
+    return null;
+   }
+
+   const content = response.data.content as any;
+   const fields = content?.fields || {};
+   
+   return {
+    title: fields.title || 'Unknown Model',
+    description: fields.description || '',
+    category: fields.category || 'Uncategorized',
+    modelBlobId: fields.model_blob_id || '',
+    datasetBlobId: fields.dataset_blob_id || '',
+    price: fields.price || '0',
+    downloads: fields.current_downloads || 0,
+    qualityScore: fields.quality_score || 0
+   };
+  } catch (error) {
+   logger.warn('Failed to fetch marketplace model details', { marketplaceId, error });
+   return null;
+  }
+ }
+
+ /**
   * Query events from the blockchain with filtering options
   */
  async queryEvents(filter: EventFilter = {}): Promise<EventQueryResult> {
@@ -86,7 +122,7 @@ export class EventService {
    logger.info('Querying blockchain events', { filter });
 
    const query = {
-    MoveEventType: `${this.packageId}::marketplace_v2::ListingCreated`
+    MoveEventType: `${this.packageId}::marketplace::ModelListed`
    };
 
    const response = await this.client.queryEvents({
@@ -96,8 +132,11 @@ export class EventService {
     order: 'descending'
    });
 
-   const events = response.data
-    .map(event => this.parseEvent(event))
+   const parsedEvents = await Promise.all(
+    response.data.map(event => this.parseEvent(event))
+   );
+
+   const events = parsedEvents
     .filter((event): event is MarketplaceEvent => event !== null)
     .filter(event => this.applyEventFilter(event, filter));
 
@@ -265,24 +304,28 @@ export class EventService {
  /**
   * Parse raw event data into typed event objects
   */
- private parseEvent(rawEvent: any): MarketplaceEvent | null {
+ private async parseEvent(rawEvent: any): Promise<MarketplaceEvent | null> {
   try {
    const eventType = rawEvent.type.split('::').pop();
    const fields = rawEvent.parsedJson || {};
    const timestamp = parseInt(rawEvent.timestampMs) || Date.now();
 
    switch (eventType) {
-    case 'ListingCreated':
+    case 'ModelListed': {
+     const marketplaceId = fields.marketplace_id || '';
+     const modelDetails = await this.getMarketplaceModelDetails(marketplaceId);
+     
      return {
       type: 'ListingCreated',
-      listingId: fields.listing_id || fields.listingId || '',
+      listingId: marketplaceId,
       creator: fields.creator || '',
-      title: fields.title || '',
-      downloadPrice: fields.download_price?.toString() || fields.downloadPrice?.toString() || '0',
-      walrusBlobId: fields.walrus_blob_id || fields.walrusBlobId || '',
+      title: modelDetails?.title || 'Unknown Model',
+      downloadPrice: fields.price?.toString() || modelDetails?.price || '0',
+      walrusBlobId: modelDetails?.modelBlobId || '',
       timestamp,
       transactionDigest: rawEvent.id.txDigest
      };
+    }
 
     case 'ListingPurchased':
      return {

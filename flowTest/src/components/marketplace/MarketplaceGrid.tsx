@@ -104,7 +104,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({ filters }) => 
      </svg>
     </div>
     <div className="text-center">
-     <h3 className="text-xl font-russo text-secondary-800 mb-2">Something went wrong</h3>
+     <h3 className="text-xl font-albert font-semibold text-secondary-800 mb-2">Something went wrong</h3>
      <p className="text-secondary-800 mb-6">{error}</p>
      <button
       onClick={() => loadListings()}
@@ -125,7 +125,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({ filters }) => 
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
      </svg>
     </div>
-    <h3 className="text-2xl font-russo text-secondary-800 mb-4">No models found</h3>
+    <h3 className="text-2xl font-albert font-bold text-secondary-800 mb-4">No models found</h3>
     <p className="text-secondary-800 mb-8 max-w-md mx-auto">
      Be the first to upload and sell your AI models on the marketplace! Start building the future of trusted AI.
     </p>
@@ -141,7 +141,7 @@ export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({ filters }) => 
    {/* Results Header */}
    <div className="flex items-center justify-between">
     <div>
-     <h2 className="text-xl font-russo text-secondary-800">
+     <h2 className="text-xl font-albert font-semibold text-secondary-800">
       {listings.length} model{listings.length !== 1 ? 's' : ''} found
      </h2>
      <p className="text-secondary-800">Verified and ready for download</p>
@@ -257,7 +257,7 @@ function ModelCard({ model, onPurchase }: { model: ModelListedEvent, onPurchase:
      {/* Price Tag */}
      <div className="absolute bottom-4 right-4">
       <div className="bg-white/95 backdrop-blur-sm border border-secondary-300 rounded-xl px-3 py-2 shadow-card">
-       <div className="text-lg font-russo text-secondary-900">{formatPrice(model.downloadPrice)}</div>
+       <div className="text-lg font-albert font-bold text-secondary-900">{formatPrice(model.downloadPrice)}</div>
       </div>
      </div>
     </div>
@@ -266,7 +266,7 @@ function ModelCard({ model, onPurchase }: { model: ModelListedEvent, onPurchase:
     <div className="p-6">
      {/* Title and Rating */}
      <div className="flex items-start justify-between mb-3">
-      <h3 className="text-xl font-russo text-secondary-900 group-hover:text-secondary-700 transition-colors line-clamp-2 flex-1">
+      <h3 className="text-xl font-albert font-semibold text-secondary-900 group-hover:text-secondary-700 transition-colors line-clamp-2 flex-1">
        {model.title}
       </h3>
      </div>

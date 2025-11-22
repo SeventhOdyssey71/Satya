@@ -8,7 +8,7 @@ interface FormFieldProps {
 export function FormField({ label, children }: FormFieldProps) {
  return (
   <div>
-   <label className="block text-secondary-700 text-lg font-russo mb-3">
+   <label className="block text-secondary-700 text-lg font-albert font-bold mb-3">
     {label}
    </label>
    {children}

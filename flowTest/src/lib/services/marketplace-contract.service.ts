@@ -54,6 +54,13 @@ export class MarketplaceContractService {
   return new MarketplaceContractService(suiClient);
  }
 
+ // Initialize the service (for compatibility with existing hooks)
+ async initialize(): Promise<void> {
+  // Service is ready to use immediately after construction
+  // This method exists for compatibility with existing code
+  logger.info('MarketplaceContractService initialized');
+ }
+
  /**
   * Phase 1: Upload model to pending state
   */
@@ -452,31 +459,93 @@ export class MarketplaceContractService {
   signer: any
  ): Promise<ContractResult> {
   try {
+   // Validate inputs
+   if (!pendingModelId || typeof pendingModelId !== 'string') {
+    throw new Error('Invalid pending model ID provided');
+   }
+   
+   // Validate object ID format (Sui object IDs are 32 bytes = 64 hex chars)
+   if (!/^0x[0-9a-fA-F]{64}$/.test(pendingModelId)) {
+    throw new Error(`Invalid object ID format: ${pendingModelId}`);
+   }
+
    logger.info('Completing TEE verification', {
     modelId: pendingModelId,
     qualityScore: params.qualityScore
    });
 
+   console.log('=== VERIFICATION DEBUG ===');
+   console.log('Pending Model ID:', pendingModelId);
+   console.log('Enclave ID:', params.enclaveId);
+   console.log('Quality Score:', params.qualityScore);
+   console.log('Security Assessment:', params.securityAssessment);
+   console.log('Package ID:', MARKETPLACE_CONFIG.PACKAGE_ID);
+   console.log('Registry ID:', MARKETPLACE_CONFIG.REGISTRY_ID);
+
+   // Validate the object exists and is accessible
+   try {
+    const userAddress = await signer.toSuiAddress();
+    console.log('User address:', userAddress);
+    
+    const objectInfo = await this.suiClient.getObject({
+     id: pendingModelId,
+     options: { showContent: true, showType: true, showOwner: true }
+    });
+    
+    console.log('Object info:', {
+     id: objectInfo.data?.objectId,
+     type: objectInfo.data?.type,
+     owner: objectInfo.data?.owner,
+     hasContent: !!objectInfo.data?.content
+    });
+
+    if (!objectInfo.data) {
+     throw new Error('Object not found or not accessible');
+    }
+
+    if (objectInfo.data?.owner && typeof objectInfo.data.owner === 'object' && 'AddressOwner' in objectInfo.data.owner) {
+     const objectOwner = (objectInfo.data.owner as any).AddressOwner;
+     if (objectOwner !== userAddress) {
+      throw new Error(`Object is not owned by current user. Owner: ${objectOwner}, User: ${userAddress}`);
+     }
+    }
+   } catch (objectError) {
+    console.error('Object validation failed:', objectError);
+    throw new Error(`Cannot access pending model: ${objectError instanceof Error ? objectError.message : String(objectError)}`);
+   }
+
+   // Two-step approach: first ensure submission, then complete verification
+   logger.info('Preparing verification transaction for model', { pendingModelId });
+
+   // Create single transaction with both operations
+   console.log('Creating verification transaction...');
    const tx = new Transaction();
-
+   
+   // Create object references
    const pendingModel = tx.object(pendingModelId);
+   const registry = tx.object(MARKETPLACE_CONFIG.REGISTRY_ID);
+   const clock = tx.object('0x6');
 
+   // Step 1: Submit for verification (changes PENDING -> VERIFYING)
+   console.log('Adding submit_for_verification to transaction...');
    tx.moveCall({
-    target: `0x2::clock::create_for_testing`,
-    arguments: [tx.pure.u64(Date.now())]
+    target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::submit_for_verification`,
+    arguments: [pendingModel, registry, clock],
    });
 
+   // Step 2: Complete verification (changes VERIFYING -> VERIFIED) 
+   console.log('Adding complete_verification to transaction...');
    const verificationResult = tx.moveCall({
     target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::complete_verification`,
     arguments: [
      pendingModel,
-     tx.object(MARKETPLACE_CONFIG.REGISTRY_ID),
+     registry,
      tx.pure.string(params.enclaveId),
      tx.pure.u64(params.qualityScore),
      tx.pure.string(params.securityAssessment),
      tx.pure.vector('u8', Array.from(params.attestationHash)),
      tx.pure.vector('u8', Array.from(params.verifierSignature)),
-     tx.object('0x6'), // Clock
+     clock
     ],
    });
 
@@ -484,9 +553,25 @@ export class MarketplaceContractService {
    tx.transferObjects([verificationResult], senderAddress);
 
    const txResult = await signer.executeTransaction(tx);
+   
+   console.log('Complete verification transaction result:', JSON.stringify(txResult, null, 2));
 
-   if (txResult.effects?.status?.status === 'success') {
-    const createdObjects = txResult.objectChanges?.filter(
+   // Check if txResult is defined and has the expected structure
+   if (!txResult) {
+    logger.error('Transaction result is undefined', { modelId: pendingModelId });
+    return {
+     success: false,
+     error: 'Transaction execution failed: No result returned'
+    };
+   }
+
+   // Handle both direct result and nested result structures
+   const effects = txResult.effects || txResult.result?.effects;
+   const objectChanges = txResult.objectChanges || txResult.result?.objectChanges;
+   const digest = txResult.digest || txResult.result?.digest;
+
+   if (effects?.status?.status === 'success') {
+    const createdObjects = objectChanges?.filter(
      (change: any) => change.type === 'created'
     );
     const verificationObj = createdObjects?.find(
@@ -495,18 +580,23 @@ export class MarketplaceContractService {
     );
 
     logger.info('TEE verification completed', {
-     digest: txResult.digest,
+     digest: digest,
      verificationId: verificationObj?.objectId,
      qualityScore: params.qualityScore
     });
 
     return {
      success: true,
-     transactionDigest: txResult.digest,
+     transactionDigest: digest,
      objectId: verificationObj?.objectId
     };
    } else {
-    const error = txResult.effects?.status?.error || 'Transaction failed';
+    const error = effects?.status?.error || 'Transaction failed or returned undefined result';
+    logger.error('Complete verification failed', {
+     error,
+     txResult,
+     modelId: pendingModelId
+    });
     return {
      success: false,
      error: `Verification completion failed: ${error}`
@@ -545,18 +635,14 @@ export class MarketplaceContractService {
    const pendingModel = tx.object(pendingModelId);
    const verification = tx.object(verificationId);
 
-   tx.moveCall({
-    target: `0x2::clock::create_for_testing`,
-    arguments: [tx.pure.u64(Date.now())]
-   });
-
+   // Use the shared clock object for testnet
    const marketplaceModel = tx.moveCall({
     target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::list_on_marketplace`,
     arguments: [
      pendingModel,
      verification,
      tx.object(MARKETPLACE_CONFIG.REGISTRY_ID),
-     tx.object('0x6'), // Clock
+     tx.object('0x6'), // Clock shared object on testnet
     ],
    });
 
@@ -565,8 +651,27 @@ export class MarketplaceContractService {
 
    const txResult = await signer.executeTransaction(tx);
 
-   if (txResult.effects?.status?.status === 'success') {
-    const createdObjects = txResult.objectChanges?.filter(
+   console.log('List on marketplace transaction result:', JSON.stringify(txResult, null, 2));
+
+   // Check if txResult is defined
+   if (!txResult) {
+    logger.error('Transaction result is undefined', { 
+     pendingModelId, 
+     verificationId 
+    });
+    return {
+     success: false,
+     error: 'Transaction execution failed: No result returned'
+    };
+   }
+
+   // Handle both direct result and nested result structures
+   const effects = txResult.effects || txResult.result?.effects;
+   const objectChanges = txResult.objectChanges || txResult.result?.objectChanges;
+   const digest = txResult.digest || txResult.result?.digest;
+
+   if (effects?.status?.status === 'success') {
+    const createdObjects = objectChanges?.filter(
      (change: any) => change.type === 'created'
     );
     const marketplaceObj = createdObjects?.find(
@@ -575,17 +680,17 @@ export class MarketplaceContractService {
     );
 
     logger.info('Model listed on marketplace', {
-     digest: txResult.digest,
+     digest: digest,
      marketplaceId: marketplaceObj?.objectId
     });
 
     return {
      success: true,
-     transactionDigest: txResult.digest,
+     transactionDigest: digest,
      objectId: marketplaceObj?.objectId
     };
    } else {
-    const error = txResult.effects?.status?.error || 'Transaction failed';
+    const error = effects?.status?.error || 'Transaction failed';
     return {
      success: false,
      error: `Marketplace listing failed: ${error}`
@@ -720,15 +825,170 @@ export class MarketplaceContractService {
   */
  async getMarketplaceModels(limit = 50): Promise<any[]> {
   try {
-   // TODO: Implement proper querying when SuiClient API is stable
-   logger.warn('getMarketplaceModels not implemented yet');
-   return [];
+   logger.info('Querying marketplace models', { limit });
+
+   // Try multiple approaches to find MarketplaceModel objects
+   let response;
+   
+   // Approach 1: Query by registry ownership
+   try {
+    response = await this.suiClient.getOwnedObjects({
+     owner: MARKETPLACE_CONFIG.REGISTRY_ID,
+     filter: {
+      StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::MarketplaceModel`
+     },
+     options: {
+      showContent: true,
+      showType: true,
+      showOwner: true,
+      showDisplay: true,
+     },
+     limit,
+    });
+    
+    if (response.data && response.data.length > 0) {
+     console.log('Found marketplace models via registry ownership:', response.data.length);
+    }
+   } catch (registryError) {
+    console.log('Registry ownership query failed, trying alternative approach');
+   }
+
+   // Approach 2: Event-based query if no direct results
+   if (!response || !response.data || response.data.length === 0) {
+    console.log('No direct results, using event-based query');
+    
+    // Query ModelListed events to get marketplace model IDs
+    const eventsResponse = await this.suiClient.queryEvents({
+     query: {
+      MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelListed`
+     },
+     limit,
+     order: 'descending'
+    });
+
+    if (eventsResponse.data && eventsResponse.data.length > 0) {
+     console.log('Found ModelListed events:', eventsResponse.data.length);
+     
+     // Extract model IDs from events and fetch the actual objects
+     const modelPromises = eventsResponse.data.map(async (event) => {
+      try {
+       const eventData = event.parsedJson as any;
+       const modelId = eventData?.model_id;
+       
+       if (modelId) {
+        console.log('Fetching marketplace model:', modelId);
+        return await this.suiClient.getObject({
+         id: modelId,
+         options: {
+          showContent: true,
+          showType: true,
+          showOwner: true,
+          showDisplay: true,
+         }
+        });
+       }
+       return null;
+      } catch (err) {
+       console.warn('Failed to fetch model object', { modelId: event.parsedJson, error: err });
+       return null;
+      }
+     });
+
+     const models = await Promise.all(modelPromises);
+     const validModels = models.filter(model => model && model.data);
+     
+     console.log('Successfully fetched marketplace models from events:', validModels.length);
+     
+     // Transform to expected format
+     response = {
+      data: validModels.map(model => ({ data: model!.data }))
+     };
+    } else {
+     console.log('No ModelListed events found');
+     response = { data: [] };
+    }
+   }
+
+   if (!response.data) {
+    logger.warn('No marketplace models found');
+    return [];
+   }
+
+   logger.info('Found marketplace models', { 
+    count: response.data.length,
+    objects: response.data.map(obj => ({
+     id: obj.data?.objectId,
+     type: obj.data?.type,
+     hasContent: !!obj.data?.content
+    }))
+   });
+
+   const filteredData = response.data.filter(obj => obj.data !== null);
+   
+   console.log('Marketplace models raw data:', {
+    total: filteredData.length,
+    sample: filteredData[0] ? {
+     objectId: filteredData[0].data?.objectId,
+     type: filteredData[0].data?.type,
+     content: filteredData[0].data?.content
+    } : null
+   });
+
+   return filteredData;
 
   } catch (error) {
    logger.error('Failed to query marketplace models', {
     error: error instanceof Error ? error.message : String(error)
    });
-   return [];
+   
+   // Fallback: Try querying by package type without owner filter
+   try {
+    logger.info('Trying fallback query for marketplace models');
+    
+    const response = await this.suiClient.queryEvents({
+     query: {
+      MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelListed`
+     },
+     limit,
+     order: 'descending'
+    });
+
+    if (response.data && response.data.length > 0) {
+     logger.info('Found marketplace models via events', { count: response.data.length });
+     
+     // Extract model IDs from events and fetch the actual objects
+     const modelPromises = response.data.map(async (event) => {
+      try {
+       const modelId = (event.parsedJson as any)?.model_id;
+       if (modelId) {
+        return await this.suiClient.getObject({
+         id: modelId,
+         options: {
+          showContent: true,
+          showType: true,
+          showOwner: true,
+          showDisplay: true,
+         }
+        });
+       }
+      } catch (err) {
+       const modelId = (event.parsedJson as any)?.model_id;
+       logger.warn('Failed to fetch model object', { modelId: modelId, error: err });
+       return null;
+      }
+     });
+
+     const models = await Promise.all(modelPromises);
+     return models.filter(model => model && model.data).map(model => ({ data: model!.data }));
+    }
+    
+    return [];
+   } catch (fallbackError) {
+    logger.error('Fallback query also failed', {
+     error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
+    });
+    return [];
+   }
   }
  }
 
@@ -737,19 +997,30 @@ export class MarketplaceContractService {
   */
  async getUserPendingModels(userAddress: string): Promise<any[]> {
   try {
-   // Get marketplace models to see which pending models have been listed
+   console.log('Querying pending models for user:', userAddress);
+
+   // Approach 1: Get marketplace models to see which pending models have been listed
    const marketplaceModels = await this.getMarketplaceModels();
+   console.log('Marketplace models found:', marketplaceModels.length);
+   
    const listedModelIds = new Set<string>();
    
    // Extract pending model IDs from marketplace models
-   marketplaceModels.forEach(model => {
-    const pendingId = model.data?.content?.fields?.pending_model_id;
-    if (pendingId) {
-     listedModelIds.add(pendingId);
-    }
-   });
+   if (marketplaceModels.length > 0) {
+    console.log('Sample marketplace model:', {
+     id: marketplaceModels[0].data?.objectId,
+     fields: marketplaceModels[0].data?.content?.fields
+    });
+    
+    marketplaceModels.forEach(model => {
+     const pendingId = model.data?.content?.fields?.pending_model_id;
+     if (pendingId) {
+      listedModelIds.add(pendingId);
+     }
+    });
+   }
 
-   // Also check ModelListed events to get recently listed models
+   // Approach 2: Also check ModelListed events to get recently listed models
    try {
     const eventsResponse = await this.suiClient.queryEvents({
      query: {
@@ -759,48 +1030,87 @@ export class MarketplaceContractService {
      order: 'descending'
     });
 
-    eventsResponse.data?.forEach(event => {
-     const eventData = event.parsedJson as any;
-     const pendingModelId = eventData?.pending_model_id;
-     if (pendingModelId) {
-      listedModelIds.add(pendingModelId);
-     }
-    });
+    if (eventsResponse.data) {
+     console.log('Found ModelListed events:', eventsResponse.data.length);
+     
+     eventsResponse.data.forEach(event => {
+      const eventData = event.parsedJson as any;
+      const pendingModelId = eventData?.pending_model_id;
+      if (pendingModelId) {
+       listedModelIds.add(pendingModelId);
+       console.log('Found listed model from event:', pendingModelId);
+      }
+     });
+    }
    } catch (eventError) {
-    // Silent fail for cleaner logs
+    console.log('Failed to query events:', eventError);
    }
 
-   // Query all objects owned by the user with proper pagination
-   let allOwnedObjects: any[] = [];
-   let cursor: string | null = null;
-   let pageCount = 0;
-   const maxPages = 20;
+   console.log('All listed model IDs (from models + events):', Array.from(listedModelIds));
 
-   do {
-    pageCount++;
-    const page = await this.suiClient.getOwnedObjects({
-     owner: userAddress,
-     cursor: cursor,
-     options: {
-      showContent: true,
-      showType: true,
-     },
-     limit: 50,
+   // Query all objects owned by the user
+   const ownedObjects = await this.suiClient.getOwnedObjects({
+    owner: userAddress,
+    options: {
+     showContent: true,
+     showType: true,
+    },
+   });
+
+   console.log('Total owned objects:', ownedObjects.data.length);
+   
+   // Debug: Log all owned object types to see what we have
+   const objectTypes = ownedObjects.data.map(obj => ({
+    id: obj.data?.objectId?.slice(0, 8),
+    type: obj.data?.type
+   }));
+   console.log('Owned object types sample:', objectTypes.slice(0, 10));
+   
+   // Debug: Log all PendingModel objects specifically
+   const allPendingModelIds = ownedObjects.data
+    .filter(obj => obj.data?.type?.includes('PendingModel'))
+    .map(obj => ({
+     id: obj.data?.objectId,
+     type: obj.data?.type,
+     createdAt: (obj.data?.content as any)?.fields?.created_at
+    }));
+   console.log('ALL PENDING MODELS FOUND:', allPendingModelIds);
+
+   // Filter for PendingModel objects that haven't been listed on marketplace
+   const allPendingModels = ownedObjects.data.filter(obj => {
+    const objectType = obj.data?.type;
+    return objectType?.includes('PendingModel');
+   });
+   
+   console.log(`Found ${allPendingModels.length} total pending models for user`);
+   
+   const pendingModels = allPendingModels.filter(obj => {
+    const objectId = obj.data?.objectId;
+    if (!objectId) return false;
+    const isListed = listedModelIds.has(objectId);
+    
+    // Check age and validity - exclude models with invalid dates or older than 7 days
+    const content = obj.data?.content as any;
+    const createdAt = content?.fields?.created_at;
+    const now = Date.now();
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    
+    // Filter out models with invalid timestamps (0 or invalid values)
+    const createdTimestamp = parseInt(createdAt || '0');
+    const hasValidDate = createdTimestamp > 0 && createdTimestamp < now;
+    const isOld = hasValidDate && (now - createdTimestamp) > sevenDays;
+    
+    console.log('Pending model check:', {
+     objectId: objectId?.slice(0, 8),
+     isListed: isListed,
+     isOld: isOld,
+     hasValidDate: hasValidDate,
+     createdAt: hasValidDate ? new Date(createdTimestamp).toISOString() : 'invalid',
+     willInclude: !isListed && !isOld && hasValidDate
     });
     
-    allOwnedObjects.push(...page.data);
-    cursor = page.nextCursor;
-    
-    if (pageCount >= maxPages) {
-     break;
-    }
-   } while (cursor);
-
-   // Filter for PendingModel objects from CURRENT package only
-   const expectedPendingModelType = `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::PendingModel`;
-   const allPendingModels = allOwnedObjects.filter(obj => {
-    const objectType = obj.data?.type;
-    return objectType === expectedPendingModelType;
+    // Only include pending models that haven't been listed, aren't too old, and have valid dates
+    return !isListed && !isOld && hasValidDate;
    });
    
    const pendingModels = allPendingModels.filter(obj => {
@@ -997,5 +1307,60 @@ export class MarketplaceContractService {
    });
    return [];
   }
+ }
+
+ /**
+  * Get completed models (models that have been verified and listed on marketplace)
+  */
+ async getUserCompletedModels(userAddress: string): Promise<any[]> {
+  try {
+   console.log('Querying completed models for user:', userAddress);
+
+   // Get all marketplace models created by this user
+   const marketplaceModels = await this.getMarketplaceModels();
+   console.log('Total marketplace models found:', marketplaceModels.length);
+   
+   const userModels = marketplaceModels.filter(model => {
+    const creator = model.data?.content?.fields?.creator;
+    return creator === userAddress;
+   });
+
+   console.log(`Found ${userModels.length} completed models for user ${userAddress}`);
+   
+   return userModels.map(obj => this.transformMarketplaceModelObject(obj));
+
+  } catch (error) {
+   logger.error('Failed to fetch completed models', { error, userAddress });
+   return [];
+  }
+ }
+
+ /**
+  * Transform marketplace model object for dashboard display
+  */
+ private transformMarketplaceModelObject(obj: any): any {
+  const content = obj.data?.content as any;
+  const fields = content?.fields || {};
+
+  return {
+   id: obj.data?.objectId || '',
+   title: fields.title || 'Untitled Model',
+   description: fields.description || '',
+   category: fields.category || 'Uncategorized',
+   tags: Array.isArray(fields.tags) ? fields.tags : [],
+   creator: fields.creator || '',
+   modelBlobId: fields.model_blob_id || '',
+   datasetBlobId: fields.dataset_blob_id || null,
+   price: fields.price || '0',
+   maxDownloads: fields.max_downloads || null,
+   qualityScore: fields.quality_score || 0,
+   teeVerified: fields.tee_verified || false,
+   currentDownloads: fields.current_downloads || 0,
+   totalEarnings: fields.total_earnings || '0',
+   listedAt: fields.listed_at || Date.now(),
+   pendingModelId: fields.pending_model_id || '',
+   verificationId: fields.verification_id || '',
+   status: 3 // STATUS_MARKETPLACE (completed)
+  };
  }
 }
