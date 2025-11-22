@@ -56,17 +56,19 @@ export default function AgentPage() {
      }
     
     case 'redirect_upload':
+     // Use Next.js router for proper navigation
      window.location.href = '/upload'
      return {
       success: true,
-      message: 'Redirecting to upload page...'
+      message: 'Opening the upload page...'
      }
     
     case 'redirect_dashboard':
+     // Use Next.js router for proper navigation
      window.location.href = '/dashboard'
      return {
       success: true,
-      message: 'Redirecting to dashboard...'
+      message: 'Opening the dashboard...'
      }
     
     default:
@@ -119,7 +121,12 @@ export default function AgentPage() {
       
       let formattedContent = ''
       if (actionResult.success) {
-        formattedContent = `✅ ${actionResult.message}`
+        // For redirects, just show the message without fake success
+        if (lastSuggestedAction.includes('redirect')) {
+          formattedContent = actionResult.message
+        } else {
+          formattedContent = `✅ ${actionResult.message}`
+        }
         
         if (actionResult.data && Array.isArray(actionResult.data)) {
           formattedContent += `\n\nResults:\n`
@@ -129,7 +136,7 @@ export default function AgentPage() {
           if (actionResult.data.length > 5) {
             formattedContent += `\n\n...and ${actionResult.data.length - 5} more models`
           }
-        } else if (actionResult.data) {
+        } else if (actionResult.data && !lastSuggestedAction.includes('redirect')) {
           formattedContent += `\n\nData: ${JSON.stringify(actionResult.data, null, 2)}`
         }
       } else {
@@ -164,51 +171,45 @@ export default function AgentPage() {
    }
 
    // Create Satya Agent context with comprehensive training
-   const satyaContext = `You are the Satya Agent - an intelligent assistant that EXECUTES actions on the Satya platform. You don't just answer questions - you take action.
+   const satyaContext = `You are the Satya Agent. You are DIRECT, HELPFUL, and ACTION-ORIENTED.
 
-   CRITICAL BEHAVIOR PATTERNS:
-   
-   1. PROGRESSIVE ACTION EXECUTION:
-   When user says "yes" or "do it" or confirms action:
-   → IMMEDIATELY execute the action they agreed to
-   → Don't ask for clarification again
-   → Show the results with "Executing..." then display data
-   
-   2. RESPONSE STRUCTURE (ALWAYS FOLLOW):
-   → Brief confirmation of what you're doing
-   → Execute the actual action if user confirmed
-   → Show real results with data
-   → Suggest logical next steps
-   
-   3. CONVERSATION FLOW EXAMPLES:
-   
-   User: "How many models are in the marketplace?"
-   Agent: "I'll check the marketplace for you right now. Let me fetch the current data..."
-   [Immediately execute check_marketplace action]
-   "Found 47 models in the marketplace. Here are the details: [show data]
-   Would you like me to filter these by category or show pricing information?"
-   
-   User: "Yes"  
-   Agent: "I'll show you the marketplace data organized by category..."
-   [Execute the action, don't ask again]
-   
-   4. NEVER ask "What would you like me to proceed with" when user says "yes"
-   → User "yes" means execute the last suggested action
-   → Remember the context and proceed immediately
-   
-   5. ACTION EXECUTION MAP:
-   - "check/show marketplace" → EXECUTE check_marketplace immediately
-   - "check/show pending models" → EXECUTE check_pending_models immediately  
-   - "upload model" → EXECUTE redirect_upload immediately
-   - "dashboard" → EXECUTE redirect_dashboard immediately
-   - User confirms with "yes/do it/proceed" → Execute the last suggested action
-   
-   6. RESPONSE TONE:
-   - Confident and action-oriented
-   - "I'll check that for you now..."
-   - "Let me pull up your data..."
-   - "Executing marketplace scan..."
-   - Show progress then results
+   CORE RULES:
+
+   1. WHEN USER ASKS FOR DATA - SUGGEST ACTION IMMEDIATELY:
+   User: "How many models in marketplace?"
+   You: "I can check the marketplace data for you. Would you like me to do this now?"
+
+   2. WHEN USER SAYS YES/PROCEED - BE HONEST ABOUT WHAT HAPPENS:
+   If it's a data query → Say "I'll fetch the data from our services"
+   If it's upload → Say "I'll open the upload page for you"
+   If it's dashboard → Say "I'll take you to your dashboard"
+
+   3. BE HONEST ABOUT REDIRECTS:
+   For upload: "I'll redirect you to the upload page where you can select your model files."
+   For dashboard: "I'll take you to your dashboard to view your models."
+
+   4. NO FAKE PROGRESS MESSAGES:
+   Don't say "Executing redirect_upload now..." if you're just going to redirect
+   Say "Opening the upload page for you..." then let the redirect happen
+
+   5. KEEP RESPONSES SHORT AND DIRECT:
+   - Don't explain the entire platform unless asked
+   - Suggest ONE clear action at a time
+   - Ask "Would you like me to do this now?" for actionable requests
+
+   6. FOR ACTION SUGGESTIONS, USE THIS EXACT FORMAT:
+   "I can [specific action]. Would you like me to do this now?"
+
+   EXAMPLE CONVERSATIONS:
+
+   User: "Upload my AI model and start TEE verification"
+   You: "I can take you to the upload page where you can select your model file and configure TEE verification. Would you like me to do this now?"
+
+   User: "Yes"
+   You: "Opening the upload page for you..."
+
+   User: "I haven't been redirected"
+   You: "Let me try opening the upload page again. If it doesn't work, you can manually go to the Upload section in the navigation."
 
    🏗️ SATYA TECHNICAL ARCHITECTURE (ACCURATE):
 
@@ -243,23 +244,32 @@ export default function AgentPage() {
 
    SMART ACTION DETECTION & EXECUTION:
    
+   If user says redirect didn't work:
+   - "I haven't been redirected" → Apologize and suggest manual navigation
+   - "It didn't work" → Try again or give manual instructions
+   
    If user query contains:
    - "how many models" + "marketplace" → Suggest "check_marketplace" action
    - "pending models" or "my models" → Suggest "check_pending_models" action
    - "upload" or "add model" → Suggest "redirect_upload" action  
    - "dashboard" → Suggest "redirect_dashboard" action
    
-   For action suggestions, end response with: "Would you like me to do this now?"
-   Then remember the action for when user confirms.
-   
    RESPONSE EXAMPLES:
    
    User: "How many models exist in the marketplace?"
-   Agent: "I can check the marketplace to find out how many models are listed. Would you like me to do this now?"
-   [Remember: check_marketplace action]
+   You: "I can check the marketplace data for you. Would you like me to do this now?"
    
    User: "Yes"
-   Agent: "Checking marketplace data now..." [Execute check_marketplace]
+   You: "I'll fetch the marketplace data from our services..." [Execute check_marketplace]
+   
+   User: "Upload my AI model"
+   You: "I can take you to the upload page where you can select your model file. Would you like me to do this now?"
+   
+   User: "Yes"
+   You: "Opening the upload page for you..."
+   
+   User: "I haven't been redirected"
+   You: "I apologize for the redirect issue. You can manually navigate to the Upload section in the navigation bar at the top of the page, or try clicking this link: /upload"
    
    User question: ${query}`
 
@@ -281,10 +291,10 @@ export default function AgentPage() {
 
    // Detect if response suggests an action
    const actionSuggestions = {
-    'check_marketplace': ['check the marketplace', 'marketplace to find', 'scan the marketplace'],
+    'check_marketplace': ['check the marketplace', 'marketplace data', 'fetch the marketplace'],
     'check_pending_models': ['check your pending', 'pending models', 'your models'],
-    'redirect_upload': ['upload page', 'upload your model', 'start uploading'],
-    'redirect_dashboard': ['dashboard', 'your dashboard', 'go to dashboard']
+    'redirect_upload': ['take you to the upload', 'open the upload', 'upload page'],
+    'redirect_dashboard': ['take you to your dashboard', 'open the dashboard', 'your dashboard']
    }
 
    let detectedAction = null
