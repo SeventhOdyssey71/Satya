@@ -36,7 +36,6 @@ export function ModelVerificationFlow({
  const PACKAGE_ID = "0xc4a516ae2dad92faeaf2894ff8b9324d1b1d41decbf6ab81d702cb3ded808196"; // Our deployed contract
 
  const uploadToMarketplace = async (attestationData: TEEAttestationData, txDigest: string) => {
-  console.log('Uploading verified model to marketplace...');
   
   // Create marketplace listing with verified model data
   const listingData = {
@@ -70,7 +69,6 @@ export function ModelVerificationFlow({
   }
 
   const result = await response.json();
-  console.log('Model successfully uploaded to marketplace:', result);
   return result;
  };
 
@@ -79,7 +77,6 @@ export function ModelVerificationFlow({
   setError(null);
 
   try {
-   console.log('Starting real TEE verification for blobs:', { modelBlobId, datasetBlobId });
 
    // Step 1: Process data in TEE using nautilus server with real blob analysis
    const teeResponse = await fetch('http://localhost:3333/process_data', {
@@ -103,7 +100,6 @@ export function ModelVerificationFlow({
    }
 
    const nautilusResponse = await teeResponse.json();
-   console.log('Real nautilus TEE response:', nautilusResponse);
    
    // Validate we got a proper TEE response
    if (!nautilusResponse.response || !nautilusResponse.signature) {
@@ -141,11 +137,9 @@ export function ModelVerificationFlow({
     }
    };
    
-   console.log('Real TEE attestation generated:', attestation);
    setAttestationData(attestation);
 
   } catch (err) {
-   console.log('Real TEE attestation generation failed:', err);
    setError(err instanceof Error ? err.message : 'TEE verification failed');
   } finally {
    setIsGeneratingAttestation(false);
@@ -171,13 +165,11 @@ export function ModelVerificationFlow({
 
   // Check if wallet is connected to the right network
   const currentNetwork = process.env.NEXT_PUBLIC_SUI_NETWORK || 'testnet';
-  console.log(`App is configured for ${currentNetwork} network`);
 
   setIsVerifyingOnChain(true);
   setError(null);
 
   try {
-   console.log('Starting real blockchain verification for pending model:', pendingModelId);
    
    // Import the marketplace contract service
    const { MarketplaceContractService } = await import('@/lib/services/marketplace-contract.service');
@@ -198,49 +190,54 @@ export function ModelVerificationFlow({
 
    // Create wallet signer
    const walletSigner = {
-    toSuiAddress: async () => account.address,
+    toSuiAddress: async () => {
+     return account.address;
+    },
     executeTransaction: async (tx: Transaction) => {
      return new Promise((resolve, reject) => {
-      console.log('Requesting transaction signature from user...');
       
-      signAndExecuteTransaction(
-       { transaction: tx },
-       {
-        onSuccess: (result) => {
-         console.log('Transaction successful:', result);
-         resolve(result);
+      // Ensure we have a valid transaction
+      if (!tx) {
+       reject(new Error('No transaction provided'));
+       return;
+      }
+      
+      try {
+       // Show wallet popup for signing
+       signAndExecuteTransaction(
+        { 
+         transaction: tx,
+         // Add chain explicitly
+         chain: 'sui:testnet'
         },
-        onError: (error) => {
-         console.error('Transaction failed:', error);
-         if (error.message?.includes('User rejected')) {
-          reject(new Error('Transaction was cancelled by user'));
-         } else {
-          reject(error);
+        {
+         onSuccess: (result) => {
+          resolve(result);
+         },
+         onError: (error) => {
+          console.error('❌ Transaction failed:', error);
+          if (error.message?.includes('User rejected') || error.message?.includes('cancelled')) {
+           reject(new Error('Transaction was cancelled by user'));
+          } else {
+           reject(error);
+          }
          }
         }
-       }
-      );
+       );
+      } catch (error) {
+       console.error('Failed to trigger wallet:', error);
+       reject(error);
+      }
      });
     }
    };
 
-   console.log('Calling complete_verification with real contract:', {
-    pendingModelId,
-    qualityScore: qualityScoreBP,
-    attestationHashLength: attestationHash.length,
-    signatureLength: verifierSignature.length
-   });
-
    // Step 1: Complete verification on blockchain
-   console.log('Calling completeVerification with parameters:', {
-    pendingModelId,
-    enclaveId: attestationData.tee_attestation.enclave_id,
-    qualityScore: qualityScoreBP,
-    securityAssessment: 'PASSED',
-    attestationHashLength: attestationHash.length,
-    verifierSignatureLength: verifierSignature.length
-   });
 
+   
+   // Add a small delay to ensure wallet is ready
+   await new Promise(resolve => setTimeout(resolve, 100));
+   
    const verificationResult = await contractService.completeVerification(
     pendingModelId,
     {
@@ -254,39 +251,36 @@ export function ModelVerificationFlow({
     walletSigner
    );
 
-   console.log('Raw verification result:', verificationResult);
+
+   if (!verificationResult || typeof verificationResult !== 'object') {
+    throw new Error('Invalid verification result received');
+   }
 
    if (!verificationResult.success) {
-    throw new Error(verificationResult.error || 'Blockchain verification failed');
+    const errorMsg = verificationResult.error || 'Blockchain verification failed';
+    console.error('Verification failed:', errorMsg);
+    throw new Error(errorMsg);
    }
 
-   console.log('Blockchain verification successful:', verificationResult);
 
-   // Step 2: List on marketplace  
-   console.log('Now listing on marketplace...');
-   const listingResult = await contractService.listOnMarketplace(
-    pendingModelId,
-    verificationResult.objectId!,
-    walletSigner
-   );
-
-   if (!listingResult.success) {
-    throw new Error(listingResult.error || 'Marketplace listing failed');
-   }
-
-   console.log('Marketplace listing successful:', listingResult);
+   // SUCCESS: Verification completed (marketplace listing included in same transaction)
 
    // Set final result
    setVerificationResult({
-    digest: listingResult.transactionDigest,
+    digest: verificationResult.transactionDigest,
     effects: { status: { status: 'success' } },
     verificationDigest: verificationResult.transactionDigest,
-    listingDigest: listingResult.transactionDigest
+    listingDigest: verificationResult.transactionDigest
    });
+   
+   // Force marketplace refresh after short delay
+   setTimeout(() => {
+    window.dispatchEvent(new CustomEvent('marketplace-refresh'));
+   }, 2000);
    
    // Call completion callback
    if (onVerificationComplete) {
-    onVerificationComplete(attestationData, listingResult.transactionDigest!);
+    onVerificationComplete(attestationData, verificationResult.transactionDigest!);
    }
 
   } catch (err) {

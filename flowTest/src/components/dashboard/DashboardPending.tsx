@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { TbShieldX, TbShieldCheck, TbClockHour4, TbCertificate, TbRefresh } from 'react-icons/tb'
+import { TbShieldX, TbShieldCheck, TbClockHour4, TbCertificate, TbRefresh, TbTrash } from 'react-icons/tb'
 import { ModelVerificationFlow } from '@/components/tee'
 import { useUploadTasks } from '@/contexts/UploadContext'
 import { useCurrentAccount } from '@mysten/dapp-kit'
@@ -295,6 +295,47 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
       >
        <TbRefresh className={`h-4 w-4 ${(state.isLoading || isLoading) ? 'animate-spin' : ''}`} />
        Force Refresh
+      </button>
+      
+      <button
+       onClick={async () => {
+        if (!contractService || !currentAccount?.address) return;
+        
+        try {
+         console.log('Starting cleanup of old pending models...');
+         setState(prev => ({ ...prev, isLoading: true }));
+         
+         const result = await contractService.cleanupOldPendingModels(currentAccount.address);
+         
+         console.log('Cleanup result:', result);
+         
+         if (result.removed > 0) {
+          alert(`Identified ${result.removed} old models for cleanup. Refreshing...`);
+          // Refresh the display
+          loadPendingModels();
+          loadCompletedModels();
+         } else {
+          alert('No old models found to cleanup.');
+         }
+         
+         if (result.errors.length > 0) {
+          console.error('Cleanup errors:', result.errors);
+         }
+        } catch (error) {
+         console.error('Cleanup failed:', error);
+         setState(prev => ({ 
+          ...prev, 
+          error: error instanceof Error ? error.message : 'Cleanup failed' 
+         }));
+        } finally {
+         setState(prev => ({ ...prev, isLoading: false }));
+        }
+       }}
+       disabled={state.isLoading || isLoading || !currentAccount?.address}
+       className="flex items-center gap-2 px-3 py-1 text-orange-600 hover:text-orange-900 text-sm border border-orange-300 rounded-md hover:bg-orange-50"
+      >
+       <TbTrash className={`h-4 w-4`} />
+       Clean Old Models
       </button>
      </div>
     </div>

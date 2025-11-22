@@ -134,11 +134,9 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
    const walletSigner = {
     toSuiAddress: async () => currentAccount!.address,
     executeTransaction: async (tx: any) => {
-     console.log('Wallet signing transaction...');
      const result = await signAndExecuteTransaction({ 
       transaction: tx
      });
-     console.log('Transaction signed and executed:', result);
      return result;
     }
    }
@@ -158,7 +156,6 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     accessDuration: data.accessDuration || 30
    }
 
-   console.log('Starting comprehensive upload flow...', uploadData)
 
    // Create upload service instance
    const modelUploadService = await ModelUploadService.createWithFallback()
@@ -168,7 +165,6 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     uploadData,
     walletSigner,
     (progress: ModelUploadProgress) => {
-     console.log('Upload progress:', progress)
      setUploadProgress(progress)
     }
    )
@@ -178,7 +174,6 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     
     // Handle toLowerCase errors gracefully
     if (errorMsg.includes('toLowerCase')) {
-     console.log('🔧 toLowerCase error detected and handled safely');
      throw new Error('Upload processing error. Please check your input data and try again.');
     }
     
@@ -215,6 +210,16 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
    alert(`Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Smart contract record created ✓\n\nPending Model ID: ${uploadResult.pendingModelId}\n\nYour model is now pending TEE verification. You can track its progress in the Dashboard.`)
    
    setCurrentStep(steps.length) // Go to result step
+   
+   // Dispatch event to refresh pending models
+   console.log('Dispatching model-uploaded event to refresh pending models...')
+   window.dispatchEvent(new CustomEvent('model-uploaded', { 
+    detail: { 
+     pendingModelId: uploadResult.pendingModelId,
+     title: data.title 
+    } 
+   }))
+   window.dispatchEvent(new CustomEvent('pending-models-refresh'))
    
    // Call the callback if provided
    if (onUploadComplete) {

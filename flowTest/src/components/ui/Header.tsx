@@ -85,6 +85,16 @@ export default function Header({ isHomepage = false }: HeaderProps) {
         >
          Upload
         </Link>
+        <Link 
+         href="/agent"
+         className={`transition-colors text-base ${
+          pathname === '/agent' 
+           ? 'text-black font-medium' 
+           : 'text-gray-500 font-light hover:text-gray-700'
+         }`}
+        >
+         Agent
+        </Link>
        </nav>
        
        <div className="flex-1 flex justify-end">

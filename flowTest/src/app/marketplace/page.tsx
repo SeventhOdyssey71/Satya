@@ -89,14 +89,14 @@ export default function MarketplacePage() {
    console.log('Loaded raw models:', rawModels);
 
    // Transform contract data to component format
-   const transformedModels: MarketplaceModel[] = rawModels
+   const transformedModels: MarketplaceModel[] = (rawModels || [])
     .map(obj => {
      try {
-      const content = obj.content as any;
+      const content = obj.data?.content as any;
       const fields = content?.fields || {};
       
       return {
-       id: obj.id,
+       id: obj.data?.objectId || '',
        title: fields.title || 'Untitled Model',
        description: fields.description || '',
        category: fields.category || 'Uncategorized',
@@ -104,13 +104,13 @@ export default function MarketplacePage() {
        creator: fields.creator || '',
        modelBlobId: fields.model_blob_id || '',
        datasetBlobId: fields.dataset_blob_id || undefined,
-       qualityScore: parseInt(fields.quality_score || '0'),
+       qualityScore: fields.quality_score ? Math.round(parseInt(fields.quality_score) / 10000) : 0,
        teeVerified: Boolean(fields.tee_verified),
        price: fields.price || '0',
        maxDownloads: fields.max_downloads ? parseInt(fields.max_downloads) : undefined,
        currentDownloads: parseInt(fields.current_downloads || '0'),
        totalEarnings: fields.total_earnings || '0',
-       listedAt: parseInt(fields.listed_at || '0'),
+       listedAt: fields.listed_at ? parseInt(fields.listed_at) : Date.now(),
        lastPurchasedAt: fields.last_purchased_at ? parseInt(fields.last_purchased_at) : undefined,
        featured: Boolean(fields.featured)
       };
@@ -246,15 +246,50 @@ export default function MarketplacePage() {
       onVerifiedChange={handleVerifiedFilter}
       onSearch={handleSearch}
       isLoading={state.isLoading}
-      onRefresh={loadMarketplaceModels}
       totalResults={filteredModels.length}
      />
      
      {/* Loading State */}
      {state.isLoading && (
-      <div className="text-center py-12">
-       <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent mx-auto mb-3" />
-       <p className="text-gray-600">Loading marketplace models...</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+       {[...Array(9)].map((_, index) => (
+        <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+         {/* Model Image Placeholder */}
+         <div className="h-48 bg-gray-200 animate-pulse"></div>
+         
+         <div className="p-4">
+          {/* Title */}
+          <div className="h-5 bg-gray-200 rounded w-3/4 mb-3 animate-pulse"></div>
+          
+          {/* Description */}
+          <div className="space-y-2 mb-4">
+           <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
+           <div className="h-3 bg-gray-100 rounded w-5/6 animate-pulse"></div>
+          </div>
+          
+          {/* Tags */}
+          <div className="flex gap-2 mb-4">
+           <div className="h-5 bg-gray-100 rounded-full w-16 animate-pulse"></div>
+           <div className="h-5 bg-gray-100 rounded-full w-12 animate-pulse"></div>
+          </div>
+          
+          {/* Stats Row */}
+          <div className="flex items-center justify-between mb-4">
+           <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded w-8 animate-pulse"></div>
+           </div>
+           <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+          </div>
+          
+          {/* Price and Button */}
+          <div className="flex items-center justify-between">
+           <div className="h-6 bg-gray-200 rounded w-20 animate-pulse"></div>
+           <div className="h-8 bg-gray-200 rounded w-24 animate-pulse"></div>
+          </div>
+         </div>
+        </div>
+       ))}
       </div>
      )}
 
@@ -291,7 +326,6 @@ function EnhancedNavigation({
  onVerifiedChange,
  onSearch,
  isLoading,
- onRefresh,
  totalResults
 }: { 
  activeCategory: string
@@ -300,7 +334,6 @@ function EnhancedNavigation({
  onVerifiedChange: (verified: string) => void
  onSearch: (query: string) => void
  isLoading: boolean
- onRefresh: () => void
  totalResults: number
 }) {
  const [searchQuery, setSearchQuery] = useState('')
@@ -372,19 +405,6 @@ function EnhancedNavigation({
      </div>
     </div>
 
-    {/* Refresh Button */}
-    <button
-     onClick={onRefresh}
-     disabled={isLoading}
-     className={`px-4 py-2 border border-gray-300 rounded-lg flex items-center gap-2 text-sm font-medium ${
-      isLoading 
-       ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-500' 
-       : 'bg-white text-gray-700 hover:bg-gray-50'
-     }`}
-    >
-     <HiArrowPath className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-     {isLoading ? 'Loading...' : 'Refresh'}
-    </button>
    </div>
 
 
@@ -526,142 +546,125 @@ function EnhancedMarketplaceGrid({
    )}
 
    {/* Models Grid */}
-   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {models.map((model) => (
+   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+    {models.map((model, index) => (
      <div
-      key={model.id}
-      className="bg-white border border-gray-200 rounded-lg group hover:shadow-lg transition-shadow duration-200"
+      key={model.id || `model-${index}`}
+      className="relative rounded-2xl overflow-hidden group hover:shadow-lg transition-all duration-300 bg-white border border-gray-300 shadow-sm"
+      style={{
+       height: '400px'
+      }}
      >
-      {/* Model Header */}
-      <div className="p-4 border-b border-gray-200">
-       <div className="flex items-start justify-between mb-2">
-        <h3 className="text-lg font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-         {model.title}
-        </h3>
-        <div className="flex items-center gap-1">
-         {model.teeVerified && (
-          <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
-           <HiCheckBadge className="w-3 h-3" />
-           TEE
-          </div>
-         )}
-         {model.featured && (
-          <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
-           <HiSparkles className="w-3 h-3" />
-           Featured
-          </div>
-         )}
-        </div>
-       </div>
-       
-       <p className="text-gray-600 text-sm leading-relaxed mb-3 line-clamp-2">
-        {model.description}
-       </p>
-
-       <div className="flex flex-wrap items-center gap-1 mb-3">
-        <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs">
-         {model.category}
-        </span>
-        {model.tags.slice(0, 2).map((tag, index) => (
-         <span key={index} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs">
-          {tag}
-         </span>
-        ))}
-        {model.tags.length > 2 && (
-         <span className="text-xs text-gray-500">
-          +{model.tags.length - 2} more
-         </span>
-        )}
-       </div>
-      </div>
-
-      {/* Model Stats */}
-      <div className="p-4 space-y-3">
-       <div className="grid grid-cols-2 gap-3 text-sm">
-        <div className="space-y-1">
-         <span className="text-gray-600">Quality Score</span>
-         <div className="flex items-center gap-2">
-          <div className="flex-1 bg-gray-200 rounded-full h-1.5">
-           <div 
-            className={`h-1.5 rounded-full ${
-             model.qualityScore >= 8500 ? 'bg-blue-500' :
-             model.qualityScore >= 7000 ? 'bg-blue-400' : 'bg-blue-300'
-            }`}
-            style={{ width: `${(model.qualityScore / 10000) * 100}%` }}
-           />
-          </div>
-          <span className="font-medium text-gray-900">
-           {(model.qualityScore / 100).toFixed(0)}%
+      {/* Background Image Section */}
+      <div 
+        className="relative h-48 overflow-hidden"
+        style={{
+          backgroundImage: "url('/images/Claude.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      >
+        {/* Subtle overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+        
+        {/* Top badges */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+          <span className="inline-flex items-center px-3 py-1.5 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full text-xs font-medium shadow-sm">
+            {model.category}
           </span>
-         </div>
+          {model.teeVerified && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded-full text-xs font-medium shadow-sm">
+              <HiCheckBadge className="w-3 h-3" />
+              Verified
+            </div>
+          )}
         </div>
         
-        <div className="space-y-1">
-         <span className="text-gray-600">Downloads</span>
-         <p className="font-medium text-gray-900">
-          {model.currentDownloads}
-          {model.maxDownloads && ` / ${model.maxDownloads}`}
-         </p>
+        {/* Title at bottom of image */}
+        <div className="absolute bottom-4 left-4 right-4">
+          <h3 className="text-xl font-bold text-white mb-1 drop-shadow-lg">
+            {model.title}
+          </h3>
         </div>
-       </div>
-
-       <div className="flex items-center justify-between text-sm">
-        <div className="space-y-1">
-         <span className="text-gray-600">Listed</span>
-         <p className="text-gray-800">
-          {formatDate(model.listedAt)}
-         </p>
-        </div>
-        <div className="text-right space-y-1">
-         <span className="text-gray-600">Earnings</span>
-         <p className="font-medium text-gray-900">
-          {formatPrice(model.totalEarnings)}
-         </p>
-        </div>
-       </div>
       </div>
 
-      {/* Purchase Section */}
-      <div className="p-4 border-t border-gray-200">
-       <div className="flex items-center justify-between">
-        <div>
-         <span className="text-xl font-semibold text-gray-900">
-          {formatPrice(model.price)}
-         </span>
-         {model.maxDownloads && model.currentDownloads >= model.maxDownloads && (
-          <p className="text-xs text-orange-600 mt-1">
-           Limited availability
+      {/* Content Section */}
+      <div className="p-6 flex flex-col justify-between" style={{ height: '200px' }}>
+        {/* Model Details Section - Fixed height for uniformity */}
+        <div className="flex-1 space-y-2">
+          {/* Description - Fixed 2 lines max */}
+          <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 h-10">
+            {model.description}
           </p>
-         )}
+          
+          {/* Tags Section - Fixed height container */}
+          <div className="h-6">
+            {model.tags && model.tags.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {model.tags.slice(0, 3).map((tag, tagIndex) => (
+                  <span 
+                    key={tagIndex}
+                    className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {model.tags.length > 3 && (
+                  <span className="text-xs text-gray-400">
+                    +{model.tags.length - 3}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div></div>
+            )}
+          </div>
         </div>
         
-        <button
-         onClick={() => handlePurchase(model)}
-         disabled={
-          purchasingModel === model.id ||
-          !currentAccount ||
-          model.creator === currentAccount?.address ||
-          !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads)
-         }
-         className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-         {purchasingModel === model.id ? (
-          <>
-           <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
-           Purchasing...
-          </>
-         ) : model.creator === currentAccount?.address ? (
-          'Your Model'
-         ) : !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads) ? (
-          'Sold Out'
-         ) : (
-          <>
-           <HiShoppingCart className="w-4 h-4" />
-           Purchase
-          </>
-         )}
-        </button>
-       </div>
+        {/* Bottom Section - Always aligned */}
+        <div className="space-y-2">
+          {/* Stats */}
+          <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+              <span>Quality: {model.qualityScore}%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <HiClock className="w-3 h-3" />
+              <span>{formatDate(model.listedAt)}</span>
+            </div>
+          </div>
+          
+          {/* Action Button */}
+          <button
+            onClick={() => handlePurchase(model)}
+            disabled={
+              purchasingModel === model.id ||
+              !currentAccount ||
+              model.creator === currentAccount?.address ||
+              !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads)
+            }
+            className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            {purchasingModel === model.id ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                Processing...
+              </>
+            ) : model.creator === currentAccount?.address ? (
+              'Your Model'
+            ) : !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads) ? (
+              'Sold Out'
+            ) : (
+              <>
+                Verify Model
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </>
+            )}
+          </button>
+        </div>
       </div>
      </div>
     ))}

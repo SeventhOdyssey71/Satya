@@ -23,11 +23,16 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
  const { pendingModels, statusCounts, isLoading, refresh } = usePendingModels()
  const currentAccount = useCurrentAccount()
  const [completedCount, setCompletedCount] = useState(0)
+ const [isLoadingCompleted, setIsLoadingCompleted] = useState(true)
 
  // Load completed models (marketplace models) count
  const loadCompletedCount = async () => {
-  if (!currentAccount?.address) return
+  if (!currentAccount?.address) {
+   setIsLoadingCompleted(false)
+   return
+  }
   
+  setIsLoadingCompleted(true)
   try {
    const contractService = new MarketplaceContractService()
    await contractService.initialize()
@@ -38,9 +43,10 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
    )
    
    setCompletedCount(userModels.length)
-   console.log('User completed models count:', userModels.length)
   } catch (error) {
    console.error('Failed to load completed models count:', error)
+  } finally {
+   setIsLoadingCompleted(false)
   }
  }
 
@@ -64,6 +70,72 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
   pending: statusCounts.pending + statusCounts.verifying, // Combine pending and verifying
   completed: completedCount, // Use marketplace models count
   failed: statusCounts.failed
+ }
+
+ // Show loading state while data is being fetched
+ if (isLoading || isLoadingCompleted) {
+  return (
+   <div className="space-y-8">
+    {/* Loading Status Cards */}
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
+     <div className="grid grid-cols-3 gap-6">
+      {[...Array(3)].map((_, index) => (
+       <div key={index} className="text-center">
+        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2 animate-pulse">
+         <div className="w-5 h-5 bg-gray-300 rounded"></div>
+        </div>
+        <div className="h-4 bg-gray-200 rounded mb-2 animate-pulse"></div>
+        <div className="h-8 bg-gray-200 rounded mb-1 animate-pulse"></div>
+        <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
+       </div>
+      ))}
+     </div>
+    </div>
+    
+    {/* Loading Stats Cards */}
+    <div className="grid grid-cols-4 gap-4">
+     {[...Array(4)].map((_, index) => (
+      <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+       <div className="text-center">
+        <div className="w-8 h-8 bg-gray-200 rounded-lg mx-auto mb-2 animate-pulse"></div>
+        <div className="h-4 bg-gray-200 rounded mb-2 animate-pulse"></div>
+        <div className="h-6 bg-gray-200 rounded mb-1 animate-pulse"></div>
+        <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
+       </div>
+      </div>
+     ))}
+    </div>
+    
+    {/* Loading Recent Activity */}
+    <div className="bg-white border border-gray-200 rounded-lg">
+     <div className="p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between">
+       <div>
+        <div className="h-5 bg-gray-200 rounded w-32 mb-2 animate-pulse"></div>
+        <div className="h-4 bg-gray-100 rounded w-48 animate-pulse"></div>
+       </div>
+       <div className="h-8 bg-gray-200 rounded w-20 animate-pulse"></div>
+      </div>
+     </div>
+     <div className="p-4">
+      <div className="space-y-3">
+       {[...Array(3)].map((_, index) => (
+        <div key={index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+         <div className="flex items-center space-x-3">
+          <div className="w-2 h-2 bg-gray-200 rounded-full animate-pulse"></div>
+          <div>
+           <div className="h-4 bg-gray-200 rounded w-20 mb-1 animate-pulse"></div>
+           <div className="h-3 bg-gray-100 rounded w-32 animate-pulse"></div>
+          </div>
+         </div>
+         <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
+        </div>
+       ))}
+      </div>
+     </div>
+    </div>
+   </div>
+  )
  }
 
  return (
