@@ -251,64 +251,45 @@ export default function MarketplacePage() {
      
      {/* Loading State */}
      {state.isLoading && (
-      <div className="space-y-6">
-       {/* Loading Header Stats */}
-       <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <div className="grid grid-cols-3 gap-6">
-         {[...Array(3)].map((_, index) => (
-          <div key={index} className="text-center">
-           <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2 animate-pulse">
-            <div className="w-5 h-5 bg-gray-300 rounded"></div>
-           </div>
-           <div className="h-4 bg-gray-200 rounded mb-2 animate-pulse"></div>
-           <div className="h-6 bg-gray-200 rounded mb-1 animate-pulse"></div>
-           <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
-          </div>
-         ))}
-        </div>
-       </div>
-
-       {/* Loading Model Grid */}
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(9)].map((_, index) => (
-         <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          {/* Model Image Placeholder */}
-          <div className="h-48 bg-gray-200 animate-pulse"></div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+       {[...Array(9)].map((_, index) => (
+        <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+         {/* Model Image Placeholder */}
+         <div className="h-48 bg-gray-200 animate-pulse"></div>
+         
+         <div className="p-4">
+          {/* Title */}
+          <div className="h-5 bg-gray-200 rounded w-3/4 mb-3 animate-pulse"></div>
           
-          <div className="p-4">
-           {/* Title */}
-           <div className="h-5 bg-gray-200 rounded w-3/4 mb-3 animate-pulse"></div>
-           
-           {/* Description */}
-           <div className="space-y-2 mb-4">
-            <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
-            <div className="h-3 bg-gray-100 rounded w-5/6 animate-pulse"></div>
+          {/* Description */}
+          <div className="space-y-2 mb-4">
+           <div className="h-3 bg-gray-100 rounded animate-pulse"></div>
+           <div className="h-3 bg-gray-100 rounded w-5/6 animate-pulse"></div>
+          </div>
+          
+          {/* Tags */}
+          <div className="flex gap-2 mb-4">
+           <div className="h-5 bg-gray-100 rounded-full w-16 animate-pulse"></div>
+           <div className="h-5 bg-gray-100 rounded-full w-12 animate-pulse"></div>
+          </div>
+          
+          {/* Stats Row */}
+          <div className="flex items-center justify-between mb-4">
+           <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded w-8 animate-pulse"></div>
            </div>
-           
-           {/* Tags */}
-           <div className="flex gap-2 mb-4">
-            <div className="h-5 bg-gray-100 rounded-full w-16 animate-pulse"></div>
-            <div className="h-5 bg-gray-100 rounded-full w-12 animate-pulse"></div>
-           </div>
-           
-           {/* Stats Row */}
-           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-             <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-             <div className="h-4 bg-gray-200 rounded w-8 animate-pulse"></div>
-            </div>
-            <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
-           </div>
-           
-           {/* Price and Button */}
-           <div className="flex items-center justify-between">
-            <div className="h-6 bg-gray-200 rounded w-20 animate-pulse"></div>
-            <div className="h-8 bg-gray-200 rounded w-24 animate-pulse"></div>
-           </div>
+           <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+          </div>
+          
+          {/* Price and Button */}
+          <div className="flex items-center justify-between">
+           <div className="h-6 bg-gray-200 rounded w-20 animate-pulse"></div>
+           <div className="h-8 bg-gray-200 rounded w-24 animate-pulse"></div>
           </div>
          </div>
-        ))}
-       </div>
+        </div>
+       ))}
       </div>
      )}
 
