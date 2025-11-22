@@ -66,7 +66,6 @@ export default function AgentPage() {
 
    setChatHistory(prev => [...prev, assistantMessage])
   } catch (error) {
-   console.error('Error getting AI response:', error)
    const errorMessage: ChatMessage = {
     role: 'assistant',
     content: 'Sorry, I encountered an error. Please try again or contact support if the issue persists.',
