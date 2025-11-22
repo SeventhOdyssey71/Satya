@@ -68,12 +68,14 @@ function HeroSection() {
         <HiArrowRight className="w-5 h-5" />
        </button>
       </Link>
-      <button className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-black border-2 border-gray-200 rounded-lg font-medium min-w-[200px] hover:border-black transition-colors flex items-center justify-center gap-2">
-       Read Docs
+      <Link href="/docs">
+       <button className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-black border-2 border-gray-200 rounded-lg font-medium min-w-[200px] hover:border-black transition-colors flex items-center justify-center gap-2">
+        Read Docs
        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
        </svg>
       </button>
+      </Link>
      </motion.div>
 
      <motion.div 
