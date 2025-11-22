@@ -1154,12 +1154,17 @@ export class MarketplaceContractService {
     // Don't filter by age or timestamp validity
     return !isListed;
    });
+   
+   const pendingModels = allPendingModels.filter(obj => {
+    const objectId = obj.data?.objectId;
+    if (!objectId) return false;
+    const isListed = listedModelIds.has(objectId);
+    return !isListed;
+   });
 
-
-   // If no current package models found, try to query recent events to find newly created models
-   // that might not be indexed yet in getOwnedObjects
+   // Event-based fallback for recently created models
    if (allPendingModels.length === 0) {
-     try {
+    try {
      const recentEvents = await this.suiClient.queryEvents({
       query: {
        MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelUploaded`
@@ -1174,8 +1179,6 @@ export class MarketplaceContractService {
       const eventSender = event.sender;
 
       if (modelId && eventSender === userAddress) {
-
-       // Try to fetch this object directly
        try {
         const recentObject = await this.suiClient.getObject({
          id: modelId,
@@ -1187,8 +1190,7 @@ export class MarketplaceContractService {
         });
 
         if (recentObject.data && recentObject.data.type === expectedPendingModelType) {
-         
-         // Add it to our results manually
+         console.log('✓ Found recent model via events:', modelId.slice(0, 10) + '...');
          pendingModels.push({
           data: recentObject.data
          });
@@ -1203,6 +1205,7 @@ export class MarketplaceContractService {
     }
    }
 
+   console.log(`✓ Found ${pendingModels.length} pending models`);
 
    // Return the raw object data for the dashboard to transform
    return pendingModels.map(obj => ({
