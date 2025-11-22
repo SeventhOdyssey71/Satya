@@ -279,6 +279,7 @@ export default function MarketplacePage() {
       onSearch={handleSearch}
       isLoading={state.isLoading}
       totalResults={filteredModels.length}
+      models={state.models}
      />
      
      {/* Loading State */}
@@ -371,7 +372,8 @@ function EnhancedNavigation({
  onVerifiedChange,
  onSearch,
  isLoading,
- totalResults
+ totalResults,
+ models
 }: { 
  activeCategory: string
  activeVerified: string
@@ -380,6 +382,7 @@ function EnhancedNavigation({
  onSearch: (query: string) => void
  isLoading: boolean
  totalResults: number
+ models: MarketplaceModel[]
 }) {
  const [searchQuery, setSearchQuery] = useState('')
  
@@ -393,7 +396,7 @@ function EnhancedNavigation({
  ];
 
  // Get unique categories from actual model data
- const modelCategories = [...new Set(state.models.map(model => model.category))]
+ const modelCategories = [...new Set(models.map(model => model.category))]
   .filter(Boolean)
   .map(category => ({
    value: normalizeCategory(category),

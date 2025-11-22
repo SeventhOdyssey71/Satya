@@ -12,6 +12,8 @@ interface ChatMessage {
   timestamp: Date
   isAction?: boolean
   actionData?: any
+  data?: any
+  dataType?: string
 }
 
 export default function AgentPage() {
@@ -21,9 +23,37 @@ export default function AgentPage() {
  const [showUploadMenu, setShowUploadMenu] = useState(false)
  const [lastSuggestedAction, setLastSuggestedAction] = useState<string | null>(null)
  const messagesEndRef = useRef<HTMLDivElement>(null)
+ const chatMessagesRef = useRef<HTMLDivElement>(null)
+ const chatEndRef = useRef<HTMLDivElement>(null)
  
  const marketplaceService = new MarketplaceContractService()
  const eventService = new EventService()
+
+ // Scroll to bottom function
+ const scrollToBottom = () => {
+  messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+ }
+
+ // Detect user intent from query
+ const detectAdvancedIntent = (query: string): string => {
+  const lowerQuery = query.toLowerCase()
+  
+  if (lowerQuery.includes('pending') || lowerQuery.includes('upload') || lowerQuery.includes('queue')) {
+   return 'pending_models'
+  } else if (lowerQuery.includes('marketplace') || lowerQuery.includes('browse') || lowerQuery.includes('buy')) {
+   return 'marketplace_models'
+  } else if (lowerQuery.includes('stats') || lowerQuery.includes('dashboard') || lowerQuery.includes('overview')) {
+   return 'platform_stats'
+  }
+  
+  return 'general'
+ }
+
+ // Update conversation context
+ const updateConversationContext = (query: string, intent: string) => {
+  // Simple context tracking - could be expanded later
+  console.log(`Query: "${query}" detected as intent: ${intent}`)
+ }
 
  // Auto scroll to bottom when messages change
  useEffect(() => {
