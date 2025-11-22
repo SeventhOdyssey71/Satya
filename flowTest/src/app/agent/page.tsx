@@ -165,6 +165,15 @@ export default function AgentPage() {
      /* Initial State - Centered */
      <div className="flex items-center justify-center flex-1 px-6">
       <div className="w-full max-w-2xl mx-auto text-center">
+       {/* AI Icon */}
+       <div className="mb-8">
+        <img 
+         src="/images/AI-Icon.png" 
+         alt="AI Assistant Icon" 
+         className="w-24 h-24 mx-auto"
+        />
+       </div>
+       
        {/* Title */}
        <h1 className="text-5xl font-normal text-gray-900 mb-4">
         Satya AI Assistant
