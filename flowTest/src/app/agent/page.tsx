@@ -232,20 +232,20 @@ export default function AgentPage() {
    <main className="flex flex-col min-h-[calc(100vh-4rem)]">
     {chatHistory.length === 0 ? (
      /* Initial State - Centered */
-     <div className="flex items-center justify-center flex-1 px-6">
+     <div className="flex items-center justify-center flex-1 px-4 sm:px-6">
       <div className="w-full max-w-2xl mx-auto text-center">       
        {/* Title */}
-       <h1 className="text-5xl font-normal text-gray-900 mb-4">
+       <h1 className="text-3xl sm:text-4xl md:text-5xl font-normal text-gray-900 mb-3 sm:mb-4">
         Satya Agent
        </h1>
        
        {/* Subtitle */}
-       <p className="text-gray-500 text-lg mb-12">
+       <p className="text-gray-500 text-sm sm:text-base md:text-lg mb-8 sm:mb-10 md:mb-12 px-4">
         Your AI agent that can perform actions on the Satya platform - upload models, check marketplace, verify TEE, and more
        </p>
        
        {/* Search Form */}
-       <form onSubmit={handleSubmit} className="mb-8">
+       <form onSubmit={handleSubmit} className="mb-6 sm:mb-8">
         <div className="relative">
          <input
           type="text"
@@ -253,26 +253,26 @@ export default function AgentPage() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask about Satya platform..."
           disabled={isLoading}
-          className="w-full px-12 py-4 pr-20 text-lg bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
+          className="w-full px-10 sm:px-12 py-3 sm:py-4 pr-16 sm:pr-20 text-base sm:text-lg bg-gray-50 border-none rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
          />
          
          {/* Plus button with upload menu */}
-         <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+         <div className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2">
           <button
            type="button"
            onClick={() => setShowUploadMenu(!showUploadMenu)}
-           className="text-gray-400 hover:text-gray-600 text-xl"
+           className="text-gray-400 hover:text-gray-600 text-lg sm:text-xl"
           >
            +
           </button>
           
           {showUploadMenu && (
-           <div className="absolute top-8 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 min-w-48 z-10">
-            <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded cursor-pointer">
-             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+           <div className="absolute top-8 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 min-w-40 sm:min-w-48 z-10">
+            <label className="flex items-center gap-2 px-2 sm:px-3 py-2 hover:bg-gray-50 rounded cursor-pointer">
+             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="sm:w-4 sm:h-4">
               <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
              </svg>
-             Upload AI Model
+             <span className="text-sm sm:text-base">Upload AI Model</span>
              <input
               type="file"
               onChange={handleFileUpload}
@@ -297,12 +297,12 @@ export default function AgentPage() {
          <button
           type="submit"
           disabled={!query.trim() || isLoading}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+          className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
          >
           {isLoading ? (
-           <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+           <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
           ) : (
-           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="sm:w-5 sm:h-5">
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
            </svg>
           )}
@@ -311,23 +311,23 @@ export default function AgentPage() {
        </form>
        
        {/* Suggested Queries */}
-       <div className="space-y-3">
+       <div className="space-y-2 sm:space-y-3">
         {suggestedQueries.map((suggestion, index) => (
          <button
           key={index}
           onClick={() => handleSuggestedQuery(suggestion)}
           disabled={isLoading}
-          className="flex items-center w-full text-left px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors group disabled:opacity-50"
+          className="flex items-center w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-gray-600 hover:bg-gray-50 rounded-lg transition-colors group disabled:opacity-50"
          >
           <svg 
-           className="w-4 h-4 mr-3 text-gray-400 group-hover:text-gray-600 transition-colors" 
+           className="w-3 h-3 sm:w-4 sm:h-4 mr-2 sm:mr-3 text-gray-400 group-hover:text-gray-600 transition-colors flex-shrink-0" 
            fill="none" 
            stroke="currentColor" 
            viewBox="0 0 24 24"
           >
            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          {suggestion}
+          <span className="leading-tight">{suggestion}</span>
          </button>
         ))}
        </div>
@@ -338,25 +338,25 @@ export default function AgentPage() {
      <div className="flex-1 flex flex-col">
       {/* Chat Header */}
       <div className="border-b border-gray-100 bg-white/95 backdrop-blur-sm sticky top-16 z-10">
-       <div className="max-w-4xl mx-auto px-6 py-4">
-        <h1 className="text-2xl font-semibold text-gray-900">Satya AI Assistant</h1>
-        <p className="text-gray-500">Your AI helper for Satya platform</p>
+       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">Satya AI Assistant</h1>
+        <p className="text-sm sm:text-base text-gray-500">Your AI helper for Satya platform</p>
        </div>
       </div>
 
       {/* Chat Messages */}
-      <div className="flex-1 max-w-4xl mx-auto w-full px-6 py-8 space-y-6">
+      <div className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 pt-6 sm:pt-8 pb-20 space-y-4 sm:space-y-6">
        {chatHistory.map((message, index) => (
         <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-         <div className={`max-w-3xl rounded-2xl px-4 py-3 ${
+         <div className={`max-w-[85%] sm:max-w-3xl rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-3 ${
           message.role === 'user' 
            ? 'bg-black text-white' 
            : 'bg-gray-100 text-gray-900'
          }`}>
-          <p className={`whitespace-pre-wrap ${
+          <p className={`whitespace-pre-wrap text-sm sm:text-base ${
            message.role === 'user' ? 'text-white' : 'text-gray-900'
           }`}>{message.content}</p>
-          <p className={`text-xs mt-2 ${
+          <p className={`text-xs mt-1 sm:mt-2 ${
            message.role === 'user' ? 'text-gray-300' : 'text-gray-500'
           }`}>
            {message.timestamp.toLocaleTimeString()}
@@ -367,11 +367,11 @@ export default function AgentPage() {
        
        {isLoading && (
         <div className="flex justify-start">
-         <div className="bg-gray-100 rounded-2xl px-4 py-3">
-          <div className="flex items-center space-x-2">
-           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+         <div className="bg-gray-100 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center space-x-1 sm:space-x-2">
+           <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce"></div>
+           <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+           <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
           </div>
          </div>
         </div>
@@ -379,8 +379,8 @@ export default function AgentPage() {
       </div>
 
       {/* Fixed Chat Input */}
-      <div className="border-t border-gray-100 bg-white/95 backdrop-blur-sm">
-       <div className="max-w-4xl mx-auto px-6 py-4">
+      <div className="border-t border-gray-100 bg-white/95 backdrop-blur-sm fixed bottom-0 left-0 right-0">
+       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
         <form onSubmit={handleSubmit}>
          <div className="relative">
           <input
@@ -389,15 +389,15 @@ export default function AgentPage() {
            onChange={(e) => setQuery(e.target.value)}
            placeholder="Ask about Satya..."
            disabled={isLoading}
-           className="w-full px-10 py-3 pr-12 text-lg bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
+           className="w-full px-8 sm:px-10 py-2 sm:py-3 pr-10 sm:pr-12 text-base sm:text-lg bg-gray-50 border-none rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
           />
           
           {/* Plus button with upload menu */}
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+          <div className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2">
            <button
             type="button"
             onClick={() => setShowUploadMenu(!showUploadMenu)}
-            className="text-gray-400 hover:text-gray-600 text-lg"
+            className="text-gray-400 hover:text-gray-600 text-base sm:text-lg"
            >
             +
            </button>
@@ -406,12 +406,12 @@ export default function AgentPage() {
           <button
            type="submit"
            disabled={!query.trim() || isLoading}
-           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+           className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
           >
            {isLoading ? (
-            <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+            <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
            ) : (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="sm:w-5 sm:h-5">
              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
             </svg>
            )}
