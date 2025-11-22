@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Header from '@/components/ui/Header'
 import { geminiModel } from '@/lib/gemini-client'
 import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
@@ -19,9 +19,15 @@ export default function AgentPage() {
  const [isLoading, setIsLoading] = useState(false)
  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
  const [showUploadMenu, setShowUploadMenu] = useState(false)
+ const messagesEndRef = useRef<HTMLDivElement>(null)
  
  const marketplaceService = new MarketplaceContractService()
  const eventService = new EventService()
+
+ // Auto scroll to bottom when messages change
+ useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+ }, [chatHistory, isLoading])
 
  const suggestedQueries = [
   "Upload my AI model and start TEE verification",
@@ -226,10 +232,10 @@ export default function AgentPage() {
  }
 
  return (
-  <div className="min-h-screen bg-white pt-16">
+  <div className="min-h-screen bg-white">
    <Header />
    
-   <main className="flex flex-col min-h-[calc(100vh-4rem)]">
+   <main className="flex flex-col min-h-screen pt-16">
     {chatHistory.length === 0 ? (
      /* Initial State - Centered */
      <div className="flex items-center justify-center flex-1 px-4 sm:px-6">
@@ -345,7 +351,7 @@ export default function AgentPage() {
       </div>
 
       {/* Chat Messages */}
-      <div className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 pt-6 sm:pt-8 pb-20 space-y-4 sm:space-y-6">
+      <div className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 pt-6 sm:pt-8 pb-24 sm:pb-28 space-y-4 sm:space-y-6 overflow-y-auto">
        {chatHistory.map((message, index) => (
         <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
          <div className={`max-w-[85%] sm:max-w-3xl rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-3 ${
@@ -376,10 +382,13 @@ export default function AgentPage() {
          </div>
         </div>
        )}
+       
+       {/* Scroll target */}
+       <div ref={messagesEndRef} />
       </div>
 
       {/* Fixed Chat Input */}
-      <div className="border-t border-gray-100 bg-white/95 backdrop-blur-sm fixed bottom-0 left-0 right-0">
+      <div className="border-t border-gray-100 bg-white/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-20">
        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
         <form onSubmit={handleSubmit}>
          <div className="relative">
@@ -389,7 +398,7 @@ export default function AgentPage() {
            onChange={(e) => setQuery(e.target.value)}
            placeholder="Ask about Satya..."
            disabled={isLoading}
-           className="w-full px-8 sm:px-10 py-2 sm:py-3 pr-10 sm:pr-12 text-base sm:text-lg bg-gray-50 border-none rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
+           className="w-full px-8 sm:px-10 py-3 sm:py-4 pr-10 sm:pr-12 text-base sm:text-lg bg-gray-50 border-none rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
           />
           
           {/* Plus button with upload menu */}
@@ -401,6 +410,35 @@ export default function AgentPage() {
            >
             +
            </button>
+           
+           {showUploadMenu && (
+            <div className="absolute bottom-8 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 min-w-40 sm:min-w-48 z-30">
+             <label className="flex items-center gap-2 px-2 sm:px-3 py-2 hover:bg-gray-50 rounded cursor-pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="sm:w-4 sm:h-4">
+               <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+              </svg>
+              <span className="text-sm sm:text-base">Upload AI Model</span>
+              <input
+               type="file"
+               onChange={handleFileUpload}
+               accept=".pkl,.pt,.pth,.h5,.onnx,.pb,.tflite,.json"
+               className="hidden"
+              />
+             </label>
+             <button
+              onClick={() => {
+               setQuery("Create new AI model from scratch")
+               setShowUploadMenu(false)
+              }}
+              className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded w-full text-left"
+             >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+               <path d="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,21H5V3H14V9H19V21Z"/>
+              </svg>
+              Create New Model
+             </button>
+            </div>
+           )}
           </div>
           
           <button
