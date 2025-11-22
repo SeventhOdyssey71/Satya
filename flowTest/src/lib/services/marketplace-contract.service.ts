@@ -1143,22 +1143,6 @@ export class MarketplaceContractService {
     const objectId = obj.data?.objectId;
     if (!objectId) return false;
     const isListed = listedModelIds.has(objectId);
-    
-    // Don't filter by age or date validity - show ALL pending models
-    const content = obj.data?.content as any;
-    const fields = content?.fields || {};
-    const status = fields?.status;
-    
-    
-    // Include ALL pending models that haven't been listed on marketplace
-    // Don't filter by age or timestamp validity
-    return !isListed;
-   });
-   
-   const pendingModels = allPendingModels.filter(obj => {
-    const objectId = obj.data?.objectId;
-    if (!objectId) return false;
-    const isListed = listedModelIds.has(objectId);
     return !isListed;
    });
 
