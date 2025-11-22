@@ -102,16 +102,6 @@ export default function Header({ isHomepage = false }: HeaderProps) {
          >
           Agent
          </Link>
-         <Link 
-          href="/docs"
-          className={`transition-colors text-base ${
-           pathname === '/docs' 
-            ? 'text-black font-medium' 
-            : 'text-gray-500 font-light hover:text-gray-700'
-          }`}
-         >
-          Docs
-         </Link>
         </nav>
         
         <div className="flex-1 flex justify-end">
@@ -256,17 +246,6 @@ export default function Header({ isHomepage = false }: HeaderProps) {
         }`}
        >
         Agent
-       </Link>
-       <Link 
-        href="/docs"
-        onClick={() => setShowMobileMenu(false)}
-        className={`px-4 py-2 transition-colors text-base ${
-         pathname === '/docs' 
-          ? 'text-black font-medium bg-gray-50' 
-          : 'text-gray-500 font-light hover:text-gray-700 hover:bg-gray-50'
-        }`}
-       >
-        Docs
        </Link>
       </nav>
      </div>
