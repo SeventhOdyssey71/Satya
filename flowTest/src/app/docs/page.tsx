@@ -66,10 +66,10 @@ export default function DocsPage() {
 function IntroductionContent() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-black">Satya AI Marketplace Documentation</h1>
+      <h1 className="text-2xl font-bold text-black">Satya AI Marketplace Documentation</h1>
       
       <div className="border-l-4 border-blue-500 pl-6 py-4 bg-gray-50">
-        <p className="text-gray-700 text-lg leading-relaxed">
+        <p className="text-gray-700 leading-relaxed">
           Satya is a decentralized marketplace for AI models built on the SUI blockchain. 
           It enables secure trading of machine learning models using advanced encryption, 
           trusted execution environments, and blockchain technology.
@@ -77,7 +77,7 @@ function IntroductionContent() {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-black">Core Features</h2>
+        <h2 className="text-lg font-semibold text-black">Core Features</h2>
         
         <div className="space-y-4">
           <div className="border border-gray-200 rounded-lg p-4">
@@ -119,7 +119,7 @@ function IntroductionContent() {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-black">Architecture Overview</h2>
+        <h2 className="text-lg font-semibold text-black">Architecture Overview</h2>
         <p className="text-gray-700">
           The platform consists of several integrated components working together to provide
           a secure and efficient marketplace experience:
@@ -172,11 +172,11 @@ function IntroductionContent() {
 function GettingStartedContent() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-black">Getting Started</h1>
+      <h1 className="text-2xl font-bold text-black">Getting Started</h1>
       
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Prerequisites</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Prerequisites</h2>
           <div className="space-y-3">
             <div className="border border-gray-200 rounded-lg p-4">
               <h3 className="font-medium text-black mb-2">SUI Wallet</h3>
@@ -205,7 +205,7 @@ function GettingStartedContent() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Quick Start Steps</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Quick Start Steps</h2>
           <div className="space-y-4">
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center mb-3">
@@ -260,11 +260,11 @@ function GettingStartedContent() {
 function MarketplaceContent() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-black">Marketplace Guide</h1>
+      <h1 className="text-2xl font-bold text-black">Marketplace Guide</h1>
       
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Browsing Models</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Browsing Models</h2>
           <p className="text-gray-700 mb-4">
             The marketplace provides comprehensive search and filtering capabilities to help you find the right AI models for your needs.
           </p>
@@ -301,7 +301,7 @@ function MarketplaceContent() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Purchasing Models</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Purchasing Models</h2>
           <p className="text-gray-700 mb-4">
             Purchase process is secured through blockchain transactions and provides immediate access upon confirmation.
           </p>
@@ -336,7 +336,7 @@ function MarketplaceContent() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">TEE Verification</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">TEE Verification</h2>
           <p className="text-gray-700 mb-4">
             Trusted Execution Environment verification provides cryptographic proof that models perform as advertised.
           </p>
@@ -363,11 +363,11 @@ function MarketplaceContent() {
 function UploadContent() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-black">Upload Models</h1>
+      <h1 className="text-2xl font-bold text-black">Upload Models</h1>
       
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Model Preparation</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Model Preparation</h2>
           <p className="text-gray-700 mb-4">
             Properly prepare your AI model for upload to ensure optimal marketplace performance and user experience.
           </p>
@@ -403,7 +403,7 @@ function UploadContent() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Upload Process</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Upload Process</h2>
           <p className="text-gray-700 mb-4">
             The upload process includes file validation, encryption, storage, and blockchain registration.
           </p>
@@ -462,11 +462,11 @@ function UploadContent() {
 function SealContent() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-black">SEAL Encryption</h1>
+      <h1 className="text-2xl font-bold text-black">SEAL Encryption</h1>
       
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">How SEAL Works</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">How SEAL Works</h2>
           <p className="text-gray-700 mb-4">
             Microsoft SEAL provides homomorphic encryption that enables computation on encrypted data 
             without revealing the underlying information. This protects AI model intellectual property 
@@ -501,7 +501,7 @@ function SealContent() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Access Control Policies</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Access Control Policies</h2>
           <p className="text-gray-700 mb-4">
             SEAL supports multiple access control mechanisms to provide flexible protection for different use cases.
           </p>
@@ -543,7 +543,7 @@ function SealContent() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Key Management</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Key Management</h2>
           <p className="text-gray-700 mb-4">
             Threshold cryptography distributes encryption keys across multiple servers 
             to ensure security and availability without single points of failure.
@@ -568,11 +568,11 @@ function SealContent() {
 function ApiContent() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-black">API Reference</h1>
+      <h1 className="text-2xl font-bold text-black">API Reference</h1>
       
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">REST API</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">REST API</h2>
           <p className="text-gray-700 mb-4">
             Satya provides RESTful APIs for integrating marketplace functionality into external applications.
             All endpoints require authentication using SUI wallet signatures.
@@ -654,7 +654,7 @@ function ApiContent() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Authentication</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Authentication</h2>
           <p className="text-gray-700 mb-4">
             All API requests require authentication using SUI wallet signatures for security and access control.
           </p>
@@ -667,7 +667,7 @@ Content-Type: application/json`}</pre>
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Error Responses</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Error Responses</h2>
           <p className="text-gray-700 mb-4">
             Standardized error responses with consistent formatting and detailed error information.
           </p>
@@ -690,11 +690,11 @@ Content-Type: application/json`}</pre>
 function ContractsContent() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-black">Smart Contracts</h1>
+      <h1 className="text-2xl font-bold text-black">Smart Contracts</h1>
       
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Contract Addresses</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Contract Addresses</h2>
           <p className="text-gray-700 mb-4">
             Satya smart contracts are deployed on the SUI blockchain for marketplace operations, payments, and access control.
           </p>
@@ -725,7 +725,7 @@ function ContractsContent() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Core Functions</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Core Functions</h2>
           <p className="text-gray-700 mb-4">
             The marketplace smart contract provides functions for listing, purchasing, and managing AI models.
           </p>
@@ -785,7 +785,7 @@ function ContractsContent() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold text-black mb-4">Data Structures</h2>
+          <h2 className="text-lg font-semibold text-black mb-4">Data Structures</h2>
           <p className="text-gray-700 mb-4">
             Key data structures used in the smart contract system for model and access management.
           </p>
