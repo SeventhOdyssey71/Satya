@@ -10,10 +10,6 @@ out/
 build/
 dist/
 
-# Rust build artifacts
-target/
-Cargo.lock
-
 # Environment variables
 .env
 .env.local
@@ -78,18 +74,39 @@ coverage/
 .cache
 .parcel-cache
 
+# Cache
+.cache/
+
 # Temporary folders
 tmp/
 temp/
 
+# Temporary files
+*.tmp
+*.temp
+
 # WebAssembly files
 *.wasm
+
+# Rust build artifacts
+target/
+Cargo.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Move.lock
+Move.lock
 
 # Debug files
 debug_*.js
 
 # Test output
 test-results/
-
-# Gemi-fren knowledge base (agent enhancement files)
-gemi-fren/
