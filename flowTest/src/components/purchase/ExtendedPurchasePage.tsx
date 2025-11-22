@@ -234,7 +234,7 @@ export default function ExtendedPurchasePage({
       {/* Title and Price */}
       <div className="flex items-start justify-between">
        <div className="flex-1">
-        <h1 className="text-4xl font-russo text-black mb-2">{model.title}</h1>
+        <h1 className="text-4xl font-albert font-bold text-black mb-2">{model.title}</h1>
         <p className="text-gray-600 text-sm leading-relaxed">
          {model.description}
         </p>
@@ -278,13 +278,13 @@ export default function ExtendedPurchasePage({
        <div className="bg-white rounded-lg p-6 border border-gray-200 space-y-4">
         <div className="flex items-center justify-between">
          <div>
-          <h3 className="font-russo text-xl text-black">Verify Model</h3>
+          <h3 className="font-albert font-bold text-xl text-black">Verify Model</h3>
           <p className="text-gray-600 text-sm mt-1">
            Start the verification process to ensure model integrity
           </p>
          </div>
          <div className="text-right">
-          <div className="text-2xl font-russo text-black">${model.price}</div>
+          <div className="text-2xl font-albert font-bold text-black">${model.price}</div>
           <div className="text-xs text-gray-500">SUI</div>
          </div>
         </div>
@@ -321,7 +321,7 @@ export default function ExtendedPurchasePage({
       {/* Verification Steps */}
       {currentStep === 'verify' && isVerifying && (
        <div className="bg-white rounded-lg p-6 border border-gray-200 space-y-4">
-        <h3 className="font-russo text-lg text-black">Verification in Progress</h3>
+        <h3 className="font-albert font-bold text-lg text-black">Verification in Progress</h3>
 
         <div className="space-y-3">
          {verificationSteps.map((step, index) => (
@@ -354,7 +354,7 @@ export default function ExtendedPurchasePage({
        <div className="bg-white rounded-lg p-6 border border-gray-200 space-y-4">
         <div className="flex items-center gap-2 mb-2">
          <CheckCircle className="w-5 h-5 text-green-600" />
-         <h3 className="font-russo text-lg text-green-900">Verification Complete</h3>
+         <h3 className="font-albert font-bold text-lg text-green-900">Verification Complete</h3>
         </div>
         <div className="text-sm space-y-2 bg-green-50 p-4 rounded-lg">
          <p><span className="text-gray-600">Enclave ID:</span> <span className="font-mono text-sm">{attestationResult.enclaveId}</span></p>
@@ -381,7 +381,7 @@ export default function ExtendedPurchasePage({
        <div className="bg-white rounded-lg p-6 border border-red-200 space-y-4">
         <div className="flex items-center gap-2">
          <AlertCircle className="w-5 h-5 text-red-600" />
-         <h3 className="font-russo text-lg text-red-900">Verification Failed</h3>
+         <h3 className="font-albert font-bold text-lg text-red-900">Verification Failed</h3>
         </div>
         <p className="text-red-700 text-sm bg-red-50 p-4 rounded-lg">{error}</p>
         <button
@@ -400,7 +400,7 @@ export default function ExtendedPurchasePage({
       {currentStep === 'run' && (
        <div className="bg-white rounded-lg p-6 border border-gray-200 space-y-4">
         <div className="flex items-center justify-between mb-4">
-         <h3 className="font-russo text-xl text-black">Execute Model</h3>
+         <h3 className="font-albert font-bold text-xl text-black">Execute Model</h3>
          <div className="flex items-center gap-2 text-sm text-green-600">
           <Cpu className="w-4 h-4" />
           TEE Environment Ready
@@ -442,7 +442,7 @@ export default function ExtendedPurchasePage({
        <div className="bg-white rounded-lg p-6 border border-gray-200 space-y-6">
         <div className="text-center py-4">
          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-         <h3 className="font-russo text-xl text-green-900 mb-2">
+         <h3 className="font-albert font-bold text-xl text-green-900 mb-2">
           Execution Complete
          </h3>
          <p className="text-gray-600">
@@ -489,7 +489,7 @@ export default function ExtendedPurchasePage({
        <div className="bg-white rounded-lg p-6 border border-red-200 space-y-6">
         <div className="text-center py-4">
          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-         <h3 className="font-russo text-xl text-red-900 mb-2">
+         <h3 className="font-albert font-bold text-xl text-red-900 mb-2">
           Execution Failed
          </h3>
          <p className="text-gray-600 mb-4">

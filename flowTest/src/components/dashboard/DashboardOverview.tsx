@@ -7,245 +7,253 @@ import {
  IoCloseCircle,
  IoCloudUpload,
  IoStatsChart,
- IoDownload
+ IoDownload,
+ IoRefresh
 } from 'react-icons/io5'
-import { useUploadTasks, useUploadActions } from '@/contexts/UploadContext'
+import { usePendingModels } from '@/hooks/usePendingModels'
+import { useCurrentAccount } from '@mysten/dapp-kit'
+import { useState, useEffect } from 'react'
+import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
 
 interface DashboardOverviewProps {
  onNewUpload?: () => void
 }
 
 export default function DashboardOverview({ onNewUpload }: DashboardOverviewProps) {
- const { allTasks } = useUploadTasks()
- const { clearFailedTasks } = useUploadActions()
+ const { pendingModels, statusCounts, isLoading, refresh } = usePendingModels()
+ const currentAccount = useCurrentAccount()
+ const [completedCount, setCompletedCount] = useState(0)
 
- // Calculate status counts based on the new flow requirements
- const statusCounts = {
-  pending: allTasks.filter(task => task.status === 'pending' || task.status === 'uploading').length,
-  completed: allTasks.filter(task => task.status === 'completed').length,
-  failed: allTasks.filter(task => task.status === 'cancelled').length
+ // Load completed models (marketplace models) count
+ const loadCompletedCount = async () => {
+  if (!currentAccount?.address) return
+  
+  try {
+   const contractService = new MarketplaceContractService()
+   await contractService.initialize()
+   
+   const marketplaceModels = await contractService.getMarketplaceModels()
+   const userModels = marketplaceModels.filter(model => 
+    model.data?.content?.fields?.creator === currentAccount.address
+   )
+   
+   setCompletedCount(userModels.length)
+  } catch (error) {
+   console.error('Failed to load completed models count:', error)
+  }
+ }
+
+ useEffect(() => {
+  loadCompletedCount()
+ }, [currentAccount?.address])
+
+ // Set up periodic refresh for completed count
+ useEffect(() => {
+  if (!currentAccount?.address) return
+
+  const interval = setInterval(() => {
+   loadCompletedCount()
+  }, 15000) // 15 seconds
+
+  return () => clearInterval(interval)
+ }, [currentAccount?.address])
+
+ // Calculate status counts based on pending models from smart contract
+ const displayCounts = {
+  pending: statusCounts.pending + statusCounts.verifying, // Combine pending and verifying
+  completed: completedCount, // Use marketplace models count
+  failed: statusCounts.failed
  }
 
  return (
-  <div className="space-y-12">
+  <div className="space-y-8">
    {/* Status Overview Cards */}
-   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-    {/* Pending Card */}
-    <div className="card-hover bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 p-8 hover:shadow-orange-100/50 transition-all duration-300">
-     <div className="flex items-center justify-between">
-      <div className="flex-1">
-       <div className="flex items-center gap-2 mb-2">
-        <IoTime className="w-5 h-5 text-orange-600" />
-        <h3 className="text-lg font-russo text-orange-800">Pending</h3>
-       </div>
-       <p className="text-4xl font-russo text-orange-700 mb-2">{statusCounts.pending}</p>
-       <p className="text-orange-600">Processing uploads</p>
+   <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="grid grid-cols-3 gap-6">
+     {/* Pending */}
+     <div className="text-center">
+      <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+       <IoTime className="w-5 h-5 text-yellow-700" />
       </div>
-      <div className="w-16 h-16 bg-orange-200/80 rounded-2xl flex items-center justify-center">
-       <IoTime className="w-8 h-8 text-orange-600" />
-      </div>
+      <h3 className="text-sm font-medium text-gray-900 mb-1">Pending</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{displayCounts.pending}</p>
+      <p className="text-xs text-gray-600">Awaiting verification</p>
      </div>
-     {statusCounts.pending > 0 && (
-      <div className="mt-4 pt-4 border-t border-orange-200">
-       <div className="w-full bg-orange-200 rounded-full h-2">
-        <div className="bg-orange-500 h-2 rounded-full w-1/3 animate-pulse"></div>
-       </div>
-       <p className="text-sm text-orange-600 mt-2">Verification in progress...</p>
-      </div>
-     )}
-    </div>
 
-    {/* Completed Card */}
-    <div className="card-hover bg-gradient-to-br from-green-50 to-green-100 border-green-200 p-8 hover:shadow-green-100/50 transition-all duration-300">
-     <div className="flex items-center justify-between">
-      <div className="flex-1">
-       <div className="flex items-center gap-2 mb-2">
-        <IoCheckmarkCircle className="w-5 h-5 text-green-600" />
-        <h3 className="text-lg font-russo text-green-800">Completed</h3>
-       </div>
-       <p className="text-4xl font-russo text-green-700 mb-2">{statusCounts.completed}</p>
-       <p className="text-green-600">Available in marketplace</p>
+     {/* Completed */}
+     <div className="text-center">
+      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+       <IoCheckmarkCircle className="w-5 h-5 text-green-700" />
       </div>
-      <div className="w-16 h-16 bg-green-200/80 rounded-2xl flex items-center justify-center">
-       <IoCheckmarkCircle className="w-8 h-8 text-green-600" />
-      </div>
+      <h3 className="text-sm font-medium text-gray-900 mb-1">Completed</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{displayCounts.completed}</p>
+      <p className="text-xs text-gray-600">Available in marketplace</p>
      </div>
-     {statusCounts.completed > 0 && (
-      <div className="mt-4 pt-4 border-t border-green-200">
-       <p className="text-sm text-green-600">Ready for downloads</p>
-      </div>
-     )}
-    </div>
 
-    {/* Failed Card */}
-    <div className="card-hover bg-gradient-to-br from-red-50 to-red-100 border-red-200 p-8 hover:shadow-red-100/50 transition-all duration-300">
-     <div className="flex items-center justify-between">
-      <div className="flex-1">
-       <div className="flex items-center gap-2 mb-2">
-        <IoCloseCircle className="w-5 h-5 text-red-600" />
-        <h3 className="text-lg font-russo text-red-800">Failed</h3>
-       </div>
-       <p className="text-4xl font-russo text-red-700 mb-2">{statusCounts.failed}</p>
-       <p className="text-red-600">Requires attention</p>
+     {/* Failed */}
+     <div className="text-center">
+      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+       <IoCloseCircle className="w-5 h-5 text-red-500" />
       </div>
-      <div className="w-16 h-16 bg-red-200/80 rounded-2xl flex items-center justify-center">
-       <IoCloseCircle className="w-8 h-8 text-red-600" />
-      </div>
-     </div>
-     {statusCounts.failed > 0 && (
-      <div className="mt-4 pt-4 border-t border-red-200">
+      <h3 className="text-sm font-medium text-gray-900 mb-1">Failed</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{displayCounts.failed}</p>
+      <p className="text-xs text-gray-600">Requires attention</p>
+      {displayCounts.failed > 0 && (
        <button 
-        onClick={clearFailedTasks}
-        className="btn-sm bg-red-600 text-white hover:bg-red-700 transition-colors"
+        onClick={refresh}
+        className="mt-2 px-2 py-1 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors"
        >
-        Clear Failed
+        <IoRefresh className="w-3 h-3 inline mr-1" />
+        Refresh
        </button>
-      </div>
-     )}
+      )}
+     </div>
     </div>
    </div>
 
    {/* Quick Stats */}
-   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-    <div className="card p-6 text-center bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-blue-100/50 transition-all duration-300">
-     <div className="w-12 h-12 bg-blue-500/10 border border-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-3">
-      <IoStatsChart className="w-6 h-6 text-blue-600" />
+   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="bg-white border border-gray-200 rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
+     <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+      <IoStatsChart className="w-5 h-5 text-gray-600" />
      </div>
-     <p className="text-sm text-blue-600/80 mb-1">Total Uploads</p>
-     <p className="text-3xl font-russo text-blue-800 mb-1">{allTasks.length}</p>
-     <div className="text-xs text-blue-600/70">
-      {allTasks.length > 0 ? '+2 this week' : 'Get started!'}
+     <p className="text-sm text-gray-600 mb-1">Total Models</p>
+     <p className="text-2xl font-semibold text-gray-900 mb-1">{statusCounts.total}</p>
+     <div className="text-xs text-gray-500">
+      {statusCounts.total > 0 ? 'In your dashboard' : 'Get started!'}
      </div>
     </div>
 
-    <div className="card p-6 text-center bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-purple-100/50 transition-all duration-300">
-     <div className="w-12 h-12 bg-purple-500/10 border border-purple-200 rounded-2xl flex items-center justify-center mx-auto mb-3">
-      <IoDownload className="w-6 h-6 text-purple-600" />
+    <div className="bg-white border border-gray-200 rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
+     <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+      <IoDownload className="w-5 h-5 text-gray-600" />
      </div>
-     <p className="text-sm text-purple-600/80 mb-1">Total Size</p>
-     <p className="text-3xl font-russo text-purple-800 mb-1">
-      {formatFileSize(allTasks.reduce((sum, task) => sum + task.fileSize, 0))}
+     <p className="text-sm text-gray-600 mb-1">Verification Rate</p>
+     <p className="text-2xl font-semibold text-gray-900 mb-1">
+      {statusCounts.total ? Math.round((statusCounts.verified / statusCounts.total) * 100) : 0}%
      </p>
-     <div className="text-xs text-purple-600/70">
-      Across all models
+     <div className="text-xs text-gray-500">
+      Models verified
      </div>
     </div>
 
-    <div className="card p-6 text-center bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200 hover:shadow-amber-100/50 transition-all duration-300">
-     <div className="w-12 h-12 bg-amber-500/10 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto mb-3">
-      <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="bg-white border border-gray-200 rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
+     <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
       </svg>
      </div>
-     <p className="text-sm text-amber-600/80 mb-1">Avg. Speed</p>
-     <p className="text-3xl font-russo text-amber-800 mb-1">2.4 MB/s</p>
-     <div className="text-xs text-amber-600/70">
-      Upload speed
+     <p className="text-sm text-gray-600 mb-1">Avg. Speed</p>
+     <p className="text-2xl font-semibold text-gray-900 mb-1">2.4</p>
+     <div className="text-xs text-gray-500">
+      Minutes per verification
      </div>
     </div>
 
-    <div className="card p-6 text-center bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 hover:shadow-emerald-100/50 transition-all duration-300">
-     <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-3">
-      <IoCheckmarkCircle className="w-6 h-6 text-emerald-600" />
+    <div className="bg-white border border-gray-200 rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
+     <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+      <IoCheckmarkCircle className="w-5 h-5 text-gray-600" />
      </div>
-     <p className="text-sm text-emerald-600/80 mb-1">Success Rate</p>
-     <p className="text-3xl font-russo text-emerald-800 mb-1">
-      {allTasks.length ? Math.round((statusCounts.completed / allTasks.length) * 100) : 0}%
+     <p className="text-sm text-gray-600 mb-1">Success Rate</p>
+     <p className="text-2xl font-semibold text-gray-900 mb-1">
+      {statusCounts.total ? Math.round((statusCounts.verified / statusCounts.total) * 100) : 0}%
      </p>
-     <div className="text-xs text-emerald-600/70">
+     <div className="text-xs text-gray-500">
       Verification rate
      </div>
     </div>
    </div>
 
    {/* Recent Activity */}
-   <div className="card p-8">
-    <div className="flex items-center justify-between mb-8">
+   <div className="bg-white border border-gray-200 rounded-lg p-6">
+    <div className="flex items-center justify-between mb-6">
      <div>
-      <h3 className="text-2xl font-russo text-secondary-900 mb-2">Recent Activity</h3>
-      <p className="text-secondary-600">Track your latest model uploads and verifications</p>
+      <h3 className="text-xl font-medium text-gray-900 mb-1">Recent Activity</h3>
+      <p className="text-gray-600 text-sm">Track your latest model uploads and verifications</p>
      </div>
-     <div className="flex items-center gap-3">
-      {statusCounts.failed > 0 && (
-       <button
-        onClick={clearFailedTasks}
-        className="btn-sm bg-red-600 text-white hover:bg-red-700 transition-colors"
-       >
-        Clear Failed ({statusCounts.failed})
-       </button>
-      )}
+     <div className="flex items-center gap-2">
+      <button
+       onClick={refresh}
+       className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+      >
+       <IoRefresh className="w-4 h-4" />
+       Refresh
+      </button>
       <button
        onClick={onNewUpload}
-       className="btn-primary group"
+       className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
       >
-       <IoCloudUpload className="w-5 h-5" />
+       <IoCloudUpload className="w-4 h-4" />
        New Upload
-       <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-       </svg>
       </button>
      </div>
     </div>
     
-    {allTasks.length === 0 ? (
-     <div className="text-center py-16">
-      <div className="w-20 h-20 bg-white border border-surface-300 rounded-full flex items-center justify-center mx-auto mb-6">
-       <IoCloudUpload className="w-10 h-10 text-secondary-400" />
+    {pendingModels.length === 0 ? (
+     <div className="text-center py-12">
+      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+       <IoCloudUpload className="w-8 h-8 text-gray-400" />
       </div>
-      <h4 className="text-xl font-russo text-secondary-800 mb-3">No uploads yet</h4>
-      <p className="text-secondary-600 mb-8 leading-relaxed max-w-md mx-auto">
+      <h4 className="text-lg font-medium text-gray-900 mb-2">No uploads yet</h4>
+      <p className="text-gray-600 mb-6 leading-relaxed max-w-md mx-auto">
        Start by uploading your first AI model. Our TEE verification system will ensure it's secure and ready for the marketplace.
       </p>
       <button 
        onClick={onNewUpload}
-       className="btn-primary btn-lg"
+       className="px-6 py-3 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
       >
        Upload Your First Model
       </button>
      </div>
     ) : (
-     <div className="space-y-4">
-      {allTasks.slice(0, 5).map((task, index) => (
-       <div key={task.id} className="flex items-center justify-between p-6 bg-white border border-border rounded-2xl hover:bg-surface-50 transition-colors group">
-        <div className="flex items-center gap-4 flex-1">
-         <div className={`w-3 h-3 rounded-full ${getStatusColor(task.status)} ${task.status === 'pending' || task.status === 'uploading' ? 'animate-pulse' : ''}`} />
+     <div className="space-y-3">
+      {pendingModels.slice(0, 5).map((model) => (
+       <div key={model.id} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group">
+        <div className="flex items-center gap-3 flex-1">
+         <div className={`w-2 h-2 rounded-full ${getStatusColor(model.status)} ${model.status === 'pending' || model.status === 'verifying' ? 'animate-pulse' : ''}`} />
          <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-           <p className="font-russo text-secondary-900 group-hover:text-primary-600 transition-colors">{task.fileName}</p>
-           {task.status === 'completed' && (
-            <div className="badge-success btn-sm">
+           <p className="font-medium text-gray-900">{model.title}</p>
+           {model.status === 'verified' && (
+            <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs">
              <IoCheckmarkCircle className="w-3 h-3" />
              Verified
             </div>
            )}
+           {model.status === 'failed' && (
+            <div className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs">
+             <IoCloseCircle className="w-3 h-3" />
+             Failed
+            </div>
+           )}
           </div>
-          <div className="flex items-center gap-4 text-sm text-secondary-500">
-           <span>{formatFileSize(task.fileSize)}</span>
+          <div className="flex items-center gap-3 text-sm text-gray-500">
+           <span>{model.category}</span>
            <span>•</span>
-           <span>{new Date().toLocaleDateString()}</span>
-           {task.status === 'uploading' && (
+           <span>{new Date(model.createdAt).toLocaleDateString()}</span>
+           {model.status === 'verifying' && (
             <>
              <span>•</span>
              <div className="flex items-center gap-2">
-              <div className="w-16 h-1 bg-secondary-200 rounded-full overflow-hidden">
-               <div className="h-full bg-primary-600 rounded-full w-2/3 animate-pulse"></div>
+              <div className="w-12 h-1 bg-gray-200 rounded-full overflow-hidden">
+               <div className="h-full bg-blue-500 rounded-full w-2/3 animate-pulse"></div>
               </div>
-              <span>67%</span>
+              <span>Verifying...</span>
              </div>
             </>
            )}
           </div>
          </div>
         </div>
-        <div className="flex items-center gap-3">
-         <span className={`px-4 py-2 rounded-xl text-sm font-medium ${getStatusBadge(task.status)}`}>
-          {task.status === 'uploading' ? 'uploading' : 
-           task.status === 'pending' ? 'verifying' : 
-           task.status === 'completed' ? 'completed' : 
-           task.status}
+        <div className="flex items-center gap-2">
+         <span className={`px-3 py-1 rounded-md text-sm font-medium ${getStatusBadge(model.status)}`}>
+          {model.status === 'verifying' ? 'verifying' : 
+           model.status === 'pending' ? 'pending' : 
+           model.status === 'verified' ? 'verified' : 
+           model.status}
          </span>
-         <button className="p-2 rounded-lg border border-border hover:bg-surface-100 transition-colors">
-          <svg className="w-4 h-4 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+         <button className="p-1 rounded-md border border-gray-300 hover:bg-gray-100 transition-colors">
+          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
          </button>
@@ -253,10 +261,10 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
        </div>
       ))}
       
-      {allTasks.length > 5 && (
-       <div className="pt-4 text-center">
-        <button className="btn-ghost">
-         View All {allTasks.length} Uploads
+      {pendingModels.length > 5 && (
+       <div className="pt-3 text-center">
+        <button className="px-4 py-2 text-gray-600 hover:text-gray-900 text-sm">
+         View All {pendingModels.length} Models
         </button>
        </div>
       )}
@@ -277,13 +285,12 @@ function formatFileSize(bytes: number): string {
 
 function getStatusColor(status: string): string {
  switch (status) {
-  case 'completed':
+  case 'verified':
    return 'bg-green-500'
   case 'pending':
-  case 'uploading':
+  case 'verifying':
    return 'bg-yellow-500'
   case 'failed':
-  case 'error':
    return 'bg-red-500'
   default:
    return 'bg-gray-500'
@@ -292,13 +299,13 @@ function getStatusColor(status: string): string {
 
 function getStatusBadge(status: string): string {
  switch (status) {
-  case 'completed':
+  case 'verified':
    return 'bg-green-100 text-green-800'
   case 'pending':
-  case 'uploading':
    return 'bg-yellow-100 text-yellow-800'
+  case 'verifying':
+   return 'bg-blue-100 text-blue-700'
   case 'failed':
-  case 'error':
    return 'bg-red-100 text-red-800'
   default:
    return 'bg-gray-100 text-gray-700'

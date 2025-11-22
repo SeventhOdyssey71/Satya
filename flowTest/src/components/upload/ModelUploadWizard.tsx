@@ -134,11 +134,9 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
    const walletSigner = {
     toSuiAddress: async () => currentAccount!.address,
     executeTransaction: async (tx: any) => {
-     console.log('Wallet signing transaction...');
      const result = await signAndExecuteTransaction({ 
       transaction: tx
      });
-     console.log('Transaction signed and executed:', result);
      return result;
     }
    }
@@ -158,7 +156,6 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     accessDuration: data.accessDuration || 30
    }
 
-   console.log('Starting comprehensive upload flow...', uploadData)
 
    // Create upload service instance
    const modelUploadService = await ModelUploadService.createWithFallback()
@@ -168,7 +165,6 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     uploadData,
     walletSigner,
     (progress: ModelUploadProgress) => {
-     console.log('Upload progress:', progress)
      setUploadProgress(progress)
     }
    )
@@ -178,7 +174,6 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     
     // Handle toLowerCase errors gracefully
     if (errorMsg.includes('toLowerCase')) {
-     console.log('🔧 toLowerCase error detected and handled safely');
      throw new Error('Upload processing error. Please check your input data and try again.');
     }
     
@@ -215,6 +210,16 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
    alert(`Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Smart contract record created ✓\n\nPending Model ID: ${uploadResult.pendingModelId}\n\nYour model is now pending TEE verification. You can track its progress in the Dashboard.`)
    
    setCurrentStep(steps.length) // Go to result step
+   
+   // Dispatch event to refresh pending models
+   console.log('Dispatching model-uploaded event to refresh pending models...')
+   window.dispatchEvent(new CustomEvent('model-uploaded', { 
+    detail: { 
+     pendingModelId: uploadResult.pendingModelId,
+     title: data.title 
+    } 
+   }))
+   window.dispatchEvent(new CustomEvent('pending-models-refresh'))
    
    // Call the callback if provided
    if (onUploadComplete) {
@@ -369,9 +374,9 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
 
  return (
   <div>
-   <div className="mb-12">
-    <h1 className="text-5xl font-russo text-secondary-900 mb-3">Upload Model</h1>
-    <p className="text-xl font-albert text-secondary-600">Share your AI model with the Satya marketplace</p>
+   <div className="mb-8 max-w-2xl">
+    <h1 className="text-2xl md:text-3xl font-albert font-semibold leading-tight mb-3 text-gray-900">Upload Model</h1>
+    <p className="text-gray-600 mb-2">Share your AI model with the Satya marketplace</p>
    </div>
 
    {/* Progress Indicator */}
@@ -422,14 +427,11 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
  return (
   <div className="space-y-8">
    <div className="form-section">
-    <h3 className="text-xl font-albert font-semibold text-secondary-900 mb-6 flex items-center">
-     <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
-      <TbTag className="h-5 w-5 text-primary-600" />
-     </div>
+    <h3 className="text-lg font-albert font-semibold text-gray-900 mb-4">
      Model Information
     </h3>
     
-    <div className="space-y-6">
+    <div className="space-y-4">
      <div className="form-group">
       <label className="form-label">
        Model Title *
@@ -450,13 +452,13 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
       <textarea
        value={data.description}
        onChange={(e) => onChange({ description: e.target.value })}
-       rows={4}
-       className="input min-h-[120px] resize-none"
+       rows={3}
+       className="input min-h-[100px] resize-none"
        placeholder="Describe what your model does, its accuracy, use cases, etc."
       />
      </div>
 
-     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="form-group">
        <label className="form-label">
         Category *
@@ -488,7 +490,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
         />
         <button
          onClick={addTbTag}
-         className="btn btn-primary px-6 rounded-l-none"
+         className="px-4 py-2 bg-gray-900 text-white border border-gray-900 hover:bg-gray-800 transition-colors rounded-l-none"
         >
          Add
         </button>
@@ -626,12 +628,9 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
 
 
  return (
-  <div className="space-y-8">
+  <div className="space-y-6">
    <div className="form-section">
-    <h3 className="text-xl font-albert font-semibold text-secondary-900 mb-6 flex items-center">
-     <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
-      <TbUpload className="h-5 w-5 text-primary-600" />
-     </div>
+    <h3 className="text-lg font-albert font-semibold text-gray-900 mb-4">
      Upload Files
     </h3>
     
@@ -695,7 +694,7 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
       </label>
       <FileUploadZone
        accept={{
-        'application/octet-stream': ['.csv', '.json', '.parquet', '.pkl'],
+        'application/octet-stream': ['.csv', '.json', '.parquet', '.pkl', '.npy'],
         'text/csv': ['.csv'],
         'application/json': ['.json'],
         'application/zip': ['.zip'],
@@ -723,7 +722,7 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
        </div>
       )}
       <p className="form-help mt-3">
-       Supported formats: .csv, .json, .parquet, .pkl, .zip, .tar
+       Supported formats: .csv, .json, .parquet, .pkl, .npy, .zip, .tar
       </p>
      </div>
 
@@ -744,12 +743,9 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
 
 function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
  return (
-  <div className="space-y-8">
+  <div className="space-y-6">
    <div className="form-section">
-    <h3 className="text-xl font-albert font-semibold text-secondary-900 mb-6 flex items-center">
-     <div className="w-8 h-8 bg-accent-100 rounded-lg flex items-center justify-center mr-3">
-      <HiCurrencyDollar className="h-5 w-5 text-accent-600" />
-     </div>
+    <h3 className="text-lg font-albert font-semibold text-gray-900 mb-4">
      Pricing & Access
     </h3>
     
@@ -818,12 +814,9 @@ function PricingStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCance
 
 function SecurityStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
  return (
-  <div className="space-y-8">
+  <div className="space-y-6">
    <div className="form-section">
-    <h3 className="text-xl font-albert font-semibold text-secondary-900 mb-6 flex items-center">
-     <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
-      <TbShield className="h-5 w-5 text-primary-600" />
-     </div>
+    <h3 className="text-lg font-albert font-semibold text-gray-900 mb-4">
      Security & Privacy
     </h3>
     
@@ -920,7 +913,7 @@ function ReviewStep({ data, onPrev, isFirst, validation, isWalletConnected, onTb
  return (
   <div className="space-y-8">
    <div className="form-section">
-    <h3 className="text-2xl font-russo text-secondary-900 mb-6">Review Your Model</h3>
+    <h3 className="text-2xl font-albert font-bold text-secondary-900 mb-6">Review Your Model</h3>
     
     {/* Validation Summary */}
     {validation && (validation.hasErrors || validation.hasWarnings) && (
@@ -1202,7 +1195,7 @@ function StepNavigation({
     <button
      onClick={onPrev}
      disabled={isFirst}
-     className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+     className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
     >
      <RiArrowLeftLine className="h-5 w-5 mr-2" />
      Back
@@ -1210,7 +1203,7 @@ function StepNavigation({
     {onCancel && (
      <button
       onClick={onCancel}
-      className="btn btn-ghost text-danger-600 hover:bg-danger-50 border-danger-300"
+      className="px-4 py-2 text-red-600 hover:bg-red-50 border border-red-300 transition-colors rounded-md"
      >
       Cancel
      </button>
@@ -1219,9 +1212,9 @@ function StepNavigation({
    <button
     onClick={onNext}
     disabled={!isValid}
-    className="btn btn-primary btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
+    className="flex items-center px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
    >
-    <span className="font-albert font-medium">{nextLabel}</span>
+    <span className="font-medium">{nextLabel}</span>
     <RiArrowRightLine className="h-5 w-5 ml-2" />
    </button>
   </div>

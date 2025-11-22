@@ -45,7 +45,7 @@ const SUPPORTED_MODEL_EXTENSIONS = [
 ]
 
 const SUPPORTED_DATASET_EXTENSIONS = [
- '.csv', '.json', '.parquet', '.pkl', '.zip', '.tar', '.tar.gz'
+ '.csv', '.json', '.parquet', '.pkl', '.npy', '.zip', '.tar', '.tar.gz'
 ]
 
 const SUPPORTED_IMAGE_EXTENSIONS = [

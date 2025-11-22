@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { TbShieldX, TbShieldCheck, TbClockHour4, TbCertificate, TbRefresh } from 'react-icons/tb'
+import { TbShieldX, TbShieldCheck, TbClockHour4, TbCertificate, TbRefresh, TbTrash } from 'react-icons/tb'
 import { ModelVerificationFlow } from '@/components/tee'
 import { useUploadTasks } from '@/contexts/UploadContext'
 import { useCurrentAccount } from '@mysten/dapp-kit'
+import { usePendingModels } from '@/hooks/usePendingModels'
 import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
 import { ModelUploadService } from '@/lib/services/model-upload.service'
 
@@ -28,17 +29,27 @@ interface PendingModel {
 
 interface DashboardState {
  pendingModels: PendingModel[];
+ completedModels: PendingModel[]; // Reuse same interface for completed models
  isLoading: boolean;
  error: string | null;
  lastRefresh: Date | null;
 }
 
-export default function DashboardPending() {
+interface DashboardPendingProps {
+ triggerRefresh?: boolean;
+ onRefreshComplete?: () => void;
+}
+
+export default function DashboardPending({ triggerRefresh, onRefreshComplete }: DashboardPendingProps = {}) {
  const { allTasks } = useUploadTasks()
  const currentAccount = useCurrentAccount()
  
+ // Use the shared pending models hook
+ const { pendingModels: hookPendingModels, isLoading, error, refresh, statusCounts } = usePendingModels()
+ 
  const [state, setState] = useState<DashboardState>({
   pendingModels: [],
+  completedModels: [],
   isLoading: true,
   error: null,
   lastRefresh: null
@@ -123,67 +134,223 @@ export default function DashboardPending() {
   }
  };
 
+ const loadCompletedModels = async () => {
+  if (!contractService || !currentAccount?.address) return;
+
+  try {
+   console.log('Loading completed models...');
+   
+   const models = await contractService.getUserCompletedModels(currentAccount.address);
+   console.log('Loaded completed models:', models);
+   
+   setState(prev => ({
+    ...prev,
+    completedModels: models
+   }));
+   
+  } catch (error) {
+   console.error('Error loading completed models:', error);
+  }
+ };
+
+ // Sync hook data with local state
+ useEffect(() => {
+  if (hookPendingModels && hookPendingModels.length > 0) {
+   setState(prev => ({
+    ...prev,
+    pendingModels: hookPendingModels.map(model => ({
+     id: model.id,
+     title: model.title,
+     description: model.description,
+     category: model.category,
+     tags: model.tags,
+     creator: model.creator,
+     modelBlobId: model.modelBlobId,
+     datasetBlobId: model.datasetBlobId,
+     encryptionPolicyId: model.encryptionPolicyId,
+     price: String(model.price),
+     maxDownloads: undefined,
+     status: model.status === 'pending' ? 0 : model.status === 'verifying' ? 1 : model.status === 'verified' ? 2 : 3,
+     createdAt: model.createdAt,
+     updatedAt: model.createdAt,
+     verificationAttempts: 0
+    })),
+    isLoading: false,
+    error: null
+   }));
+  } else if (!isLoading && contractService) {
+   // Only load manually if hook isn't loading and has no data
+   loadPendingModels();
+  }
+ }, [hookPendingModels, isLoading, contractService]);
+ 
  // Load models on mount and account change
  useEffect(() => {
-  loadPendingModels();
+  if (contractService && currentAccount?.address) {
+   console.log('Loading models on mount/account change');
+   loadPendingModels();
+   loadCompletedModels();
+  }
  }, [contractService, currentAccount?.address]);
 
+ // Auto-refresh every 30 seconds when component is active
+ useEffect(() => {
+  if (!contractService || !currentAccount?.address) return;
+
+  const interval = setInterval(() => {
+   console.log('Auto-refreshing models...');
+   loadPendingModels();
+   loadCompletedModels();
+   refresh();
+  }, 30000); // 30 seconds
+
+  return () => clearInterval(interval);
+ }, [contractService, currentAccount?.address, refresh]);
+
+ // Handle external refresh trigger (e.g., from upload completion)
+ useEffect(() => {
+  if (triggerRefresh && contractService && currentAccount?.address) {
+   console.log('External refresh triggered - refreshing models');
+   refresh(); // Use hook's refresh
+   loadPendingModels(); // Also refresh local state
+   loadCompletedModels(); // Also refresh completed models
+   onRefreshComplete?.(); // Signal completion
+  }
+ }, [triggerRefresh, contractService, currentAccount?.address, refresh, onRefreshComplete]);
+
  // Categorize models by status
+ // Note: Verified models should no longer appear here as they are moved to marketplace
  const pendingVerification = state.pendingModels.filter(model => model.status === 0); // STATUS_PENDING
- const inVerification = state.pendingModels.filter(model => model.status === 1); // STATUS_VERIFYING 
- const verified = state.pendingModels.filter(model => model.status === 2); // STATUS_VERIFIED
+ const inVerification = state.pendingModels.filter(model => model.status === 1); // STATUS_VERIFYING
 
  // Handle verification completion
  const handleVerificationComplete = async (modelId: string, verificationId: string, transactionDigest: string) => {
   try {
    console.log('Verification completed for model:', { modelId, verificationId, transactionDigest });
    
-   // Refresh models to get updated status
-   await loadPendingModels();
+   // Show success notification immediately
+   alert(`🎉 Model verification completed successfully!\n\n✅ Your model has been verified and listed on the marketplace\n📈 Users can now discover and purchase your model\n🔗 Transaction: ${transactionDigest.slice(0, 20)}...\n\n👉 Visit the Marketplace tab to see your model!`);
    
-   alert(`Model verification completed!\nVerification ID: ${verificationId}\nTransaction: ${transactionDigest.slice(0, 20)}...`);
+   // Wait a bit for blockchain state to update, then refresh
+   setTimeout(async () => {
+    try {
+     console.log('Refreshing models after verification completion...');
+     // Use both refresh methods to ensure update
+     await Promise.all([
+      loadPendingModels(),
+      loadCompletedModels(),
+      refresh()
+     ]);
+     console.log('Models refreshed successfully');
+    } catch (refreshError) {
+     console.error('Failed to refresh after verification:', refreshError);
+    }
+   }, 2000); // 2 second delay to allow blockchain state to propagate
+   
   } catch (error) {
    console.error('Failed to handle verification completion:', error);
   }
  };
 
  return (
-  <div className="space-y-8">
+  <div className="space-y-6">
    {/* Header with Refresh */}
    <div className="flex items-center justify-between">
     <div>
-     <h2 className="text-3xl font-russo text-secondary-900">Pending Verification</h2>
-     <p className="text-secondary-600 font-albert mt-1">
+     <h2 className="text-xl font-medium text-gray-900">Pending Verification</h2>
+     <p className="text-gray-600 text-sm mt-1">
       Manage your models awaiting TEE verification
      </p>
     </div>
     <div className="flex items-center gap-3">
      {state.lastRefresh && (
-      <span className="text-sm text-secondary-500">
+      <span className="text-sm text-gray-500">
        Last updated: {state.lastRefresh.toLocaleTimeString()}
       </span>
      )}
-     <button
-      onClick={loadPendingModels}
-      disabled={state.isLoading}
-      className="btn btn-secondary btn-sm flex items-center gap-2"
-     >
-      <TbRefresh className={`h-4 w-4 ${state.isLoading ? 'animate-spin' : ''}`} />
-      Refresh
-     </button>
+     <div className="flex gap-2">
+      <button
+       onClick={() => {
+        refresh(); // Use hook's refresh
+        loadPendingModels(); // Also refresh local state
+        loadCompletedModels(); // Also refresh completed models
+       }}
+       disabled={state.isLoading || isLoading}
+       className="flex items-center gap-2 px-3 py-1 text-gray-600 hover:text-gray-900 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+      >
+       <TbRefresh className={`h-4 w-4 ${(state.isLoading || isLoading) ? 'animate-spin' : ''}`} />
+       Refresh
+      </button>
+      
+      <button
+       onClick={() => {
+        console.log('Force refreshing - clearing cache and reloading...');
+        setState(prev => ({ ...prev, pendingModels: [], completedModels: [] })); // Clear state
+        refresh(); // Use hook's refresh
+        loadPendingModels(); // Also refresh local state
+        loadCompletedModels(); // Also refresh completed models
+       }}
+       disabled={state.isLoading || isLoading}
+       className="flex items-center gap-2 px-3 py-1 text-red-600 hover:text-red-900 text-sm border border-red-300 rounded-md hover:bg-red-50"
+      >
+       <TbRefresh className={`h-4 w-4 ${(state.isLoading || isLoading) ? 'animate-spin' : ''}`} />
+       Force Refresh
+      </button>
+      
+      <button
+       onClick={async () => {
+        if (!contractService || !currentAccount?.address) return;
+        
+        try {
+         console.log('Starting cleanup of old pending models...');
+         setState(prev => ({ ...prev, isLoading: true }));
+         
+         const result = await contractService.cleanupOldPendingModels(currentAccount.address);
+         
+         console.log('Cleanup result:', result);
+         
+         if (result.removed > 0) {
+          alert(`Identified ${result.removed} old models for cleanup. Refreshing...`);
+          // Refresh the display
+          loadPendingModels();
+          loadCompletedModels();
+         } else {
+          alert('No old models found to cleanup.');
+         }
+         
+         if (result.errors.length > 0) {
+          console.error('Cleanup errors:', result.errors);
+         }
+        } catch (error) {
+         console.error('Cleanup failed:', error);
+         setState(prev => ({ 
+          ...prev, 
+          error: error instanceof Error ? error.message : 'Cleanup failed' 
+         }));
+        } finally {
+         setState(prev => ({ ...prev, isLoading: false }));
+        }
+       }}
+       disabled={state.isLoading || isLoading || !currentAccount?.address}
+       className="flex items-center gap-2 px-3 py-1 text-orange-600 hover:text-orange-900 text-sm border border-orange-300 rounded-md hover:bg-orange-50"
+      >
+       <TbTrash className={`h-4 w-4`} />
+       Clean Old Models
+      </button>
+     </div>
     </div>
    </div>
 
    {/* Error Display */}
    {state.error && (
-    <div className="bg-danger-50 border border-danger-200 rounded-xl p-4">
+    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
      <div className="flex items-center gap-3">
-      <div className="w-6 h-6 bg-danger-500 rounded-full flex items-center justify-center">
+      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
        <span className="text-white text-sm font-bold">!</span>
       </div>
       <div>
-       <h5 className="font-albert font-semibold text-danger-800">Error Loading Models</h5>
-       <p className="font-albert text-danger-700">{state.error}</p>
+       <h5 className="font-medium text-red-800">Error Loading Models</h5>
+       <p className="text-red-700 text-sm">{state.error}</p>
       </div>
      </div>
     </div>
@@ -191,60 +358,60 @@ export default function DashboardPending() {
 
    {/* Loading State */}
    {state.isLoading && (
-    <div className="card p-8 text-center">
-     <div className="animate-spin rounded-full h-12 w-12 border-2 border-primary-500 border-t-transparent mx-auto mb-4" />
-     <p className="text-secondary-600 font-albert">Loading your pending models...</p>
+    <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+     <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent mx-auto mb-3" />
+     <p className="text-gray-600">Loading your pending models...</p>
     </div>
    )}
 
    {/* Status Overview */}
    {!state.isLoading && (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-    {/* Awaiting Verification - Blue theme */}
-    <div className="rounded-3xl p-6 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    {/* Awaiting Verification */}
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
      <div className="flex flex-col items-center text-center">
-      <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl flex items-center justify-center mb-4">
-       <TbClockHour4 className="w-8 h-8 text-white" />
+      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+       <TbClockHour4 className="w-6 h-6 text-gray-600" />
       </div>
-      <h3 className="font-albert text-sm text-blue-600 mb-2">Awaiting Verification</h3>
-      <p className="text-3xl font-russo font-bold text-blue-700 mb-1">{pendingVerification.length}</p>
-      <p className="text-xs text-blue-500">Models pending</p>
+      <h3 className="text-sm text-gray-600 mb-1">Awaiting Verification</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{pendingVerification.length}</p>
+      <p className="text-xs text-gray-500">Models pending</p>
      </div>
     </div>
 
-    {/* In Verification - Purple theme */}
-    <div className="rounded-3xl p-6 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200">
+    {/* In Verification */}
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
      <div className="flex flex-col items-center text-center">
-      <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-500 rounded-2xl flex items-center justify-center mb-4">
-       <TbShieldX className="w-8 h-8 text-white" />
+      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+       <TbShieldX className="w-6 h-6 text-gray-600" />
       </div>
-      <h3 className="font-albert text-sm text-purple-600 mb-2">In Verification</h3>
-      <p className="text-3xl font-russo font-bold text-purple-700 mb-1">{inVerification.length}</p>
-      <p className="text-xs text-purple-500">Currently processing</p>
+      <h3 className="text-sm text-gray-600 mb-1">In Verification</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{inVerification.length}</p>
+      <p className="text-xs text-gray-500">Currently processing</p>
      </div>
     </div>
 
-    {/* Processing Speed - Orange theme */}
-    <div className="rounded-3xl p-6 bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200">
+    {/* Processing Speed */}
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
      <div className="flex flex-col items-center text-center">
-      <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl flex items-center justify-center mb-4">
-       <TbRefresh className="w-8 h-8 text-white" />
+      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+       <TbRefresh className="w-6 h-6 text-gray-600" />
       </div>
-      <h3 className="font-albert text-sm text-orange-600 mb-2">Avg. Speed</h3>
-      <p className="text-3xl font-russo font-bold text-orange-700 mb-1">2.4</p>
-      <p className="text-xs text-orange-500">Minutes per verification</p>
+      <h3 className="text-sm text-gray-600 mb-1">Avg. Speed</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">2.4</p>
+      <p className="text-xs text-gray-500">Minutes per verification</p>
      </div>
     </div>
 
-    {/* Verified - Green theme */}
-    <div className="rounded-3xl p-6 bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200">
+    {/* Success Rate */}
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
      <div className="flex flex-col items-center text-center">
-      <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl flex items-center justify-center mb-4">
-       <TbShieldCheck className="w-8 h-8 text-white" />
+      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+       <TbShieldCheck className="w-6 h-6 text-gray-600" />
       </div>
-      <h3 className="font-albert text-sm text-emerald-600 mb-2">Success Rate</h3>
-      <p className="text-3xl font-russo font-bold text-emerald-700 mb-1">{verified.length > 0 ? '100' : '0'}%</p>
-      <p className="text-xs text-emerald-500">Verification rate</p>
+      <h3 className="text-sm text-gray-600 mb-1">Success Rate</h3>
+      <p className="text-2xl font-semibold text-gray-900 mb-1">{inVerification.length > 0 ? '100' : '0'}%</p>
+      <p className="text-xs text-gray-500">Verification rate</p>
      </div>
     </div>
    </div>
@@ -252,110 +419,78 @@ export default function DashboardPending() {
 
    {/* Pending Verification List */}
    {!state.isLoading && pendingVerification.length > 0 && (
-    <div className="card p-8">
-     <h3 className="text-2xl font-russo text-secondary-900 mb-8 flex items-center">
-      <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
-       <TbCertificate className="w-5 h-5 text-amber-600" />
+    <div className="bg-white border border-gray-200 rounded-lg p-6">
+     <h3 className="text-lg font-medium text-gray-900 mb-6 flex items-center">
+      <div className="w-6 h-6 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
+       <TbCertificate className="w-4 h-4 text-amber-600" />
       </div>
       Models Awaiting TEE Verification
-      <span className="ml-3 badge bg-amber-100 text-amber-800">{pendingVerification.length}</span>
+      <span className="ml-3 px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-md">{pendingVerification.length}</span>
      </h3>
      
-     <div className="space-y-8">
+     <div className="space-y-6">
       {pendingVerification.map((model) => (
-       <div key={model.id} className="card-hover p-6 border-l-4 border-l-amber-400">
-        <div className="flex justify-between items-start mb-6">
-         <div>
-          <h4 className="text-xl font-albert font-semibold text-secondary-900">{model.title}</h4>
-          <p className="text-secondary-600 font-albert mt-1">{model.description}</p>
-          <p className="text-secondary-500 font-albert text-sm mt-1">
+       <div key={model.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors border-l-4 border-l-amber-400">
+        <div className="flex justify-between items-start mb-4">
+         <div className="flex-1 min-w-0">
+          <h4 className="text-base font-medium text-gray-900 truncate">{model.title}</h4>
+          <p className="text-gray-600 text-sm mt-1 line-clamp-2">{model.description}</p>
+          <p className="text-gray-500 text-xs mt-2">
            Created: {new Date(model.createdAt).toLocaleDateString()} • 
            Category: {model.category} • 
            Price: {(parseFloat(model.price) / 1000000000).toFixed(4)} SUI
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-           <span className="badge bg-primary-100 text-primary-800">
+          <div className="mt-2 flex flex-wrap gap-1">
+           <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
             Model: {model.modelBlobId.substring(0, 12)}...
            </span>
            {model.datasetBlobId && (
-            <span className="badge bg-secondary-100 text-secondary-800">
+            <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">
              Dataset: {model.datasetBlobId.substring(0, 12)}...
             </span>
            )}
-           {model.tags.length > 0 && model.tags.map(tag => (
-            <span key={tag} className="badge bg-surface-200 text-secondary-700">
+           {model.tags.length > 0 && model.tags.slice(0, 3).map(tag => (
+            <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
              {tag}
             </span>
            ))}
           </div>
          </div>
-         <div className="flex flex-col items-end gap-2">
-          <span className="badge badge-warning">
+         <div className="flex flex-col items-end gap-2 flex-shrink-0 ml-4">
+          <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded">
            Needs Verification
           </span>
           {model.verificationAttempts > 0 && (
-           <span className="text-xs text-secondary-500">
+           <span className="text-xs text-gray-500">
             Attempts: {model.verificationAttempts}
            </span>
           )}
          </div>
         </div>
 
-        <div className="bg-warning-50 border border-warning-200 rounded-xl p-5 mb-6">
-         <div className="flex items-start gap-3">
-          <div className="w-6 h-6 bg-warning-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-           <span className="text-white text-sm font-bold">!</span>
-          </div>
-          <div>
-           <h5 className="font-albert font-semibold text-warning-800 mb-1">Action Required</h5>
-           <p className="font-albert text-warning-700 leading-relaxed">
-            Your model has been successfully uploaded to Walrus storage. 
-            To publish it to the marketplace, you must complete TEE attestation verification.
-           </p>
-          </div>
-         </div>
-        </div>
-
         {model.modelBlobId ? (
          <div>
-          <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 mb-4">
-           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-primary-500 rounded-full flex items-center justify-center">
-             <TbShieldCheck className="h-3 w-3 text-white" />
-            </div>
-            <p className="font-albert text-primary-700 font-medium">
-             TEE Verification Ready
-            </p>
-           </div>
-           <p className="font-albert text-primary-600 text-sm mt-1">
-            Click "Start Verification" to begin secure TEE attestation process
-           </p>
-          </div>
 
-          {/* Enhanced Verification Flow */}
-          <EnhancedVerificationFlow
+          {/* Model Verification Flow */}
+          <ModelVerificationFlow
            pendingModelId={model.id}
            modelBlobId={model.modelBlobId}
            datasetBlobId={model.datasetBlobId}
-           encryptionPolicyId={model.encryptionPolicyId}
            modelName={model.title}
-           category={model.category}
-           contractService={contractService}
-           uploadService={uploadService}
-           onVerificationComplete={(verificationId, transactionDigest) => {
-            handleVerificationComplete(model.id, verificationId, transactionDigest);
+           onVerificationComplete={(attestationData, txDigest) => {
+            handleVerificationComplete(model.id, 'verification-id', txDigest);
            }}
           />
          </div>
         ) : (
-         <div className="bg-danger-50 border border-danger-200 rounded-xl p-4">
+         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
           <div className="flex items-center gap-3">
-           <div className="w-6 h-6 bg-danger-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-bold">!</span>
+           <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+            <span className="text-white text-xs font-bold">!</span>
            </div>
            <div>
-            <p className="font-albert text-danger-800 font-medium">Invalid Model Data</p>
-            <p className="font-albert text-danger-700 text-sm">
+            <p className="text-red-800 font-medium text-sm">Invalid Model Data</p>
+            <p className="text-red-700 text-xs">
              No blob ID found - model data may be corrupted
             </p>
            </div>
@@ -368,56 +503,16 @@ export default function DashboardPending() {
     </div>
    )}
 
-   {/* Verified Models */}
-   {verified.length > 0 && (
-    <div className="card p-8">
-     <h3 className="text-2xl font-russo text-secondary-900 mb-8 flex items-center">
-      <div className="w-8 h-8 bg-success-100 rounded-lg flex items-center justify-center mr-3">
-       <TbShieldCheck className="w-5 h-5 text-success-600" />
-      </div>
-      Verified Models
-     </h3>
-     
-     <div className="space-y-6">
-      {verified.map((task) => (
-       <div key={task.id} className="card-hover p-6 bg-gradient-to-r from-success-50 to-success-100 border-success-200">
-        <div className="flex items-center justify-between">
-         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-success-500 rounded-xl flex items-center justify-center">
-           <TbShieldCheck className="w-6 h-6 text-white" />
-          </div>
-          <div>
-           <p className="font-albert font-semibold text-success-900 text-lg">{task.title}</p>
-           <p className="text-success-700 font-albert">
-            {task.category} • Verified • Ready for marketplace
-           </p>
-           <code className="text-xs bg-success-200 px-2 py-1 rounded text-success-800 font-mono mt-2 inline-block">
-            Model ID: {task.id.substring(0, 20)}...
-           </code>
-          </div>
-         </div>
-         <span className="badge badge-success">
-          Verified
-         </span>
-        </div>
-       </div>
-      ))}
-     </div>
-    </div>
-   )}
 
    {/* Empty State */}
    {!state.isLoading && state.pendingModels.length === 0 && !state.error && (
-    <div className="card p-12 text-center">
-     <div className="w-24 h-24 bg-secondary-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-      <TbCertificate className="w-12 h-12 text-secondary-400" />
-     </div>
-     <h3 className="text-2xl font-russo text-secondary-900 mb-3">No models pending verification</h3>
-     <p className="text-secondary-600 font-albert max-w-md mx-auto leading-relaxed">
+    <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+     <h3 className="text-lg font-medium text-gray-900 mb-2">No models pending verification</h3>
+     <p className="text-gray-600 text-sm max-w-md mx-auto">
       Upload a model first, then it will appear here for TEE verification before marketplace publication.
      </p>
-     <div className="mt-6">
-      <a href="/upload" className="btn btn-primary">
+     <div className="mt-4">
+      <a href="/upload" className="inline-block px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors">
        Upload Your First Model
       </a>
      </div>
@@ -559,7 +654,7 @@ function EnhancedVerificationFlow({
 
  const getStepColor = () => {
   switch (verificationStep) {
-   case 'ready': return 'btn-primary';
+   case 'ready': return 'bg-gray-900 text-white hover:bg-gray-800';
    case 'submitting': 
    case 'verifying': 
    case 'listing': return 'bg-blue-500 text-white';
