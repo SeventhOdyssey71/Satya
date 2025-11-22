@@ -24,8 +24,8 @@ export default function UploadPage() {
  return (
   <div className="min-h-screen bg-white pt-16">
    <Header />
-   <main className="relative z-10 py-6 pb-8">
-    <div className="container-custom">
+   <main className="relative z-10 py-4 sm:py-6 pb-6 sm:pb-8">
+    <div className="container-custom px-4 sm:px-6">
      <UploadProvider>
       <ModelUploadWizard onUploadComplete={handleUploadComplete} />
      </UploadProvider>

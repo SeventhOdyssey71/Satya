@@ -374,9 +374,9 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
 
  return (
   <div>
-   <div className="mb-8 max-w-2xl">
-    <h1 className="text-2xl md:text-3xl font-albert font-semibold leading-tight mb-3 text-gray-900">Upload Model</h1>
-    <p className="text-gray-600 mb-2">Share your AI model with the Satya marketplace</p>
+   <div className="mb-6 sm:mb-8 max-w-2xl">
+    <h1 className="text-xl sm:text-2xl md:text-3xl font-albert font-semibold leading-tight mb-2 sm:mb-3 text-gray-900">Upload Model</h1>
+    <p className="text-sm sm:text-base text-gray-600 mb-2">Share your AI model with the Satya marketplace</p>
    </div>
 
    {/* Progress Indicator */}
@@ -389,7 +389,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
    />
 
    {/* Step Content */}
-   <div className="mt-8">
+   <div className="mt-6 sm:mt-8">
     <CurrentStepComponent
      data={data}
      onChange={updateData}
@@ -1190,20 +1190,20 @@ function StepNavigation({
  onCancel?: () => void
 }) {
  return (
-  <div className="flex justify-between pt-8">
-   <div className="flex space-x-3">
+  <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6 sm:pt-8">
+   <div className="flex space-x-2 sm:space-x-3">
     <button
      onClick={onPrev}
      disabled={isFirst}
-     className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
+     className="flex items-center px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm sm:text-base"
     >
-     <RiArrowLeftLine className="h-5 w-5 mr-2" />
+     <RiArrowLeftLine className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
      Back
     </button>
     {onCancel && (
      <button
       onClick={onCancel}
-      className="px-4 py-2 text-red-600 hover:bg-red-50 border border-red-300 transition-colors rounded-md"
+      className="px-3 sm:px-4 py-2 text-red-600 hover:bg-red-50 border border-red-300 transition-colors rounded-md text-sm sm:text-base"
      >
       Cancel
      </button>
@@ -1212,10 +1212,10 @@ function StepNavigation({
    <button
     onClick={onNext}
     disabled={!isValid}
-    className="flex items-center px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
+    className="flex items-center justify-center px-4 sm:px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm sm:text-base"
    >
     <span className="font-medium">{nextLabel}</span>
-    <RiArrowRightLine className="h-5 w-5 ml-2" />
+    <RiArrowRightLine className="h-4 w-4 sm:h-5 sm:w-5 ml-1 sm:ml-2" />
    </button>
   </div>
  )
