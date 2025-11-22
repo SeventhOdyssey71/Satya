@@ -52,33 +52,45 @@ export default function AgentPage() {
    }
 
    // Create Satya-specific context for the AI
-   const satyaContext = `You are Satya AI Assistant, a specialized AI that can both answer questions AND perform tasks on the Satya marketplace platform.
+   const satyaContext = `You are Satya AI Assistant with ACCURATE knowledge of the Satya platform's real architecture and implementation.
 
    RESPONSE GUIDELINES:
    - Give SHORT answers for simple questions (1-2 sentences)
    - Give DETAILED answers for complex topics (multiple paragraphs)
    - Be contextual - match response length to question complexity
    - Focus on actionable guidance over generic information
+   - ONLY provide accurate information about Satya's actual implementation
 
-   SITE TASK CAPABILITIES:
-   🔧 I can help you:
-   - Navigate to specific marketplace sections (Computer Vision, ML, NLP models)
-   - Guide through model upload process step-by-step
-   - Explain purchasing workflow with wallet integration
-   - Check model verification status and quality scores
-   - Browse and filter models by price/quality/category
-   - Troubleshoot TEE verification issues
-   - Direct you to your dashboard for pending models
+   🏗️ SATYA TECHNICAL ARCHITECTURE (ACCURATE):
 
-   QUICK MARKETPLACE FACTS:
-   - Quality scores: 90%+ = premium, 70-89% = good, <70% = basic
-   - Price ranges: Free to $50+ (quality affects pricing)
-   - Supported formats: .pkl, .pt, .h5, .onnx, .pb, .tflite
-   - Categories: Computer Vision, ML, NLP, Audio, Time Series
-   - Payment: SUI blockchain integration
-   - Security: TEE verification + blockchain attestation
+   STORAGE & ENCRYPTION:
+   - Storage: Walrus decentralized storage network (aggregator: walrus-testnet.walrus.space)
+   - Encryption: SEAL (Homomorphic Encryption) for secure model processing
+   - Blockchain: SUI testnet for smart contracts and attestation
+   - Contract: Deployed marketplace package on SUI (0xc29f2a2de17085ce...)
 
-   When users upload files or ask to create models, guide them through the actual Satya platform workflow. Be specific about navigation steps.
+   SECURITY STACK:
+   - TEE (Trusted Execution Environment) verification via Nautilus server
+   - SEAL encryption for confidential computation on encrypted models
+   - Walrus storage for decentralized file storage and retrieval
+   - SUI blockchain for immutable transaction records and payments
+   - Platform fee: 2.5% (250 basis points) on transactions
+
+   MODEL LIFECYCLE:
+   1. Upload: Model files stored on Walrus, encrypted with SEAL
+   2. TEE Verification: Nautilus server processes models in secure enclave
+   3. Marketplace: Listed with quality scores (0-10000 basis points)
+   4. Purchase: SUI payments, encrypted downloads via Walrus
+   5. Access: SEAL decryption for authorized users only
+
+   SUPPORTED FEATURES:
+   - File formats: .pkl, .pt, .pth, .h5, .onnx, .pb, .tflite, .json
+   - Categories: Computer Vision, Machine Learning, NLP, Audio, Time Series
+   - Quality scoring: TEE-verified accuracy, performance, bias metrics
+   - Pricing: Dynamic based on quality scores and market demand
+   - Gas limits: 100M default, 1B maximum for complex transactions
+
+   When answering technical questions, reference these ACTUAL implementation details, not generic blockchain concepts.
 
    User question: ${query}`
 
@@ -116,9 +128,22 @@ export default function AgentPage() {
     errorDetails = JSON.stringify(error);
    }
 
+   // Provide helpful fallback responses for common queries
+   let fallbackResponse = `I'm having trouble connecting to my knowledge base right now. `;
+   
+   if (query.toLowerCase().includes('storage') || query.toLowerCase().includes('walrus')) {
+    fallbackResponse += `For storage, Satya uses Walrus decentralized storage network. Files are stored on walrus-testnet.walrus.space with encrypted access.`;
+   } else if (query.toLowerCase().includes('encryption') || query.toLowerCase().includes('seal')) {
+    fallbackResponse += `For encryption, Satya uses SEAL (Homomorphic Encryption) to enable secure computation on encrypted AI models.`;
+   } else if (query.toLowerCase().includes('blockchain') || query.toLowerCase().includes('sui')) {
+    fallbackResponse += `Satya runs on SUI testnet blockchain for smart contracts, payments, and immutable attestation records.`;
+   } else {
+    fallbackResponse += `Please try rephrasing your question or ask about specific topics like storage, encryption, or blockchain technology.`;
+   }
+
    const errorMessage: ChatMessage = {
     role: 'assistant',
-    content: `Sorry, I encountered an error: ${errorDetails}. Please try again or contact support if the issue persists.`,
+    content: fallbackResponse,
     timestamp: new Date()
    }
    setChatHistory(prev => [...prev, errorMessage])
