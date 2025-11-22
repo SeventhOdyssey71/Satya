@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Header from '@/components/ui/Header'
 import { geminiModel } from '@/lib/gemini-client'
 import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
@@ -30,9 +30,22 @@ export default function AgentPage() {
    workflowState: null,
    userPreferences: {}
  })
+
+ // Refs for auto-scrolling
+ const chatMessagesRef = useRef<HTMLDivElement>(null)
+ const chatEndRef = useRef<HTMLDivElement>(null)
  
  const marketplaceService = new MarketplaceContractService()
  const eventService = new EventService()
+
+ // Auto-scroll to bottom when new messages arrive
+ const scrollToBottom = () => {
+   chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+ }
+
+ useEffect(() => {
+   scrollToBottom()
+ }, [chatHistory, isLoading])
  
  // Analyze user expertise based on query patterns and vocabulary
  const analyzeUserExpertise = (query: string, currentLevel: 'beginner' | 'intermediate' | 'expert' | 'unknown'): 'beginner' | 'intermediate' | 'expert' | 'unknown' => {
@@ -220,6 +233,9 @@ Real-time data synchronization with confidence indicators. Intelligent filtering
   setIsLoading(true)
   const currentQuery = query
   setQuery('')
+  
+  // Scroll to bottom when starting to process
+  setTimeout(() => scrollToBottom(), 100)
 
   try {
    // Detect user intent with advanced pattern matching
@@ -386,6 +402,8 @@ Identify potential issues before they occur based on usage patterns. Suggest opt
    }
 
    setChatHistory(prev => [...prev, assistantMessage])
+   // Scroll to bottom after adding response
+   setTimeout(() => scrollToBottom(), 100)
   } catch (error) {
    let errorDetails = 'Unknown error occurred';
    
@@ -426,10 +444,10 @@ Identify potential issues before they occur based on usage patterns. Suggest opt
  }
 
  return (
-  <div className="min-h-screen bg-white pt-16">
+  <div className="h-screen bg-white flex flex-col">
    <Header />
    
-   <main className="flex flex-col min-h-[calc(100vh-4rem)]">
+   <main className="flex-1 flex flex-col overflow-hidden">
     {chatHistory.length === 0 ? (
      /* Initial State - Centered */
      <div className="flex items-center justify-center flex-1 px-6">
@@ -534,18 +552,22 @@ Identify potential issues before they occur based on usage patterns. Suggest opt
       </div>
      </div>
     ) : (
-     /* Chat State - Top-aligned with messages */
-     <div className="flex-1 flex flex-col">
+     /* Chat State - Fixed layout with auto-scroll */
+     <div className="flex-1 flex flex-col h-full">
       {/* Chat Header */}
-      <div className="border-b border-gray-100 bg-white/95 backdrop-blur-sm sticky top-16 z-10">
+      <div className="border-b border-gray-100 bg-white/95 backdrop-blur-sm sticky top-16 z-10 shrink-0">
        <div className="max-w-4xl mx-auto px-6 py-4">
         <h1 className="text-2xl font-semibold text-gray-900">Satya AI Assistant</h1>
         <p className="text-gray-500">Your AI helper for Satya platform</p>
        </div>
       </div>
 
-      {/* Chat Messages */}
-      <div className="flex-1 max-w-4xl mx-auto w-full px-6 py-8 space-y-6">
+      {/* Chat Messages - Scrollable */}
+      <div 
+       ref={chatMessagesRef}
+       className="flex-1 overflow-y-auto"
+      >
+       <div className="max-w-4xl mx-auto w-full px-6 py-8 space-y-6 pb-20">
        {chatHistory.map((message, index) => (
         <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
          <div className={`max-w-3xl rounded-2xl px-4 py-3 ${
@@ -654,10 +676,14 @@ Identify potential issues before they occur based on usage patterns. Suggest opt
          </div>
         </div>
        )}
+       
+       {/* Scroll anchor */}
+       <div ref={chatEndRef} />
+       </div>
       </div>
 
       {/* Fixed Chat Input */}
-      <div className="border-t border-gray-100 bg-white/95 backdrop-blur-sm">
+      <div className="border-t border-gray-100 bg-white/95 backdrop-blur-sm sticky bottom-0 shrink-0 z-20">
        <div className="max-w-4xl mx-auto px-6 py-4">
         <form onSubmit={handleSubmit}>
          <div className="relative">
