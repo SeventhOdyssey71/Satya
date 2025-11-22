@@ -35,6 +35,47 @@ export default function AgentPage() {
   "Show me all pending models in my dashboard", 
   "Find the best computer vision models under $20 and purchase one"
  ]
+ 
+ // Data fetching functions
+ const fetchPendingModels = async () => {
+  try {
+   const pendingModels = await marketplaceService.getUserPendingModels('0x1234567890abcdef')
+   return pendingModels
+  } catch (error) {
+   console.error('Error fetching pending models:', error)
+   return []
+  }
+ }
+ 
+ const fetchMarketplaceModels = async () => {
+  try {
+   const result = await eventService.getModelListings(20)
+   return result.events
+  } catch (error) {
+   console.error('Error fetching marketplace models:', error)
+   return []
+  }
+ }
+ 
+ // Intent detection function
+ const detectIntent = (userQuery: string) => {
+  const query = userQuery.toLowerCase()
+  
+  if (query.includes('pending') || query.includes('my models') || query.includes('dashboard')) {
+   return 'pending_models'
+  }
+  if (query.includes('marketplace') || query.includes('available models') || query.includes('browse')) {
+   return 'marketplace_models'
+  }
+  if (query.includes('upload') || query.includes('add model')) {
+   return 'upload_guidance'
+  }
+  if (query.includes('stats') || query.includes('how many') || query.includes('count')) {
+   return 'platform_stats'
+  }
+  
+  return 'general_query'
+ }
 
  const executeAction = async (action: string, params?: any) => {
   try {
@@ -105,65 +146,42 @@ export default function AgentPage() {
 
   setChatHistory(prev => [...prev, userMessage])
   setIsLoading(true)
-  
-  // Check if user is confirming a previous suggestion
-  const confirmationWords = ['yes', 'yeah', 'yep', 'do it', 'proceed', 'go ahead', 'execute', 'run it', 'ok', 'okay']
-  const isConfirmation = confirmationWords.some(word => 
-    query.trim().toLowerCase() === word || 
-    query.trim().toLowerCase() === word + '.' ||
-    query.trim().toLowerCase() === word + '!'
-  )
-
-  // If user is confirming and we have a suggested action, execute it immediately
-  if (isConfirmation && lastSuggestedAction) {
-    try {
-      const actionResult = await executeAction(lastSuggestedAction)
-      
-      let formattedContent = ''
-      if (actionResult.success) {
-        // For redirects, just show the message without fake success
-        if (lastSuggestedAction.includes('redirect')) {
-          formattedContent = actionResult.message
-        } else {
-          formattedContent = `✅ ${actionResult.message}`
-        }
-        
-        if (actionResult.data && Array.isArray(actionResult.data)) {
-          formattedContent += `\n\nResults:\n`
-          actionResult.data.slice(0, 5).forEach((item: any, index: number) => {
-            formattedContent += `\n${index + 1}. ${item.title || item.name || 'Model'} - ${item.price || 'Price not set'}`
-          })
-          if (actionResult.data.length > 5) {
-            formattedContent += `\n\n...and ${actionResult.data.length - 5} more models`
-          }
-        } else if (actionResult.data && !lastSuggestedAction.includes('redirect')) {
-          formattedContent += `\n\nData: ${JSON.stringify(actionResult.data, null, 2)}`
-        }
-      } else {
-        formattedContent = `❌ Action failed: ${actionResult.message}`
-      }
-
-      const actionMessage: ChatMessage = {
-        role: 'assistant',
-        content: formattedContent,
-        timestamp: new Date(),
-        isAction: true,
-        actionData: actionResult.data
-      }
-
-      setChatHistory(prev => [...prev, actionMessage])
-      setLastSuggestedAction(null)
-      setIsLoading(false)
-      setQuery('')
-      return
-    } catch (error) {
-      console.error('Action execution failed:', error)
-    }
-  }
-  
+  const currentQuery = query
   setQuery('')
+  
+  // Scroll to bottom when starting to process
+  setTimeout(() => scrollToBottom(), 100)
 
   try {
+   // Detect user intent with advanced pattern matching
+   const intent = detectAdvancedIntent(currentQuery)
+   
+   // Update conversation context with new interaction
+   updateConversationContext(currentQuery, intent)
+   
+   let fetchedData = null
+   let dataType = undefined
+   
+   // Fetch relevant data based on intent
+   if (intent === 'pending_models') {
+    fetchedData = await fetchPendingModels()
+    dataType = 'pending_models'
+   } else if (intent === 'marketplace_models') {
+    fetchedData = await fetchMarketplaceModels()
+    dataType = 'marketplace_models'
+   } else if (intent === 'platform_stats') {
+    const [pending, marketplace] = await Promise.all([
+     fetchPendingModels(),
+     fetchMarketplaceModels()
+    ])
+    fetchedData = {
+     pendingCount: pending.length,
+     marketplaceCount: marketplace.length,
+     totalModels: pending.length + marketplace.length
+    }
+    dataType = 'dashboard_stats'
+   }
+
    // Check if API key is available
    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
    if (!apiKey) {
@@ -286,8 +304,19 @@ export default function AgentPage() {
     throw new Error('Empty response from Gemini API');
    }
 
-   // Remove markdown formatting like **bold** text
-   const cleanResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '$1');
+   // Remove all markdown formatting for clean, clear text
+   let cleanResponse = aiResponse
+     .replace(/\*\*(.*?)\*\*/g, '$1')  // Remove **bold**
+     .replace(/\*(.*?)\*/g, '$1')     // Remove *italic*  
+     .replace(/#{1,6}\s+/g, '')       // Remove headers (# ## ###)
+     .replace(/^\s*[\*\-\+]\s+/gm, '') // Remove bullet points (*, -, +)
+     .replace(/^\s*\d+\.\s+/gm, '')   // Remove numbered lists (1. 2. 3.)
+     .replace(/`([^`]+)`/g, '$1')     // Remove `code` backticks
+     .replace(/```[\s\S]*?```/g, '')  // Remove code blocks
+     .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Remove links [text](url)
+     .replace(/^\s*>/gm, '')          // Remove blockquotes
+     .replace(/\n{3,}/g, '\n\n')      // Reduce multiple newlines
+     .trim();
 
    // Detect if response suggests an action
    const actionSuggestions = {
@@ -318,10 +347,14 @@ export default function AgentPage() {
    const assistantMessage: ChatMessage = {
     role: 'assistant',
     content: cleanResponse,
-    timestamp: new Date()
+    timestamp: new Date(),
+    data: fetchedData,
+    dataType: dataType as any
    }
 
    setChatHistory(prev => [...prev, assistantMessage])
+   // Scroll to bottom after adding response
+   setTimeout(() => scrollToBottom(), 100)
   } catch (error) {
    let errorDetails = 'Unknown error occurred';
    
@@ -362,10 +395,10 @@ export default function AgentPage() {
  }
 
  return (
-  <div className="min-h-screen bg-white">
+  <div className="h-screen bg-white flex flex-col">
    <Header />
    
-   <main className="flex flex-col min-h-screen pt-16">
+   <main className="flex-1 flex flex-col overflow-hidden">
     {chatHistory.length === 0 ? (
      /* Initial State - Centered */
      <div className="flex items-center justify-center flex-1 px-4 sm:px-6">
@@ -470,18 +503,22 @@ export default function AgentPage() {
       </div>
      </div>
     ) : (
-     /* Chat State - Top-aligned with messages */
-     <div className="flex-1 flex flex-col">
+     /* Chat State - Fixed layout with auto-scroll */
+     <div className="flex-1 flex flex-col h-full">
       {/* Chat Header */}
-      <div className="border-b border-gray-100 bg-white/95 backdrop-blur-sm sticky top-16 z-10">
-       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-        <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">Satya AI Assistant</h1>
-        <p className="text-sm sm:text-base text-gray-500">Your AI helper for Satya platform</p>
+      <div className="border-b border-gray-100 bg-white/95 backdrop-blur-sm sticky top-16 z-10 shrink-0">
+       <div className="max-w-4xl mx-auto px-6 py-4">
+        <h1 className="text-2xl font-semibold text-gray-900">Satya AI Assistant</h1>
+        <p className="text-gray-500">Your AI helper for Satya platform</p>
        </div>
       </div>
 
-      {/* Chat Messages */}
-      <div className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 pt-6 sm:pt-8 pb-24 sm:pb-28 space-y-4 sm:space-y-6 overflow-y-auto">
+      {/* Chat Messages - Scrollable */}
+      <div 
+       ref={chatMessagesRef}
+       className="flex-1 overflow-y-auto"
+      >
+       <div className="max-w-4xl mx-auto w-full px-6 py-8 space-y-6 pb-20">
        {chatHistory.map((message, index) => (
         <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
          <div className={`max-w-[85%] sm:max-w-3xl rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-3 ${
@@ -492,7 +529,85 @@ export default function AgentPage() {
           <p className={`whitespace-pre-wrap text-sm sm:text-base ${
            message.role === 'user' ? 'text-white' : 'text-gray-900'
           }`}>{message.content}</p>
-          <p className={`text-xs mt-1 sm:mt-2 ${
+          
+          {/* Data Visualization for Assistant Messages */}
+          {message.role === 'assistant' && message.data && (
+           <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+            {message.dataType === 'pending_models' && (
+             <div>
+              <h4 className="font-semibold text-gray-900 mb-3">Your Pending Models ({message.data.length})</h4>
+              {message.data.length > 0 ? (
+               <div className="space-y-2 max-h-60 overflow-y-auto">
+                {message.data.slice(0, 5).map((model: any, idx: number) => (
+                 <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div>
+                   <p className="font-medium text-sm">Model {model.id?.slice(0, 8)}...</p>
+                   <p className="text-xs text-gray-600">Status: Pending Verification</p>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                   {new Date().toLocaleDateString()}
+                  </div>
+                 </div>
+                ))}
+                {message.data.length > 5 && (
+                 <p className="text-xs text-gray-500 text-center">+ {message.data.length - 5} more models</p>
+                )}
+               </div>
+              ) : (
+               <p className="text-gray-600 text-sm">No pending models found.</p>
+              )}
+             </div>
+            )}
+            
+            {message.dataType === 'marketplace_models' && (
+             <div>
+              <h4 className="font-semibold text-gray-900 mb-3">Marketplace Models ({message.data.length})</h4>
+              {message.data.length > 0 ? (
+               <div className="space-y-2 max-h-60 overflow-y-auto">
+                {message.data.slice(0, 5).map((model: any, idx: number) => (
+                 <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <div>
+                   <p className="font-medium text-sm">{model.title || `Model ${model.listingId?.slice(0, 8)}...`}</p>
+                   <p className="text-xs text-gray-600">Price: {((parseFloat(model.downloadPrice || '0') / 1e9).toFixed(4))} SUI</p>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                   Listed: {new Date(model.timestamp).toLocaleDateString()}
+                  </div>
+                 </div>
+                ))}
+                {message.data.length > 5 && (
+                 <p className="text-xs text-gray-500 text-center">+ {message.data.length - 5} more models</p>
+                )}
+               </div>
+              ) : (
+               <p className="text-gray-600 text-sm">No models found in marketplace.</p>
+              )}
+             </div>
+            )}
+            
+            {message.dataType === 'dashboard_stats' && (
+             <div>
+              <h4 className="font-semibold text-gray-900 mb-3">Platform Statistics</h4>
+              <div className="grid grid-cols-3 gap-4">
+               <div className="text-center p-3 bg-blue-50 rounded">
+                <p className="text-2xl font-bold text-blue-600">{message.data.pendingCount}</p>
+                <p className="text-xs text-blue-700">Pending Models</p>
+               </div>
+               <div className="text-center p-3 bg-green-50 rounded">
+                <p className="text-2xl font-bold text-green-600">{message.data.marketplaceCount}</p>
+                <p className="text-xs text-green-700">Live Models</p>
+               </div>
+               <div className="text-center p-3 bg-purple-50 rounded">
+                <p className="text-2xl font-bold text-purple-600">{message.data.totalModels}</p>
+                <p className="text-xs text-purple-700">Total Models</p>
+               </div>
+              </div>
+             </div>
+            )}
+           </div>
+          )}
+          
+          <p className={`text-xs mt-2 ${
            message.role === 'user' ? 'text-gray-300' : 'text-gray-500'
           }`}>
            {message.timestamp.toLocaleTimeString()}
@@ -513,13 +628,14 @@ export default function AgentPage() {
         </div>
        )}
        
-       {/* Scroll target */}
-       <div ref={messagesEndRef} />
+       {/* Scroll anchor */}
+       <div ref={chatEndRef} />
+       </div>
       </div>
 
       {/* Fixed Chat Input */}
-      <div className="border-t border-gray-100 bg-white/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-20">
-       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+      <div className="border-t border-gray-100 bg-white/95 backdrop-blur-sm sticky bottom-0 shrink-0 z-20">
+       <div className="max-w-4xl mx-auto px-6 py-4">
         <form onSubmit={handleSubmit}>
          <div className="relative">
           <input
