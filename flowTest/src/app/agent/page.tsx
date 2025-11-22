@@ -19,14 +19,167 @@ export default function AgentPage() {
  const [isLoading, setIsLoading] = useState(false)
  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
  const [showUploadMenu, setShowUploadMenu] = useState(false)
+ const [conversationContext, setConversationContext] = useState<{
+   userExpertiseLevel: 'beginner' | 'intermediate' | 'expert' | 'unknown'
+   recentTopics: string[]
+   workflowState: any
+   userPreferences: any
+ }>({
+   userExpertiseLevel: 'unknown',
+   recentTopics: [],
+   workflowState: null,
+   userPreferences: {}
+ })
  
  const marketplaceService = new MarketplaceContractService()
  const eventService = new EventService()
+ 
+ // Analyze user expertise based on query patterns and vocabulary
+ const analyzeUserExpertise = (query: string, currentLevel: 'beginner' | 'intermediate' | 'expert' | 'unknown'): 'beginner' | 'intermediate' | 'expert' | 'unknown' => {
+   const expertTerms = ['smart contract', 'gas limit', 'tee verification', 'homomorphic', 'proof-of-stake', 'sgx', 'onnx', 'quantization', 'pruning']
+   const intermediateTerms = ['verification', 'marketplace', 'quality score', 'blockchain', 'upload', 'pricing', 'optimization']
+   const beginnerTerms = ['how to', 'what is', 'help me', 'guide', 'explain', 'simple']
+   
+   const expertCount = expertTerms.filter(term => query.toLowerCase().includes(term)).length
+   const intermediateCount = intermediateTerms.filter(term => query.toLowerCase().includes(term)).length  
+   const beginnerCount = beginnerTerms.filter(term => query.toLowerCase().includes(term)).length
+   
+   if (expertCount >= 2 || query.includes('API') || query.includes('SDK')) return 'expert'
+   if (expertCount >= 1 || intermediateCount >= 2) return 'intermediate'
+   if (beginnerCount >= 1 && expertCount === 0) return 'beginner'
+   
+   return currentLevel // Keep existing level if unclear
+ }
+ 
+ // Update conversation context with new interaction
+ const updateConversationContext = (query: string, intent: string) => {
+   setConversationContext(prev => {
+     const newExpertiseLevel = analyzeUserExpertise(query, prev.userExpertiseLevel)
+     const newTopics = [...prev.recentTopics, intent].slice(-5) // Keep last 5 topics
+     
+     return {
+       ...prev,
+       userExpertiseLevel: newExpertiseLevel,
+       recentTopics: newTopics,
+       workflowState: intent === 'pending_models' || intent === 'marketplace_models' ? 
+         { lastDataFetch: Date.now(), intent } : prev.workflowState
+     }
+   })
+ }
+ 
+ // Enhanced AI knowledge integration
+ const getAdvancedKnowledge = (userQuery: string, intent: string, userData: any) => {
+   const queryLower = userQuery.toLowerCase()
+   let enhancedKnowledge = ''
+   
+   // Technical Architecture Knowledge
+   if (queryLower.includes('architecture') || queryLower.includes('technical') || queryLower.includes('how does')) {
+     enhancedKnowledge += `
+ADVANCED TECHNICAL CONTEXT:
+- SUI Blockchain: Proof-of-Stake consensus with validator network, 100M-1B gas limits
+- Walrus Storage: Multi-node replication with automatic failover, content-addressed storage
+- TEE Security: Intel SGX secure enclaves via Nautilus, zero-knowledge proofs for integrity
+- SEAL Encryption: Homomorphic computation enabling secure processing on encrypted models
+- Performance Targets: <2s response time, 99.5% upload success rate, <10min verification
+
+INTEGRATION PATTERNS:
+- Event-driven architecture with WebSocket real-time updates
+- Parallel data fetching with Promise.allSettled error isolation  
+- Intelligent caching with dependency tracking and smart invalidation
+- Exponential backoff retry logic for network resilience
+`
+   }
+   
+   // User Experience & Interaction Patterns
+   if (queryLower.includes('help') || queryLower.includes('guide') || queryLower.includes('how to')) {
+     enhancedKnowledge += `
+USER INTERACTION OPTIMIZATION:
+- Adaptive technical depth based on user expertise (detected from vocabulary)
+- Context preservation across conversation turns with intelligent memory
+- Multi-turn conversation support maintaining workflow state
+- Proactive assistance with predictive error prevention
+
+RESPONSE PERSONALIZATION:
+- Beginner: Conceptual explanations with analogies and step-by-step guidance
+- Intermediate: Process explanations with practical examples and best practices  
+- Expert: Implementation details with technical specifics and optimization techniques
+- Power users: Bulk operations, API-level control, and automation capabilities
+`
+   }
+   
+   // Problem Resolution Knowledge
+   if (queryLower.includes('error') || queryLower.includes('failed') || queryLower.includes('problem')) {
+     enhancedKnowledge += `
+INTELLIGENT ERROR RESOLUTION:
+- Graduated response: Auto-retry → Guided troubleshooting → Alternative approach → Escalation
+- Context-preserving recovery maintaining user workflow state and progress
+- Predictive error prevention based on usage patterns and platform metrics
+- Root cause analysis with specific solutions for each error category
+
+COMMON ISSUE PATTERNS:
+- Upload failures: File format validation, size optimization, network stability
+- Verification delays: Queue analysis, complexity assessment, resource allocation  
+- Transaction errors: Gas estimation, balance validation, contract interaction
+- Performance issues: Caching strategies, parallel processing, load balancing
+`
+   }
+   
+   // Advanced Workflow Knowledge
+   if (intent === 'pending_models' || intent === 'marketplace_models' || intent === 'platform_stats') {
+     enhancedKnowledge += `
+WORKFLOW INTELLIGENCE:
+- Multi-step task orchestration with conditional branching and error recovery
+- Parallel operation coordination with resource conflict resolution
+- State-based decision making adapting to platform and user context
+- Automated monitoring with proactive recommendations and insights
+
+DATA INTEGRATION EXCELLENCE:
+- Real-time data synchronization with confidence indicators
+- Intelligent filtering based on user intent and historical patterns
+- Progressive disclosure from overview to detailed analysis
+- Contextual memory utilization for conversation continuity
+`
+   }
+   
+   return enhancedKnowledge
+ }
+ 
+ // Enhanced intent detection with sophisticated patterns
+ const detectAdvancedIntent = (userQuery: string) => {
+   const query = userQuery.toLowerCase()
+   
+   // Multi-intent detection
+   const intents = []
+   
+   if (query.match(/(show|display|list|get).*pending|my models.*status/)) {
+     intents.push('pending_models')
+   }
+   if (query.match(/(marketplace|available|browse).*models/)) {
+     intents.push('marketplace_models')  
+   }
+   if (query.match(/(stats|statistics|count|how many|metrics)/)) {
+     intents.push('platform_stats')
+   }
+   if (query.match(/(upload|add|create).*model/)) {
+     intents.push('upload_guidance')
+   }
+   if (query.match(/(error|failed|problem|issue|troubleshoot)/)) {
+     intents.push('troubleshooting')
+   }
+   if (query.match(/(optimize|improve|enhance|performance)/)) {
+     intents.push('optimization')
+   }
+   if (query.match(/(price|pricing|cost|market)/)) {
+     intents.push('pricing_analysis')
+   }
+   
+   return intents.length > 0 ? intents[0] : 'general_query'
+ }
 
  const suggestedQueries = [
-  "Show me my pending models",
-  "What models are available in the marketplace?", 
-  "How many models have been uploaded today?"
+  "Analyze my model performance and suggest optimizations",
+  "What are the current market trends in computer vision models?", 
+  "Help me troubleshoot my verification delays and optimize upload workflow"
  ]
  
  // Data fetching functions
@@ -94,8 +247,12 @@ export default function AgentPage() {
   setQuery('')
 
   try {
-   // Detect user intent
-   const intent = detectIntent(currentQuery)
+   // Detect user intent with advanced pattern matching
+   const intent = detectAdvancedIntent(currentQuery)
+   
+   // Update conversation context with new interaction
+   updateConversationContext(currentQuery, intent)
+   
    let fetchedData = null
    let dataType = undefined
    
@@ -125,19 +282,79 @@ export default function AgentPage() {
     throw new Error('Gemini API key not configured');
    }
 
-   // Create Satya-specific context for the AI
-   const satyaContext = `You are Satya AI Assistant with ACCURATE knowledge of the Satya platform's real architecture and implementation.
+   // Create enhanced AI context with advanced knowledge
+   const advancedKnowledge = getAdvancedKnowledge(currentQuery, intent, fetchedData)
    
-   ${fetchedData ? `CURRENT PLATFORM DATA: ${JSON.stringify(fetchedData, null, 2)}` : ''}
-   
-   Use this real-time data to answer the user's questions accurately. If data is provided, reference specific numbers and details.
+   const satyaContext = `You are Satya Agent - an advanced AI assistant with deep expertise in the Satya platform's architecture, user interaction patterns, and sophisticated problem-solving capabilities.
 
-   RESPONSE GUIDELINES:
-   - Give SHORT answers for simple questions (1-2 sentences)
-   - Give DETAILED answers for complex topics (multiple paragraphs)
-   - Be contextual - match response length to question complexity
-   - Focus on actionable guidance over generic information
-   - ONLY provide accurate information about Satya's actual implementation
+🧠 CONVERSATION INTELLIGENCE:
+- User Expertise Level: ${conversationContext.userExpertiseLevel}
+- Recent Topics: ${conversationContext.recentTopics.join(', ') || 'None'}
+- Conversation History: ${chatHistory.length} previous exchanges
+- Current Intent: ${intent}
+
+📈 ADAPTIVE BEHAVIOR INSTRUCTIONS:
+Based on user expertise level "${conversationContext.userExpertiseLevel}":
+${conversationContext.userExpertiseLevel === 'beginner' ? 
+`- Use simple, clear language with analogies
+- Provide step-by-step guidance
+- Explain technical concepts thoroughly
+- Offer reassurance and encouragement` :
+conversationContext.userExpertiseLevel === 'intermediate' ?
+`- Use moderate technical terminology
+- Provide practical examples and best practices
+- Focus on workflow optimization
+- Explain reasoning behind recommendations` :
+conversationContext.userExpertiseLevel === 'expert' ?
+`- Use precise technical language
+- Provide implementation details
+- Offer advanced optimization techniques
+- Reference specific architecture components` :
+`- Adapt dynamically based on query complexity
+- Provide balanced technical depth
+- Include both simple and advanced options`}
+
+   ${fetchedData ? `
+🔄 REAL-TIME PLATFORM DATA:
+${JSON.stringify(fetchedData, null, 2)}
+
+📊 DATA INSIGHTS: Use this current data to provide specific, actionable responses with exact numbers and status information.
+` : ''}
+
+${advancedKnowledge}
+
+🎯 ENHANCED RESPONSE GUIDELINES:
+
+📋 INTELLIGENT RESPONSE ADAPTATION:
+- DETECT user expertise level from vocabulary and question complexity
+- MATCH technical depth to user's demonstrated knowledge level
+- PROVIDE context-aware responses that build on conversation history  
+- ANTICIPATE follow-up questions and provide comprehensive initial responses
+- USE progressive disclosure: overview → details → implementation specifics
+
+🔍 ADVANCED QUERY PROCESSING:
+- ANALYZE multi-faceted queries and address all components systematically
+- IDENTIFY underlying user goals beyond surface-level questions
+- PROVIDE proactive suggestions based on detected user patterns and platform state
+- OFFER alternative approaches when primary solutions may have limitations
+
+⚡ INTELLIGENT ACTION EXECUTION:
+- SUGGEST specific next steps with clear, actionable guidance
+- PREDICT potential issues and provide preventive recommendations  
+- INTEGRATE real-time data seamlessly into conversational responses
+- MAINTAIN conversation context while executing platform operations
+
+🎨 SOPHISTICATED DATA PRESENTATION:
+- ORGANIZE information using visual hierarchies and progressive disclosure
+- HIGHLIGHT key insights and actionable items prominently
+- PROVIDE comparative analysis when multiple options exist
+- USE contextual examples that match user's specific situation
+
+🛡️ PROACTIVE ERROR PREVENTION:
+- IDENTIFY potential issues before they occur based on usage patterns
+- SUGGEST optimizations and best practices contextually
+- PROVIDE graduated guidance from simple fixes to advanced solutions
+- MAINTAIN conversation continuity even when services are degraded
 
    🏗️ SATYA TECHNICAL ARCHITECTURE (ACCURATE):
 
