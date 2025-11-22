@@ -455,7 +455,6 @@ export class MarketplaceContractService {
      }
     }
    } catch (objectError) {
-    console.error('Object validation failed:', objectError);
     throw new Error(`Cannot access pending model: ${objectError instanceof Error ? objectError.message : String(objectError)}`);
    }
 
@@ -640,7 +639,9 @@ export class MarketplaceContractService {
        }
       }
      } catch (queryError) {
-      console.error('Failed to query transaction details:', queryError);
+      logger.warn('Failed to query transaction details', {
+        error: queryError instanceof Error ? queryError.message : String(queryError)
+      });
      }
      
      // Last resort fallback
@@ -1320,7 +1321,6 @@ export class MarketplaceContractService {
    }));
 
   } catch (error) {
-   console.error('Failed to query user pending models:', error);
    logger.error('Failed to query user pending models', {
     error: error instanceof Error ? error.message : String(error),
     userAddress
@@ -1383,7 +1383,9 @@ export class MarketplaceContractService {
    return { removed: oldPackagePendingModels.length, errors: [] };
 
   } catch (error) {
-   console.error('Failed to cleanup old package pending models:', error);
+   logger.error('Failed to cleanup old package pending models', {
+    error: error instanceof Error ? error.message : String(error)
+   });
    return { 
     removed: 0, 
     errors: [error instanceof Error ? error.message : String(error)] 
@@ -1461,7 +1463,9 @@ export class MarketplaceContractService {
    };
 
   } catch (error) {
-   console.error('Failed to cleanup old pending models:', error);
+   logger.error('Failed to cleanup old pending models', {
+    error: error instanceof Error ? error.message : String(error)
+   });
    return { 
     removed: 0, 
     errors: [error instanceof Error ? error.message : String(error)]
@@ -1588,7 +1592,6 @@ export class MarketplaceContractService {
    return validPurchases;
    
   } catch (error) {
-   console.error('Failed to query user purchases:', error);
    logger.error('Failed to query user purchases', {
     error: error instanceof Error ? error.message : String(error),
     userAddress
