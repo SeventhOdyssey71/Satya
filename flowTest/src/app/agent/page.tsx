@@ -33,11 +33,11 @@ export default function AgentPage() {
   try {
    switch (action) {
     case 'check_pending_models':
-     const pendingModels = await marketplaceService.getPendingModels(20)
+     const pendingModels = await marketplaceService.getMarketplaceModels(20)
      return {
       success: true,
       data: pendingModels,
-      message: `Found ${pendingModels.length} pending models`
+      message: `Found ${pendingModels.length} models in marketplace`
      }
     
     case 'check_marketplace':
