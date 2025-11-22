@@ -222,105 +222,70 @@ function ModelCard({ model, onPurchase }: { model: ModelListedEvent, onPurchase:
 
  return (
   <Link href={`/model/${model.listingId}`} className="block group">
-   <div className="card-interactive overflow-hidden h-full">
+   <div className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
     {/* Image Section */}
-    <div className="relative aspect-[4/3] overflow-hidden">
+    <div className="h-48 relative overflow-hidden">
      {/* eslint-disable-next-line @next/next/no-img-element */}
      <img 
       src={imageUrl} 
       alt={model.title} 
-      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
       onError={(e) => {
        // Fallback to placeholder if image fails to load
        const target = e.target as HTMLImageElement;
        target.src = '/images/Claude.png';
       }}
      />
-     
-     {/* Verified Badge */}
-     <div className="absolute top-4 left-4">
-      <div className="badge-success">
-       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-       </svg>
-       TEE Verified
-      </div>
-     </div>
-
-     {/* Category Badge */}
-     <div className="absolute top-4 right-4">
-      <div className="badge bg-white border border-secondary-300 text-secondary-800 shadow-card backdrop-blur-sm">
-       {getCategory(model.title)}
-      </div>
-     </div>
-
-     {/* Price Tag */}
-     <div className="absolute bottom-4 right-4">
-      <div className="bg-white/95 backdrop-blur-sm border border-secondary-300 rounded-xl px-3 py-2 shadow-card">
-       <div className="text-lg font-albert font-bold text-secondary-900">{formatPrice(model.downloadPrice)}</div>
-      </div>
-     </div>
     </div>
 
     {/* Content Section */}
-    <div className="p-6">
-     {/* Title and Rating */}
-     <div className="flex items-start justify-between mb-3">
-      <h3 className="text-xl font-albert font-semibold text-secondary-900 group-hover:text-secondary-700 transition-colors line-clamp-2 flex-1">
-       {model.title}
-      </h3>
-     </div>
-
+    <div className="p-4">
+     {/* Title */}
+     <h3 className="font-semibold text-gray-900 mb-3 line-clamp-2">
+      {model.title}
+     </h3>
+     
      {/* Description */}
-     <p className="text-secondary-800 mb-4 line-clamp-2 leading-relaxed">
+     <p className="text-sm text-gray-600 mb-4 line-clamp-2">
       {mockDescription}
      </p>
-
+     
+     {/* Tags */}
+     <div className="flex gap-2 mb-4">
+      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+       TEE Verified
+      </span>
+      <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+       {getCategory(model.title)}
+      </span>
+     </div>
+     
      {/* Stats Row */}
-     <div className="flex items-center justify-between text-sm text-secondary-700 mb-4">
-      <div className="flex items-center gap-4">
-       <div className="flex items-center gap-1">
-        <svg className="w-4 h-4 text-secondary-600" fill="currentColor" viewBox="0 0 20 20">
-         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-        <span>{mockRating}</span>
-       </div>
-       <div className="flex items-center gap-1">
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-         <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-        </svg>
-        <span>{mockDownloads.toLocaleString()}</span>
-       </div>
+     <div className="flex items-center justify-between mb-4 text-sm text-gray-500">
+      <div className="flex items-center gap-2">
+       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+       </svg>
+       <span>{mockRating}</span>
       </div>
-      <div className="text-secondary-600">
-       {formatDate(model.timestamp)}
-      </div>
+      <span>{mockDownloads.toLocaleString()} downloads</span>
      </div>
-
-     {/* Creator Info */}
-     <div className="flex items-center gap-3 mb-4">
-      <div className="w-8 h-8 bg-gradient-to-br from-secondary-600 to-secondary-800 rounded-full flex items-center justify-center text-white text-xs font-medium">
-       {model.creator.slice(0, 2).toUpperCase()}
-      </div>
-      <div>
-       <div className="text-sm text-secondary-700">Created by</div>
-       <div className="text-sm font-medium text-secondary-900">{truncateId(model.creator)}</div>
-      </div>
+     
+     {/* Price and Button */}
+     <div className="flex items-center justify-between">
+      <span className="text-lg font-semibold text-gray-900">
+       {formatPrice(model.downloadPrice)}
+      </span>
+      <button 
+       onClick={(e) => {
+        e.preventDefault();
+        onPurchase(model.listingId);
+       }}
+       className="px-4 py-2 bg-gray-900 text-white text-sm rounded-md hover:bg-gray-800 transition-colors"
+      >
+       View Details
+      </button>
      </div>
-
-     {/* Action Button */}
-     <button 
-      onClick={(e) => {
-       e.preventDefault();
-       onPurchase(model.listingId);
-      }}
-      className="btn-primary w-full group"
-     >
-      View Details
-      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-      </svg>
-     </button>
     </div>
    </div>
   </Link>
