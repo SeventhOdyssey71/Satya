@@ -737,36 +737,123 @@ export class MarketplaceContractService {
   */
  async getUserPendingModels(userAddress: string): Promise<any[]> {
   try {
-   console.log('Querying pending models for user:', userAddress);
-
-   // Query all objects owned by the user
-   const ownedObjects = await this.suiClient.getOwnedObjects({
-    owner: userAddress,
-    options: {
-     showContent: true,
-     showType: true,
-    },
-   });
-
-   console.log('Total owned objects:', ownedObjects.data.length);
-
-   // Filter for PendingModel objects
-   const pendingModels = ownedObjects.data.filter(obj => {
-    const objectType = obj.data?.type;
-    const isPendingModel = objectType?.includes('PendingModel');
-    
-    if (isPendingModel) {
-     console.log('Found PendingModel:', {
-      objectId: obj.data?.objectId,
-      type: objectType,
-      content: obj.data?.content
-     });
+   // Get marketplace models to see which pending models have been listed
+   const marketplaceModels = await this.getMarketplaceModels();
+   const listedModelIds = new Set<string>();
+   
+   // Extract pending model IDs from marketplace models
+   marketplaceModels.forEach(model => {
+    const pendingId = model.data?.content?.fields?.pending_model_id;
+    if (pendingId) {
+     listedModelIds.add(pendingId);
     }
-    
-    return isPendingModel;
    });
 
-   console.log(`Found ${pendingModels.length} pending models for user`);
+   // Also check ModelListed events to get recently listed models
+   try {
+    const eventsResponse = await this.suiClient.queryEvents({
+     query: {
+      MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelListed`
+     },
+     limit: 100,
+     order: 'descending'
+    });
+
+    eventsResponse.data?.forEach(event => {
+     const eventData = event.parsedJson as any;
+     const pendingModelId = eventData?.pending_model_id;
+     if (pendingModelId) {
+      listedModelIds.add(pendingModelId);
+     }
+    });
+   } catch (eventError) {
+    // Silent fail for cleaner logs
+   }
+
+   // Query all objects owned by the user with proper pagination
+   let allOwnedObjects: any[] = [];
+   let cursor: string | null = null;
+   let pageCount = 0;
+   const maxPages = 20;
+
+   do {
+    pageCount++;
+    const page = await this.suiClient.getOwnedObjects({
+     owner: userAddress,
+     cursor: cursor,
+     options: {
+      showContent: true,
+      showType: true,
+     },
+     limit: 50,
+    });
+    
+    allOwnedObjects.push(...page.data);
+    cursor = page.nextCursor;
+    
+    if (pageCount >= maxPages) {
+     break;
+    }
+   } while (cursor);
+
+   // Filter for PendingModel objects from CURRENT package only
+   const expectedPendingModelType = `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::PendingModel`;
+   const allPendingModels = allOwnedObjects.filter(obj => {
+    const objectType = obj.data?.type;
+    return objectType === expectedPendingModelType;
+   });
+   
+   const pendingModels = allPendingModels.filter(obj => {
+    const objectId = obj.data?.objectId;
+    if (!objectId) return false;
+    const isListed = listedModelIds.has(objectId);
+    return !isListed;
+   });
+
+   // Event-based fallback for recently created models
+   if (allPendingModels.length === 0) {
+    try {
+     const recentEvents = await this.suiClient.queryEvents({
+      query: {
+       MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelUploaded`
+      },
+      limit: 10,
+      order: 'descending'
+     });
+
+     for (const event of recentEvents.data || []) {
+      const eventData = event.parsedJson as any;
+      const modelId = eventData?.model_id;
+      const eventSender = event.sender;
+
+      if (modelId && eventSender === userAddress) {
+       try {
+        const recentObject = await this.suiClient.getObject({
+         id: modelId,
+         options: {
+          showContent: true,
+          showType: true,
+          showOwner: true
+         }
+        });
+
+        if (recentObject.data && recentObject.data.type === expectedPendingModelType) {
+         console.log('✓ Found recent model via events:', modelId.slice(0, 10) + '...');
+         pendingModels.push({
+          data: recentObject.data
+         });
+        }
+       } catch (objectError) {
+        // Silent fail for cleaner logs
+       }
+      }
+     }
+    } catch (eventError) {
+     // Silent fail for cleaner logs
+    }
+   }
+
+   console.log(`✓ Found ${pendingModels.length} pending models`);
 
    // Return the raw object data for the dashboard to transform
    return pendingModels.map(obj => ({
@@ -776,7 +863,6 @@ export class MarketplaceContractService {
    }));
 
   } catch (error) {
-   console.error('Failed to query user pending models:', error);
    logger.error('Failed to query user pending models', {
     error: error instanceof Error ? error.message : String(error),
     userAddress
