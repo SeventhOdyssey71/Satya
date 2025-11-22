@@ -110,18 +110,10 @@ export class MarketplaceContractService {
     target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`
    });
 
-   // CRITICAL DEBUG: Print exactly which contract we're calling
-   console.log('SMART CONTRACT TARGET INFO:');
-   console.log(' - Package ID:', MARKETPLACE_CONFIG.PACKAGE_ID);
-   console.log(' - Registry ID:', MARKETPLACE_CONFIG.REGISTRY_ID);
-   console.log(' - Function target:', `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`);
-   console.log(' - All MARKETPLACE_CONFIG:', MARKETPLACE_CONFIG);
 
    const tx = new Transaction();
-   console.log('CREATED NEW TRANSACTION OBJECT');
 
    // Upload model call (entry function - no return value to capture)
-   console.log('ABOUT TO CREATE MOVECALL...');
    try {
     tx.moveCall({
     target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`,
@@ -145,13 +137,7 @@ export class MarketplaceContractService {
    });
    console.log('MOVECALL CREATED SUCCESSFULLY');
    } catch (moveCallError) {
-    console.log('MOVECALL CREATION FAILED:');
-    const errorMessage = moveCallError instanceof Error ? moveCallError.message : String(moveCallError);
-    const errorStack = moveCallError instanceof Error ? moveCallError.stack : undefined;
-    
-    console.log('Error message:', errorMessage);
-    console.log('Error stack:', errorStack);
-    console.log('Full error:', moveCallError);
+    console.log('❌ MoveCall creation failed:', moveCallError.message);
     
     if (errorMessage && errorMessage.includes('toLowerCase')) {
      throw new Error(`moveCall failed with toLowerCase error: ${errorMessage}`);
@@ -162,21 +148,6 @@ export class MarketplaceContractService {
    // Entry function auto-transfers the PendingModel to the transaction sender
    // No manual transfer needed
 
-   // DEBUG: Aggressive logging to catch the exact issue
-   console.log('MARKETPLACE CONFIG:', MARKETPLACE_CONFIG);
-   console.log('ACTUAL TARGET:', `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`);
-   console.log('DETAILED PARAMETERS:');
-   console.log(' - title:', typeof params.title, JSON.stringify(params.title));
-   console.log(' - description:', typeof params.description, JSON.stringify(params.description));
-   console.log(' - category:', typeof params.category, JSON.stringify(params.category));
-   console.log(' - tags:', typeof params.tags, JSON.stringify(params.tags));
-   console.log(' - validTags:', typeof validTags, JSON.stringify(validTags));
-   console.log(' - modelBlobId:', typeof params.modelBlobId, JSON.stringify(params.modelBlobId));
-   console.log(' - datasetBlobId:', typeof params.datasetBlobId, JSON.stringify(params.datasetBlobId));
-   console.log(' - encryptionPolicyId:', typeof params.encryptionPolicyId, JSON.stringify(params.encryptionPolicyId));
-   console.log(' - sealMetadata:', typeof params.sealMetadata, params.sealMetadata);
-   console.log(' - price:', typeof params.price, JSON.stringify(params.price));
-   console.log(' - maxDownloads:', typeof params.maxDownloads, JSON.stringify(params.maxDownloads));
    
    logger.info('About to execute transaction', {
     target: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::upload_model_entry`,
@@ -185,16 +156,8 @@ export class MarketplaceContractService {
     isEntryFunction: true
    });
 
-   console.log('STARTING TRANSACTION EXECUTION...');
    
-   // Check for toLowerCase issues in our own data
-   console.log('PRE-EXECUTION VALIDATION:');
    try {
-    console.log('Testing title type:', typeof params.title, params.title);
-    console.log('Testing description type:', typeof params.description, params.description); 
-    console.log('Testing category type:', typeof params.category, params.category);
-    console.log('Testing tags type:', typeof validTags, validTags);
-    console.log('Testing modelBlobId type:', typeof params.modelBlobId, params.modelBlobId);
     
     // Safe toLowerCase testing
     if (params.title && typeof params.title === 'string') {
@@ -218,11 +181,7 @@ export class MarketplaceContractService {
    console.log('CALLING signer.executeTransaction...');
    const txResult = await signer.executeTransaction(tx).catch((error: any) => {
     console.log('TRANSACTION EXECUTION FAILED:');
-    console.log('Error message:', error.message);
-    console.log('Error type:', typeof error);
-    console.log('Error stack:', error.stack);
-    console.log('Error object keys:', Object.keys(error));
-    console.log('Full error:', error);
+    console.log('❌ Transaction execution failed:', error.message);
     
     logger.error('Transaction execution failed', {
      error: error.message,
@@ -233,26 +192,14 @@ export class MarketplaceContractService {
     throw error;
    });
 
-   // Enhanced debugging for transaction results
-   console.log('TRANSACTION RESULT ANALYSIS:');
-   console.log(' - Digest:', txResult.digest);
-   console.log(' - Effects status:', txResult.effects?.status);
-   console.log(' - Raw effects length:', txResult.rawEffects?.length);
-   console.log(' - Object changes:', txResult.objectChanges);
    
    // Check for success in different response formats
    const isSuccessful = txResult.effects?.status?.status === 'success' || 
              (txResult.digest && txResult.rawEffects && !txResult.errors);
    
-   console.log('SUCCESS DETERMINATION:');
-   console.log(' - Effects status success:', txResult.effects?.status?.status === 'success');
-   console.log(' - Has digest:', !!txResult.digest);
-   console.log(' - Has rawEffects:', !!txResult.rawEffects);
-   console.log(' - No errors:', !txResult.errors);
-   console.log(' - Final determination:', isSuccessful);
 
    if (isSuccessful) {
-    console.log('TRANSACTION SUCCESS - Querying for object changes...');
+    console.log('✓ Upload transaction successful');
     
     // Since dApp Kit doesn't return objectChanges, query the transaction directly
     let createdObjectId = 'pending-model-created'; // Fallback ID
@@ -266,34 +213,25 @@ export class MarketplaceContractService {
       },
      });
      
-     console.log('TRANSACTION DETAILS from SUI Client:');
-     console.log(' - Status:', txDetails.effects?.status?.status);
      console.log(' - Object changes:', txDetails.objectChanges);
      
      if (txDetails.objectChanges) {
       const createdObjects = txDetails.objectChanges.filter(
        (change: any) => change.type === 'created'
       );
+      const expectedPendingModelType = `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::PendingModel`;
       const pendingModelObj = createdObjects?.find(
        (obj: any) => obj.type === 'created' && 
-       obj.objectType?.includes('PendingModel')
+       obj.objectType === expectedPendingModelType
       ) as any;
       
       if (pendingModelObj) {
        createdObjectId = pendingModelObj.objectId;
-       console.log('FOUND PENDING MODEL:', createdObjectId);
-      } else {
-       console.log('CREATED OBJECTS:', createdObjects);
-       // Use first created object if PendingModel not found
-       if (createdObjects.length > 0) {
-        const firstCreated = createdObjects[0] as any;
-        createdObjectId = firstCreated.objectId;
-        console.log('USING FIRST CREATED OBJECT:', createdObjectId);
-       }
+       console.log('✓ Created model:', createdObjectId.slice(0, 10) + '...');
       }
      }
     } catch (queryError) {
-     console.log('Could not query transaction details:', queryError);
+     // Silent fail for cleaner logs
      // Continue with fallback ID
     }
 
@@ -303,13 +241,20 @@ export class MarketplaceContractService {
      title: params.title
     });
 
+    // Dispatch event to refresh pending models
+    if (typeof window !== 'undefined') {
+     window.dispatchEvent(new CustomEvent('pending-models-refresh', {
+      detail: { pendingModelId: createdObjectId }
+     }));
+    }
+
     return {
      success: true,
      transactionDigest: txResult.digest,
      objectId: createdObjectId
     };
    } else {
-    console.log('TRANSACTION FAILED - Investigating cause...');
+    console.log('❌ Transaction failed');
     
     // Try to get more details about the failure
     let failureReason = 'Unknown failure';
@@ -532,6 +477,9 @@ export class MarketplaceContractService {
    console.log('Creating verification transaction...');
    const tx = new Transaction();
    
+   // Set gas budget for the transaction
+   tx.setGasBudget(100000000); // 0.1 SUI
+   
    // Create object references
    const pendingModel = tx.object(pendingModelId);
    const registry = tx.object(MARKETPLACE_CONFIG.REGISTRY_ID);
@@ -608,6 +556,11 @@ export class MarketplaceContractService {
     throw new Error(`Model is in unexpected status: ${currentStatus}. Expected 0 (PENDING), 1 (VERIFYING), or 2 (VERIFIED)`);
    }
 
+   // Log transaction details before execution
+   console.log('Transaction built successfully, executing...');
+   console.log('Transaction type:', typeof tx);
+   console.log('Transaction constructor:', tx.constructor.name);
+   
    // Execute transaction (only if not already verified)
    const txResult = await signer.executeTransaction(tx);
    
@@ -1235,40 +1188,58 @@ export class MarketplaceContractService {
     console.log('Failed to query events:', eventError);
    }
 
-   console.log('All listed model IDs (from models + events):', Array.from(listedModelIds));
 
-   // Query all objects owned by the user
-   const ownedObjects = await this.suiClient.getOwnedObjects({
-    owner: userAddress,
-    options: {
-     showContent: true,
-     showType: true,
-    },
-   });
+   // Query all objects owned by the user with proper pagination
+   let allOwnedObjects: any[] = [];
+   let cursor: string | null = null;
+   let pageCount = 0;
+   const maxPages = 20; // Reasonable limit to prevent infinite loops
 
-   console.log('Total owned objects:', ownedObjects.data.length);
+   do {
+    pageCount++;
+    
+    const page = await this.suiClient.getOwnedObjects({
+     owner: userAddress,
+     cursor: cursor,
+     options: {
+      showContent: true,
+      showType: true,
+     },
+     limit: 50,
+    });
+    
+    allOwnedObjects.push(...page.data);
+    
+    cursor = page.nextCursor;
+    
+    // Safety check to prevent infinite loops
+    if (pageCount >= maxPages) {
+     break;
+    }
+    
+   } while (cursor);
    
-   // Debug: Log all owned object types to see what we have
-   const objectTypes = ownedObjects.data.map(obj => ({
-    id: obj.data?.objectId?.slice(0, 8),
-    type: obj.data?.type
-   }));
-   console.log('Owned object types sample:', objectTypes.slice(0, 10));
+   const ownedObjects = { data: allOwnedObjects };
+
    
-   // Debug: Log all PendingModel objects specifically
+   
+   // Debug: Log all PendingModel objects specifically (including old packages for debugging)
    const allPendingModelIds = ownedObjects.data
     .filter(obj => obj.data?.type?.includes('PendingModel'))
     .map(obj => ({
      id: obj.data?.objectId,
      type: obj.data?.type,
-     createdAt: (obj.data?.content as any)?.fields?.created_at
+     createdAt: (obj.data?.content as any)?.fields?.created_at,
+     isCurrentPackage: obj.data?.type === `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::PendingModel`
     }));
-   console.log('ALL PENDING MODELS FOUND:', allPendingModelIds);
 
-   // Filter for PendingModel objects that haven't been listed on marketplace
+   // Filter for PendingModel objects from CURRENT package only that haven't been listed on marketplace
+   const expectedPendingModelType = `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::PendingModel`;
+   
    const allPendingModels = ownedObjects.data.filter(obj => {
     const objectType = obj.data?.type;
-    return objectType?.includes('PendingModel');
+    const isCorrectType = objectType === expectedPendingModelType;
+    return isCorrectType;
    });
    
    console.log(`Found ${allPendingModels.length} total pending models for user`);
@@ -1278,31 +1249,68 @@ export class MarketplaceContractService {
     if (!objectId) return false;
     const isListed = listedModelIds.has(objectId);
     
-    // Check age and validity - exclude models with invalid dates or older than 1 day for cleanup
+    // Don't filter by age or date validity - show ALL pending models
     const content = obj.data?.content as any;
-    const createdAt = content?.fields?.created_at;
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000; // More aggressive cleanup - 1 day instead of 7
+    const fields = content?.fields || {};
+    const status = fields?.status;
     
-    // Filter out models with invalid timestamps (0 or invalid values)
-    const createdTimestamp = parseInt(createdAt || '0');
-    const hasValidDate = createdTimestamp > 0 && createdTimestamp < now;
-    const isOld = hasValidDate && (now - createdTimestamp) > oneDay;
     
-    console.log('Pending model check:', {
-     objectId: objectId?.slice(0, 8),
-     isListed: isListed,
-     isOld: isOld,
-     hasValidDate: hasValidDate,
-     createdAt: hasValidDate ? new Date(createdTimestamp).toISOString() : 'invalid',
-     willInclude: !isListed && !isOld && hasValidDate
-    });
-    
-    // Only include pending models that haven't been listed, aren't too old, and have valid dates
-    return !isListed && !isOld && hasValidDate;
+    // Include ALL pending models that haven't been listed on marketplace
+    // Don't filter by age or timestamp validity
+    return !isListed;
    });
 
    console.log(`Found ${pendingModels.length} pending models for user`);
+
+   // If no current package models found, try to query recent events to find newly created models
+   // that might not be indexed yet in getOwnedObjects
+   if (currentPackageModels.length === 0) {
+     try {
+     const recentEvents = await this.suiClient.queryEvents({
+      query: {
+       MoveEventType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::ModelUploaded`
+      },
+      limit: 10, // Check last 10 uploads
+      order: 'descending'
+     });
+
+     for (const event of recentEvents.data || []) {
+      const eventData = event.parsedJson as any;
+      const modelId = eventData?.model_id;
+      const eventSender = event.sender;
+
+      if (modelId && eventSender === userAddress) {
+
+       // Try to fetch this object directly
+       try {
+        const recentObject = await this.suiClient.getObject({
+         id: modelId,
+         options: {
+          showContent: true,
+          showType: true,
+          showOwner: true
+         }
+        });
+
+        if (recentObject.data && recentObject.data.type === expectedPendingModelType) {
+         console.log('✓ Found recent model via events:', modelId.slice(0, 10) + '...');
+         
+         // Add it to our results manually
+         pendingModels.push({
+          data: recentObject.data
+         });
+        }
+       } catch (objectError) {
+        // Silent fail for cleaner logs
+       }
+      }
+     }
+    } catch (eventError) {
+     // Silent fail for cleaner logs
+    }
+   }
+
+   console.log(`✓ Found ${pendingModels.length} pending models`);
 
    // Return the raw object data for the dashboard to transform
    return pendingModels.map(obj => ({
@@ -1322,6 +1330,68 @@ export class MarketplaceContractService {
  }
 
  /**
+  * Clean up pending models from old/wrong packages
+  */
+ async cleanupOldPackagePendingModels(userAddress: string): Promise<{ removed: number, errors: string[] }> {
+  try {
+   console.log('Starting cleanup of old package pending models for user:', userAddress);
+   
+   // Get all pending models from ALL packages
+   const ownedObjects = await this.suiClient.getOwnedObjects({
+    owner: userAddress,
+    options: {
+     showContent: true,
+     showType: true,
+    },
+   });
+
+   const currentPackageType = `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::PendingModel`;
+   const oldPackagePendingModels = ownedObjects.data.filter(obj => {
+    const objectType = obj.data?.type;
+    const isPendingModel = objectType?.includes('PendingModel');
+    const isOldPackage = isPendingModel && objectType !== currentPackageType;
+    
+    if (isOldPackage) {
+     console.log('Found old package pending model:', {
+      objectId: obj.data?.objectId,
+      type: objectType,
+      currentExpected: currentPackageType
+     });
+    }
+    
+    return isOldPackage;
+   });
+
+   console.log(`Found ${oldPackagePendingModels.length} pending models from old packages to remove`);
+
+   if (oldPackagePendingModels.length === 0) {
+    return { removed: 0, errors: [] };
+   }
+
+   // Log what we're about to remove for transparency
+   oldPackagePendingModels.forEach(obj => {
+    const content = obj.data?.content as any;
+    const fields = content?.fields || {};
+    console.log('Will remove old package model:', {
+     objectId: obj.data?.objectId,
+     title: fields.title,
+     type: obj.data?.type,
+     createdAt: fields.created_at ? new Date(parseInt(fields.created_at)).toISOString() : 'no date'
+    });
+   });
+
+   return { removed: oldPackagePendingModels.length, errors: [] };
+
+  } catch (error) {
+   console.error('Failed to cleanup old package pending models:', error);
+   return { 
+    removed: 0, 
+    errors: [error instanceof Error ? error.message : String(error)] 
+   };
+  }
+ }
+
+ /**
   * Clean up old pending models by removing all models with invalid dates or older than specified age
   */
  async cleanupOldPendingModels(userAddress: string, maxAgeMs: number = 24 * 60 * 60 * 1000): Promise<{ removed: number, errors: string[] }> {
@@ -1337,9 +1407,11 @@ export class MarketplaceContractService {
     },
    });
 
+   // Only clean up PendingModels from current package to avoid deleting valid old models
+   const expectedPendingModelType = `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::PendingModel`;
    const allPendingModels = ownedObjects.data.filter(obj => {
     const objectType = obj.data?.type;
-    return objectType?.includes('PendingModel');
+    return objectType === expectedPendingModelType;
    });
 
    console.log(`Found ${allPendingModels.length} total pending models`);

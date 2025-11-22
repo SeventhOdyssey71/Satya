@@ -119,13 +119,31 @@ export function usePendingModels() {
   loadPendingModels()
  }, [contractService, currentAccount])
 
- // Set up polling for automatic refresh every 10 seconds
+ // Listen for model upload events
+ useEffect(() => {
+  const handleModelUpload = () => {
+   console.log('Model upload detected, refreshing pending models...')
+   setTimeout(() => {
+    loadPendingModels()
+   }, 1000) // Delay to ensure blockchain has processed
+  }
+
+  window.addEventListener('model-uploaded', handleModelUpload)
+  window.addEventListener('pending-models-refresh', handleModelUpload)
+
+  return () => {
+   window.removeEventListener('model-uploaded', handleModelUpload)
+   window.removeEventListener('pending-models-refresh', handleModelUpload)
+  }
+ }, [contractService, currentAccount])
+
+ // Set up polling for automatic refresh every 5 seconds (more frequent)
  useEffect(() => {
   if (!contractService || !currentAccount) return
 
   const interval = setInterval(() => {
    loadPendingModels()
-  }, 10000) // 10 seconds
+  }, 5000) // 5 seconds for better responsiveness
 
   return () => clearInterval(interval)
  }, [contractService, currentAccount])

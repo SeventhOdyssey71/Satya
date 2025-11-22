@@ -210,24 +210,42 @@ export function ModelVerificationFlow({
     executeTransaction: async (tx: Transaction) => {
      return new Promise((resolve, reject) => {
       console.log('Requesting transaction signature from user...');
+      console.log('Transaction object:', tx);
       
-      signAndExecuteTransaction(
-       { transaction: tx },
-       {
-        onSuccess: (result) => {
-         console.log('Transaction successful:', result);
-         resolve(result);
+      // Ensure we have a valid transaction
+      if (!tx) {
+       reject(new Error('No transaction provided'));
+       return;
+      }
+      
+      try {
+       // Show wallet popup for signing
+       console.log('Triggering wallet signature request...');
+       signAndExecuteTransaction(
+        { 
+         transaction: tx,
+         // Add chain explicitly
+         chain: 'sui:testnet'
         },
-        onError: (error) => {
-         console.error('Transaction failed:', error);
-         if (error.message?.includes('User rejected')) {
-          reject(new Error('Transaction was cancelled by user'));
-         } else {
-          reject(error);
+        {
+         onSuccess: (result) => {
+          console.log('✅ Transaction signed and executed successfully:', result);
+          resolve(result);
+         },
+         onError: (error) => {
+          console.error('❌ Transaction failed:', error);
+          if (error.message?.includes('User rejected') || error.message?.includes('cancelled')) {
+           reject(new Error('Transaction was cancelled by user'));
+          } else {
+           reject(error);
+          }
          }
         }
-       }
-      );
+       );
+      } catch (error) {
+       console.error('Failed to trigger wallet:', error);
+       reject(error);
+      }
      });
     }
    };
@@ -251,6 +269,12 @@ export function ModelVerificationFlow({
    });
 
    console.log('About to call contractService.completeVerification...');
+   console.log('Wallet is connected:', !!account);
+   console.log('Wallet address:', account?.address);
+   
+   // Add a small delay to ensure wallet is ready
+   await new Promise(resolve => setTimeout(resolve, 100));
+   
    const verificationResult = await contractService.completeVerification(
     pendingModelId,
     {

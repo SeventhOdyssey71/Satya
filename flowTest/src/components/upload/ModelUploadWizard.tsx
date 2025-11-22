@@ -216,6 +216,16 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
    
    setCurrentStep(steps.length) // Go to result step
    
+   // Dispatch event to refresh pending models
+   console.log('Dispatching model-uploaded event to refresh pending models...')
+   window.dispatchEvent(new CustomEvent('model-uploaded', { 
+    detail: { 
+     pendingModelId: uploadResult.pendingModelId,
+     title: data.title 
+    } 
+   }))
+   window.dispatchEvent(new CustomEvent('pending-models-refresh'))
+   
    // Call the callback if provided
    if (onUploadComplete) {
     onUploadComplete({

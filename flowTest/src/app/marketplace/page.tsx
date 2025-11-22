@@ -246,7 +246,6 @@ export default function MarketplacePage() {
       onVerifiedChange={handleVerifiedFilter}
       onSearch={handleSearch}
       isLoading={state.isLoading}
-      onRefresh={loadMarketplaceModels}
       totalResults={filteredModels.length}
      />
      
@@ -291,7 +290,6 @@ function EnhancedNavigation({
  onVerifiedChange,
  onSearch,
  isLoading,
- onRefresh,
  totalResults
 }: { 
  activeCategory: string
@@ -300,7 +298,6 @@ function EnhancedNavigation({
  onVerifiedChange: (verified: string) => void
  onSearch: (query: string) => void
  isLoading: boolean
- onRefresh: () => void
  totalResults: number
 }) {
  const [searchQuery, setSearchQuery] = useState('')
@@ -372,19 +369,6 @@ function EnhancedNavigation({
      </div>
     </div>
 
-    {/* Refresh Button */}
-    <button
-     onClick={onRefresh}
-     disabled={isLoading}
-     className={`px-4 py-2 border border-gray-300 rounded-lg flex items-center gap-2 text-sm font-medium ${
-      isLoading 
-       ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-500' 
-       : 'bg-white text-gray-700 hover:bg-gray-50'
-     }`}
-    >
-     <HiArrowPath className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-     {isLoading ? 'Loading...' : 'Refresh'}
-    </button>
    </div>
 
 
@@ -526,50 +510,96 @@ function EnhancedMarketplaceGrid({
    )}
 
    {/* Models Grid */}
-   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
     {models.map((model, index) => (
      <div
       key={model.id || `model-${index}`}
-      className="relative rounded-xl overflow-hidden group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+      className="relative rounded-2xl overflow-hidden group hover:shadow-lg transition-all duration-300 bg-white border border-gray-300 shadow-sm"
       style={{
-       backgroundImage: "url('/images/Claude.png')",
-       backgroundSize: 'cover',
-       backgroundPosition: 'center',
-       aspectRatio: '16/10'
+       height: '400px'
       }}
      >
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-60 group-hover:bg-opacity-50 transition-opacity duration-300"></div>
-      
-      {/* Content overlay */}
-      <div className="relative z-10 p-6 h-full flex flex-col justify-between text-white">
-        {/* Top section */}
-        <div>
-          {/* Category and TEE badge */}
-          <div className="flex items-start justify-between mb-4">
-            <span className="inline-flex items-center px-3 py-1 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg text-sm font-medium">
-              {model.category}
-            </span>
-            {model.teeVerified && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-green-500 bg-opacity-90 rounded-lg text-xs font-medium">
-                <HiCheckBadge className="w-3 h-3" />
-              </div>
-            )}
-          </div>
-          
-          {/* Title */}
-          <h3 className="text-2xl font-bold mb-2 group-hover:text-blue-200 transition-colors">
+      {/* Background Image Section */}
+      <div 
+        className="relative h-48 overflow-hidden"
+        style={{
+          backgroundImage: "url('/images/Claude.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      >
+        {/* Subtle overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+        
+        {/* Top badges */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+          <span className="inline-flex items-center px-3 py-1.5 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full text-xs font-medium shadow-sm">
+            {model.category}
+          </span>
+          {model.teeVerified && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded-full text-xs font-medium shadow-sm">
+              <HiCheckBadge className="w-3 h-3" />
+              Verified
+            </div>
+          )}
+        </div>
+        
+        {/* Title at bottom of image */}
+        <div className="absolute bottom-4 left-4 right-4">
+          <h3 className="text-xl font-bold text-white mb-1 drop-shadow-lg">
             {model.title}
           </h3>
-          
-          {/* Description */}
-          <p className="text-gray-200 text-sm leading-relaxed mb-4 line-clamp-2">
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="p-6 flex flex-col justify-between" style={{ height: '200px' }}>
+        {/* Model Details Section - Fixed height for uniformity */}
+        <div className="flex-1 space-y-2">
+          {/* Description - Fixed 2 lines max */}
+          <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 h-10">
             {model.description}
           </p>
+          
+          {/* Tags Section - Fixed height container */}
+          <div className="h-6">
+            {model.tags && model.tags.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {model.tags.slice(0, 3).map((tag, tagIndex) => (
+                  <span 
+                    key={tagIndex}
+                    className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {model.tags.length > 3 && (
+                  <span className="text-xs text-gray-400">
+                    +{model.tags.length - 3}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div></div>
+            )}
+          </div>
         </div>
-
-        {/* Bottom section */}
-        <div>
+        
+        {/* Bottom Section - Always aligned */}
+        <div className="space-y-2">
+          {/* Stats */}
+          <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+              <span>Quality: {model.qualityScore}%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <HiClock className="w-3 h-3" />
+              <span>{formatDate(model.listedAt)}</span>
+            </div>
+          </div>
+          
+          {/* Action Button */}
           <button
             onClick={() => handlePurchase(model)}
             disabled={
@@ -578,7 +608,7 @@ function EnhancedMarketplaceGrid({
               model.creator === currentAccount?.address ||
               !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads)
             }
-            className="w-full px-6 py-3 bg-blue-600 bg-opacity-90 backdrop-blur-sm text-white rounded-xl font-semibold hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-200"
+            className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md"
           >
             {purchasingModel === model.id ? (
               <>
