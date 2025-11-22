@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@gsap/react": "^2.1.2",
     "@mysten/dapp-kit": "^0.19.8",
     "@mysten/seal": "^0.9.4",
