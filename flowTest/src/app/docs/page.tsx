@@ -1001,37 +1001,32 @@ function ListingSetupContent() {
           <div>
             <h4 className="font-semibold mb-3">Optimization Tips</h4>
             
-            <div className="bg-amber-50 border rounded-lg p-4">
-              <h5 className="font-medium text-amber-800 mb-3">Increase Your Model's Visibility:</h5>
-              <ul className="space-y-2 text-amber-700">
-                <li className="flex items-start">
-                  <span className="mr-2">📝</span>
+            <div className="bg-gray-50 border rounded-lg p-4">
+              <h5 className="font-medium text-black mb-3">Strategies to Increase Your Model's Visibility and Sales:</h5>
+              <ul className="space-y-3 text-gray-700">
+                <li className="border-l-4 border-blue-500 pl-4">
                   <div>
-                    <strong>Clear Description:</strong> Explain what your model does and its use cases
+                    <strong>Clear and Comprehensive Description:</strong> Write detailed explanations of what your model does, its specific use cases, performance metrics, and technical specifications. Include information about training data, model architecture, accuracy rates, and recommended applications. Buyers need to understand exactly what they're purchasing and how it can solve their problems.
                   </div>
                 </li>
-                <li className="flex items-start">
-                  <span className="mr-2">🏷️</span>
+                <li className="border-l-4 border-blue-500 pl-4">
                   <div>
-                    <strong>Relevant Tags:</strong> Use popular, searchable tags (computer-vision, nlp, classification)
+                    <strong>Strategic Tag Selection:</strong> Use popular and searchable tags that accurately describe your model's functionality. Examples include computer-vision, nlp, classification, object-detection, sentiment-analysis, recommendation-system. Research what tags are commonly used in your category and include both broad category tags and specific technique tags.
                   </div>
                 </li>
-                <li className="flex items-start">
-                  <span className="mr-2">💎</span>
+                <li className="border-l-4 border-blue-500 pl-4">
                   <div>
-                    <strong>Quality Score:</strong> Higher quality scores rank better in search results
+                    <strong>Quality Score Optimization:</strong> Higher quality scores improve your model's ranking in search results. Quality is determined by factors including model performance metrics, completeness of documentation, number of downloads, user ratings, and verification status. Provide thorough documentation and ensure your model performs well on standard benchmarks.
                   </div>
                 </li>
-                <li className="flex items-start">
-                  <span className="mr-2">✅</span>
+                <li className="border-l-4 border-blue-500 pl-4">
                   <div>
-                    <strong>TEE Verification:</strong> Verified models are prioritized and trusted more
+                    <strong>TEE Verification Benefits:</strong> Verified models through Trusted Execution Environment are given priority placement and carry trust badges that significantly increase buyer confidence. The verification process validates that your model performs as advertised and hasn't been tampered with, which is crucial for enterprise buyers and safety-critical applications.
                   </div>
                 </li>
-                <li className="flex items-start">
-                  <span className="mr-2">💰</span>
+                <li className="border-l-4 border-blue-500 pl-4">
                   <div>
-                    <strong>Competitive Pricing:</strong> Research similar models to price competitively
+                    <strong>Competitive Pricing Strategy:</strong> Research similar models in your category to understand market pricing. Consider factors like model complexity, uniqueness, performance metrics, and target audience. Price competitively while ensuring fair compensation for your work. You can adjust pricing based on demand and performance over time.
                   </div>
                 </li>
               </ul>
@@ -1042,22 +1037,18 @@ function ListingSetupContent() {
             <h4 className="font-semibold mb-3">After Listing</h4>
             <p className="text-gray-700 mb-3">Once your model is listed:</p>
             
-            <div className="space-y-2">
-              <div className="flex items-center p-2 bg-gray-50 rounded">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Monitor your model's performance in the Dashboard</span>
+            <div className="space-y-4">
+              <div className="border-l-4 border-blue-500 pl-4 py-2">
+                <span className="text-gray-700"><strong>Monitor Performance:</strong> Use the Dashboard to track your model's performance metrics including view counts, download rates, user ratings, and revenue generation. Regular monitoring helps you understand market demand and optimize your listings accordingly.</span>
               </div>
-              <div className="flex items-center p-2 bg-gray-50 rounded">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Track downloads and earnings</span>
+              <div className="border-l-4 border-blue-500 pl-4 py-2">
+                <span className="text-gray-700"><strong>Track Financial Metrics:</strong> Monitor downloads, earnings, and transaction history to understand your revenue streams. The platform provides detailed analytics on buyer demographics, peak usage times, and payment patterns to help you make informed business decisions.</span>
               </div>
-              <div className="flex items-center p-2 bg-gray-50 rounded">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Update pricing or description as needed</span>
+              <div className="border-l-4 border-blue-500 pl-4 py-2">
+                <span className="text-gray-700"><strong>Update and Maintain:</strong> Regularly review and update your model pricing, descriptions, and tags based on market feedback and performance data. Keep your model documentation current and respond to changing market conditions to maintain competitive positioning.</span>
               </div>
-              <div className="flex items-center p-2 bg-gray-50 rounded">
-                <span className="text-green-600 mr-2">✓</span>
-                <span className="text-gray-700">Respond to buyer inquiries through the platform</span>
+              <div className="border-l-4 border-blue-500 pl-4 py-2">
+                <span className="text-gray-700"><strong>Customer Communication:</strong> Engage with potential and existing buyers through the platform's messaging system. Respond promptly to inquiries, provide technical support, and gather feedback to improve your models and build a reputation as a reliable creator.</span>
               </div>
             </div>
           </div>
@@ -1115,44 +1106,52 @@ function PolicyTypesContent() {
         SEAL supports various access policies to control who can decrypt and use your encrypted models.
       </p>
       
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         <div className="border p-6 rounded-lg">
-          <h4 className="font-semibold mb-3 text-green-600">Time-Based Access</h4>
-          <p className="text-gray-600 mb-4">Control access duration for your models.</p>
-          <div className="bg-green-50 p-4 rounded text-sm">
-            <code className="text-green-800">
-              duration: 2592000000 // 30 days in ms
+          <h4 className="font-semibold mb-3 text-black">Time-Based Access Control</h4>
+          <p className="text-gray-600 mb-4">Configure how long users maintain access to your encrypted models after purchase. This policy type allows you to set specific durations ranging from hours to years, providing flexibility for different use cases such as temporary access for evaluation or long-term access for production deployment.</p>
+          <div className="bg-gray-50 p-4 rounded text-sm border-l-4 border-blue-500">
+            <strong className="text-black">Configuration Example:</strong>
+            <code className="block mt-2 text-gray-700">
+              duration: 2592000000 // 30 days in milliseconds
             </code>
+            <p className="mt-2 text-gray-600">Common durations: 24 hours (86400000ms), 7 days (604800000ms), 30 days (2592000000ms), 1 year (31536000000ms)</p>
           </div>
         </div>
         
         <div className="border p-6 rounded-lg">
-          <h4 className="font-semibold mb-3 text-blue-600">Address-Based Access</h4>
-          <p className="text-gray-600 mb-4">Restrict access to specific wallet addresses.</p>
-          <div className="bg-blue-50 p-4 rounded text-sm">
-            <code className="text-blue-800">
-              allowedUsers: ['0xabc...', '0xdef...']
+          <h4 className="font-semibold mb-3 text-black">Address-Based Access Control</h4>
+          <p className="text-gray-600 mb-4">Restrict model access to specific wallet addresses, enabling allowlist functionality for private distributions or enterprise deployments. This approach is useful for controlled releases, beta testing with selected users, or compliance requirements that mandate access restrictions.</p>
+          <div className="bg-gray-50 p-4 rounded text-sm border-l-4 border-blue-500">
+            <strong className="text-black">Configuration Example:</strong>
+            <code className="block mt-2 text-gray-700">
+              allowedUsers: ['0xabc123...', '0xdef456...', '0x789ghi...']
             </code>
+            <p className="mt-2 text-gray-600">Supports multiple addresses, wildcards for address patterns, and can be combined with other policy types</p>
           </div>
         </div>
         
         <div className="border p-6 rounded-lg">
-          <h4 className="font-semibold mb-3 text-purple-600">Payment-Based Access</h4>
-          <p className="text-gray-600 mb-4">Require payment for model access.</p>
-          <div className="bg-purple-50 p-4 rounded text-sm">
-            <code className="text-purple-800">
-              price: 1000000000, // 1 SUI in MIST
+          <h4 className="font-semibold mb-3 text-black">Payment-Based Access Control</h4>
+          <p className="text-gray-600 mb-4">Require specific payment amounts for model access, enabling monetization strategies beyond simple one-time purchases. This policy can implement tiered pricing, subscription models, or pay-per-use scenarios based on SUI token payments.</p>
+          <div className="bg-gray-50 p-4 rounded text-sm border-l-4 border-blue-500">
+            <strong className="text-black">Configuration Example:</strong>
+            <code className="block mt-2 text-gray-700">
+              price: 1000000000, // 1 SUI in MIST (smallest unit)
             </code>
+            <p className="mt-2 text-gray-600">MIST conversion: 1 SUI = 1,000,000,000 MIST. Supports dynamic pricing and recurring payments.</p>
           </div>
         </div>
         
         <div className="border p-6 rounded-lg">
-          <h4 className="font-semibold mb-3 text-orange-600">Usage-Based Access</h4>
-          <p className="text-gray-600 mb-4">Limit number of model interactions.</p>
-          <div className="bg-orange-50 p-4 rounded text-sm">
-            <code className="text-orange-800">
-              maxUsage: 100 // 100 inference calls
+          <h4 className="font-semibold mb-3 text-black">Usage-Based Access Control</h4>
+          <p className="text-gray-600 mb-4">Limit the number of model interactions or inference calls that users can perform, enabling fine-grained usage control and supporting pay-per-use business models. This policy tracks usage automatically and enforces limits transparently.</p>
+          <div className="bg-gray-50 p-4 rounded text-sm border-l-4 border-blue-500">
+            <strong className="text-black">Configuration Example:</strong>
+            <code className="block mt-2 text-gray-700">
+              maxUsage: 100 // 100 inference calls maximum
             </code>
+            <p className="mt-2 text-gray-600">Usage tracking includes API calls, model downloads, and compute operations. Can be reset or extended through additional payments.</p>
           </div>
         </div>
       </div>
@@ -1167,42 +1166,49 @@ function KeyManagementContent() {
         SEAL uses threshold cryptography with multiple key servers to ensure security and availability.
       </p>
       
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6">
-        <h4 className="font-semibold mb-3 text-yellow-800">Key Server Configuration</h4>
-        <div className="space-y-3 text-yellow-700">
-          <div><strong>Threshold:</strong> 2 out of 2 key servers required</div>
-          <div><strong>Primary Server:</strong> seal-key-server-testnet-1.mystenlabs.com</div>
-          <div><strong>Secondary Server:</strong> seal-key-server-testnet-2.mystenlabs.com</div>
-          <div><strong>Session TTL:</strong> 30 minutes</div>
+      <div className="bg-gray-50 border-l-4 border-blue-500 p-6">
+        <h4 className="font-semibold mb-3 text-black">Key Server Configuration Details</h4>
+        <div className="space-y-3 text-gray-700">
+          <div><strong>Threshold Requirement:</strong> 2 out of 2 key servers must participate in any decryption operation to ensure security through distribution</div>
+          <div><strong>Primary Server:</strong> seal-key-server-testnet-1.mystenlabs.com (handles primary key operations and coordination)</div>
+          <div><strong>Secondary Server:</strong> seal-key-server-testnet-2.mystenlabs.com (provides redundancy and threshold completion)</div>
+          <div><strong>Session Time-to-Live:</strong> 30 minutes maximum for any active decryption session to limit exposure window</div>
+          <div><strong>Health Check Interval:</strong> 5 minutes between server availability checks to ensure system reliability</div>
         </div>
       </div>
 
       <div className="space-y-4">
         <h4 className="font-semibold">Key Lifecycle Management</h4>
         
-        <div className="grid md:grid-cols-3 gap-4">
-          <div className="bg-white border p-4 rounded-lg">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-              <span className="text-blue-600 font-semibold">1</span>
+        <div className="space-y-6">
+          <div className="border p-6 rounded-lg">
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-4">
+                <span className="text-black font-semibold">1</span>
+              </div>
+              <h5 className="font-medium text-black">Distributed Key Generation</h5>
             </div>
-            <h5 className="font-medium mb-2">Key Generation</h5>
-            <p className="text-sm text-gray-600">Distributed key generation across threshold servers</p>
+            <p className="text-gray-600">The system generates cryptographic keys using a distributed protocol where no single server ever holds the complete key. This process involves mathematical operations that create key shares across multiple servers simultaneously, ensuring that the full key never exists in one location. The generation process uses proven cryptographic algorithms including Shamir's Secret Sharing and distributed key generation protocols.</p>
           </div>
           
-          <div className="bg-white border p-4 rounded-lg">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mb-3">
-              <span className="text-green-600 font-semibold">2</span>
+          <div className="border p-6 rounded-lg">
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-4">
+                <span className="text-black font-semibold">2</span>
+              </div>
+              <h5 className="font-medium text-black">Secure Key Share Distribution</h5>
             </div>
-            <h5 className="font-medium mb-2">Key Shares</h5>
-            <p className="text-sm text-gray-600">Each server holds partial key shares for security</p>
+            <p className="text-gray-600">Each key server maintains only partial key shares that are mathematically useless in isolation. These shares are generated so that any individual share reveals no information about the complete key or the encrypted data. The shares are stored in secure enclaves and protected by additional encryption layers. Regular key rotation ensures long-term security even if shares are compromised.</p>
           </div>
           
-          <div className="bg-white border p-4 rounded-lg">
-            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mb-3">
-              <span className="text-purple-600 font-semibold">3</span>
+          <div className="border p-6 rounded-lg">
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-4">
+                <span className="text-black font-semibold">3</span>
+              </div>
+              <h5 className="font-medium text-black">Threshold Decryption Operations</h5>
             </div>
-            <h5 className="font-medium mb-2">Threshold Decryption</h5>
-            <p className="text-sm text-gray-600">Requires multiple servers to decrypt data</p>
+            <p className="text-gray-600">Decryption requires coordinated participation from multiple key servers, implementing a threshold scheme where a minimum number of servers must cooperate to decrypt any data. This ensures that no single point of failure can compromise the system. The decryption process involves secure multi-party computation protocols that maintain privacy while enabling the necessary mathematical operations to recover the original data.</p>
           </div>
         </div>
       </div>
@@ -1256,58 +1262,68 @@ Content-Type: application/json`}
         <div>
           <h4 className="font-semibold mb-3">Marketplace Endpoints</h4>
           
-          <div className="space-y-4">
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded mr-3">GET</span>
-                <code className="text-sm">/models</code>
+          <div className="space-y-6">
+            <div className="border rounded-lg p-6">
+              <div className="flex items-center mb-4 border-b border-gray-200 pb-2">
+                <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded mr-3">GET</span>
+                <code className="text-lg font-mono">/models</code>
               </div>
-              <p className="text-gray-600 text-sm mb-3">Retrieve all available models in the marketplace</p>
-              <div className="bg-gray-50 p-3 rounded text-xs">
-                <strong>Query Parameters:</strong>
-                <ul className="mt-1 space-y-1 text-gray-600">
-                  <li>• <code>category</code> (optional) - Filter by model category</li>
-                  <li>• <code>limit</code> (optional) - Number of results (default: 20)</li>
-                  <li>• <code>offset</code> (optional) - Pagination offset</li>
+              <p className="text-gray-600 mb-4">Retrieve all available models in the marketplace with optional filtering and pagination. This endpoint supports comprehensive search functionality including category filtering, text search, price ranges, and sorting options. Results are returned in a standardized format with model metadata, pricing information, and availability status.</p>
+              <div className="bg-gray-50 p-4 rounded border-l-4 border-blue-500">
+                <strong className="text-black">Query Parameters:</strong>
+                <ul className="mt-2 space-y-2 text-gray-700">
+                  <li><strong>category</strong> (optional) - Filter by model category (computer-vision, nlp, audio, etc.)</li>
+                  <li><strong>limit</strong> (optional) - Maximum number of results to return (default: 20, max: 100)</li>
+                  <li><strong>offset</strong> (optional) - Pagination offset for retrieving additional results</li>
+                  <li><strong>search</strong> (optional) - Full-text search across model titles and descriptions</li>
+                  <li><strong>sort</strong> (optional) - Sort order: newest, oldest, price-low, price-high, popular</li>
+                  <li><strong>verified</strong> (optional) - Filter for TEE-verified models only (true/false)</li>
                 </ul>
               </div>
             </div>
 
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded mr-3">GET</span>
-                <code className="text-sm">/models/{id}</code>
+            <div className="border rounded-lg p-6">
+              <div className="flex items-center mb-4 border-b border-gray-200 pb-2">
+                <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded mr-3">GET</span>
+                <code className="text-lg font-mono">/models/{id}</code>
               </div>
-              <p className="text-gray-600 text-sm">Retrieve details for a specific model</p>
+              <p className="text-gray-600 mb-4">Retrieve comprehensive details for a specific model including metadata, performance metrics, creator information, pricing details, download statistics, user ratings, and verification status. This endpoint provides all information necessary for users to make informed purchase decisions.</p>
             </div>
 
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded mr-3">POST</span>
-                <code className="text-sm">/models</code>
+            <div className="border rounded-lg p-6">
+              <div className="flex items-center mb-4 border-b border-gray-200 pb-2">
+                <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded mr-3">POST</span>
+                <code className="text-lg font-mono">/models</code>
               </div>
-              <p className="text-gray-600 text-sm mb-3">Upload and list a new model</p>
-              <div className="bg-gray-50 p-3 rounded text-xs">
-                <strong>Request Body:</strong>
-                <pre className="mt-1 text-gray-700">
+              <p className="text-gray-600 mb-4">Upload and list a new AI model in the marketplace. This endpoint handles the complete model listing process including file upload to Walrus storage, SEAL encryption, metadata validation, and blockchain registration. The process is atomic and will rollback if any step fails.</p>
+              <div className="bg-gray-50 p-4 rounded border-l-4 border-blue-500">
+                <strong className="text-black">Request Body Schema:</strong>
+                <pre className="mt-2 text-gray-700 text-sm">
 {`{
   "title": "My AI Model",
-  "description": "Model description",
+  "description": "Detailed model description with use cases",
   "category": "computer-vision",
   "price": 1000000000,
   "accessDuration": 2592000000,
-  "tags": ["classification", "images"]
+  "tags": ["classification", "images", "pytorch"],
+  "modelFile": "base64_encoded_model_data",
+  "datasetFile": "base64_encoded_dataset_data", // optional
+  "sampleFiles": ["base64_encoded_sample_data"], // optional
+  "accessPolicy": {
+    "type": "payment-gated",
+    "restrictions": ["time-limited"]
+  }
 }`}
                 </pre>
               </div>
             </div>
 
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded mr-3">POST</span>
-                <code className="text-sm">/models/{id}/purchase</code>
+            <div className="border rounded-lg p-6">
+              <div className="flex items-center mb-4 border-b border-gray-200 pb-2">
+                <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded mr-3">POST</span>
+                <code className="text-lg font-mono">/models/{id}/purchase</code>
               </div>
-              <p className="text-gray-600 text-sm">Purchase access to a model</p>
+              <p className="text-gray-600 mb-4">Purchase access to a specific model by providing payment in SUI tokens. This endpoint validates payment amounts, processes the transaction on the SUI blockchain, distributes fees between the platform and creator, and issues an access ticket for model decryption. The transaction is atomic and reversible on failure.</p>
             </div>
           </div>
         </div>
@@ -1315,48 +1331,71 @@ Content-Type: application/json`}
         <div>
           <h4 className="font-semibold mb-3">TEE Verification Endpoints</h4>
           
-          <div className="space-y-4">
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded mr-3">POST</span>
-                <code className="text-sm">/tee/verify</code>
+          <div className="space-y-6">
+            <div className="border rounded-lg p-6">
+              <div className="flex items-center mb-4 border-b border-gray-200 pb-2">
+                <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded mr-3">POST</span>
+                <code className="text-lg font-mono">/tee/verify</code>
               </div>
-              <p className="text-gray-600 text-sm mb-3">Initiate TEE verification for a model</p>
-              <div className="bg-gray-50 p-3 rounded text-xs">
-                <strong>Request Body:</strong>
-                <pre className="mt-1 text-gray-700">
+              <p className="text-gray-600 mb-4">Initiate Trusted Execution Environment verification for an AI model to validate its integrity, authenticity, and performance claims. This process runs the model within a secure enclave to generate cryptographic proofs that can be verified by potential buyers. Verification typically takes 5-30 minutes depending on model complexity.</p>
+              <div className="bg-gray-50 p-4 rounded border-l-4 border-blue-500">
+                <strong className="text-black">Request Body Schema:</strong>
+                <pre className="mt-2 text-gray-700 text-sm">
 {`{
-  "modelId": "0x...",
-  "verificationLevel": "standard",
-  "expectedHash": "sha256_hash"
+  "modelId": "0xabc123...",
+  "verificationLevel": "standard", // standard, thorough, custom
+  "expectedHash": "sha256_hash_of_model",
+  "testDataset": "optional_test_data_blob_id",
+  "performanceThresholds": {
+    "accuracy": 0.95,
+    "latency": 100 // ms
+  }
 }`}
                 </pre>
+                <p className="mt-2 text-gray-600">Verification levels: standard (basic integrity), thorough (performance validation), custom (user-defined tests)</p>
               </div>
             </div>
 
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded mr-3">GET</span>
-                <code className="text-sm">/tee/verify/{id}</code>
+            <div className="border rounded-lg p-6">
+              <div className="flex items-center mb-4 border-b border-gray-200 pb-2">
+                <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded mr-3">GET</span>
+                <code className="text-lg font-mono">/tee/verify/{verification_id}</code>
               </div>
-              <p className="text-gray-600 text-sm">Check verification status</p>
+              <p className="text-gray-600 mb-4">Check the status and results of an ongoing or completed TEE verification process. Returns detailed information about verification progress, any errors encountered, and final results including performance metrics, integrity proofs, and verification certificates that can be used for marketplace trust indicators.</p>
             </div>
           </div>
         </div>
 
         <div>
-          <h4 className="font-semibold mb-3">Error Responses</h4>
-          <p className="text-gray-600 mb-4">All endpoints return standardized error responses:</p>
+          <h4 className="font-semibold mb-3">Error Handling and Response Codes</h4>
+          <p className="text-gray-600 mb-4">All API endpoints return standardized error responses with consistent formatting. Error codes follow HTTP conventions and include additional context for debugging and user feedback.</p>
           
-          <div className="bg-red-50 p-4 rounded-lg">
-            <pre className="text-sm text-red-700">
+          <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">
+            <strong className="text-black">Standard Error Response Format:</strong>
+            <pre className="mt-2 text-gray-700 text-sm">
 {`{
   "error": "INVALID_REQUEST",
-  "message": "Model not found",
+  "message": "Model not found or access denied",
   "code": 404,
-  "timestamp": "2024-11-22T10:30:00Z"
+  "timestamp": "2024-11-22T10:30:00Z",
+  "details": {
+    "field": "modelId",
+    "reason": "Invalid format or non-existent model"
+  }
 }`}
             </pre>
+            <div className="mt-4 space-y-2 text-gray-600">
+              <p><strong>Common Error Codes:</strong></p>
+              <ul className="space-y-1 ml-4">
+                <li>400 - Bad Request (invalid parameters or malformed data)</li>
+                <li>401 - Unauthorized (missing or invalid authentication)</li>
+                <li>403 - Forbidden (insufficient permissions for operation)</li>
+                <li>404 - Not Found (resource does not exist)</li>
+                <li>409 - Conflict (operation conflicts with current state)</li>
+                <li>429 - Too Many Requests (rate limiting active)</li>
+                <li>500 - Internal Server Error (unexpected server issue)</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -1371,12 +1410,13 @@ function SmartContractsContent() {
         Satya's smart contracts are deployed on the SUI blockchain and handle marketplace operations, payments, and access control.
       </p>
       
-      <div className="bg-green-50 border-l-4 border-green-400 p-6">
-        <h4 className="font-semibold mb-3 text-green-800">Contract Addresses (Testnet)</h4>
-        <div className="space-y-2 text-green-700 text-sm">
-          <div><strong>Marketplace Package:</strong> <code>0x2643c7f8f6ea672a2780c8259be490bfc57cfa2c3895cbfd6109bde5e65a0bc7</code></div>
-          <div><strong>Registry Object:</strong> <code>0xc6c008c9df4017f000a28b37c4949a931b566258d52eaa3ae4b5be17a6e1bf06</code></div>
-          <div><strong>SEAL Package:</strong> <code>0x98f8a6ce208764219b23dc51db45bf11516ec0998810e98f3a94548d788ff679</code></div>
+      <div className="bg-gray-50 border-l-4 border-blue-500 p-6">
+        <h4 className="font-semibold mb-3 text-black">Smart Contract Addresses (SUI Testnet)</h4>
+        <div className="space-y-3 text-gray-700">
+          <div><strong>Marketplace Package:</strong> <code className="bg-white px-2 py-1 rounded text-sm">0x2643c7f8f6ea672a2780c8259be490bfc57cfa2c3895cbfd6109bde5e65a0bc7</code></div>
+          <div><strong>Registry Object:</strong> <code className="bg-white px-2 py-1 rounded text-sm">0xc6c008c9df4017f000a28b37c4949a931b566258d52eaa3ae4b5be17a6e1bf06</code></div>
+          <div><strong>SEAL Package:</strong> <code className="bg-white px-2 py-1 rounded text-sm">0x98f8a6ce208764219b23dc51db45bf11516ec0998810e98f3a94548d788ff679</code></div>
+          <p className="mt-4 text-sm text-gray-600">These addresses are for the SUI testnet environment. Mainnet addresses will be different when the platform launches on the main network.</p>
         </div>
       </div>
 
@@ -1384,57 +1424,57 @@ function SmartContractsContent() {
         <div>
           <h4 className="font-semibold mb-3">Core Contract Functions</h4>
           
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="border rounded-lg p-4">
-              <h5 className="font-medium mb-2 text-blue-600">list_model</h5>
-              <p className="text-sm text-gray-600 mb-3">List a new AI model for sale</p>
-              <div className="bg-blue-50 p-3 rounded text-xs">
-                <strong>Parameters:</strong>
-                <ul className="mt-1 space-y-1 text-blue-700">
-                  <li>• registry: &mut Registry</li>
-                  <li>• title: String</li>
-                  <li>• description: String</li>
-                  <li>• price: u64</li>
-                  <li>• blob_id: String</li>
+          <div className="space-y-6">
+            <div className="border rounded-lg p-6">
+              <h5 className="font-medium mb-3 text-black">list_model Function</h5>
+              <p className="text-gray-600 mb-4">Creates a new marketplace listing for an AI model. This function registers the model in the global registry, sets pricing and access parameters, and makes it available for purchase by other users. The function validates all input parameters and ensures the model data is properly stored before creating the listing.</p>
+              <div className="bg-gray-50 p-4 rounded border-l-4 border-blue-500">
+                <strong className="text-black">Function Parameters:</strong>
+                <ul className="mt-2 space-y-2 text-gray-700">
+                  <li><strong>registry:</strong> &mut Registry - Mutable reference to the marketplace registry</li>
+                  <li><strong>title:</strong> String - Human-readable name for the model</li>
+                  <li><strong>description:</strong> String - Detailed description of model capabilities and use cases</li>
+                  <li><strong>price:</strong> u64 - Price in MIST (1 SUI = 1,000,000,000 MIST)</li>
+                  <li><strong>blob_id:</strong> String - Walrus storage identifier for the encrypted model data</li>
                 </ul>
               </div>
             </div>
 
-            <div className="border rounded-lg p-4">
-              <h5 className="font-medium mb-2 text-purple-600">purchase_model</h5>
-              <p className="text-sm text-gray-600 mb-3">Purchase access to a model</p>
-              <div className="bg-purple-50 p-3 rounded text-xs">
-                <strong>Parameters:</strong>
-                <ul className="mt-1 space-y-1 text-purple-700">
-                  <li>• registry: &mut Registry</li>
-                  <li>• model_id: ID</li>
-                  <li>• payment: Coin&lt;SUI&gt;</li>
-                  <li>• ctx: &mut TxContext</li>
+            <div className="border rounded-lg p-6">
+              <h5 className="font-medium mb-3 text-black">purchase_model Function</h5>
+              <p className="text-gray-600 mb-4">Enables users to purchase access to a listed AI model by providing payment in SUI tokens. The function validates the payment amount, transfers fees to the platform treasury and creator, and issues an access ticket that can be used to decrypt the model. All transactions are atomic and reversible if any step fails.</p>
+              <div className="bg-gray-50 p-4 rounded border-l-4 border-blue-500">
+                <strong className="text-black">Function Parameters:</strong>
+                <ul className="mt-2 space-y-2 text-gray-700">
+                  <li><strong>registry:</strong> &mut Registry - Mutable reference to the marketplace registry</li>
+                  <li><strong>model_id:</strong> ID - Unique identifier of the model to purchase</li>
+                  <li><strong>payment:</strong> Coin&lt;SUI&gt; - SUI coin object containing the payment amount</li>
+                  <li><strong>ctx:</strong> &mut TxContext - Transaction context for the current operation</li>
                 </ul>
               </div>
             </div>
 
-            <div className="border rounded-lg p-4">
-              <h5 className="font-medium mb-2 text-green-600">verify_model</h5>
-              <p className="text-sm text-gray-600 mb-3">Verify model integrity</p>
-              <div className="bg-green-50 p-3 rounded text-xs">
-                <strong>Parameters:</strong>
-                <ul className="mt-1 space-y-1 text-green-700">
-                  <li>• registry: &mut Registry</li>
-                  <li>• model_id: ID</li>
-                  <li>• attestation: vector&lt;u8&gt;</li>
+            <div className="border rounded-lg p-6">
+              <h5 className="font-medium mb-3 text-black">verify_model Function</h5>
+              <p className="text-gray-600 mb-4">Validates model integrity and authenticity through TEE (Trusted Execution Environment) attestation. This function processes cryptographic proofs that demonstrate the model has not been tampered with and performs as advertised. Verified models receive trust badges and improved marketplace positioning.</p>
+              <div className="bg-gray-50 p-4 rounded border-l-4 border-blue-500">
+                <strong className="text-black">Function Parameters:</strong>
+                <ul className="mt-2 space-y-2 text-gray-700">
+                  <li><strong>registry:</strong> &mut Registry - Mutable reference to the marketplace registry</li>
+                  <li><strong>model_id:</strong> ID - Unique identifier of the model to verify</li>
+                  <li><strong>attestation:</strong> vector&lt;u8&gt; - Cryptographic attestation data from TEE verification</li>
                 </ul>
               </div>
             </div>
 
-            <div className="border rounded-lg p-4">
-              <h5 className="font-medium mb-2 text-orange-600">get_access_key</h5>
-              <p className="text-sm text-gray-600 mb-3">Retrieve decryption key</p>
-              <div className="bg-orange-50 p-3 rounded text-xs">
-                <strong>Parameters:</strong>
-                <ul className="mt-1 space-y-1 text-orange-700">
-                  <li>• access: &AccessTicket</li>
-                  <li>• seal_key: vector&lt;u8&gt;</li>
+            <div className="border rounded-lg p-6">
+              <h5 className="font-medium mb-3 text-black">get_access_key Function</h5>
+              <p className="text-gray-600 mb-4">Retrieves the decryption key for a purchased model using the access ticket and SEAL key coordination. This function coordinates with multiple key servers to reconstruct the decryption key through threshold cryptography, ensuring secure access while maintaining the integrity of the encryption system.</p>
+              <div className="bg-gray-50 p-4 rounded border-l-4 border-blue-500">
+                <strong className="text-black">Function Parameters:</strong>
+                <ul className="mt-2 space-y-2 text-gray-700">
+                  <li><strong>access:</strong> &AccessTicket - Reference to the access ticket obtained from purchase</li>
+                  <li><strong>seal_key:</strong> vector&lt;u8&gt; - SEAL key shares for threshold decryption process</li>
                 </ul>
               </div>
             </div>
