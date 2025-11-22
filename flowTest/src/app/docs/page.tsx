@@ -83,18 +83,18 @@ function IntroductionContent() {
           <div className="border border-gray-200 rounded-lg p-4">
             <h3 className="text-base font-medium text-black mb-2">Decentralized Model Trading</h3>
             <p className="text-gray-700">
-              Trade AI models on a peer-to-peer marketplace without intermediaries. 
-              All transactions are recorded on the SUI blockchain for transparency and immutability.
-              Creators maintain ownership while enabling controlled access to their models.
+              Trade AI models through a structured pipeline: Upload → Pending → TEE Verification → Marketplace Listing. 
+              All transactions are recorded on the SUI blockchain using smart contracts for transparency and immutability.
+              Creators maintain ownership while enabling controlled access through encrypted storage.
             </p>
           </div>
           
           <div className="border border-gray-200 rounded-lg p-4">
             <h3 className="text-base font-medium text-black mb-2">SEAL Homomorphic Encryption</h3>
             <p className="text-gray-700">
-              Models are protected using Microsoft SEAL homomorphic encryption technology. 
-              This allows computation on encrypted data without revealing the underlying model structure,
-              ensuring intellectual property protection while enabling model usage.
+              Models are protected using SEAL encryption with threshold cryptography (2 out of 2 key servers). 
+              Encrypted models are stored on Walrus with access policies enforced through smart contracts.
+              Session-based access keys are provided to buyers after successful purchase verification.
             </p>
           </div>
           
@@ -110,9 +110,9 @@ function IntroductionContent() {
           <div className="border border-gray-200 rounded-lg p-4">
             <h3 className="text-base font-medium text-black mb-2">Walrus Decentralized Storage</h3>
             <p className="text-gray-700">
-              All model data is stored on the Walrus decentralized storage network.
-              This ensures data availability, redundancy, and censorship resistance while
-              maintaining cost-effectiveness for large model files.
+              Encrypted model data is stored on Walrus testnet with blob IDs tracked in smart contracts.
+              Maximum file size is 1GB with 10MB chunk sizes for efficient uploads.
+              Storage includes 5-epoch default retention with aggregator and publisher endpoints.
             </p>
           </div>
         </div>
@@ -130,36 +130,36 @@ function IntroductionContent() {
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
               <div>
-                <span className="font-medium text-black">Frontend Application:</span>
-                <span className="text-gray-700"> Next.js web application for marketplace interaction</span>
+                <span className="font-medium text-black">Next.js Frontend:</span>
+                <span className="text-gray-700"> React application with SUI wallet integration and responsive design</span>
               </div>
             </div>
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
               <div>
-                <span className="font-medium text-black">SUI Blockchain:</span>
-                <span className="text-gray-700"> Smart contracts for marketplace operations and payments</span>
+                <span className="font-medium text-black">SUI Smart Contracts:</span>
+                <span className="text-gray-700"> Marketplace contract managing upload, verification, listing, and purchase flows</span>
               </div>
             </div>
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
               <div>
-                <span className="font-medium text-black">SEAL Encryption:</span>
-                <span className="text-gray-700"> Homomorphic encryption for model protection</span>
+                <span className="font-medium text-black">SEAL Key Servers:</span>
+                <span className="text-gray-700"> Two testnet servers with threshold cryptography for secure key management</span>
               </div>
             </div>
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
               <div>
-                <span className="font-medium text-black">TEE Services:</span>
-                <span className="text-gray-700"> Model verification and attestation generation</span>
+                <span className="font-medium text-black">Nautilus TEE:</span>
+                <span className="text-gray-700"> Local enclave verification service for model integrity and quality assessment</span>
               </div>
             </div>
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
               <div>
-                <span className="font-medium text-black">Walrus Storage:</span>
-                <span className="text-gray-700"> Decentralized storage for encrypted model data</span>
+                <span className="font-medium text-black">Walrus Testnet:</span>
+                <span className="text-gray-700"> Decentralized storage with aggregator and publisher endpoints for blob management</span>
               </div>
             </div>
           </div>
@@ -181,23 +181,23 @@ function GettingStartedContent() {
             <div className="border border-gray-200 rounded-lg p-4">
               <h3 className="text-base font-medium text-black mb-2">SUI Wallet</h3>
               <p className="text-gray-700 mb-3">
-                You need a SUI wallet to interact with the marketplace. We recommend using the official SUI Wallet extension.
+                Connect a SUI wallet to interact with the testnet marketplace. The platform connects to SUI testnet at fullnode.testnet.sui.io:443.
               </p>
               <div className="bg-gray-50 p-3 rounded">
                 <p className="text-sm text-gray-600">
-                  Download from: https://chrome.google.com/webstore/detail/sui-wallet
+                  <strong>Testnet RPC:</strong> https://fullnode.testnet.sui.io:443
                 </p>
               </div>
             </div>
             
             <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="text-base font-medium text-black mb-2">SUI Tokens</h3>
+              <h3 className="text-base font-medium text-black mb-2">SUI Testnet Tokens</h3>
               <p className="text-gray-700 mb-3">
-                You need SUI tokens to purchase models and pay transaction fees. For testnet, you can get free tokens from the faucet.
+                SUI tokens are required for transactions with gas budgets of 100-1000 million MIST. Platform fee is 2.5% of model prices.
               </p>
               <div className="bg-gray-50 p-3 rounded">
                 <p className="text-sm text-gray-600">
-                  Testnet faucet: https://discord.gg/sui (use #testnet-faucet channel)
+                  <strong>Default gas budget:</strong> 200 million MIST
                 </p>
               </div>
             </div>
@@ -213,8 +213,8 @@ function GettingStartedContent() {
                 <h3 className="text-base font-medium text-black">Install and Setup Wallet</h3>
               </div>
               <p className="text-gray-700 ml-12">
-                Install the SUI Wallet browser extension, create a new wallet or import an existing one.
-                Make sure to securely store your seed phrase and set up a strong password for your wallet.
+                Install and configure a SUI wallet for testnet. The application will request wallet connection
+                and permission to interact with marketplace smart contracts.
               </p>
             </div>
 
@@ -224,8 +224,8 @@ function GettingStartedContent() {
                 <h3 className="text-base font-medium text-black">Get SUI Tokens</h3>
               </div>
               <p className="text-gray-700 ml-12">
-                For testnet usage, request SUI tokens from the Discord faucet. For mainnet, 
-                purchase SUI tokens from a cryptocurrency exchange and transfer them to your wallet.
+                Obtain testnet SUI tokens. Platform requires sufficient balance for gas fees 
+                and model purchase prices set by creators.
               </p>
             </div>
 
@@ -235,8 +235,8 @@ function GettingStartedContent() {
                 <h3 className="text-base font-medium text-black">Connect to Satya</h3>
               </div>
               <p className="text-gray-700 ml-12">
-                Visit the Satya marketplace and click the "Connect Wallet" button. 
-                Approve the connection request in your wallet to link your account to the platform.
+                Connect your wallet through the header interface. The application establishes
+                connection to testnet contracts and displays your wallet address.
               </p>
             </div>
 
@@ -246,8 +246,8 @@ function GettingStartedContent() {
                 <h3 className="text-base font-medium text-black">Browse and Purchase</h3>
               </div>
               <p className="text-gray-700 ml-12">
-                Explore available models, review their specifications and pricing, 
-                then purchase access using your SUI tokens. Downloaded models can be used according to their licensing terms.
+                Browse marketplace models with TEE verification status, quality scores, and pricing.
+                Purchase creates on-chain records and provides SEAL decryption access.
               </p>
             </div>
           </div>
@@ -349,8 +349,8 @@ function MarketplaceContent() {
             </p>
             <div className="bg-gray-50 p-3 rounded">
               <p className="text-sm text-gray-600">
-                <strong>Verification process:</strong> Models are executed in secure enclaves, 
-                performance metrics are measured, and cryptographic attestations are generated for public verification.
+                <strong>Verification process:</strong> Nautilus TEE service executes models in local enclaves, 
+                generates quality scores and security assessments, then calls complete_verification on-chain.
               </p>
             </div>
           </div>
@@ -376,12 +376,12 @@ function UploadContent() {
             <div className="border border-gray-200 rounded-lg p-4">
               <h3 className="text-base font-medium text-black mb-2">Supported Formats</h3>
               <p className="text-gray-700 mb-3">
-                The platform supports standard AI model formats including PyTorch (.pt, .pth), TensorFlow (.pb, .h5), 
-                ONNX (.onnx), and scikit-learn (.pkl). Ensure your model is saved in a compatible format.
+                Platform accepts JSON, CSV, ZIP, TAR, GZIP, ONNX, and pickle files. 
+                Files are uploaded to Walrus storage with blob ID tracking in smart contracts.
               </p>
               <div className="bg-gray-50 p-3 rounded">
                 <p className="text-sm text-gray-600">
-                  <strong>File size limits:</strong> Maximum 10GB per model file. Larger models should be split or compressed.
+                  <strong>File limits:</strong> Maximum 1GB file size, 10MB chunks for parallel uploads
                 </p>
               </div>
             </div>
@@ -412,44 +412,44 @@ function UploadContent() {
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center mb-3">
                 <span className="w-8 h-8 bg-gray-200 text-black rounded-full flex items-center justify-center font-semibold mr-4">1</span>
-                <h3 className="text-base font-medium text-black">Basic Information</h3>
+                <h3 className="text-base font-medium text-black">Create Pending Model</h3>
               </div>
               <p className="text-gray-700 ml-12">
-                Enter model title, description, category, tags, and creator information. 
-                Choose appropriate tags to improve discoverability in marketplace search results.
+                Submit model metadata (title, description, category, tags) and pricing to create a PendingModel object.
+                Status starts as PENDING (0) and advances through verification stages.
               </p>
             </div>
 
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center mb-3">
                 <span className="w-8 h-8 bg-gray-200 text-black rounded-full flex items-center justify-center font-semibold mr-4">2</span>
-                <h3 className="text-base font-medium text-black">File Upload</h3>
+                <h3 className="text-base font-medium text-black">SEAL Encryption & Walrus Storage</h3>
               </div>
               <p className="text-gray-700 ml-12">
-                Upload your model file, optional dataset, and sample files. 
-                The system validates file formats and sizes before proceeding to encryption.
+                Files are SEAL-encrypted with policy metadata and uploaded to Walrus storage.
+                Blob IDs and encryption policies are recorded in the smart contract.
               </p>
             </div>
 
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center mb-3">
                 <span className="w-8 h-8 bg-gray-200 text-black rounded-full flex items-center justify-center font-semibold mr-4">3</span>
-                <h3 className="text-base font-medium text-black">Pricing and Access</h3>
+                <h3 className="text-base font-medium text-black">TEE Verification Request</h3>
               </div>
               <p className="text-gray-700 ml-12">
-                Set your model price in SUI tokens, configure access duration, and select encryption policies. 
-                Consider market pricing for similar models when setting your price.
+                Submit model for Nautilus TEE verification. Status changes to VERIFYING (1) while
+                enclave performs quality assessment and generates attestation.
               </p>
             </div>
 
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center mb-3">
                 <span className="w-8 h-8 bg-gray-200 text-black rounded-full flex items-center justify-center font-semibold mr-4">4</span>
-                <h3 className="text-base font-medium text-black">Encryption and Storage</h3>
+                <h3 className="text-base font-medium text-black">Marketplace Listing</h3>
               </div>
               <p className="text-gray-700 ml-12">
-                Files are encrypted using SEAL homomorphic encryption and stored on Walrus decentralized storage. 
-                The system generates access policies and stores metadata on the SUI blockchain.
+                After verification completion, create MarketplaceModel from verified PendingModel.
+                Model becomes available for purchase with TEE verification badge and quality score.
               </p>
             </div>
           </div>
@@ -514,7 +514,7 @@ function SealContent() {
                 Configure durations from hours to years based on your business model and user needs.
               </p>
               <div className="bg-gray-50 p-3 rounded">
-                <code className="text-sm text-gray-700">duration: 2592000000 // 30 days in milliseconds</code>
+                <code className="text-sm text-gray-700">DEFAULT_ACCESS_DURATION_MS: 2592000000 // 30 days</code>
               </div>
             </div>
             
@@ -552,11 +552,11 @@ function SealContent() {
           <div className="border border-gray-200 rounded-lg p-4">
             <h3 className="text-base font-medium text-black mb-2">Server Configuration</h3>
             <div className="space-y-2 text-gray-700">
-              <p><strong>Threshold Requirement:</strong> 2 out of 2 key servers must participate in decryption</p>
-              <p><strong>Primary Server:</strong> seal-key-server-testnet-1.mystenlabs.com</p>
-              <p><strong>Secondary Server:</strong> seal-key-server-testnet-2.mystenlabs.com</p>
-              <p><strong>Session Duration:</strong> 30 minutes maximum for active decryption sessions</p>
-              <p><strong>Health Monitoring:</strong> 5-minute intervals for server availability checks</p>
+              <p><strong>Threshold Requirement:</strong> 2 out of 2 key servers for decryption</p>
+              <p><strong>Server 1 Object ID:</strong> 0x2304dd255b13eaf5cb471bd5188df946a64f1715ee2b7b02fecf306bd12ceebc</p>
+              <p><strong>Server 2 Object ID:</strong> 0x81aeaa8c25d2c912e1dc23b4372305b7a602c4ec4cc3e510963bc635e500aa37</p>
+              <p><strong>Session TTL:</strong> 30 minutes for active sessions</p>
+              <p><strong>Health Check:</strong> 5-minute intervals (reduced from 30 seconds)</p>
             </div>
           </div>
         </div>
@@ -572,97 +572,97 @@ function ApiContent() {
       
       <div className="space-y-6">
         <div>
-          <h2 className="text-base font-semibold text-black mb-4">REST API</h2>
+          <h2 className="text-base font-semibold text-black mb-4">Local Development APIs</h2>
           <p className="text-gray-700 mb-4">
-            Satya provides RESTful APIs for integrating marketplace functionality into external applications.
-            All endpoints require authentication using SUI wallet signatures.
+            Satya provides local API routes for development and testing. These endpoints are available 
+            when running the Next.js development server.
           </p>
           
           <div className="border border-gray-200 rounded-lg p-4 mb-4">
             <h3 className="text-base font-medium text-black mb-2">Base URL</h3>
             <div className="bg-gray-50 p-3 rounded">
-              <code className="text-gray-700">https://api.satya.ai/v1</code>
+              <code className="text-gray-700">http://localhost:3000/api</code>
             </div>
           </div>
           
           <div className="space-y-4">
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center space-x-3 mb-3">
-                <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded">GET</span>
-                <code className="text-gray-700">/models</code>
+                <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded">POST</span>
+                <code className="text-gray-700">/marketplace/create-listing</code>
               </div>
               <p className="text-gray-700 mb-3">
-                Retrieve all available models with filtering and pagination support. 
-                Supports category filtering, text search, price ranges, and sorting options.
+                Create a new marketplace listing by calling the smart contract's upload_model_entry function.
+                Handles file encryption, Walrus storage, and blockchain registration.
               </p>
               <div className="bg-gray-50 p-3 rounded">
-                <p className="text-sm text-gray-600 mb-2"><strong>Query Parameters:</strong></p>
+                <p className="text-sm text-gray-600 mb-2"><strong>Request Body:</strong></p>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p><code>category</code> - Filter by model category</p>
-                  <p><code>limit</code> - Maximum results (default: 20, max: 100)</p>
-                  <p><code>offset</code> - Pagination offset</p>
-                  <p><code>search</code> - Full-text search</p>
-                  <p><code>verified</code> - Filter TEE-verified models only</p>
+                  <p><code>title</code> - Model name and description</p>
+                  <p><code>price</code> - Price in SUI MIST units</p>
+                  <p><code>category</code> - Model category classification</p>
+                  <p><code>file</code> - Model file for SEAL encryption and Walrus upload</p>
                 </div>
               </div>
             </div>
             
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center space-x-3 mb-3">
-                <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded">GET</span>
-                <code className="text-gray-700">/models/&#123;id&#125;</code>
+                <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded">POST</span>
+                <code className="text-gray-700">/decrypt-blobs</code>
               </div>
               <p className="text-gray-700">
-                Retrieve comprehensive details for a specific model including metadata, 
-                performance metrics, pricing, and verification status.
+                Decrypt purchased model blobs using SEAL session keys. Coordinates with 
+                key servers to provide decrypted model access to verified buyers.
               </p>
             </div>
             
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center space-x-3 mb-3">
                 <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded">POST</span>
-                <code className="text-gray-700">/models</code>
+                <code className="text-gray-700">/debug/test-marketplace-service</code>
               </div>
               <p className="text-gray-700 mb-3">
-                Upload and list a new AI model. Handles file upload, encryption, storage, and blockchain registration.
+                Development endpoint for testing marketplace service integration.
+                Tests smart contract interactions and service coordination.
               </p>
               <div className="bg-gray-50 p-3 rounded">
-                <p className="text-sm text-gray-600 mb-2"><strong>Request Body Example:</strong></p>
-                <pre className="text-sm text-gray-700 overflow-x-auto">{`{
-  "title": "Computer Vision Model",
-  "description": "Image classification model",
-  "category": "computer-vision",
-  "price": 1000000000,
-  "accessDuration": 2592000000,
-  "tags": ["classification", "images"],
-  "modelFile": "base64_encoded_data"
-}`}</pre>
+                <p className="text-sm text-gray-600 mb-2"><strong>Debug Endpoints Available:</strong></p>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <p><code>/debug/test-full-upload</code> - Test complete upload flow</p>
+                  <p><code>/debug/test-smart-contract</code> - Test contract calls</p>
+                  <p><code>/debug/test-marketplace-service</code> - Test service integration</p>
+                </div>
               </div>
             </div>
             
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center space-x-3 mb-3">
-                <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded">POST</span>
-                <code className="text-gray-700">/models/&#123;id&#125;/purchase</code>
+                <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded">Frontend</span>
+                <code className="text-gray-700">Direct Blockchain Integration</code>
               </div>
               <p className="text-gray-700">
-                Purchase access to a model with SUI token payment. Processes blockchain transaction 
-                and issues access ticket for model decryption.
+                Model purchases are handled directly through wallet interactions with smart contracts.
+                No separate API endpoint - uses browser SUI wallet integration for transactions.
               </p>
             </div>
           </div>
         </div>
 
         <div>
-          <h2 className="text-base font-semibold text-black mb-4">Authentication</h2>
+          <h2 className="text-base font-semibold text-black mb-4">Wallet Integration</h2>
           <p className="text-gray-700 mb-4">
-            All API requests require authentication using SUI wallet signatures for security and access control.
+            The application uses browser-based SUI wallet integration for transaction signing.
+            No separate authentication API - wallet connection handled by frontend hooks.
           </p>
           
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <p className="text-sm text-gray-600 mb-2"><strong>Header Format:</strong></p>
-            <pre className="text-sm text-gray-700">{`Authorization: Bearer <wallet_signature>
-Content-Type: application/json`}</pre>
+            <p className="text-sm text-gray-600 mb-2"><strong>Integration Method:</strong></p>
+            <div className="space-y-1 text-sm text-gray-600">
+              <p><code>useAuth</code> - Wallet connection management</p>
+              <p><code>useMarketplace</code> - Smart contract interactions</p>
+              <p><code>useSeal</code> - SEAL encryption operations</p>
+            </div>
           </div>
         </div>
 
@@ -700,24 +700,30 @@ function ContractsContent() {
           </p>
           
           <div className="border border-gray-200 rounded-lg p-4">
-            <h3 className="text-base font-medium text-black mb-3">Testnet Deployment</h3>
+            <h3 className="text-base font-medium text-black mb-3">Active Testnet Deployment</h3>
             <div className="space-y-3">
               <div>
                 <span className="text-sm font-medium text-black">Marketplace Package:</span>
                 <div className="bg-gray-50 p-2 rounded mt-1">
-                  <code className="text-sm text-gray-700">0x2643c7f8f6ea672a2780c8259be490bfc57cfa2c3895cbfd6109bde5e65a0bc7</code>
+                  <code className="text-sm text-gray-700">0xc29f2a2de17085ce6b7e8c490a2d80eba3e7bdda5c2a8e1d1840af88ef604678</code>
                 </div>
               </div>
               <div>
                 <span className="text-sm font-medium text-black">Registry Object:</span>
                 <div className="bg-gray-50 p-2 rounded mt-1">
-                  <code className="text-sm text-gray-700">0xc6c008c9df4017f000a28b37c4949a931b566258d52eaa3ae4b5be17a6e1bf06</code>
+                  <code className="text-sm text-gray-700">0xa3a0814822a4126846b0dbc5ffef91f1ee5bf078ca129eef16c8bdf5b6481c9b</code>
                 </div>
               </div>
               <div>
                 <span className="text-sm font-medium text-black">SEAL Package:</span>
                 <div className="bg-gray-50 p-2 rounded mt-1">
-                  <code className="text-sm text-gray-700">0x98f8a6ce208764219b23dc51db45bf11516ec0998810e98f3a94548d788ff679</code>
+                  <code className="text-sm text-gray-700">0x8afa5d31dbaa0a8fb07082692940ca3d56b5e856c5126cb5a3693f0a4de63b82</code>
+                </div>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-black">Platform Fee:</span>
+                <div className="bg-gray-50 p-2 rounded mt-1">
+                  <code className="text-sm text-gray-700">250 basis points (2.5%)</code>
                 </div>
               </div>
             </div>
@@ -732,19 +738,19 @@ function ContractsContent() {
           
           <div className="space-y-4">
             <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="text-base font-medium text-black mb-2">list_model</h3>
+              <h3 className="text-base font-medium text-black mb-2">upload_model_entry</h3>
               <p className="text-gray-700 mb-3">
-                Creates a new marketplace listing for an AI model with pricing and access parameters.
-                Validates input data and registers the model in the global marketplace registry.
+                Creates a PendingModel object with status PENDING (0). Initial step in the 
+                Upload → Verification → Marketplace pipeline.
               </p>
               <div className="bg-gray-50 p-3 rounded">
                 <p className="text-sm text-gray-600 mb-2"><strong>Parameters:</strong></p>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p><code>registry: &mut Registry</code> - Marketplace registry reference</p>
                   <p><code>title: String</code> - Model display name</p>
-                  <p><code>description: String</code> - Detailed model description</p>
+                  <p><code>model_blob_id: String</code> - Walrus encrypted blob ID</p>
+                  <p><code>encryption_policy_id: String</code> - SEAL policy reference</p>
                   <p><code>price: u64</code> - Price in MIST (1 SUI = 1,000,000,000 MIST)</p>
-                  <p><code>blob_id: String</code> - Walrus storage identifier</p>
+                  <p><code>clock: &Clock</code> - SUI clock for timestamps</p>
                 </div>
               </div>
             </div>
@@ -752,32 +758,33 @@ function ContractsContent() {
             <div className="border border-gray-200 rounded-lg p-4">
               <h3 className="text-base font-medium text-black mb-2">purchase_model</h3>
               <p className="text-gray-700 mb-3">
-                Processes model purchase with SUI token payment, fee distribution, 
-                and access ticket generation for buyer model access.
+                Processes MarketplaceModel purchase with 2.5% platform fee distribution.
+                Creates PurchaseRecord with access_key field for SEAL decryption.
               </p>
               <div className="bg-gray-50 p-3 rounded">
                 <p className="text-sm text-gray-600 mb-2"><strong>Parameters:</strong></p>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p><code>registry: &mut Registry</code> - Marketplace registry reference</p>
-                  <p><code>model_id: ID</code> - Unique model identifier</p>
+                  <p><code>marketplace_model: &mut MarketplaceModel</code> - Target model</p>
                   <p><code>payment: Coin&lt;SUI&gt;</code> - SUI payment coin</p>
+                  <p><code>clock: &Clock</code> - SUI clock for timestamps</p>
                   <p><code>ctx: &mut TxContext</code> - Transaction context</p>
                 </div>
               </div>
             </div>
             
             <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="text-base font-medium text-black mb-2">verify_model</h3>
+              <h3 className="text-base font-medium text-black mb-2">complete_verification</h3>
               <p className="text-gray-700 mb-3">
-                Processes TEE verification attestations to validate model integrity 
-                and performance claims, updating verification status on-chain.
+                Called by TEE service to complete verification process. Changes model status 
+                to VERIFIED (2) and creates VerificationResult with quality score.
               </p>
               <div className="bg-gray-50 p-3 rounded">
                 <p className="text-sm text-gray-600 mb-2"><strong>Parameters:</strong></p>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p><code>registry: &mut Registry</code> - Marketplace registry reference</p>
-                  <p><code>model_id: ID</code> - Model to verify</p>
-                  <p><code>attestation: vector&lt;u8&gt;</code> - TEE attestation data</p>
+                  <p><code>model: &mut PendingModel</code> - Model being verified</p>
+                  <p><code>enclave_id: String</code> - TEE enclave identifier</p>
+                  <p><code>quality_score: u64</code> - Verification quality rating</p>
+                  <p><code>verifier_signature: vector&lt;u8&gt;</code> - TEE signature</p>
                 </div>
               </div>
             </div>
