@@ -14,15 +14,21 @@ export default function AgentPage() {
  const [query, setQuery] = useState('')
  const [isLoading, setIsLoading] = useState(false)
  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
+ const [showUploadMenu, setShowUploadMenu] = useState(false)
 
  const suggestedQueries = [
-  "Show me models with the highest quality scores",
-  "Find cheap AI models under $5", 
-  "What computer vision models are available?",
-  "Browse machine learning models for classification",
-  "How do I purchase a model from the marketplace?",
-  "Check the status of my uploaded models"
+  "Show me computer vision models with 90%+ quality scores",
+  "Find cheap AI models under $10", 
+  "Help me upload and verify my neural network model"
  ]
+
+ const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0]
+  if (file) {
+   setQuery(`I want to upload my AI model file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`)
+   setShowUploadMenu(false)
+  }
+ }
 
  const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
@@ -46,49 +52,33 @@ export default function AgentPage() {
    }
 
    // Create Satya-specific context for the AI
-   const satyaContext = `You are Satya AI Assistant, a specialized AI helper for the Satya marketplace - a decentralized platform for AI models with TEE verification and blockchain security.
+   const satyaContext = `You are Satya AI Assistant, a specialized AI that can both answer questions AND perform tasks on the Satya marketplace platform.
 
-   SATYA MARKETPLACE FUNCTIONALITY:
-   
-   🏪 BROWSING & DISCOVERY:
-   - Browse models by category: Computer Vision, Machine Learning, NLP, etc.
-   - Filter by quality score (0-100% verified by TEE)
-   - Sort by price (find cheap models or premium ones)
-   - Search by model type: classification, detection, prediction, etc.
-   - View model details: file size, upload date, verification status
+   RESPONSE GUIDELINES:
+   - Give SHORT answers for simple questions (1-2 sentences)
+   - Give DETAILED answers for complex topics (multiple paragraphs)
+   - Be contextual - match response length to question complexity
+   - Focus on actionable guidance over generic information
 
-   💰 PRICING & PURCHASING:
-   - Models have different price ranges (from free to premium)
-   - Quality scores affect pricing (higher scores = more expensive typically)
-   - Purchase process: wallet connection → buy → encrypted download
-   - Support for SUI blockchain payments
-   
-   📊 QUALITY METRICS:
-   - TEE verification provides quality scores (accuracy, performance, bias metrics)
-   - Blockchain attestation ensures score authenticity  
-   - Models with 90%+ scores are considered premium
-   - Quality assessment includes: accuracy, performance, bias detection
+   SITE TASK CAPABILITIES:
+   🔧 I can help you:
+   - Navigate to specific marketplace sections (Computer Vision, ML, NLP models)
+   - Guide through model upload process step-by-step
+   - Explain purchasing workflow with wallet integration
+   - Check model verification status and quality scores
+   - Browse and filter models by price/quality/category
+   - Troubleshoot TEE verification issues
+   - Direct you to your dashboard for pending models
 
-   🔐 SECURITY FEATURES:
-   - All models undergo TEE (Trusted Execution Environment) verification
-   - Blockchain attestation on SUI network
-   - Encrypted storage and secure downloads
-   - Verification prevents tampered or malicious models
+   QUICK MARKETPLACE FACTS:
+   - Quality scores: 90%+ = premium, 70-89% = good, <70% = basic
+   - Price ranges: Free to $50+ (quality affects pricing)
+   - Supported formats: .pkl, .pt, .h5, .onnx, .pb, .tflite
+   - Categories: Computer Vision, ML, NLP, Audio, Time Series
+   - Payment: SUI blockchain integration
+   - Security: TEE verification + blockchain attestation
 
-   📤 UPLOAD & SELLING:
-   - Users can upload their own AI models
-   - TEE verification process for quality assessment
-   - Dashboard tracks: pending models, verification status, sales
-   - Revenue sharing for successful model sales
-
-   💻 SUPPORTED CATEGORIES:
-   - Computer Vision: image classification, object detection, facial recognition
-   - Machine Learning: regression, clustering, recommendation systems  
-   - Natural Language: sentiment analysis, text classification, translation
-   - Audio Processing: speech recognition, music analysis
-   - Time Series: forecasting, anomaly detection
-
-   When users ask about specific functionality, provide helpful guidance on how to use the Satya platform. For requests like "show models" or "find cheap models", explain how to navigate the marketplace interface.
+   When users upload files or ask to create models, guide them through the actual Satya platform workflow. Be specific about navigation steps.
 
    User question: ${query}`
 
@@ -169,8 +159,55 @@ export default function AgentPage() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask about Satya platform..."
           disabled={isLoading}
-          className="w-full px-6 py-4 pr-20 text-lg bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
+          className="w-full px-14 py-4 pr-20 text-lg bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
          />
+         
+         {/* Plus button */}
+         <button
+          type="button"
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl"
+         >
+          +
+         </button>
+         
+         {/* Upload button with menu */}
+         <div className="absolute left-10 top-1/2 transform -translate-y-1/2">
+          <button
+           type="button"
+           onClick={() => setShowUploadMenu(!showUploadMenu)}
+           className="text-gray-400 hover:text-gray-600 p-1"
+          >
+           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+           </svg>
+          </button>
+          
+          {showUploadMenu && (
+           <div className="absolute top-8 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 min-w-48 z-10">
+            <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded cursor-pointer">
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+             </svg>
+             Upload AI Model
+             <input
+              type="file"
+              onChange={handleFileUpload}
+              accept=".pkl,.pt,.pth,.h5,.onnx,.pb,.tflite,.json"
+              className="hidden"
+             />
+            </label>
+            <button
+             onClick={() => setQuery("Create new AI model from scratch")}
+             className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded w-full text-left"
+            >
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,21H5V3H14V9H19V21Z"/>
+             </svg>
+             Create New Model
+            </button>
+           </div>
+          )}
+         </div>
          
          {/* Submit button */}
          <button
@@ -268,8 +305,30 @@ export default function AgentPage() {
            onChange={(e) => setQuery(e.target.value)}
            placeholder="Ask about Satya..."
            disabled={isLoading}
-           className="w-full px-4 py-3 pr-12 text-lg bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
+           className="w-full px-12 py-3 pr-12 text-lg bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
           />
+          
+          {/* Plus button */}
+          <button
+           type="button"
+           className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg"
+          >
+           +
+          </button>
+          
+          {/* Upload button */}
+          <div className="absolute left-8 top-1/2 transform -translate-y-1/2">
+           <button
+            type="button"
+            onClick={() => setShowUploadMenu(!showUploadMenu)}
+            className="text-gray-400 hover:text-gray-600"
+           >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+           </button>
+          </div>
+          
           <button
            type="submit"
            disabled={!query.trim() || isLoading}
