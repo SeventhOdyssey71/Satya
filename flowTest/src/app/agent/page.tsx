@@ -159,27 +159,17 @@ export default function AgentPage() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask about Satya platform..."
           disabled={isLoading}
-          className="w-full px-14 py-4 pr-20 text-lg bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
+          className="w-full px-12 py-4 pr-20 text-lg bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
          />
          
-         {/* Plus button */}
-         <button
-          type="button"
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl"
-         >
-          +
-         </button>
-         
-         {/* Upload button with menu */}
-         <div className="absolute left-10 top-1/2 transform -translate-y-1/2">
+         {/* Plus button with upload menu */}
+         <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
           <button
            type="button"
            onClick={() => setShowUploadMenu(!showUploadMenu)}
-           className="text-gray-400 hover:text-gray-600 p-1"
+           className="text-gray-400 hover:text-gray-600 text-xl"
           >
-           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-           </svg>
+           +
           </button>
           
           {showUploadMenu && (
@@ -305,27 +295,17 @@ export default function AgentPage() {
            onChange={(e) => setQuery(e.target.value)}
            placeholder="Ask about Satya..."
            disabled={isLoading}
-           className="w-full px-12 py-3 pr-12 text-lg bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
+           className="w-full px-10 py-3 pr-12 text-lg bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder-gray-400 disabled:opacity-50"
           />
           
-          {/* Plus button */}
-          <button
-           type="button"
-           className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg"
-          >
-           +
-          </button>
-          
-          {/* Upload button */}
-          <div className="absolute left-8 top-1/2 transform -translate-y-1/2">
+          {/* Plus button with upload menu */}
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
            <button
             type="button"
             onClick={() => setShowUploadMenu(!showUploadMenu)}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 text-lg"
            >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-            </svg>
+            +
            </button>
           </div>
           
