@@ -170,7 +170,7 @@ export default function AgentPage() {
         <img 
          src="/images/AI-Icon.png" 
          alt="AI Assistant Icon" 
-         className="w-16 h-16 mx-auto animate-spin"
+         className="w-12 h-12 mx-auto animate-spin"
          style={{ animationDuration: '8s' }}
         />
        </div>
