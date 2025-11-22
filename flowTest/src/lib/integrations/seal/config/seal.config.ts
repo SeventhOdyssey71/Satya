@@ -41,9 +41,9 @@ export const SEAL_CONFIG = {
  },
  
  monitoring: {
-  healthCheckIntervalMs: 30000,
+  healthCheckIntervalMs: 300000,
   metricsEnabled: true,
-  logLevel: "info" as const
+  logLevel: "error" as const
  }
 };
 

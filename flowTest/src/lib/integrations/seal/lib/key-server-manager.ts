@@ -70,8 +70,6 @@ export class KeyServerManager {
   error?: string;
  }> {
   try {
-   console.log(`Verifying key server registration: ${objectId}`);
-   
    const serverObject = await this.suiClient.getObject({
     id: objectId,
     options: {
@@ -96,11 +94,7 @@ export class KeyServerManager {
     };
    }
 
-   console.log('Key server object found:', {
-    type: serverObject.data.type,
-    version: serverObject.data.version,
-    owner: serverObject.data.owner
-   });
+   // Key server object found
 
    return {
     isRegistered: true,
@@ -127,8 +121,6 @@ export class KeyServerManager {
   const startTime = Date.now();
   
   try {
-   console.log(`Health checking key server: ${url}`);
-   
    // Attempt to reach the key server health endpoint
    const healthUrl = `${url}/health`;
    const response = await fetch(healthUrl, {
@@ -143,7 +135,6 @@ export class KeyServerManager {
    const responseTime = Date.now() - startTime;
 
    if (response.ok) {
-    console.log(`Key server healthy: ${url} (${responseTime}ms)`);
     return {
      url,
      status: 'healthy',
@@ -151,7 +142,6 @@ export class KeyServerManager {
      lastChecked: new Date()
     };
    } else {
-    console.warn(`Key server degraded: ${url} (HTTP ${response.status})`);
     return {
      url,
      status: 'degraded',
@@ -162,7 +152,6 @@ export class KeyServerManager {
    }
   } catch (error) {
    const responseTime = Date.now() - startTime;
-   console.error(`Key server failed: ${url}`, error);
    
    return {
     url,
@@ -244,9 +233,7 @@ export class KeyServerManager {
    .filter(server => server.health.status !== 'failed')
    .slice(0, Math.max(minServers, SEAL_CONFIG.testnet.threshold));
 
-  console.log(`Selected ${selectedServers.length} key servers:`, 
-   selectedServers.map(s => ({ url: s.url, status: s.health.status }))
-  );
+  // Selected key servers for use
 
   return selectedServers.map(s => ({
    objectId: s.objectId,
