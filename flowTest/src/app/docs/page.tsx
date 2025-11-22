@@ -610,7 +610,7 @@ function ApiContent() {
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center space-x-3 mb-3">
                 <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded">GET</span>
-                <code className="text-gray-700">/models/{id}</code>
+                <code className="text-gray-700">/models/&#123;id&#125;</code>
               </div>
               <p className="text-gray-700">
                 Retrieve comprehensive details for a specific model including metadata, 
@@ -643,7 +643,7 @@ function ApiContent() {
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center space-x-3 mb-3">
                 <span className="px-3 py-1 bg-gray-200 text-black text-sm font-medium rounded">POST</span>
-                <code className="text-gray-700">/models/{id}/purchase</code>
+                <code className="text-gray-700">/models/&#123;id&#125;/purchase</code>
               </div>
               <p className="text-gray-700">
                 Purchase access to a model with SUI token payment. Processes blockchain transaction 
