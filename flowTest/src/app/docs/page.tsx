@@ -549,17 +549,191 @@ function TechnologyStackContent() {
   )
 }
 
-// Placeholder components for other sections
+// Marketplace content components
 function BrowsingModelsContent() {
-  return <div className="text-gray-600">Browsing Models content coming soon...</div>
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-xl font-semibold mb-4">Finding the Right AI Model</h3>
+        
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+          <p className="text-blue-700">
+            <strong>Pro Tip:</strong> Use filters and search to quickly find models that match your specific requirements.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <h4 className="font-semibold mb-2">Search and Filters</h4>
+            <ul className="space-y-2 text-gray-700">
+              <li>• <strong>Search Bar:</strong> Search by model name, description, or tags</li>
+              <li>• <strong>Category Filter:</strong> Machine Learning, Computer Vision, NLP, Audio, etc.</li>
+              <li>• <strong>Verification Filter:</strong> Show only TEE-verified models</li>
+              <li>• <strong>Price Range:</strong> Filter by price to match your budget</li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-2">Model Information</h4>
+            <p className="text-gray-700 mb-3">Each model card displays:</p>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-3 rounded">
+                <strong>Basic Info:</strong> Title, description, category, tags
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <strong>Verification:</strong> TEE verification status and quality score
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <strong>Pricing:</strong> Cost in SUI tokens and access duration
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <strong>Stats:</strong> Upload date, downloads, creator info
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function PurchasingContent() {
-  return <div className="text-gray-600">Purchasing content coming soon...</div>
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-xl font-semibold mb-4">How to Purchase AI Models</h3>
+
+        <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6">
+          <p className="text-amber-700">
+            <strong>Requirements:</strong> Connected SUI wallet with sufficient balance for the model price + gas fees.
+          </p>
+        </div>
+
+        <ol className="space-y-4">
+          <li className="flex items-start space-x-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
+            <div>
+              <strong>Select Model:</strong> Browse and click on the model you want to purchase
+            </div>
+          </li>
+          
+          <li className="flex items-start space-x-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
+            <div>
+              <strong>Review Details:</strong> Check model information, price, and access duration
+            </div>
+          </li>
+
+          <li className="flex items-start space-x-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
+            <div>
+              <strong>Connect Wallet:</strong> Ensure your SUI wallet is connected
+            </div>
+          </li>
+
+          <li className="flex items-start space-x-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
+            <div>
+              <strong>Verify Purchase:</strong> Click "Verify Model" to initiate TEE verification
+            </div>
+          </li>
+
+          <li className="flex items-start space-x-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">5</span>
+            <div>
+              <strong>Complete Transaction:</strong> Approve the transaction in your wallet
+            </div>
+          </li>
+        </ol>
+
+        <div className="bg-green-50 border-l-4 border-green-400 p-4 mt-6">
+          <h4 className="font-semibold text-green-800 mb-2">After Purchase</h4>
+          <ul className="text-green-700 text-sm space-y-1">
+            <li>• Model access is granted immediately upon transaction confirmation</li>
+            <li>• Download links and API access are available in your dashboard</li>
+            <li>• Access duration begins from purchase time</li>
+            <li>• Support is available if you encounter any issues</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function VerificationContent() {
-  return <div className="text-gray-600">Verification content coming soon...</div>
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-xl font-semibold mb-4">TEE (Trusted Execution Environment) Verification</h3>
+        
+        <div className="space-y-6">
+          <div>
+            <h4 className="font-medium mb-3">What is TEE Verification?</h4>
+            <p className="text-gray-700 mb-4">
+              TEE verification uses hardware-based security to ensure that AI models run exactly as intended, 
+              without tampering or modification. This provides mathematical proof of model integrity.
+            </p>
+            
+            <div className="bg-green-50 border-l-4 border-green-400 p-4">
+              <h5 className="font-semibold text-green-800 mb-2">Benefits of TEE Verification:</h5>
+              <ul className="text-green-700 text-sm space-y-1">
+                <li>• <strong>Integrity:</strong> Guarantees the model hasn't been tampered with</li>
+                <li>• <strong>Authenticity:</strong> Proves the model comes from the claimed creator</li>
+                <li>• <strong>Performance:</strong> Validates advertised accuracy and performance metrics</li>
+                <li>• <strong>Security:</strong> Ensures no malicious code is embedded in the model</li>
+              </ul>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-medium mb-3">Verification Process</h4>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded">
+                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
+                <div className="text-blue-700">Model is uploaded to secure enclave environment</div>
+              </div>
+              
+              <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded">
+                <div className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
+                <div className="text-purple-700">Hardware attestation generates cryptographic proof</div>
+              </div>
+              
+              <div className="flex items-center space-x-3 p-3 bg-green-50 rounded">
+                <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
+                <div className="text-green-700">Verification results are recorded on SUI blockchain</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-medium mb-3">Verification Statuses</h4>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-3 p-3 border rounded">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <div>
+                  <strong className="text-green-700">Verified</strong> - Model passed all TEE checks
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-3 p-3 border rounded">
+                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                <div>
+                  <strong className="text-yellow-700">Pending</strong> - Verification in progress
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-3 p-3 border rounded">
+                <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                <div>
+                  <strong className="text-gray-700">Unverified</strong> - No verification attempted
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function ModelPreparationContent() {
