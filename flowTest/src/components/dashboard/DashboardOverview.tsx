@@ -38,7 +38,6 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
    )
    
    setCompletedCount(userModels.length)
-   console.log('User completed models count:', userModels.length)
   } catch (error) {
    console.error('Failed to load completed models count:', error)
   }

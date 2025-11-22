@@ -36,7 +36,6 @@ export function ModelVerificationFlow({
  const PACKAGE_ID = "0xc4a516ae2dad92faeaf2894ff8b9324d1b1d41decbf6ab81d702cb3ded808196"; // Our deployed contract
 
  const uploadToMarketplace = async (attestationData: TEEAttestationData, txDigest: string) => {
-  console.log('Uploading verified model to marketplace...');
   
   // Create marketplace listing with verified model data
   const listingData = {
@@ -70,7 +69,6 @@ export function ModelVerificationFlow({
   }
 
   const result = await response.json();
-  console.log('Model successfully uploaded to marketplace:', result);
   return result;
  };
 
@@ -79,7 +77,6 @@ export function ModelVerificationFlow({
   setError(null);
 
   try {
-   console.log('Starting real TEE verification for blobs:', { modelBlobId, datasetBlobId });
 
    // Step 1: Process data in TEE using nautilus server with real blob analysis
    const teeResponse = await fetch('http://localhost:3333/process_data', {
@@ -103,7 +100,6 @@ export function ModelVerificationFlow({
    }
 
    const nautilusResponse = await teeResponse.json();
-   console.log('Real nautilus TEE response:', nautilusResponse);
    
    // Validate we got a proper TEE response
    if (!nautilusResponse.response || !nautilusResponse.signature) {
@@ -141,11 +137,9 @@ export function ModelVerificationFlow({
     }
    };
    
-   console.log('Real TEE attestation generated:', attestation);
    setAttestationData(attestation);
 
   } catch (err) {
-   console.log('Real TEE attestation generation failed:', err);
    setError(err instanceof Error ? err.message : 'TEE verification failed');
   } finally {
    setIsGeneratingAttestation(false);
@@ -171,22 +165,16 @@ export function ModelVerificationFlow({
 
   // Check if wallet is connected to the right network
   const currentNetwork = process.env.NEXT_PUBLIC_SUI_NETWORK || 'testnet';
-  console.log(`App is configured for ${currentNetwork} network`);
 
   setIsVerifyingOnChain(true);
   setError(null);
 
   try {
-   console.log('Starting real blockchain verification for pending model:', pendingModelId);
    
    // Import the marketplace contract service
-   console.log('Importing MarketplaceContractService...');
    const { MarketplaceContractService } = await import('@/lib/services/marketplace-contract.service');
-   console.log('Creating contract service instance...');
    const contractService = new MarketplaceContractService();
-   console.log('Initializing contract service...');
    await contractService.initialize();
-   console.log('Contract service initialized successfully');
 
    // Convert quality score to basis points (0.85 -> 8500) 
    const qualityScoreBP = Math.floor(attestationData.ml_processing_result.quality_score * 10000);
@@ -201,16 +189,12 @@ export function ModelVerificationFlow({
    const verifierSignature = new Uint8Array(signatureBytes.slice(0, 64));
 
    // Create wallet signer
-   console.log('Creating wallet signer...');
    const walletSigner = {
     toSuiAddress: async () => {
-     console.log('Getting user address:', account.address);
      return account.address;
     },
     executeTransaction: async (tx: Transaction) => {
      return new Promise((resolve, reject) => {
-      console.log('Requesting transaction signature from user...');
-      console.log('Transaction object:', tx);
       
       // Ensure we have a valid transaction
       if (!tx) {
@@ -220,7 +204,6 @@ export function ModelVerificationFlow({
       
       try {
        // Show wallet popup for signing
-       console.log('Triggering wallet signature request...');
        signAndExecuteTransaction(
         { 
          transaction: tx,
@@ -229,7 +212,6 @@ export function ModelVerificationFlow({
         },
         {
          onSuccess: (result) => {
-          console.log('✅ Transaction signed and executed successfully:', result);
           resolve(result);
          },
          onError: (error) => {
@@ -249,9 +231,7 @@ export function ModelVerificationFlow({
      });
     }
    };
-   console.log('Wallet signer created successfully');
 
-   console.log('Calling complete_verification with real contract:', {
     pendingModelId,
     qualityScore: qualityScoreBP,
     attestationHashLength: attestationHash.length,
@@ -259,7 +239,6 @@ export function ModelVerificationFlow({
    });
 
    // Step 1: Complete verification on blockchain
-   console.log('Calling completeVerification with parameters:', {
     pendingModelId,
     enclaveId: attestationData.tee_attestation.enclave_id,
     qualityScore: qualityScoreBP,
@@ -268,9 +247,6 @@ export function ModelVerificationFlow({
     verifierSignatureLength: verifierSignature.length
    });
 
-   console.log('About to call contractService.completeVerification...');
-   console.log('Wallet is connected:', !!account);
-   console.log('Wallet address:', account?.address);
    
    // Add a small delay to ensure wallet is ready
    await new Promise(resolve => setTimeout(resolve, 100));
@@ -288,7 +264,6 @@ export function ModelVerificationFlow({
     walletSigner
    );
 
-   console.log('Raw verification result:', JSON.stringify(verificationResult, null, 2));
 
    if (!verificationResult || typeof verificationResult !== 'object') {
     throw new Error('Invalid verification result received');
@@ -300,11 +275,8 @@ export function ModelVerificationFlow({
     throw new Error(errorMsg);
    }
 
-   console.log('Blockchain verification successful:', verificationResult);
 
    // SUCCESS: Verification completed (marketplace listing included in same transaction)
-   console.log('🎉 COMPLETE SUCCESS: Model verified and listed on marketplace!');
-   console.log('Transaction digest:', verificationResult.transactionDigest);
 
    // Set final result
    setVerificationResult({
@@ -316,7 +288,6 @@ export function ModelVerificationFlow({
    
    // Force marketplace refresh after short delay
    setTimeout(() => {
-    console.log('Forcing marketplace refresh after verification...');
     window.dispatchEvent(new CustomEvent('marketplace-refresh'));
    }, 2000);
    

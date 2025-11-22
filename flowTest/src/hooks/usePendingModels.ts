@@ -64,11 +64,9 @@ export function usePendingModels() {
   try {
    setState(prev => ({ ...prev, isLoading: true, error: null }))
 
-   console.log('Loading pending models for user:', currentAccount)
    
    const pendingModels = await contractService.getUserPendingModels(currentAccount.address)
    
-   console.log('Loaded pending models:', pendingModels)
 
    // Transform contract data to component format
    const transformedModels: PendingModel[] = pendingModels.map(obj => {
@@ -122,7 +120,6 @@ export function usePendingModels() {
  // Listen for model upload events
  useEffect(() => {
   const handleModelUpload = () => {
-   console.log('Model upload detected, refreshing pending models...')
    setTimeout(() => {
     loadPendingModels()
    }, 1000) // Delay to ensure blockchain has processed
