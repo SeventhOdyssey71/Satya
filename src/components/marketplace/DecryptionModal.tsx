@@ -290,8 +290,8 @@ export default function DecryptionModal({ model, onClose }: DecryptionModalProps
 
      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
       <p className="text-xs text-blue-800">
-       <strong>Secure Access:</strong> This model is encrypted with SEAL technology 
-       and verified through TEE attestation. Your download is secure and authenticated.
+       <strong>Secure Decryption:</strong> This model uses AES-GCM encryption with per-segment keys. 
+       SEAL transactions provide cryptographic proof of purchase authorization.
       </p>
      </div>
     </div>

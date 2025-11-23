@@ -83,6 +83,7 @@ temp/
 
 # Project-specific ignores
 accelerator-redac/
+decryption-codebase/
 .editorconfig
 .env.example
 .gitmessage

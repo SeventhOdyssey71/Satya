@@ -29,6 +29,7 @@
     "accelerator-redac/**",
     "nautilus-server/**",
     "contracts/**",
+    "decryption-codebase/**",
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/__tests__/**"
