@@ -28,7 +28,7 @@ const ENVIRONMENT_CONFIGS: Record<string, EnvironmentConfig> = {
    'Content-Type': 'application/octet-stream'
   },
   timeoutAdjustments: {
-   upload: 120000, // 120s for dev (increased for large files)
+   upload: 600000, // 10 minutes for dev (extended for large models/datasets)
    download: 60000, // 60s for dev 
    health: 10000  // 10s for dev
   },
@@ -50,7 +50,7 @@ const ENVIRONMENT_CONFIGS: Record<string, EnvironmentConfig> = {
    'Content-Type': 'application/octet-stream'
   },
   timeoutAdjustments: {
-   upload: 60000,  // 60s for prod
+   upload: 600000,  // 10 minutes for prod (extended for large models/datasets)
    download: 30000, // 30s for prod
    health: 5000   // 5s for prod
   },
@@ -68,7 +68,7 @@ const ENVIRONMENT_CONFIGS: Record<string, EnvironmentConfig> = {
    'Content-Type': 'application/octet-stream'
   },
   timeoutAdjustments: {
-   upload: 15000,  // 15s for tests
+   upload: 600000,  // 10 minutes for tests (extended for large models/datasets)
    download: 10000, // 10s for tests
    health: 3000   // 3s for tests
   },

@@ -193,19 +193,8 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
   }
  }, [contractService, currentAccount?.address]);
 
- // Auto-refresh every 30 seconds when component is active
- useEffect(() => {
-  if (!contractService || !currentAccount?.address) return;
-
-  const interval = setInterval(() => {
-   console.log('Auto-refreshing models...');
-   loadPendingModels();
-   loadCompletedModels();
-   refresh();
-  }, 30000); // 30 seconds
-
-  return () => clearInterval(interval);
- }, [contractService, currentAccount?.address, refresh]);
+ // Removed auto-refresh to prevent random refreshing
+ // Users can manually refresh using the refresh button
 
  // Handle external refresh trigger (e.g., from upload completion)
  useEffect(() => {

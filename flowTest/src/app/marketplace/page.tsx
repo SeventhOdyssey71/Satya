@@ -69,6 +69,7 @@ export default function MarketplacePage() {
  });
 
  const [contractService, setContractService] = useState<MarketplaceContractService | null>(null);
+ const [hasLoadedModels, setHasLoadedModels] = useState(false);
 
  // Initialize service
  useEffect(() => {
@@ -158,24 +159,16 @@ export default function MarketplacePage() {
   }
  };
 
- // Load models when service is ready
+ // Load models when service is ready (only once)
  useEffect(() => {
-  if (contractService) {
+  if (contractService && !hasLoadedModels) {
    loadMarketplaceModels();
+   setHasLoadedModels(true);
   }
- }, [contractService]);
+ }, [contractService, hasLoadedModels]);
 
- // Set up periodic refresh for new marketplace listings
- useEffect(() => {
-  if (!contractService) return;
-
-  const interval = setInterval(() => {
-   console.log('Auto-refreshing marketplace models...');
-   loadMarketplaceModels();
-  }, 30000); // 30 seconds
-
-  return () => clearInterval(interval);
- }, [contractService]);
+ // Removed auto-refresh to prevent random refreshing
+ // Users can manually refresh if needed
 
  // Filter models based on current filters
  const filteredModels = state.models.filter(model => {

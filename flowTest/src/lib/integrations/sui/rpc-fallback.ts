@@ -2,10 +2,19 @@
 import { SuiClient } from '@mysten/sui/client';
 import { SUI_CONFIG } from '../../constants';
 
+// Cache the working client to avoid repeated testing
+let cachedClient: SuiClient | null = null;
+let lastSuccessfulUrl: string | null = null;
+
 /**
  * Create SUI client with automatic RPC fallback for SEAL operations
  */
 export async function createSuiClientWithFallback(): Promise<SuiClient> {
+ // Return cached client if available
+ if (cachedClient && lastSuccessfulUrl) {
+  console.log('Using cached SUI client:', lastSuccessfulUrl);
+  return cachedClient;
+ }
  // Try primary RPC first
  const primaryRpcUrl = SUI_CONFIG.RPC_URL;
  
@@ -16,6 +25,10 @@ export async function createSuiClientWithFallback(): Promise<SuiClient> {
   // Quick health check
   await primaryClient.getLatestSuiSystemState();
   console.log('Primary RPC is working');
+  
+  // Cache successful client
+  cachedClient = primaryClient;
+  lastSuccessfulUrl = primaryRpcUrl;
   
   return primaryClient;
  } catch (error) {
@@ -31,6 +44,10 @@ export async function createSuiClientWithFallback(): Promise<SuiClient> {
    // Quick health check
    await fallbackClient.getLatestSuiSystemState();
    console.log(`Fallback RPC ${index + 1} is working`);
+   
+   // Cache successful client
+   cachedClient = fallbackClient;
+   lastSuccessfulUrl = fallbackUrl;
    
    return fallbackClient;
   } catch (error) {

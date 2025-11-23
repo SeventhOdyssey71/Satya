@@ -43,15 +43,23 @@ export interface ContractResult {
 
 export class MarketplaceContractService {
  private suiClient: SuiClient;
+ private static instance: MarketplaceContractService | null = null;
  
  constructor(suiClient?: SuiClient) {
   this.suiClient = suiClient || new SuiClient({ url: 'https://fullnode.testnet.sui.io:443' });
  }
 
- // Create service with fallback RPC support
+ // Create service with fallback RPC support (singleton)
  static async createWithFallback(): Promise<MarketplaceContractService> {
+  // Return cached instance if available
+  if (MarketplaceContractService.instance) {
+   console.log('Using cached MarketplaceContractService instance');
+   return MarketplaceContractService.instance;
+  }
+  
   const suiClient = await createSuiClientWithFallback();
-  return new MarketplaceContractService(suiClient);
+  MarketplaceContractService.instance = new MarketplaceContractService(suiClient);
+  return MarketplaceContractService.instance;
  }
 
  // Initialize the service (for compatibility with existing hooks)
@@ -862,10 +870,10 @@ export class MarketplaceContractService {
   try {
    logger.info('Querying marketplace models', { limit });
 
-   // Try multiple approaches to find MarketplaceModel objects
+   // Try primary approach first
    let response;
    
-   // Approach 1: Query by registry ownership
+   // Query by registry ownership (most reliable)
    try {
     response = await this.suiClient.getOwnedObjects({
      owner: MARKETPLACE_CONFIG.REGISTRY_ID,
@@ -882,11 +890,14 @@ export class MarketplaceContractService {
     });
     
     if (response.data && response.data.length > 0) {
+     console.log(`Found ${response.data.length} models via registry`);
+     return response.data;
     }
    } catch (registryError) {
+    console.warn('Registry query failed:', registryError);
    }
 
-   // Approach 2: Try querying by object type directly
+   // Only try fallback if primary failed
    if (!response || !response.data || response.data.length === 0) {
     
     try {

@@ -10,6 +10,15 @@ const nextConfig = {
   },
   output: 'standalone',
   
+  // Extended timeout for large file uploads (10 minutes)
+  // Note: This requires Vercel Pro plan for timeouts > 10s in production
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '100mb', // Allow large file uploads
+      allowedOrigins: ['*']
+    },
+  },
+  
   // Webpack configuration for WASM support
   webpack: (config, { isServer }) => {
     // Handle WASM files
