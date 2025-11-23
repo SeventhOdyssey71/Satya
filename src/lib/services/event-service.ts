@@ -1,5 +1,5 @@
 // Smart Contract Event Querying Service
-import { SuiClient } from '@mysten/sui.js/client';
+import { SuiClient } from '@mysten/sui/client';
 import { SUI_CONFIG, MARKETPLACE_CONFIG } from '../constants';
 import { logger } from '../integrations/core/logger';
 

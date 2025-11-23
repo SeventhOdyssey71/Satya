@@ -1,5 +1,5 @@
-# FlowTest Multi-Stage Docker Build
-# This Dockerfile builds the complete flowTest application
+# Satya Multi-Stage Docker Build
+# This Dockerfile builds the complete Satya application
 
 # Stage 1: Build the Next.js application
 FROM node:18-alpine AS frontend-builder

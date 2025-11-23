@@ -39,7 +39,7 @@ export function OnChainVerification({ teeResult, onVerificationComplete }: OnCha
  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
  const account = useCurrentAccount();
 
- // Using the flowTest onchain_verification.move package ID
+ // Using the onchain_verification.move package ID
  const PACKAGE_ID = "0x3bb585bfbc7c637bbfce62b92c8711bcbd752f48117d80477f4260f7dd9448fd";
 
  const handleOnChainVerification = async () => {
