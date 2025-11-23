@@ -10,37 +10,42 @@ import { aesGcmDecrypt, base64ToUint8Array } from '@/lib/crypto/primitives'
  */
 async function decryptBlobData(blobData: Uint8Array): Promise<{ success: boolean; data?: Uint8Array; error?: string }> {
   try {
+    console.log(`Decrypting blob data, size: ${blobData.length} bytes`)
+    
     // Try to parse as encrypted blob first
     // Expected format: [metadata_length(4)] [metadata_json] [encrypted_data]
     if (blobData.length < 4) {
-      // Too small to be encrypted, treat as raw data
+      console.log('Blob too small to be encrypted, treating as raw data')
       return { success: true, data: blobData }
     }
 
     // Read metadata length (first 4 bytes)
     const metadataLengthView = new DataView(blobData.buffer, 0, 4)
     const metadataLength = metadataLengthView.getUint32(0, true) // little-endian
+    console.log(`Parsed metadata length: ${metadataLength}`)
 
     // Validate metadata length
     if (metadataLength < 10 || metadataLength > 1000) {
-      // Invalid metadata length, likely not encrypted - treat as raw data
+      console.log(`Invalid metadata length ${metadataLength}, treating as raw data`)
       return { success: true, data: blobData }
     }
 
     if (blobData.length < 4 + metadataLength) {
-      // Not enough data for metadata, treat as raw data
+      console.log(`Not enough data for metadata (${blobData.length} < ${4 + metadataLength}), treating as raw data`)
       return { success: true, data: blobData }
     }
 
     // Extract metadata
     const metadataBytes = blobData.slice(4, 4 + metadataLength)
     const metadataString = new TextDecoder().decode(metadataBytes)
+    console.log(`Extracted metadata string: ${metadataString}`)
     
     let metadata: { dek_base64: string; iv_base64: string }
     try {
       metadata = JSON.parse(metadataString)
-    } catch {
-      // Invalid JSON, treat as raw data
+      console.log(`Parsed metadata successfully:`, { hasDek: !!metadata.dek_base64, hasIv: !!metadata.iv_base64 })
+    } catch (e) {
+      console.log(`Invalid JSON in metadata, treating as raw data. Error:`, e)
       return { success: true, data: blobData }
     }
 
@@ -105,16 +110,29 @@ export async function POST(request: NextRequest) {
    dataset_blob_id: dataset_blob_id.slice(0, 20) + '...'
   })
 
+  console.log('Starting Walrus download for model and dataset...')
+
   const walrusService = new WalrusStorageService()
   // Create a temporary SUI client for this API call
   const suiClient = new SuiClient({ url: process.env.NEXT_PUBLIC_SUI_NETWORK_URL || 'https://fullnode.testnet.sui.io' });
   const sealService = new SealEncryptionService(suiClient)
 
   // Step 1: Download encrypted files from Walrus
+  console.log(`Downloading model blob: ${model_blob_id}`)
   const modelData = await walrusService.downloadBlob(model_blob_id)
+  console.log(`Model data downloaded, size: ${modelData?.length || 0} bytes`)
+
+  console.log(`Downloading dataset blob: ${dataset_blob_id}`)
   const datasetData = await walrusService.downloadBlob(dataset_blob_id)
+  console.log(`Dataset data downloaded, size: ${datasetData?.length || 0} bytes`)
 
   if (!modelData || !datasetData) {
+   console.error('Failed to download blobs from Walrus:', {
+    modelDataExists: !!modelData,
+    datasetDataExists: !!datasetData,
+    modelSize: modelData?.length || 0,
+    datasetSize: datasetData?.length || 0
+   })
    return NextResponse.json(
     { error: 'Failed to download encrypted files from Walrus' },
     { status: 500 }
@@ -130,11 +148,15 @@ export async function POST(request: NextRequest) {
     // Format: [metadata_length(4)] [metadata] [encrypted_data]
     // Metadata contains: {"dek_base64": "...", "iv_base64": "..."}
     
+    console.log('Starting model decryption...')
     const modelDecryptionResult = await decryptBlobData(modelData)
     modelDecryption = modelDecryptionResult
+    console.log('Model decryption result:', { success: modelDecryptionResult.success, error: modelDecryptionResult.error })
 
+    console.log('Starting dataset decryption...')
     const datasetDecryptionResult = await decryptBlobData(datasetData)
     datasetDecryption = datasetDecryptionResult
+    console.log('Dataset decryption result:', { success: datasetDecryptionResult.success, error: datasetDecryptionResult.error })
 
   } catch (error) {
     console.error('Decryption error:', error)
@@ -158,12 +180,24 @@ export async function POST(request: NextRequest) {
   }
 
   // Step 3: Return decrypted data
+  console.log('Decryption successful! Returning decrypted data:', {
+   modelDataSize: modelDecryption.data?.length || 0,
+   datasetDataSize: datasetDecryption.data?.length || 0,
+   modelBlobId: model_blob_id.slice(0, 20) + '...',
+   datasetBlobId: dataset_blob_id.slice(0, 20) + '...'
+  })
+
   return NextResponse.json({
    success: true,
    decrypted_model_data: Array.from(modelDecryption.data!),
    decrypted_dataset_data: Array.from(datasetDecryption.data!),
    model_blob_id,
-   dataset_blob_id
+   dataset_blob_id,
+   info: {
+    model_size: modelDecryption.data!.length,
+    dataset_size: datasetDecryption.data!.length,
+    decryption_status: 'Data retrieved successfully (may be raw unencrypted data)'
+   }
   })
 
  } catch (error) {

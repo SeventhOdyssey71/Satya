@@ -95,6 +95,11 @@ export default function DecryptionModal({ model, onClose }: DecryptionModalProps
      setIsDecrypting(false)
      setIsComplete(true)
      
+     // Show info about the decrypted data
+     if (result.info) {
+      console.log('Decryption info:', result.info)
+     }
+     
      // Create downloadable blobs from the decrypted data
      const urls: {model?: string, dataset?: string} = {}
      
