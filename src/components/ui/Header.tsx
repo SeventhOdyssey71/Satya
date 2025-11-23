@@ -15,8 +15,10 @@ export default function Header({ isHomepage = false }: HeaderProps) {
  const account = useCurrentAccount()
  const { mutate: disconnect } = useDisconnectWallet()
  const [showDropdown, setShowDropdown] = useState(false)
+ const [showMobileDropdown, setShowMobileDropdown] = useState(false)
  const [showMobileMenu, setShowMobileMenu] = useState(false)
  const dropdownRef = useRef<HTMLDivElement>(null)
+ const mobileDropdownRef = useRef<HTMLDivElement>(null)
  const mobileMenuRef = useRef<HTMLDivElement>(null)
 
  // Close dropdowns when clicking outside
@@ -24,6 +26,9 @@ export default function Header({ isHomepage = false }: HeaderProps) {
   const handleClickOutside = (event: MouseEvent) => {
    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
     setShowDropdown(false)
+   }
+   if (mobileDropdownRef.current && !mobileDropdownRef.current.contains(event.target as Node)) {
+    setShowMobileDropdown(false)
    }
    if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
     setShowMobileMenu(false)
@@ -120,9 +125,14 @@ export default function Header({ isHomepage = false }: HeaderProps) {
           {showDropdown && (
            <div className="absolute right-0 mt-2 w-48 bg-white border border-ocean/10 rounded-2xl shadow-lg z-10 overflow-hidden">
             <button
-             onClick={() => {
-              disconnect()
-              setShowDropdown(false)
+             onClick={async () => {
+              try {
+               await disconnect()
+               setShowDropdown(false)
+              } catch (error) {
+               console.error('Failed to disconnect wallet:', error)
+               setShowDropdown(false)
+              }
              }}
              className="w-full text-left px-4 py-2.5 text-[15px] font-albert font-normal text-ocean hover:bg-aqua/10 transition-colors"
             >
@@ -143,9 +153,9 @@ export default function Header({ isHomepage = false }: HeaderProps) {
        <div className="md:hidden flex items-center gap-3">
         {/* Mobile Wallet */}
         {account ? (
-         <div className="relative" ref={dropdownRef}>
+         <div className="relative" ref={mobileDropdownRef}>
           <button 
-           onClick={() => setShowDropdown(!showDropdown)}
+           onClick={() => setShowMobileDropdown(!showMobileDropdown)}
            className="flex items-center gap-2 px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-light text-sm"
           >
            <span>
@@ -153,12 +163,17 @@ export default function Header({ isHomepage = false }: HeaderProps) {
            </span>
           </button>
           
-          {showDropdown && (
+          {showMobileDropdown && (
            <div className="absolute right-0 mt-2 w-40 bg-white border border-ocean/10 rounded-xl shadow-lg z-10 overflow-hidden">
             <button
-             onClick={() => {
-              disconnect()
-              setShowDropdown(false)
+             onClick={async () => {
+              try {
+               await disconnect()
+               setShowMobileDropdown(false)
+              } catch (error) {
+               console.error('Failed to disconnect wallet:', error)
+               setShowMobileDropdown(false)
+              }
              }}
              className="w-full text-left px-3 py-2 text-sm font-albert font-normal text-ocean hover:bg-aqua/10 transition-colors"
             >
