@@ -430,12 +430,12 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
            Price: {(parseFloat(model.price) / 1000000000).toFixed(4)} SUI
           </p>
           <div className="mt-2 flex flex-wrap gap-1">
-           <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-            Model: {model.modelBlobId.substring(0, 12)}...
+           <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded break-all">
+            Model: {model.modelBlobId}
            </span>
            {model.datasetBlobId && (
-            <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">
-             Dataset: {model.datasetBlobId.substring(0, 12)}...
+            <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded break-all">
+             Dataset: {model.datasetBlobId}
             </span>
            )}
            {model.tags.length > 0 && model.tags.slice(0, 3).map(tag => (

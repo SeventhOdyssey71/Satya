@@ -13,13 +13,7 @@ use std::sync::Arc;
 use std::collections::HashMap;
 use sha2::{Sha256, Digest};
 use tracing::{debug, info};
-use base64;
-use fastcrypto::encoding::{Hex, Base64 as FcBase64, Encoding};
-use fastcrypto::ed25519::Ed25519KeyPair;
-use fastcrypto::traits::{KeyPair, Signer};
-use seal_sdk::{EncryptedObject, IBEPublicKey, seal_decrypt_all_objects, types::{FetchKeyRequest, FetchKeyResponse, KeyId}};
-use sui_sdk_types::ObjectId as ObjectID;
-use rand::thread_rng;
+use base64::{Engine, engine::general_purpose};
 
 mod seal_impl;
 
@@ -235,304 +229,7 @@ async fn download_and_hash_blob(blob_id: &str, data_type: &str, state: &AppState
     Ok((data, hash))
 }
 
-/// Attempt to decrypt a blob that may be AES-encrypted
-/// Returns Ok(decrypted_data) if decryption succeeds, Err if not encrypted or decryption fails
-async fn attempt_decrypt_blob(data: &[u8]) -> Result<Vec<u8>, EnclaveError> {
-    use fastcrypto::aes::{Aes256CbcPkcs7, Cipher};
-    use fastcrypto::traits::ToFromBytes;
-    
-    // Check if data looks like it might be encrypted (heuristics)
-    if data.len() < 32 {
-        return Err(EnclaveError::GenericError("Data too small to be encrypted".to_string()));
-    }
-    
-    // Look for common encrypted file patterns
-    // Most encrypted files have high entropy and don't start with common file signatures
-    let first_bytes = &data[..std::cmp::min(20, data.len())];
-    
-    // Check if it starts with common unencrypted file signatures
-    if first_bytes.starts_with(b"\x89PNG") ||      // PNG
-       first_bytes.starts_with(b"GIF") ||           // GIF
-       first_bytes.starts_with(b"\xff\xd8\xff") || // JPEG
-       first_bytes.starts_with(b"PK") ||            // ZIP/JAR
-       first_bytes.starts_with(b"\x80\x02") ||     // Pickle
-       first_bytes.starts_with(b"\x80\x03") ||     // Pickle
-       first_bytes.starts_with(b"\x80\x04") ||     // Pickle
-       first_bytes.starts_with(b"\x93NUMPY") {     // NumPy
-        return Err(EnclaveError::GenericError("Data appears to be unencrypted".to_string()));
-    }
-    
-    // Try different decryption approaches
-    
-    // Approach 1: Try to extract IV from the beginning and decrypt with a default key
-    if data.len() >= 48 { // 16-byte IV + 32-byte key + some data
-        let iv_bytes = &data[0..16];
-        let encrypted_data = &data[16..];
-        
-        // Try with a default/demo key (in production, this would come from secure key management)
-        let default_key_bytes = b"satya_default_key_32_bytes_long!"; // 32 bytes
-        
-        // Try to create key and iv for AES256 CBC
-        if default_key_bytes.len() == 32 && iv_bytes.len() == 16 {
-            if let (Ok(key), Ok(iv)) = (
-                fastcrypto::aes::AesKey::from_bytes(default_key_bytes),
-                fastcrypto::aes::InitializationVector::from_bytes(iv_bytes)
-            ) {
-                let cipher = Aes256CbcPkcs7::new(key);
-                if let Ok(decrypted) = cipher.decrypt(&iv, encrypted_data) {
-                    info!("Successfully decrypted blob with default key");
-                    return Ok(decrypted);
-                }
-            }
-        }
-    }
-    
-    // Approach 2: Try with blob ID as key (if it's long enough)
-    // This is a common pattern where the blob ID itself contains key material
-    if data.len() >= 32 {
-        // Use first 16 bytes as IV, decrypt the rest
-        let iv_bytes = &data[0..16];
-        let encrypted_data = &data[16..];
-        
-        // Create a key from the blob ID (pad/truncate to 32 bytes)
-        // This is a demo - in production you'd derive this securely
-        let mut key_material = [0u8; 32];
-        let blob_id = std::env::var("CURRENT_BLOB_ID").unwrap_or_default();
-        let id_bytes = blob_id.as_bytes();
-        let copy_len = std::cmp::min(32, id_bytes.len());
-        key_material[..copy_len].copy_from_slice(&id_bytes[..copy_len]);
-        
-        if iv_bytes.len() == 16 {
-            if let (Ok(key), Ok(iv)) = (
-                fastcrypto::aes::AesKey::from_bytes(&key_material),
-                fastcrypto::aes::InitializationVector::from_bytes(iv_bytes)
-            ) {
-                let cipher = Aes256CbcPkcs7::new(key);
-                if let Ok(decrypted) = cipher.decrypt(&iv, encrypted_data) {
-                    info!("Successfully decrypted blob with blob-ID-derived key");
-                    return Ok(decrypted);
-                }
-            }
-        }
-    }
-    
-    // Approach 3: Try SEAL decryption with Mysten testnet key server
-    info!("Attempting REAL SEAL decryption with Mysten testnet key server...");
-    
-    match attempt_real_seal_decryption(data).await {
-        Ok(decrypted_data) => {
-            info!("Successfully decrypted SEAL blob: {} bytes", decrypted_data.len());
-            return Ok(decrypted_data);
-        },
-        Err(e) => {
-            info!("SEAL decryption failed: {}", e);
-        }
-    }
-    
-    Err(EnclaveError::GenericError("Failed to decrypt blob with any method (AES, SEAL)".to_string()))
-}
 
-
-/// Check if a 32-byte sequence could be a SEAL key ID
-fn is_potential_key_id(bytes: &[u8]) -> bool {
-    if bytes.len() != 32 {
-        return false;
-    }
-    
-    // Key IDs typically have specific patterns and entropy
-    // Not all zeros, not all 0xFF, reasonable entropy
-    let all_zeros = bytes.iter().all(|&b| b == 0);
-    let all_ff = bytes.iter().all(|&b| b == 0xFF);
-    
-    if all_zeros || all_ff {
-        return false;
-    }
-    
-    // Check for reasonable entropy (not too repetitive)
-    let unique_bytes: std::collections::HashSet<_> = bytes.iter().collect();
-    unique_bytes.len() > 8 // At least 8 different byte values
-}
-
-/// Attempt real SEAL decryption using Mysten testnet key server
-async fn attempt_real_seal_decryption(data: &[u8]) -> Result<Vec<u8>, EnclaveError> {
-    info!("Starting REAL SEAL decryption with Mysten testnet key server");
-    
-    // Parse the SEAL blob structure
-    let (object_info, key_count) = parse_real_seal_blob_sync(data)
-        .map_err(|e| EnclaveError::GenericError(e))?;
-    
-    info!("SEAL blob parsed: object={}, keys={}", object_info, key_count);
-    
-    // Mysten testnet key server configuration
-    let key_server_url = "https://seal-key-server-testnet-2.mystenlabs.com";
-    let key_server_object_id = "0xf5d14a81a982144ae441cd7d64b09027f116a468bd36e7eca494f750591623c8";
-    
-    info!("Connecting to Mysten SEAL key server: {}", key_server_url);
-    info!("Key server object ID: {}", key_server_object_id);
-    
-    // Extract key IDs from the blob for key server requests
-    let key_ids = extract_key_ids_from_blob(data)?;
-    info!("Extracted {} key IDs for decryption", key_ids.len());
-    
-    // Fetch keys from Mysten testnet key server
-    let decryption_keys = fetch_keys_from_mysten_server(&key_ids, key_server_url).await?;
-    info!("Retrieved {} keys from Mysten key server", decryption_keys.len());
-    
-    // Attempt SEAL decryption with the fetched keys
-    let decrypted_data = perform_seal_decryption_with_keys(data, &decryption_keys).await?;
-    
-    info!("SEAL decryption successful: {} bytes decrypted", decrypted_data.len());
-    Ok(decrypted_data)
-}
-
-/// Extract key IDs from SEAL encrypted blob
-fn extract_key_ids_from_blob(data: &[u8]) -> Result<Vec<Vec<u8>>, EnclaveError> {
-    if data.len() < 100 {
-        return Err(EnclaveError::GenericError("Blob too small for SEAL encryption".to_string()));
-    }
-    
-    let mut key_ids = Vec::new();
-    
-    // Scan for key ID patterns starting after the object ID (offset 37)
-    for i in (37..data.len().saturating_sub(32)).step_by(32) {
-        let potential_key = &data[i..i+32];
-        
-        if is_potential_key_id(potential_key) {
-            key_ids.push(potential_key.to_vec());
-            info!("Found key ID at offset {}: {:02x}{:02x}...{:02x}{:02x}", 
-                i, potential_key[0], potential_key[1], potential_key[30], potential_key[31]);
-        }
-        
-        // Limit to reasonable number of keys
-        if key_ids.len() >= 5 {
-            break;
-        }
-    }
-    
-    if key_ids.is_empty() {
-        return Err(EnclaveError::GenericError("No valid key IDs found in SEAL blob".to_string()));
-    }
-    
-    Ok(key_ids)
-}
-
-/// Fetch decryption keys from Mysten SEAL key server
-async fn fetch_keys_from_mysten_server(key_ids: &[Vec<u8>], server_url: &str) -> Result<Vec<Vec<u8>>, EnclaveError> {
-    let client = reqwest::Client::new();
-    let mut decryption_keys = Vec::new();
-    
-    for (i, key_id) in key_ids.iter().enumerate() {
-        info!("Fetching key {}/{} from Mysten server", i+1, key_ids.len());
-        
-        // Convert key_id to hex for the request
-        let key_id_hex = key_id.iter().map(|b| format!("{:02x}", b)).collect::<String>();
-        
-        // Construct the key fetch request URL
-        // This follows SEAL key server API format
-        let fetch_url = format!("{}/fetch_key/{}", server_url, key_id_hex);
-        
-        info!("Fetching from URL: {}", fetch_url);
-        
-        match client.get(&fetch_url)
-            .timeout(std::time::Duration::from_secs(30))
-            .send()
-            .await 
-        {
-            Ok(response) => {
-                if response.status().is_success() {
-                    match response.bytes().await {
-                        Ok(key_data) => {
-                            info!("Successfully fetched key: {} bytes", key_data.len());
-                            decryption_keys.push(key_data.to_vec());
-                        },
-                        Err(e) => {
-                            info!("Failed to read key response: {}", e);
-                        }
-                    }
-                } else {
-                    info!("Key server returned error: {}", response.status());
-                }
-            },
-            Err(e) => {
-                info!("Failed to connect to key server: {}", e);
-            }
-        }
-    }
-    
-    if decryption_keys.is_empty() {
-        return Err(EnclaveError::GenericError("Failed to fetch any keys from Mysten server".to_string()));
-    }
-    
-    info!("Successfully fetched {} keys from Mysten SEAL server", decryption_keys.len());
-    Ok(decryption_keys)
-}
-
-/// Perform SEAL decryption using the fetched keys
-async fn perform_seal_decryption_with_keys(blob_data: &[u8], keys: &[Vec<u8>]) -> Result<Vec<u8>, EnclaveError> {
-    info!("Performing SEAL decryption with {} keys", keys.len());
-    
-    // Extract the encrypted payload from the blob
-    // Skip headers and key metadata to get to the actual encrypted content
-    let header_size = 37 + (keys.len() * 32); // Object ID + key IDs
-    
-    if header_size >= blob_data.len() {
-        return Err(EnclaveError::GenericError("Invalid blob structure for SEAL decryption".to_string()));
-    }
-    
-    let encrypted_payload = &blob_data[header_size..];
-    info!("Encrypted payload size: {} bytes", encrypted_payload.len());
-    
-    // Try decryption with each key (SEAL uses Identity-Based Encryption)
-    for (i, key) in keys.iter().enumerate() {
-        info!("Trying decryption with key {}/{}", i+1, keys.len());
-        
-        // This is where we would use the SEAL SDK for actual IBE decryption
-        // For now, implement a placeholder that shows the structure
-        
-        // In a real implementation, this would:
-        // 1. Parse the IBE public key from the server response
-        // 2. Use SEAL SDK to decrypt with IBE
-        // 3. Verify the decryption result
-        
-        info!("Key {}: {} bytes", i+1, key.len());
-        
-        // For testing, check if we can detect a successful decryption pattern
-        if key.len() > 32 && encrypted_payload.len() > 100 {
-            // This would be replaced with real SEAL IBE decryption
-            info!("Would attempt IBE decryption with key {} ({} bytes)", i+1, key.len());
-        }
-    }
-    
-    // For now, return an error indicating we need full SEAL SDK integration
-    Err(EnclaveError::GenericError("SEAL IBE decryption requires full SEAL SDK integration - keys fetched successfully".to_string()))
-}
-
-/// Simplified SEAL blob analysis (synchronous version)
-fn parse_real_seal_blob_sync(data: &[u8]) -> Result<(String, usize), String> {
-    if data.len() < 100 {
-        return Err("Blob too small to be SEAL encrypted".to_string());
-    }
-    
-    // Extract potential object ID at offset 5 (found in analysis)
-    let object_id_bytes = &data[5..37]; // 32 bytes for object ID
-    let object_id_hex = format!("{:02x}{:02x}{:02x}...{:02x}{:02x}{:02x}", 
-        object_id_bytes[0], object_id_bytes[1], object_id_bytes[2],
-        object_id_bytes[29], object_id_bytes[30], object_id_bytes[31]);
-    
-    // Count potential key IDs
-    let mut key_count = 0;
-    for i in (37..data.len().saturating_sub(32)).step_by(32) {
-        let potential_key = &data[i..i+32];
-        if is_potential_key_id(potential_key) {
-            key_count += 1;
-        }
-        if key_count > 10 {
-            break; // Limit search
-        }
-    }
-    
-    Ok((object_id_hex, key_count))
-}
 
 /// Download blob from actual Walrus aggregator
 async fn download_from_walrus(blob_id: &str, state: &AppState) -> Result<Vec<u8>, EnclaveError> {
@@ -1128,8 +825,8 @@ async fn perform_real_quality_assessment(
     dataset_data: &[u8], 
     model_blob_id: &str,
     dataset_blob_id: &str,
-    assessment_type: &AssessmentType,
-    metrics: &[String],
+    _assessment_type: &AssessmentType,
+    _metrics: &[String],
 ) -> Result<AssessmentResult, EnclaveError> {
     info!("Starting real ML assessment via Python evaluator");
     
@@ -1139,8 +836,8 @@ async fn perform_real_quality_assessment(
     
     // Prepare request payload
     let payload = serde_json::json!({
-        "model_data": base64::encode(model_data),
-        "dataset_data": base64::encode(dataset_data),
+        "model_data": general_purpose::STANDARD.encode(model_data),
+        "dataset_data": general_purpose::STANDARD.encode(dataset_data),
         "model_blob_id": model_blob_id,
         "dataset_blob_id": dataset_blob_id,
         "use_walrus": false  // Always false since we already handled Walrus download/fallback
@@ -1209,11 +906,11 @@ async fn perform_real_quality_assessment(
 fn perform_quality_assessment(
     model_info: &ModelInfo,
     dataset_info: &DatasetInfo,
-    assessment_type: &AssessmentType,
-    metrics: &[String],
+    _assessment_type: &AssessmentType,
+    _metrics: &[String],
 ) -> Result<AssessmentResult, EnclaveError> {
     
-    info!("Performing {:?} assessment with metrics: {:?}", assessment_type, metrics);
+    info!("Performing assessment with quality metrics");
     
     let start = std::time::Instant::now();
     
@@ -1354,7 +1051,7 @@ async fn publish_verification_onchain(
     }
     
     // Get Sui network configuration
-    let sui_rpc_url = std::env::var("SUI_RPC_URL")
+    let _sui_rpc_url = std::env::var("SUI_RPC_URL")
         .unwrap_or_else(|_| "https://fullnode.testnet.sui.io".to_string());
     let marketplace_package_id = std::env::var("MARKETPLACE_PACKAGE_ID")
         .map_err(|_| EnclaveError::GenericError("MARKETPLACE_PACKAGE_ID not set".to_string()))?;
@@ -1362,7 +1059,7 @@ async fn publish_verification_onchain(
         .map_err(|_| EnclaveError::GenericError("PENDING_MODEL_ID not set".to_string()))?;
         
     // Prepare transaction data
-    let tx_data = serde_json::json!({
+    let _tx_data = serde_json::json!({
         "packageId": marketplace_package_id,
         "module": "satya_marketplace", 
         "function": "complete_verification",
