@@ -245,4 +245,13 @@ if __name__ == '__main__':
     print("")
     print("Starting server on localhost:3333...")
     
-    app.run(host='0.0.0.0', port=3333, debug=True)
+    # Production-safe configuration
+    import os
+    debug_mode = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+    host = os.getenv('FLASK_HOST', '127.0.0.1')  # Localhost only by default
+    port = int(os.getenv('FLASK_PORT', '3333'))
+    
+    if debug_mode:
+        print("⚠️  WARNING: Debug mode enabled! Not suitable for production.")
+    
+    app.run(host=host, port=port, debug=debug_mode)
