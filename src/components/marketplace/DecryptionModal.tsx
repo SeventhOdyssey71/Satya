@@ -92,6 +92,7 @@ export default function DecryptionModal({ model, onClose }: DecryptionModalProps
     console.log('Decryption result:', result)
     
     if (result.success) {
+     setIsDecrypting(false)
      setIsComplete(true)
      
      // Create downloadable blobs from the decrypted data
@@ -122,8 +123,9 @@ export default function DecryptionModal({ model, onClose }: DecryptionModalProps
     throw new Error(`Decryption failed: ${errorData.error || response.statusText}`)
    }
   } catch (error) {
-   console.error('Decryption failed:', error)
-   setError(error instanceof Error ? error.message : 'Decryption failed. Please try again.')
+   const errorMessage = error instanceof Error ? error.message : 'Decryption failed. Please try again.'
+   console.warn('Decryption failed:', errorMessage)
+   setError(errorMessage)
    setIsDecrypting(false)
   }
  }
