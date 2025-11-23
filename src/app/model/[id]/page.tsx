@@ -231,12 +231,12 @@ export default function ModelPage({ params }: ModelPageProps) {
   <div className="min-h-screen bg-white">
    <Header />
    
-   <main className="relative z-10 py-6">
+   <main className="relative z-10 pt-20 pb-12">
     <div className="container max-w-7xl mx-auto px-6">
      {/* Back Button */}
      <button 
       onClick={() => router.push('/marketplace')}
-      className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+      className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-12 transition-colors"
      >
       ← Back to Marketplace
      </button>

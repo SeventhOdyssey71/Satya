@@ -199,9 +199,9 @@ function TrustedMarketplacesSection() {
 
      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
       {[
-       { title: "Verified Models", count: "1,000+", description: "TEE-attested AI models" },
-       { title: "Active Users", count: "10,000+", description: "Developers and researchers" },
-       { title: "Total Volume", count: "$5M+", description: "In secure transactions" }
+       { title: "Verified Models", count: "--", description: "TEE-attested AI models" },
+       { title: "Active Users", count: "--", description: "Developers and researchers" },
+       { title: "Total Volume", count: "--", description: "In secure transactions" }
       ].map((stat, index) => (
        <AnimatedSection key={index} delay={index * 0.1}>
         <div className="text-center p-6 sm:p-8 bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
@@ -238,10 +238,7 @@ function SuiStackSection() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-4xl mx-auto">
      <AnimatedSection delay={0.1}>
       <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 hover:shadow-lg transition-shadow">
-       <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-        <HiShieldCheck className="w-6 h-6 sm:w-8 sm:h-8 text-gray-700 flex-shrink-0" />
-        <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Security First</h3>
-       </div>
+       <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Security First</h3>
        <p className="text-sm sm:text-base text-gray-600">
         Multi-layer security with TEE verification, encryption, and blockchain immutability
        </p>
@@ -250,10 +247,7 @@ function SuiStackSection() {
 
      <AnimatedSection delay={0.2}>
       <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 hover:shadow-lg transition-shadow">
-       <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-        <HiBolt className="w-6 h-6 sm:w-8 sm:h-8 text-gray-700 flex-shrink-0" />
-        <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Lightning Fast</h3>
-       </div>
+       <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Lightning Fast</h3>
        <p className="text-sm sm:text-base text-gray-600">
         Sub-second finality with Sui blockchain and optimized storage retrieval
        </p>
@@ -343,39 +337,32 @@ function Footer() {
  return (
   <footer className="relative z-10 py-12 sm:py-14 md:py-16 bg-white border-t border-gray-200">
    <div className="container-custom px-4 sm:px-6">
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 mb-8 sm:mb-10 md:mb-12">
-     <div className="sm:col-span-2 md:col-span-1">
+    <div className="flex flex-col md:flex-row justify-between items-start mb-8 sm:mb-10 md:mb-12">
+     <div className="mb-6 md:mb-0">
       <h3 className="font-bold text-gray-900 mb-3 sm:mb-4">Satya</h3>
-      <p className="text-gray-600 text-sm">
+      <p className="text-gray-600 text-sm max-w-sm">
        Building the future of trusted AI with verifiable data markets.
       </p>
      </div>
      
-     <div>
-      <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4">Product</h4>
-      <ul className="space-y-2">
-       <li><Link href="/marketplace" className="text-gray-600 hover:text-gray-900 text-sm">Marketplace</Link></li>
-       <li><Link href="/upload" className="text-gray-600 hover:text-gray-900 text-sm">Upload Model</Link></li>
-       <li><Link href="/dashboard" className="text-gray-600 hover:text-gray-900 text-sm">Dashboard</Link></li>
-      </ul>
-     </div>
-     
-     <div>
-      <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4">Resources</h4>
-      <ul className="space-y-2">
-       <li><a href="/docs" className="text-gray-600 hover:text-gray-900 text-sm">Documentation</a></li>
-       <li><a href="/api" className="text-gray-600 hover:text-gray-900 text-sm">API Reference</a></li>
-       <li><a href="/guides" className="text-gray-600 hover:text-gray-900 text-sm">Guides</a></li>
-      </ul>
-     </div>
-     
-     <div>
-      <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4">Company</h4>
-      <ul className="space-y-2">
-       <li><a href="/about" className="text-gray-600 hover:text-gray-900 text-sm">About</a></li>
-       <li><a href="/blog" className="text-gray-600 hover:text-gray-900 text-sm">Blog</a></li>
-       <li><a href="/contact" className="text-gray-600 hover:text-gray-900 text-sm">Contact</a></li>
-      </ul>
+     <div className="flex flex-col sm:flex-row gap-8 sm:gap-12">
+      <div>
+       <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4">Product</h4>
+       <ul className="space-y-2">
+        <li><Link href="/marketplace" className="text-gray-600 hover:text-gray-900 text-sm">Marketplace</Link></li>
+        <li><Link href="/upload" className="text-gray-600 hover:text-gray-900 text-sm">Upload Model</Link></li>
+        <li><Link href="/dashboard" className="text-gray-600 hover:text-gray-900 text-sm">Dashboard</Link></li>
+       </ul>
+      </div>
+      
+      <div>
+       <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4">Resources</h4>
+       <ul className="space-y-2">
+        <li><a href="/docs" className="text-gray-600 hover:text-gray-900 text-sm">Documentation</a></li>
+        <li><a href="/api" className="text-gray-600 hover:text-gray-900 text-sm">API Reference</a></li>
+        <li><a href="/guides" className="text-gray-600 hover:text-gray-900 text-sm">Guides</a></li>
+       </ul>
+      </div>
      </div>
     </div>
     
