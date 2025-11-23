@@ -23,6 +23,9 @@ const albert = Albert_Sans({
 export const metadata: Metadata = {
  title: 'Satya Data Marketplace',
  description: 'Secure ML model and dataset marketplace with TEE verification',
+ icons: {
+  icon: '/images/satya icon black.svg',
+ },
 }
 
 export default function RootLayout({
