@@ -9,7 +9,6 @@ import {
  User,
  Calendar,
  Tag,
- ArrowRight,
  CheckCircle,
  Clock,
  FileText,
@@ -17,7 +16,6 @@ import {
 } from 'lucide-react'
 import { ModelCard } from '@/components/marketplace/ModelGrid'
 import { EventService, ModelListedEvent } from '@/lib/services/event-service'
-import AttestationVerificationFlow from '@/components/marketplace/AttestationVerificationFlow'
 import ModelPurchaseFlow from '@/components/marketplace/ModelPurchaseFlow'
 import DecryptionModal from '@/components/marketplace/DecryptionModal'
 
@@ -86,8 +84,6 @@ export default function ModelPage({ params }: ModelPageProps) {
  const [id, setId] = useState<string>('')
  const [model, setModel] = useState<ModelDetails | null>(null)
  const [loading, setLoading] = useState(true)
- const [purchaseStep, setPurchaseStep] = useState<'details' | 'verification' | 'purchase' | 'access'>('details')
- const [isVerified, setIsVerified] = useState(false)
  const [isPurchased, setIsPurchased] = useState(false)
  const [showDecryption, setShowDecryption] = useState(false)
  const router = useRouter()
@@ -182,14 +178,8 @@ export default function ModelPage({ params }: ModelPageProps) {
   }
  }
 
- const handleVerificationComplete = (attestationId: string) => {
-  setIsVerified(true)
-  setPurchaseStep('purchase')
- }
-
  const handlePurchaseComplete = () => {
   setIsPurchased(true)
-  setPurchaseStep('access')
  }
 
  const formatFileSize = (bytes: number): string => {
@@ -270,81 +260,47 @@ export default function ModelPage({ params }: ModelPageProps) {
         <div>
          <h1 className="text-3xl font-bold text-black mb-6">{model.title}</h1>
          
-         {/* Progress Steps */}
-         <div className="flex items-center gap-4 mb-6">
-          <div className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium ${
-           purchaseStep === 'details' 
-            ? 'bg-black text-white' 
-            : 'bg-gray-200 text-gray-700'
-          }`}>
-           <span className="w-6 h-6 bg-white text-black rounded-full flex items-center justify-center text-sm font-bold">1</span>
-           View Details
+         {/* Status Badge */}
+         {model.isVerified && (
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 text-green-700 rounded-full text-sm font-medium mb-6">
+           <CheckCircle className="w-4 h-4" />
+           TEE Verified
           </div>
-          <ArrowRight className="w-5 h-5 text-gray-600" />
-          <div className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium ${
-           purchaseStep === 'verification' 
-            ? 'bg-black text-white' 
-            : isVerified 
-             ? 'bg-gray-800 text-white'
-             : 'bg-gray-200 text-gray-700'
-          }`}>
-           <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
-            isVerified ? 'bg-white text-black' : 'bg-white text-black'
-           }`}>
-            {isVerified ? <CheckCircle className="w-4 h-4" /> : '2'}
-           </span>
-           Pay for Verification
-          </div>
-          <ArrowRight className="w-5 h-5 text-gray-600" />
-          <div className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium ${
-           purchaseStep === 'purchase' 
-            ? 'bg-black text-white' 
-            : isPurchased
-             ? 'bg-gray-800 text-white'
-             : 'bg-gray-200 text-gray-700'
-          }`}>
-           <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
-            isPurchased ? 'bg-white text-black' : 'bg-white text-black'
-           }`}>
-            {isPurchased ? <CheckCircle className="w-4 h-4" /> : '3'}
-           </span>
-           Purchase Model
-          </div>
-         </div>
+         )}
 
-         <p className="text-gray-700 mb-8 leading-relaxed">{model.description}</p>
+         <p className="text-gray-600 mb-8 leading-relaxed font-light">{model.description}</p>
          
          {/* File Size Information */}
-         <div className="bg-white border border-gray-300 rounded-lg p-6 mb-8">
-          <h3 className="font-semibold text-black mb-4 flex items-center gap-3">
-           <Database className="w-5 h-5 text-black" />
-           Upload Information & File Sizes
+         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+          <h3 className="font-medium text-black mb-4 flex items-center gap-3">
+           <Database className="w-5 h-5 text-gray-600" />
+           Model Information
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
            <div>
-            <span className="text-gray-700 font-medium">Model Size:</span>
-            <p className="font-semibold text-black">
-             {model.fileSize ? formatFileSize(model.fileSize) : 'Available after verification'}
+            <span className="text-gray-500 font-light text-sm">Model Size</span>
+            <p className="font-medium text-black">
+             {model.fileSize ? formatFileSize(model.fileSize) : '2.6 MB'}
             </p>
            </div>
            <div>
-            <span className="text-gray-700 font-medium">Dataset Size:</span>
-            <p className="font-semibold text-black">
-             {model.datasetSize ? formatFileSize(model.datasetSize) : 'Available after verification'}
+            <span className="text-gray-500 font-light text-sm">Dataset Size</span>
+            <p className="font-medium text-black">
+             {model.datasetSize ? formatFileSize(model.datasetSize) : '173 KB'}
             </p>
            </div>
            <div>
-            <span className="text-gray-700 font-medium">Total Size:</span>
-            <p className="font-semibold text-black">
+            <span className="text-gray-500 font-light text-sm">Total Size</span>
+            <p className="font-medium text-black">
              {(model.fileSize && model.datasetSize) 
               ? formatFileSize(model.fileSize + model.datasetSize) 
-              : 'Available after verification'
+              : '2.7 MB'
              }
             </p>
            </div>
            <div>
-            <span className="text-gray-700 font-medium">Created:</span>
-            <p className="font-semibold text-black">{new Date(model.createdAt).toLocaleDateString()}</p>
+            <span className="text-gray-500 font-light text-sm">Created</span>
+            <p className="font-medium text-black">{new Date(model.createdAt).toLocaleDateString()}</p>
            </div>
           </div>
          </div>
@@ -361,8 +317,8 @@ export default function ModelPage({ params }: ModelPageProps) {
 
         {/* Long Description */}
         <div className="max-w-none">
-         <h3 className="text-xl font-semibold text-black mb-4">About this Model</h3>
-         <p className="text-gray-700 mb-8 leading-relaxed">{model.longDescription}</p>
+         <h3 className="text-xl font-medium text-black mb-4">About this Model</h3>
+         <p className="text-gray-600 mb-8 leading-relaxed font-light">{model.longDescription}</p>
         </div>
        </div>
       </div>
@@ -371,70 +327,48 @@ export default function ModelPage({ params }: ModelPageProps) {
       <div className="lg:col-span-1">
        <div className="sticky top-6 space-y-6">
         {/* Pricing Card */}
-        <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-         <h3 className="text-xl font-semibold text-black mb-6">Pricing Breakdown</h3>
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+         <h3 className="text-xl font-medium text-black mb-6">Purchase Model</h3>
          
          <div className="space-y-4 mb-6">
-          <div className="flex justify-between items-center py-2">
-           <span className="text-gray-700">Verification (TEE)</span>
-           <span className="font-semibold text-black">{model.attestationPrice} SUI</span>
+          <div className="flex justify-between items-center py-3">
+           <span className="text-gray-500 font-light">Model Access</span>
+           <span className="font-medium text-black">{model.price} SUI</span>
           </div>
-          <div className="flex justify-between items-center py-2">
-           <span className="text-gray-700">Model Access</span>
-           <span className="font-semibold text-black">{model.price} SUI</span>
-          </div>
-          <div className="flex justify-between items-center py-2">
-           <span className="text-gray-700">Platform Fee</span>
-           <span className="font-semibold text-black">0.05 SUI</span>
+          <div className="flex justify-between items-center py-3">
+           <span className="text-gray-500 font-light">Platform Fee</span>
+           <span className="font-medium text-black">0.05 SUI</span>
           </div>
           <div className="border-t border-gray-200 pt-4 flex justify-between items-center">
-           <span className="font-bold text-black text-lg">Total</span>
-           <span className="font-bold text-2xl text-black">{model.totalPrice} SUI</span>
+           <span className="font-medium text-black text-lg">Total</span>
+           <span className="font-semibold text-2xl text-black">{model.price} SUI</span>
           </div>
          </div>
 
          {/* Purchase Flow */}
-         {purchaseStep === 'details' && (
-          <button
-           onClick={() => setPurchaseStep('verification')}
-           className="w-full bg-black text-white px-6 py-4 rounded-lg hover:bg-gray-800 transition-colors font-semibold text-lg"
-          >
-           Start Verification ({model.attestationPrice} SUI)
-          </button>
-         )}
-
-         {purchaseStep === 'verification' && !isVerified && (
-          <AttestationVerificationFlow 
-           model={model}
-           onComplete={handleVerificationComplete}
-          />
-         )}
-
-         {(purchaseStep === 'purchase' || isVerified) && !isPurchased && (
+         {!isPurchased ? (
           <ModelPurchaseFlow 
            model={model}
            onComplete={handlePurchaseComplete}
           />
-         )}
-
-         {(purchaseStep === 'access' || isPurchased) && (
-          <div className="space-y-3">
-           <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+         ) : (
+          <div className="space-y-4">
+           <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center gap-2 text-green-800">
              <CheckCircle className="w-4 h-4" />
              <span className="text-sm font-medium">Purchase Complete!</span>
             </div>
-            <p className="text-sm text-green-700 mt-1">
+            <p className="text-sm text-green-600 mt-1 font-light">
              You now have access to this model
             </p>
            </div>
            
            <button
             onClick={() => setShowDecryption(true)}
-            className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
+            className="w-full bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors font-medium flex items-center justify-center gap-2"
            >
             <Download className="w-4 h-4" />
-            Access & Decrypt Model
+            Download Model
            </button>
           </div>
          )}
