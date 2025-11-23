@@ -6,9 +6,9 @@ Provides actual model performance assessment instead of fake scores
 
 import os
 import json
-import pickle
 import time
 import hashlib
+import warnings
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (
@@ -123,23 +123,41 @@ class MLEvaluator:
             return None
     
     def _load_model_from_bytes(self, model_data):
-        """Load model from binary data"""
+        """Load model from binary data with security considerations"""
         try:
-            # Try to load as pickle
-            model = pickle.loads(model_data)
-            print(f"Loaded model: {model.get('metadata', {}).get('model_type', 'unknown')}")
-            return model
+            # First try joblib (safer for sklearn models)
+            import tempfile
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.joblib') as tmp:
+                tmp.write(model_data)
+                tmp.flush()
+                try:
+                    model_data = joblib.load(tmp.name)
+                    os.unlink(tmp.name)
+                    
+                    # If it's already a dict with model/metadata, return as-is
+                    if isinstance(model_data, dict) and 'model' in model_data:
+                        print(f"Loaded model via joblib: {model_data.get('metadata', {}).get('model_type', 'unknown')}")
+                        return model_data
+                    else:
+                        # If it's just a model, wrap it
+                        print(f"Loaded model via joblib: {type(model_data).__name__}")
+                        return {"model": model_data, "metadata": {"model_type": "joblib_model"}}
+                except:
+                    os.unlink(tmp.name)
+                    raise
         except:
             try:
-                # Try to load as joblib
-                import tempfile
-                with tempfile.NamedTemporaryFile(delete=False) as tmp:
-                    tmp.write(model_data)
-                    tmp.flush()
-                    model = joblib.load(tmp.name)
-                    os.unlink(tmp.name)
-                return {"model": model, "metadata": {"model_type": "joblib_model"}}
-            except:
+                # Fallback to pickle with warnings for trusted data only
+                warnings.warn(
+                    "Using pickle for model deserialization. Only use with trusted data sources!",
+                    SecurityWarning
+                )
+                import pickle
+                model = pickle.loads(model_data)
+                print(f"Loaded model via pickle: {model.get('metadata', {}).get('model_type', 'unknown')}")
+                return model
+            except Exception as e:
+                print(f"Failed to load model: {str(e)}")
                 return None
     
     def _load_dataset_from_bytes(self, dataset_data):

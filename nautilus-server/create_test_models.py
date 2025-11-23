@@ -6,7 +6,6 @@ for real attestation testing in the Satya marketplace
 
 import os
 import json
-import pickle
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -63,7 +62,7 @@ def create_high_quality_model():
     
     print(f"High-quality model metrics: Accuracy={accuracy:.3f}, F1={f1:.3f}")
     
-    # Save model and scaler together
+    # Save model and scaler together using joblib (safer than pickle)
     model_data = {
         'model': model,
         'scaler': scaler,
@@ -78,8 +77,7 @@ def create_high_quality_model():
         }
     }
     
-    with open('test_models/high_quality_model.pkl', 'wb') as f:
-        pickle.dump(model_data, f)
+    joblib.dump(model_data, 'test_models/high_quality_model.pkl')
     
     # Save test dataset
     test_data = pd.DataFrame(X_test_scaled, columns=[f'feature_{i}' for i in range(15)])
@@ -114,7 +112,7 @@ def create_medium_quality_model():
     
     print(f"Medium-quality model metrics: Accuracy={accuracy:.3f}, F1={f1:.3f}")
     
-    # Save model
+    # Save model using joblib
     model_data = {
         'model': model,
         'scaler': scaler,
@@ -129,8 +127,7 @@ def create_medium_quality_model():
         }
     }
     
-    with open('test_models/medium_quality_model.pkl', 'wb') as f:
-        pickle.dump(model_data, f)
+    joblib.dump(model_data, 'test_models/medium_quality_model.pkl')
     
     # Save test dataset
     test_data = pd.DataFrame(X_test_scaled, columns=[f'feature_{i}' for i in range(12)])
@@ -165,7 +162,7 @@ def create_low_quality_model():
     
     print(f"Low-quality model metrics: Accuracy={accuracy:.3f}, F1={f1:.3f}")
     
-    # Save model
+    # Save model using joblib
     model_data = {
         'model': model,
         'scaler': scaler,
@@ -180,8 +177,7 @@ def create_low_quality_model():
         }
     }
     
-    with open('test_models/low_quality_model.pkl', 'wb') as f:
-        pickle.dump(model_data, f)
+    joblib.dump(model_data, 'test_models/low_quality_model.pkl')
     
     # Save test dataset
     test_data = pd.DataFrame(X_test_scaled, columns=[f'feature_{i}' for i in range(8)])
@@ -220,7 +216,7 @@ def create_neural_network_model():
     
     print(f"Neural network model metrics: Accuracy={accuracy:.3f}, F1={f1:.3f}")
     
-    # Save model
+    # Save model using joblib
     model_data = {
         'model': model,
         'scaler': scaler,
@@ -236,8 +232,7 @@ def create_neural_network_model():
         }
     }
     
-    with open('test_models/neural_network_model.pkl', 'wb') as f:
-        pickle.dump(model_data, f)
+    joblib.dump(model_data, 'test_models/neural_network_model.pkl')
     
     # Save test dataset
     test_data = pd.DataFrame(X_test_scaled, columns=[f'feature_{i}' for i in range(20)])
