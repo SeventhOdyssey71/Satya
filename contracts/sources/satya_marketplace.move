@@ -1,6 +1,7 @@
 /// Satya Marketplace - Comprehensive Smart Contract for TEE-Verified Model Trading
 /// This contract manages the complete flow: Upload → Pending → Verification → Marketplace
 
+#[allow(duplicate_alias, unused_variable, unused_const, unused_use)]
 module satya::marketplace {
     use sui::object::{Self, UID, ID};
     use sui::tx_context::{Self, TxContext};
@@ -10,25 +11,20 @@ module satya::marketplace {
     use sui::sui::SUI;
     use sui::clock::{Self, Clock};
     use sui::table::{Self, Table};
-    use std::vector;
     use std::string::{Self, String};
     use std::option::{Self, Option};
 
     /// Error codes
     const EInvalidUpload: u64 = 100;
     const ENotOwner: u64 = 101;
-    const EAlreadyVerified: u64 = 102;
     const ENotVerified: u64 = 103;
     const EInsufficientPayment: u64 = 104;
-    const EAlreadyPurchased: u64 = 105;
     const EModelNotFound: u64 = 106;
 
     /// Upload status enum
     const STATUS_PENDING: u8 = 0;
     const STATUS_VERIFYING: u8 = 1;
     const STATUS_VERIFIED: u8 = 2;
-    const STATUS_MARKETPLACE: u8 = 3;
-    const STATUS_REJECTED: u8 = 4;
 
     /// Marketplace singleton object for global state
     public struct MarketplaceRegistry has key {
@@ -161,6 +157,7 @@ module satya::marketplace {
     }
 
     /// Phase 1: Upload model to pending state (entry function version)
+    #[allow(lint(public_entry))]
     public entry fun upload_model_entry(
         title: String,
         description: String,
