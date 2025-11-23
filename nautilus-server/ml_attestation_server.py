@@ -1,0 +1,248 @@
+#!/usr/bin/env python3
+"""
+ML Attestation Server for Satya Marketplace
+Provides HTTP API for real ML model evaluation
+"""
+
+import json
+import os
+import tempfile
+import traceback
+import base64
+import requests
+from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
+from ml_evaluator import MLEvaluator
+
+app = Flask(__name__)
+CORS(app)
+
+# Initialize evaluator
+evaluator = MLEvaluator()
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({
+        "status": "healthy",
+        "service": "ml_attestation_server",
+        "version": "1.0.0",
+        "evaluator_ready": True
+    })
+
+@app.route('/evaluate', methods=['POST'])
+def evaluate_model():
+    """
+    Evaluate a model on a dataset
+    
+    Request format:
+    {
+        "model_data": "base64_encoded_model_data",  # or model_url
+        "dataset_data": "base64_encoded_dataset_data",  # or dataset_url
+        "model_url": "http://...",  # Alternative to model_data
+        "dataset_url": "http://...",  # Alternative to dataset_data
+        "use_walrus": true,  # Whether to download from Walrus
+        "model_blob_id": "walrus_blob_id",  # For Walrus downloads
+        "dataset_blob_id": "walrus_blob_id"  # For Walrus downloads
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No JSON data provided"}), 400
+        
+        print(f"Received evaluation request: {list(data.keys())}")
+        
+        # Get model data
+        model_data = None
+        if data.get("use_walrus") and data.get("model_blob_id"):
+            model_data = download_from_walrus(data["model_blob_id"])
+        elif data.get("model_url"):
+            model_data = download_from_url(data["model_url"])
+        elif data.get("model_data"):
+            model_data = base64.b64decode(data["model_data"])
+        else:
+            # Use local test model for demonstration
+            model_file = data.get("model_file", "test_models/high_quality_model.pkl")
+            if os.path.exists(model_file):
+                with open(model_file, 'rb') as f:
+                    model_data = f.read()
+        
+        if not model_data:
+            return jsonify({"error": "Could not obtain model data"}), 400
+        
+        # Get dataset data
+        dataset_data = None
+        if data.get("use_walrus") and data.get("dataset_blob_id"):
+            dataset_data = download_from_walrus(data["dataset_blob_id"])
+        elif data.get("dataset_url"):
+            dataset_data = download_from_url(data["dataset_url"])
+        elif data.get("dataset_data"):
+            dataset_data = base64.b64decode(data["dataset_data"])
+        else:
+            # Use local test dataset for demonstration
+            dataset_file = data.get("dataset_file", "test_datasets/high_quality_test.csv")
+            if os.path.exists(dataset_file):
+                with open(dataset_file, 'rb') as f:
+                    dataset_data = f.read()
+        
+        if not dataset_data:
+            return jsonify({"error": "Could not obtain dataset data"}), 400
+        
+        print(f"Evaluating model ({len(model_data)} bytes) on dataset ({len(dataset_data)} bytes)")
+        
+        # Perform evaluation
+        result = evaluator.evaluate_model_on_dataset(model_data, dataset_data)
+        
+        if result:
+            return jsonify({
+                "success": True,
+                "evaluation": result
+            })
+        else:
+            return jsonify({"error": "Evaluation failed"}), 500
+            
+    except Exception as e:
+        print(f"Evaluation error: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/test_models', methods=['GET'])
+def list_test_models():
+    """List available test models"""
+    try:
+        models_dir = "test_models"
+        datasets_dir = "test_datasets"
+        
+        models = []
+        datasets = []
+        
+        if os.path.exists(models_dir):
+            for f in os.listdir(models_dir):
+                if f.endswith('.pkl'):
+                    models.append(f)
+        
+        if os.path.exists(datasets_dir):
+            for f in os.listdir(datasets_dir):
+                if f.endswith('.csv'):
+                    datasets.append(f)
+        
+        # Load manifest if available
+        manifest = {}
+        manifest_path = os.path.join(models_dir, "manifest.json")
+        if os.path.exists(manifest_path):
+            with open(manifest_path, 'r') as f:
+                manifest = json.load(f)
+        
+        return jsonify({
+            "models": models,
+            "datasets": datasets,
+            "manifest": manifest
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/test_evaluate/<model_name>/<dataset_name>', methods=['GET'])
+def test_evaluate(model_name, dataset_name):
+    """Test evaluation with specific model and dataset"""
+    try:
+        model_file = f"test_models/{model_name}"
+        dataset_file = f"test_datasets/{dataset_name}"
+        
+        if not os.path.exists(model_file):
+            return jsonify({"error": f"Model {model_name} not found"}), 404
+        if not os.path.exists(dataset_file):
+            return jsonify({"error": f"Dataset {dataset_name} not found"}), 404
+        
+        with open(model_file, 'rb') as f:
+            model_data = f.read()
+        with open(dataset_file, 'rb') as f:
+            dataset_data = f.read()
+        
+        result = evaluator.evaluate_model_on_dataset(model_data, dataset_data)
+        
+        if result:
+            return jsonify({
+                "success": True,
+                "model": model_name,
+                "dataset": dataset_name,
+                "evaluation": result
+            })
+        else:
+            return jsonify({"error": "Evaluation failed"}), 500
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/download_model/<model_name>', methods=['GET'])
+def download_model(model_name):
+    """Download a test model"""
+    try:
+        model_file = f"test_models/{model_name}"
+        if not os.path.exists(model_file):
+            return jsonify({"error": f"Model {model_name} not found"}), 404
+        
+        return send_file(model_file, as_attachment=True)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/download_dataset/<dataset_name>', methods=['GET'])
+def download_dataset(dataset_name):
+    """Download a test dataset"""
+    try:
+        dataset_file = f"test_datasets/{dataset_name}"
+        if not os.path.exists(dataset_file):
+            return jsonify({"error": f"Dataset {dataset_name} not found"}), 404
+        
+        return send_file(dataset_file, as_attachment=True)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+def download_from_walrus(blob_id):
+    """Download blob from Walrus aggregator"""
+    aggregator_url = os.environ.get("WALRUS_AGGREGATOR_URL", "https://aggregator.walrus-testnet.walrus.space")
+    url = f"{aggregator_url}/v1/{blob_id}"
+    
+    print(f"Downloading from Walrus: {url}")
+    
+    try:
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        
+        data = response.content
+        if not data:
+            raise Exception("Downloaded blob is empty")
+        
+        print(f"Downloaded {len(data)} bytes from Walrus")
+        return data
+        
+    except Exception as e:
+        print(f"Failed to download from Walrus: {str(e)}")
+        raise
+
+def download_from_url(url):
+    """Download data from URL"""
+    try:
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        return response.content
+    except Exception as e:
+        print(f"Failed to download from URL: {str(e)}")
+        raise
+
+if __name__ == '__main__':
+    print("Starting ML Attestation Server...")
+    print("Available endpoints:")
+    print("  GET  /health - Health check")
+    print("  POST /evaluate - Evaluate model on dataset")
+    print("  GET  /test_models - List available test models")
+    print("  GET  /test_evaluate/<model>/<dataset> - Test with specific model/dataset")
+    print("  GET  /download_model/<model> - Download test model")
+    print("  GET  /download_dataset/<dataset> - Download test dataset")
+    print("")
+    print("Starting server on localhost:3333...")
+    
+    app.run(host='0.0.0.0', port=3333, debug=True)

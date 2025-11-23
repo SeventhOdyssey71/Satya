@@ -83,7 +83,6 @@ temp/
 
 # Project-specific ignores
 accelerator-redac/
-nautilus-server/
 .editorconfig
 .env.example
 .gitmessage
