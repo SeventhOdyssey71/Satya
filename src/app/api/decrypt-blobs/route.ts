@@ -122,19 +122,28 @@ export async function POST(request: NextRequest) {
   const modelData = await walrusService.downloadBlob(model_blob_id)
   console.log(`Model data downloaded, size: ${modelData?.length || 0} bytes`)
 
-  console.log(`Downloading dataset blob: ${dataset_blob_id}`)
-  const datasetData = await walrusService.downloadBlob(dataset_blob_id)
-  console.log(`Dataset data downloaded, size: ${datasetData?.length || 0} bytes`)
+  // Try to download dataset blob, but make it optional
+  let datasetData: Uint8Array | null = null
+  try {
+    if (dataset_blob_id && dataset_blob_id !== 'default-dataset-blob') {
+      console.log(`Downloading dataset blob: ${dataset_blob_id}`)
+      datasetData = await walrusService.downloadBlob(dataset_blob_id)
+      console.log(`Dataset data downloaded, size: ${datasetData?.length || 0} bytes`)
+    } else {
+      console.log('No valid dataset blob ID provided, skipping dataset download')
+    }
+  } catch (datasetError) {
+    console.warn('Dataset download failed, continuing with model only:', datasetError)
+    datasetData = null
+  }
 
-  if (!modelData || !datasetData) {
-   console.error('Failed to download blobs from Walrus:', {
+  if (!modelData) {
+   console.error('Failed to download model blob from Walrus:', {
     modelDataExists: !!modelData,
-    datasetDataExists: !!datasetData,
     modelSize: modelData?.length || 0,
-    datasetSize: datasetData?.length || 0
    })
    return NextResponse.json(
-    { error: 'Failed to download encrypted files from Walrus' },
+    { error: 'Failed to download model file from Walrus' },
     { status: 500 }
    )
   }
@@ -153,10 +162,16 @@ export async function POST(request: NextRequest) {
     modelDecryption = modelDecryptionResult
     console.log('Model decryption result:', { success: modelDecryptionResult.success, error: modelDecryptionResult.error })
 
-    console.log('Starting dataset decryption...')
-    const datasetDecryptionResult = await decryptBlobData(datasetData)
-    datasetDecryption = datasetDecryptionResult
-    console.log('Dataset decryption result:', { success: datasetDecryptionResult.success, error: datasetDecryptionResult.error })
+    // Only decrypt dataset if we have data
+    if (datasetData) {
+      console.log('Starting dataset decryption...')
+      const datasetDecryptionResult = await decryptBlobData(datasetData)
+      datasetDecryption = datasetDecryptionResult
+      console.log('Dataset decryption result:', { success: datasetDecryptionResult.success, error: datasetDecryptionResult.error })
+    } else {
+      console.log('No dataset data available, marking as successful (model only)')
+      datasetDecryption = { success: true, data: new Uint8Array(0) } // Empty but successful
+    }
 
   } catch (error) {
     console.error('Decryption error:', error)
@@ -164,19 +179,17 @@ export async function POST(request: NextRequest) {
     datasetDecryption = { success: false, error: 'Failed to decrypt dataset data' }
   }
 
-  if (!modelDecryption.success || !datasetDecryption.success) {
-   const errors: string[] = []
-   if (!modelDecryption.success) {
-     errors.push(`Model: ${modelDecryption.error || 'Unknown error'}`)
-   }
-   if (!datasetDecryption.success) {
-     errors.push(`Dataset: ${datasetDecryption.error || 'Unknown error'}`)
-   }
-   
+  // Only require model decryption to succeed (dataset is optional)
+  if (!modelDecryption.success) {
    return NextResponse.json(
-    { error: `Decryption failed: ${errors.join(', ')}` },
+    { error: `Model decryption failed: ${modelDecryption.error || 'Unknown error'}` },
     { status: 500 }
    )
+  }
+  
+  // Log if dataset decryption failed but don't fail the whole operation
+  if (!datasetDecryption.success) {
+   console.warn('Dataset decryption failed, but continuing with model only:', datasetDecryption.error)
   }
 
   // Step 3: Return decrypted data
@@ -190,13 +203,16 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
    success: true,
    decrypted_model_data: Array.from(modelDecryption.data!),
-   decrypted_dataset_data: Array.from(datasetDecryption.data!),
+   decrypted_dataset_data: datasetDecryption.data ? Array.from(datasetDecryption.data) : [],
    model_blob_id,
    dataset_blob_id,
    info: {
     model_size: modelDecryption.data!.length,
-    dataset_size: datasetDecryption.data!.length,
-    decryption_status: 'Data retrieved successfully (may be raw unencrypted data)'
+    dataset_size: datasetDecryption.data?.length || 0,
+    decryption_status: datasetDecryption.data && datasetDecryption.data.length > 0 
+      ? 'Both model and dataset retrieved successfully'
+      : 'Model retrieved successfully (no dataset available)',
+    has_dataset: datasetDecryption.success && datasetDecryption.data && datasetDecryption.data.length > 0
    }
   })
 

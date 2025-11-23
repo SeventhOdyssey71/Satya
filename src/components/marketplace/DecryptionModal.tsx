@@ -134,12 +134,14 @@ export default function DecryptionModal({ model, onClose }: DecryptionModalProps
       urls.model = URL.createObjectURL(modelBlob)
      }
      
-     // Handle dataset data
-     if (result.decrypted_dataset_data) {
+     // Handle dataset data (only if available and not empty)
+     if (result.decrypted_dataset_data && result.decrypted_dataset_data.length > 0) {
       const datasetBlob = new Blob([new Uint8Array(result.decrypted_dataset_data)], { 
        type: 'application/octet-stream' 
       })
       urls.dataset = URL.createObjectURL(datasetBlob)
+     } else {
+      console.log('No dataset data available for download')
      }
      
      setDownloadUrls(urls)
@@ -174,6 +176,11 @@ export default function DecryptionModal({ model, onClose }: DecryptionModalProps
  const handleDownloadAll = () => {
   if (downloadUrls.model) handleDownload('model')
   if (downloadUrls.dataset) handleDownload('dataset')
+  
+  // If no dataset, just download the model
+  if (downloadUrls.model && !downloadUrls.dataset) {
+   console.log('Downloaded model only (no dataset available)')
+  }
  }
 
  // Cleanup URLs when component unmounts or modal closes
