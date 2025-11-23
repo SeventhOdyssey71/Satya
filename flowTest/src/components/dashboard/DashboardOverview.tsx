@@ -54,16 +54,8 @@ export default function DashboardOverview({ onNewUpload }: DashboardOverviewProp
   loadCompletedCount()
  }, [currentAccount?.address])
 
- // Set up periodic refresh for completed count
- useEffect(() => {
-  if (!currentAccount?.address) return
-
-  const interval = setInterval(() => {
-   loadCompletedCount()
-  }, 15000) // 15 seconds
-
-  return () => clearInterval(interval)
- }, [currentAccount?.address])
+ // Removed auto-refresh to prevent random refreshing
+ // Load completed count only on initial mount and manual refresh
 
  // Calculate status counts based on pending models from smart contract
  const displayCounts = {

@@ -165,17 +165,8 @@ export default function MarketplacePage() {
   }
  }, [contractService]);
 
- // Set up periodic refresh for new marketplace listings
- useEffect(() => {
-  if (!contractService) return;
-
-  const interval = setInterval(() => {
-   console.log('Auto-refreshing marketplace models...');
-   loadMarketplaceModels();
-  }, 30000); // 30 seconds
-
-  return () => clearInterval(interval);
- }, [contractService]);
+ // Removed auto-refresh to prevent random refreshing
+ // Users can manually refresh if needed
 
  // Filter models based on current filters
  const filteredModels = state.models.filter(model => {

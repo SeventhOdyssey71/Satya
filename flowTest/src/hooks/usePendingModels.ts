@@ -134,16 +134,8 @@ export function usePendingModels() {
   }
  }, [contractService, currentAccount])
 
- // Set up polling for automatic refresh every 5 seconds (more frequent)
- useEffect(() => {
-  if (!contractService || !currentAccount) return
-
-  const interval = setInterval(() => {
-   loadPendingModels()
-  }, 5000) // 5 seconds for better responsiveness
-
-  return () => clearInterval(interval)
- }, [contractService, currentAccount])
+ // Removed auto-refresh to prevent random refreshing
+ // Load models only on initial mount and manual refresh
 
  // Refresh function for manual updates
  const refresh = () => {
