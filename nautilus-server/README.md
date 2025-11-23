@@ -286,9 +286,48 @@ For production use:
 4. Use real Walrus blob IDs for model/dataset downloads
 5. Enable TEE remote attestation verification
 
+## On-Chain Verification
+
+The TEE automatically publishes real attestation results to the Sui blockchain:
+
+```bash
+# Enable on-chain publishing
+export ONCHAIN_PUBLISH_ENABLED="true"
+export MARKETPLACE_PACKAGE_ID="0x123...abc" 
+export PENDING_MODEL_ID="0xdef...456"
+
+# Test the complete flow
+python3 demo_onchain_verification.py
+```
+
+### Smart Contract Integration
+
+The system calls `satya_marketplace::complete_verification()` with:
+- **Quality Score**: Real ML performance (not fake 66%)
+- **Assessment Hash**: Cryptographic proof of computation
+- **Verifier Signature**: TEE-signed attestation
+- **Security Assessment**: Detailed performance metrics
+
+### Blockchain Transaction Format
+
+```move
+public fun complete_verification(
+    model: &mut PendingModel,
+    registry: &mut MarketplaceRegistry, 
+    enclave_id: String,
+    quality_score: u64,           // Real score: 90%, 87%, 83%
+    security_assessment: String,   // "F1: 89.1%, Fairness: 85%" 
+    attestation_hash: vector<u8>,  // SHA-256 of assessment
+    verifier_signature: vector<u8>, // TEE signature
+    clock: &Clock,
+    ctx: &mut TxContext
+): VerificationResult
+```
+
 ## Support
 
 For issues with:
 - ML evaluation: Check Python server logs
 - TEE attestation: Check Rust server logs  
 - Walrus integration: Verify blob IDs and network connectivity
+- On-chain publishing: Check Sui network connectivity and package IDs

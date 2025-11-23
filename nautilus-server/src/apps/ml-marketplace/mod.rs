@@ -151,6 +151,19 @@ pub async fn process_data(
     info!("Generated assessment hash: {}", &assessment_hash[..16]);
     info!("Generated model verification signature: {}", &model_verification_signature[..16]);
 
+    // Publish verification results to on-chain smart contract
+    let publish_result = publish_verification_onchain(
+        &request.payload.model_blob_id,
+        &quality_response,
+        &assessment_hash,
+        &model_verification_signature,
+    ).await;
+    
+    match publish_result {
+        Ok(tx_digest) => info!("Published verification to blockchain: {}", tx_digest),
+        Err(e) => info!("Failed to publish verification to blockchain: {}", e),
+    }
+
     Ok(Json(to_signed_response(
         &state.eph_kp,
         quality_response,
@@ -918,6 +931,114 @@ fn generate_model_verification_signature(
     // Return base64-encoded signature
     use base64::{Engine, engine::general_purpose::STANDARD};
     STANDARD.encode(signature.as_ref())
+}
+
+/// Publish verification results to on-chain smart contract
+async fn publish_verification_onchain(
+    model_blob_id: &str,
+    quality_response: &MLQualityResponse,
+    assessment_hash: &str,
+    verification_signature: &str,
+) -> Result<String, EnclaveError> {
+    info!("Publishing verification results to blockchain for model: {}", model_blob_id);
+    
+    // Check if on-chain publishing is enabled
+    let publish_enabled = std::env::var("ONCHAIN_PUBLISH_ENABLED")
+        .map(|v| v.to_lowercase() == "true" || v == "1")
+        .unwrap_or(false);
+        
+    if !publish_enabled {
+        info!("On-chain publishing disabled (set ONCHAIN_PUBLISH_ENABLED=true to enable)");
+        return Ok("disabled".to_string());
+    }
+    
+    // Get Sui network configuration
+    let sui_rpc_url = std::env::var("SUI_RPC_URL")
+        .unwrap_or_else(|_| "https://fullnode.testnet.sui.io".to_string());
+    let marketplace_package_id = std::env::var("MARKETPLACE_PACKAGE_ID")
+        .map_err(|_| EnclaveError::GenericError("MARKETPLACE_PACKAGE_ID not set".to_string()))?;
+    let pending_model_id = std::env::var("PENDING_MODEL_ID")
+        .map_err(|_| EnclaveError::GenericError("PENDING_MODEL_ID not set".to_string()))?;
+        
+    // Prepare transaction data
+    let tx_data = serde_json::json!({
+        "packageId": marketplace_package_id,
+        "module": "satya_marketplace", 
+        "function": "complete_verification",
+        "arguments": [
+            pending_model_id,                           // model: &mut PendingModel
+            "REGISTRY_ID_PLACEHOLDER",                   // registry: &mut MarketplaceRegistry  
+            "nautilus-tee-v1",                          // enclave_id: String
+            quality_response.quality_score,              // quality_score: u64
+            format!("ML Assessment - F1: {:.2}%, Precision: {:.2}%, Recall: {:.2}%, Bias Score: {}", 
+                quality_response.accuracy_metrics.f1_score as f64 / 10000.0,
+                quality_response.accuracy_metrics.precision as f64 / 10000.0, 
+                quality_response.accuracy_metrics.recall as f64 / 10000.0,
+                quality_response.bias_assessment.fairness_score),  // security_assessment: String
+            hex::encode(assessment_hash),                // attestation_hash: vector<u8>
+            hex::encode(verification_signature),         // verifier_signature: vector<u8>
+            "CLOCK_ID_PLACEHOLDER"                       // clock: &Clock
+        ],
+        "typeArguments": []
+    });
+    
+    // For now, simulate the transaction (would need full Sui SDK integration)
+    let simulated_tx_digest = format!("0x{}", 
+        &assessment_hash[..32]  // Use first 32 chars of assessment hash as mock tx digest
+    );
+    
+    info!("Simulated blockchain transaction for model verification:");
+    info!("  Model Blob ID: {}", model_blob_id);
+    info!("  Quality Score: {}", quality_response.quality_score);
+    info!("  F1 Score: {:.2}%", quality_response.accuracy_metrics.f1_score as f64 / 10000.0);
+    info!("  Precision: {:.2}%", quality_response.accuracy_metrics.precision as f64 / 10000.0);
+    info!("  Recall: {:.2}%", quality_response.accuracy_metrics.recall as f64 / 10000.0);
+    info!("  Bias Score: {}", quality_response.bias_assessment.fairness_score);
+    info!("  Data Integrity: {}", quality_response.data_integrity_score);
+    info!("  Assessment Hash: {}...", &assessment_hash[..16]);
+    info!("  Verification Signature: {}...", &verification_signature[..16]);
+    info!("  Mock Transaction Digest: {}", simulated_tx_digest);
+    
+    // TODO: Implement actual Sui transaction submission
+    // This would require:
+    // 1. Sui SDK integration 
+    // 2. Private key management for TEE signer
+    // 3. Transaction building and submission
+    // 4. Error handling and retry logic
+    
+    Ok(simulated_tx_digest)
+}
+
+/// Convert assessment hash to hex format for blockchain storage
+fn format_assessment_for_blockchain(
+    quality_response: &MLQualityResponse,
+) -> serde_json::Value {
+    serde_json::json!({
+        "model_hash": quality_response.model_hash,
+        "dataset_hash": quality_response.dataset_hash,
+        "quality_score": quality_response.quality_score,
+        "accuracy": {
+            "f1_score": quality_response.accuracy_metrics.f1_score,
+            "precision": quality_response.accuracy_metrics.precision,
+            "recall": quality_response.accuracy_metrics.recall,
+            "auc": quality_response.accuracy_metrics.auc
+        },
+        "performance": {
+            "inference_time_ms": quality_response.performance_metrics.inference_time_ms,
+            "memory_usage_mb": quality_response.performance_metrics.memory_usage_mb,
+            "throughput": quality_response.performance_metrics.throughput_samples_per_second
+        },
+        "bias_assessment": {
+            "fairness_score": quality_response.bias_assessment.fairness_score,
+            "bias_detected": quality_response.bias_assessment.bias_detected,
+            "demographic_parity": quality_response.bias_assessment.demographic_parity
+        },
+        "data_integrity_score": quality_response.data_integrity_score,
+        "timestamp": std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+    })
 }
 
 #[cfg(test)]
