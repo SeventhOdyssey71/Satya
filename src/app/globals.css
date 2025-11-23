@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light mode color palette */
+  --ocean: #011829;
+  --deep-ocean: #030F1C;
+  --aqua: #C0E6FF;
+  --cloud: #FFFFFF;
+  
+  --background: #FFFFFF;
+  --foreground: #011829;
+  --accent: #C0E6FF;
+  --muted: #F8FBFF;
+  --border: #E5E7EB;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    background-color: #FFFFFF;
+    @apply text-ocean antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    line-height: 1.5;
+    font-weight: 300;
+    letter-spacing: -0.01em;
+  }
+
+  /* Apple-inspired typography scale - Clean and minimal */
+  h1 { 
+    @apply text-5xl md:text-6xl lg:text-7xl font-albert font-bold leading-[1.05] tracking-[-0.02em] text-ocean; 
+    font-weight: 700;
+  }
+  h2 { 
+    @apply text-4xl md:text-5xl lg:text-6xl font-albert font-bold leading-[1.1] tracking-[-0.02em] text-ocean; 
+    font-weight: 700;
+  }
+  h3 { 
+    @apply text-3xl md:text-4xl font-albert font-semibold leading-[1.15] tracking-[-0.01em] text-ocean; 
+    font-weight: 600;
+  }
+  h4 { 
+    @apply text-2xl md:text-3xl font-albert font-light leading-[1.2] tracking-[-0.01em] text-ocean; 
+  }
+  h5 { 
+    @apply text-xl md:text-2xl font-albert font-light leading-[1.3] tracking-[-0.01em] text-ocean/90; 
+  }
+  h6 { 
+    @apply text-lg md:text-xl font-albert font-normal leading-[1.4] tracking-[-0.01em] text-ocean/90; 
+  }
+
+  p { 
+    @apply font-albert font-light leading-relaxed text-ocean/70; 
+    font-size: 17px;
+  }
+  
+  /* Subtle focus styles */
+  *:focus {
+    @apply outline-none ring-2 ring-aqua/50 ring-offset-2;
+    ring-offset-color: #FFFFFF;
+  }
+
+  /* Clean selection styles */
+  ::selection {
+    @apply bg-aqua/30 text-ocean;
+  }
+}
+
+@layer components {
+  /* Apple-inspired button variants - Clean and minimal */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 font-albert font-normal transition-all duration-300 focus:outline-none disabled:opacity-40 disabled:pointer-events-none;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+
+  .btn-primary {
+    @apply btn bg-ocean text-white hover:bg-deep-ocean active:bg-deep-ocean/90;
+    box-shadow: 0 2px 6px rgba(1, 24, 41, 0.15);
+  }
+
+  .btn-secondary {
+    @apply btn bg-white text-ocean border border-ocean/20 hover:bg-aqua/10 active:bg-aqua/20;
+    box-shadow: 0 1px 3px rgba(1, 24, 41, 0.08);
+  }
+
+  .btn-ghost {
+    @apply btn text-ocean/80 hover:bg-aqua/10 active:bg-aqua/20;
+  }
+
+  .btn-accent {
+    @apply btn bg-aqua text-ocean hover:bg-aqua/90 active:bg-aqua/80;
+    box-shadow: 0 2px 6px rgba(192, 230, 255, 0.3);
+  }
+
+  .btn-sm {
+    @apply px-4 py-2 text-[15px] rounded-full;
+  }
+
+  .btn-lg {
+    @apply px-8 py-3.5 text-[19px] rounded-full;
+  }
+
+  /* Apple-inspired card variants - Subtle and clean */
+  .card {
+    @apply bg-white border border-ocean/10 rounded-2xl;
+    box-shadow: 0 2px 12px rgba(1, 24, 41, 0.04);
+  }
+
+  .card-hover {
+    @apply card transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5;
+  }
+
+  .card-interactive {
+    @apply card-hover cursor-pointer;
+  }
+
+  /* Clean input styles */
+  .input {
+    @apply w-full px-4 py-3 bg-white border border-ocean/20 rounded-xl font-albert font-light text-ocean placeholder-ocean/40 transition-all duration-200;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+  
+  .input:focus {
+    @apply border-aqua outline-none;
+    box-shadow: 0 0 0 3px rgba(192, 230, 255, 0.2);
+  }
+
+  /* Minimal badge styles */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-albert font-normal;
+    letter-spacing: -0.01em;
+  }
+
+  .badge-success {
+    @apply badge bg-aqua/10 text-ocean border border-aqua/30;
+  }
+
+  .badge-warning {
+    @apply badge bg-amber-50 text-amber-900 border border-amber-200;
+  }
+
+  .badge-danger {
+    @apply badge bg-red-50 text-red-900 border border-red-200;
+  }
+
+  .badge-primary {
+    @apply badge bg-ocean text-white;
+  }
+
+  /* Loading states */
+  .skeleton {
+    @apply animate-pulse bg-ocean/5 rounded;
+  }
+
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+
+  .shimmer::after {
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer;
+    content: '';
+  }
+
+  /* Container utilities */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-6 sm:px-8 lg:px-12;
+  }
+
+  /* Clean navigation tabs */
+  .nav-tab {
+    @apply px-4 py-2 font-albert font-normal text-ocean/60 transition-colors border-b-2 border-transparent hover:text-ocean;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+
+  .nav-tab-active {
+    @apply nav-tab text-ocean border-ocean;
+  }
+
+  /* Minimal form sections */
+  .form-section {
+    @apply space-y-8 p-8 bg-white border border-ocean/10 rounded-2xl;
+    box-shadow: 0 2px 12px rgba(1, 24, 41, 0.04);
+  }
+
+  .form-group {
+    @apply space-y-3;
+  }
+
+  .form-label {
+    @apply block text-[15px] font-albert font-normal text-ocean;
+    letter-spacing: -0.01em;
+  }
+
+  .form-error {
+    @apply text-[15px] font-albert font-normal text-red-600;
+  }
+
+  .form-help {
+    @apply text-[15px] font-albert font-light text-ocean/50;
+  }
+}
+
+@layer utilities {
+  /* Text utilities */
+  /* Gradient text removed for cleaner look */
+
+  /* Layout utilities */
+  .content-auto {
+    content-visibility: auto;
+  }
+
+  /* Animation utilities */
+  .animate-in {
+    @apply animate-fade-in;
+  }
+
+  .slide-in {
+    @apply animate-slide-up;
+  }
+
+  .scale-in {
+    @apply animate-scale-in;
+  }
+
+  /* Grid utilities */
+  .grid-auto-fit {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  .grid-auto-fill {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+

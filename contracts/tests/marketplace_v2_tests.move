@@ -1,8 +1,9 @@
 #[test_only]
+#[allow(unused_variable, unused_const)]
 module marketplace::marketplace_v2_tests {
-    use marketplace::marketplace_v2::{Self as mp, Marketplace, AdminCap, CreatorCap, AIListing, PurchaseKey};
+    use marketplace::marketplace_v2::{Self as mp, Marketplace, AdminCap, CreatorCap, AIListing};
     use sui::test_scenario::{Self as test};
-    use sui::coin::{Self, Coin};
+    use sui::coin::Self;
     use sui::sui::SUI;
     use sui::clock::{Self, Clock};
     use sui::test_utils::assert_eq;
@@ -12,7 +13,6 @@ module marketplace::marketplace_v2_tests {
     const ADMIN: address = @0xA;
     const CREATOR: address = @0xB;
     const BUYER: address = @0xC;
-    const TREASURY: address = @0xD;
 
     #[test]
     fun test_marketplace_initialization() {
@@ -88,7 +88,7 @@ module marketplace::marketplace_v2_tests {
             let creator_cap = test::take_from_sender<CreatorCap>(&scenario);
             let clock = test::take_shared<Clock>(&scenario);
             
-            let listing_id = mp::create_listing(
+            let _listing_id = mp::create_listing(
                 &mut marketplace,
                 &creator_cap,
                 string::utf8(b"GPT-4 Clone"),
@@ -141,7 +141,7 @@ module marketplace::marketplace_v2_tests {
             );
             
             // Verify purchase key
-            let (listing_id, buyer, price_paid, _, decryption_key, access_granted) = mp::get_purchase_key_info(&purchase_key);
+            let (_listing_id, buyer, price_paid, _, _decryption_key, access_granted) = mp::get_purchase_key_info(&purchase_key);
             assert_eq(buyer, BUYER);
             assert_eq(price_paid, 1000000000);
             assert_eq(access_granted, true);

@@ -1,0 +1,43 @@
+{
+  "models": {
+    "high_quality_model": {
+      "file": "high_quality_model.pkl",
+      "expected_accuracy": 0.9,
+      "expected_f1": 0.9,
+      "model_type": "random_forest",
+      "test_dataset": "high_quality_test.csv",
+      "description": "High-performance Random Forest model with clean data"
+    },
+    "medium_quality_model": {
+      "file": "medium_quality_model.pkl",
+      "expected_accuracy": 0.8,
+      "expected_f1": 0.8,
+      "model_type": "logistic_regression",
+      "test_dataset": "medium_quality_test.csv",
+      "description": "Medium-performance Logistic Regression model"
+    },
+    "low_quality_model": {
+      "file": "low_quality_model.pkl",
+      "expected_accuracy": 0.65,
+      "expected_f1": 0.65,
+      "model_type": "logistic_regression_simple",
+      "test_dataset": "low_quality_test.csv",
+      "description": "Low-performance underfitted model with noisy data"
+    },
+    "neural_network_model": {
+      "file": "neural_network_model.pkl",
+      "expected_accuracy": 0.85,
+      "expected_f1": 0.85,
+      "model_type": "neural_network",
+      "test_dataset": "neural_network_test.csv",
+      "description": "Multi-layer perceptron neural network"
+    }
+  },
+  "datasets": {
+    "biased_dataset": {
+      "file": "biased_dataset.csv",
+      "bias_level": "high",
+      "description": "Dataset with demographic bias for testing bias detection"
+    }
+  }
+}

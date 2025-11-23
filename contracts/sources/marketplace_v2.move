@@ -5,6 +5,7 @@
 /// 2. Create marketplace listings with download prices
 /// 3. Buyers pay SUI to get decryption keys
 /// 4. Secure key distribution through Seal encryption
+#[allow(duplicate_alias, unused_variable)]
 module marketplace::marketplace_v2 {
     use sui::object::{Self, UID, ID};
     use sui::transfer;
@@ -14,8 +15,6 @@ module marketplace::marketplace_v2 {
     use sui::event;
     use sui::clock::{Self, Clock};
     use sui::table::{Self, Table};
-    use sui::balance::{Self, Balance};
-    use std::vector;
     use std::string::String;
 
     // ======= Errors =======
@@ -26,15 +25,9 @@ module marketplace::marketplace_v2 {
     #[error]
     const EInsufficientPayment: vector<u8> = b"Insufficient payment provided";
     #[error]
-    const EListingNotFound: vector<u8> = b"Listing not found";
-    #[error]
     const EListingNotActive: vector<u8> = b"Listing is not active";
     #[error]
-    const EAlreadyPurchased: vector<u8> = b"Already purchased this listing";
-    #[error]
     const EMarketplacePaused: vector<u8> = b"Marketplace is paused";
-    #[error]
-    const EInvalidCreator: vector<u8> = b"Invalid creator for this listing";
 
     // ======= Constants =======
     const PLATFORM_FEE_PERCENTAGE: u64 = 250; // 2.5%
@@ -269,7 +262,7 @@ module marketplace::marketplace_v2 {
         creator_cap: &CreatorCap,
         new_price: u64,
         clock: &Clock,
-        ctx: &mut TxContext
+        _ctx: &mut TxContext
     ) {
         assert!(listing.creator == creator_cap.creator, ENotAuthorized);
         assert!(new_price > 0, EInvalidPrice);
@@ -305,7 +298,7 @@ module marketplace::marketplace_v2 {
         marketplace: &mut Marketplace,
         listing: &mut AIListing,
         mut payment: Coin<SUI>,
-        buyer_seal_key_id: vector<u8>, // Buyer's Seal key ID for encryption
+        _buyer_seal_key_id: vector<u8>, // Buyer's Seal key ID for encryption
         clock: &Clock,
         ctx: &mut TxContext
     ): PurchaseKey {

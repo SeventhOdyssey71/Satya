@@ -1,50 +1,19 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Override language detection for build files and dependencies
+target/* linguist-generated=true
+node_modules/* linguist-vendored=true
+*.rlib linguist-generated=true
+*.wasm linguist-vendored=true
+*.d.ts linguist-generated=true
 
-# Force LF line endings for these files
-*.js text eol=lf
-*.jsx text eol=lf
-*.ts text eol=lf
-*.tsx text eol=lf
-*.json text eol=lf
-*.md text eol=lf
-*.yml text eol=lf
-*.yaml text eol=lf
-*.css text eol=lf
-*.scss text eol=lf
-*.sass text eol=lf
-*.html text eol=lf
-*.vue text eol=lf
-*.py text eol=lf
-*.sh text eol=lf
-*.bash text eol=lf
-*.zsh text eol=lf
-Makefile text eol=lf
-.gitignore text eol=lf
-.gitattributes text eol=lf
+# Ensure proper detection of source files
+*.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
+*.rs linguist-language=Rust
+*.move linguist-language=Move
 
-# Binary files
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.gif binary
-*.ico binary
-*.pdf binary
-*.woff binary
-*.woff2 binary
-*.ttf binary
-*.eot binary
-*.zip binary
-*.tar binary
-*.gz binary
-*.7z binary
-*.exe binary
-*.dll binary
-*.so binary
-*.dylib binary
-
-# Diff settings
-*.md diff=markdown
-*.py diff=python
-*.java diff=java
-*.rb diff=ruby
+# Documentation and config files
+*.md linguist-documentation=true
+*.json linguist-language=JSON
+*.toml linguist-language=TOML
+*.yaml linguist-language=YAML
+*.yml linguist-language=YAML

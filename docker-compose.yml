@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  # Main FlowTest Application
+  flowtest-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flowtest-app
+    ports:
+      - "3000:3000"  # Next.js frontend
+      - "5001:5001"  # TEE server
+      - "8001:8001"  # Tiny Models server
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - TEE_SERVER_URL=http://localhost:5001
+      - MODELS_SERVER_URL=http://localhost:8001
+    env_file:
+      - .env
+    volumes:
+      - ./tiny_models:/app/tiny_models:ro
+      - ./tiny_datasets:/app/tiny_datasets:ro
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - flowtest-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # TEE Server (standalone option)
+  tee-server:
+    image: python:3.10-slim
+    container_name: flowtest-tee-server
+    working_dir: /app
+    command: python tee_server.py
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./tee_server.py:/app/tee_server.py:ro
+      - ./real_attestation_generator.py:/app/real_attestation_generator.py:ro
+      - ./tiny_models:/app/tiny_models:ro
+      - ./tiny_datasets:/app/tiny_datasets:ro
+    environment:
+      - PORT=5001
+      - LOG_LEVEL=info
+    networks:
+      - flowtest-network
+    restart: unless-stopped
+    profiles:
+      - standalone-servers
+
+  # Tiny Models Server (standalone option)
+  models-server:
+    image: python:3.10-slim
+    container_name: flowtest-models-server
+    working_dir: /app
+    command: python tiny_models_server.py
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./tiny_models_server.py:/app/tiny_models_server.py:ro
+      - ./tiny_models:/app/tiny_models:ro
+      - ./tiny_datasets:/app/tiny_datasets:ro
+    environment:
+      - PORT=8001
+      - LOG_LEVEL=info
+    networks:
+      - flowtest-network
+    restart: unless-stopped
+    profiles:
+      - standalone-servers
+
+  # Nautilus Enclave Server (optional)
+  nautilus-server:
+    build:
+      context: ./nautilus-server
+      dockerfile: ../Dockerfile.nautilus
+    container_name: flowtest-nautilus-server
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./nautilus-server:/app:ro
+    networks:
+      - flowtest-network
+    restart: unless-stopped
+    profiles:
+      - enclave
+
+  # Database (optional, for future use)
+  postgres:
+    image: postgres:15-alpine
+    container_name: flowtest-db
+    environment:
+      - POSTGRES_USER=flowtest
+      - POSTGRES_PASSWORD=flowtest_password
+      - POSTGRES_DB=flowtest_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - flowtest-network
+    restart: unless-stopped
+    profiles:
+      - database
+
+  # Redis Cache (optional, for future use)
+  redis:
+    image: redis:7-alpine
+    container_name: flowtest-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - flowtest-network
+    restart: unless-stopped
+    profiles:
+      - cache
+
+networks:
+  flowtest-network:
+    driver: bridge
+    name: flowtest-network
+
+volumes:
+  postgres_data:
+    name: flowtest-postgres-data
+  redis_data:
+    name: flowtest-redis-data

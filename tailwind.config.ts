@@ -1,0 +1,187 @@
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        russo: ['var(--font-russo)', 'sans-serif'],
+        albert: ['var(--font-albert)', 'sans-serif'],
+      },
+      colors: {
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+        ocean: '#011829',
+        'deep-ocean': '#030F1C',
+        aqua: '#C0E6FF',
+        cloud: '#FFFFFF',
+        // Light mode gray palette
+        gray: {
+          50: '#FAFBFC',
+          100: '#F4F6F8',
+          200: '#E9ECEF',
+          300: '#DEE2E6',
+          400: '#CED4DA',
+          500: '#ADB5BD',
+          600: '#6C757D',
+          700: '#495057',
+          800: '#343A40',
+          900: '#212529',
+          950: '#0A0C0E',
+        },
+        // Primary colors based on ocean theme
+        primary: {
+          50: '#E6F4FF',
+          100: '#C0E6FF',
+          200: '#99D6FF',
+          300: '#66C0FF',
+          400: '#33AAFF',
+          500: '#0094FF',
+          600: '#0074CC',
+          700: '#005599',
+          800: '#011829',
+          900: '#030F1C',
+          950: '#010A12',
+        },
+        secondary: {
+          50: '#F0F9FF',
+          100: '#E0F2FE',
+          200: '#BAE6FD',
+          300: '#7DD3FC',
+          400: '#38BDF8',
+          500: '#0EA5E9',
+          600: '#0284C7',
+          700: '#0369A1',
+          800: '#075985',
+          900: '#0C4A6E',
+          950: '#082F49',
+        },
+        accent: {
+          50: '#F0FBFF',
+          100: '#E6F9FF',
+          200: '#C0E6FF',
+          300: '#99D6FF',
+          400: '#66C0FF',
+          500: '#33AAFF',
+          600: '#0094FF',
+          700: '#0074CC',
+          800: '#005599',
+          900: '#003666',
+          950: '#001833',
+        },
+        success: {
+          50: '#F0FDF4',
+          100: '#DCFCE7',
+          200: '#BBF7D0',
+          300: '#86EFAC',
+          400: '#4ADE80',
+          500: '#22C55E',
+          600: '#16A34A',
+          700: '#15803D',
+          800: '#166534',
+          900: '#14532D',
+          950: '#052E16',
+        },
+        warning: {
+          50: '#FFFBEB',
+          100: '#FEF3C7',
+          200: '#FDE68A',
+          300: '#FCD34D',
+          400: '#FBBF24',
+          500: '#F59E0B',
+          600: '#D97706',
+          700: '#B45309',
+          800: '#92400E',
+          900: '#78350F',
+          950: '#451A03',
+        },
+        danger: {
+          50: '#FEF2F2',
+          100: '#FEE2E2',
+          200: '#FECACA',
+          300: '#FCA5A5',
+          400: '#F87171',
+          500: '#EF4444',
+          600: '#DC2626',
+          700: '#B91C1C',
+          800: '#991B1B',
+          900: '#7F1D1D',
+          950: '#450A0A',
+        },
+        // Surface colors for cards and components
+        surface: {
+          50: '#FFFFFF',
+          100: '#FAFBFC',
+          200: '#F4F6F8',
+          300: '#E9ECEF',
+          400: '#DEE2E6',
+          500: '#CED4DA',
+        },
+        // Border colors
+        border: {
+          light: '#E9ECEF',
+          DEFAULT: '#DEE2E6',
+          dark: '#ADB5BD',
+        }
+      },
+      spacing: {
+        '18': '4.5rem',
+        '22': '5.5rem',
+        '26': '6.5rem',
+        '30': '7.5rem',
+      },
+      borderRadius: {
+        '2xl': '1rem',
+        '3xl': '1.5rem',
+        '4xl': '2rem',
+      },
+      boxShadow: {
+        'soft': '0 2px 8px rgba(1, 24, 41, 0.04)',
+        'medium': '0 4px 16px rgba(1, 24, 41, 0.08)',
+        'large': '0 8px 24px rgba(1, 24, 41, 0.12)',
+        'glow': '0 0 20px rgba(192, 230, 255, 0.2)',
+        'card': '0 2px 12px rgba(1, 24, 41, 0.04)',
+        'sm': '0 1px 3px rgba(1, 24, 41, 0.05)',
+        'md': '0 2px 8px rgba(1, 24, 41, 0.06)',
+        'lg': '0 4px 16px rgba(1, 24, 41, 0.08)',
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.5s ease-in-out',
+        'slide-up': 'slideUp 0.3s ease-out',
+        'scale-in': 'scaleIn 0.2s ease-out',
+        'shimmer': 'shimmer 2s linear infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        scaleIn: {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: 'none',
+          },
+        },
+      },
+    },
+  },
+  plugins: [],
+}
+export default config
