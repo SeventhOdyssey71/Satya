@@ -69,6 +69,7 @@ export default function MarketplacePage() {
  });
 
  const [contractService, setContractService] = useState<MarketplaceContractService | null>(null);
+ const [hasLoadedModels, setHasLoadedModels] = useState(false);
 
  // Initialize service
  useEffect(() => {
@@ -158,12 +159,13 @@ export default function MarketplacePage() {
   }
  };
 
- // Load models when service is ready
+ // Load models when service is ready (only once)
  useEffect(() => {
-  if (contractService) {
+  if (contractService && !hasLoadedModels) {
    loadMarketplaceModels();
+   setHasLoadedModels(true);
   }
- }, [contractService]);
+ }, [contractService, hasLoadedModels]);
 
  // Removed auto-refresh to prevent random refreshing
  // Users can manually refresh if needed
