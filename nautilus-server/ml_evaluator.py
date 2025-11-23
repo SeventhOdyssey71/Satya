@@ -169,14 +169,14 @@ class MLEvaluator:
             df = pd.read_csv(io.StringIO(dataset_str))
             print(f"Loaded CSV dataset: {df.shape[0]} rows, {df.shape[1]} columns")
             return df
-        except:
+        except Exception as csv_error:
             try:
                 # Try to load as JSON
                 dataset_str = dataset_data.decode('utf-8')
                 df = pd.read_json(io.StringIO(dataset_str))
                 print(f"Loaded JSON dataset: {df.shape[0]} rows, {df.shape[1]} columns")
                 return df
-            except:
+            except Exception as json_error:
                 try:
                     # Try to load as NumPy array
                     import tempfile
@@ -192,7 +192,8 @@ class MLEvaluator:
                             df = pd.DataFrame(arr.reshape(-1, 1), columns=['feature_0'])
                         print(f"Loaded NumPy dataset: {df.shape[0]} rows, {df.shape[1]} columns")
                         return df
-                except:
+                except Exception as numpy_error:
+                    print(f"Failed to load dataset: CSV({str(csv_error)[:50]}), JSON({str(json_error)[:50]}), NumPy({str(numpy_error)[:50]})")
                     return None
     
     def _evaluate_model_performance(self, model_data, dataset):
@@ -239,7 +240,8 @@ class MLEvaluator:
                             metrics["auc"] = roc_auc_score(y, y_prob)
                         else:
                             metrics["auc"] = roc_auc_score(y, y_pred)
-                    except:
+                    except Exception as e:
+                        print(f"Warning: AUC calculation failed: {str(e)}")
                         metrics["auc"] = None
             else:
                 # Regression metrics
@@ -281,8 +283,8 @@ class MLEvaluator:
         # Warm up
         try:
             model.predict(X[:10])
-        except:
-            pass
+        except Exception as e:
+            print(f"Warning: Model warmup failed: {str(e)}")
         
         # Time inference
         start = time.time()
@@ -290,7 +292,8 @@ class MLEvaluator:
             model.predict(X)
             inference_time = (time.time() - start) * 1000 / n_samples  # ms per sample
             return max(inference_time, 0.1)  # Minimum 0.1ms
-        except:
+        except Exception as e:
+            print(f"Warning: Inference time measurement failed: {str(e)}")
             return 10.0  # Default 10ms if measurement fails
     
     def _estimate_memory_usage(self):
@@ -412,7 +415,8 @@ class MLEvaluator:
             
             return max(0, int(integrity_score))
             
-        except:
+        except Exception as e:
+            print(f"Warning: Data integrity assessment failed: {str(e)}")
             return 75  # Default score
     
     def _calculate_overall_quality_score(self, metrics, bias_metrics, data_integrity):
@@ -442,7 +446,11 @@ class MLEvaluator:
                 return "csv"
             elif dataset_str.strip().startswith(('[', '{')):
                 return "json"
-        except:
+        except UnicodeDecodeError:
+            # Binary format, continue to other checks
+            pass
+        except Exception as e:
+            print(f"Warning: Dataset format detection failed: {str(e)}")
             pass
         
         if dataset_data.startswith(b'\x93NUMPY'):
