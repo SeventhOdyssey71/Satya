@@ -5,14 +5,30 @@ import { SealEncryptionService } from '@/lib/integrations/seal/services/encrypti
 
 export async function POST(request: NextRequest) {
  try {
-  const { model_blob_id, dataset_blob_id } = await request.json()
+  const { model_blob_id, dataset_blob_id, user_address, transaction_digest, seal_transaction_digest } = await request.json()
 
-  if (!model_blob_id || !dataset_blob_id) {
+  if (!model_blob_id || !dataset_blob_id || !user_address) {
    return NextResponse.json(
-    { error: 'Both model_blob_id and dataset_blob_id are required' },
+    { error: 'model_blob_id, dataset_blob_id, and user_address are required' },
     { status: 400 }
    )
   }
+
+  // Verify SEAL transaction (in production, this would verify the actual SEAL signature)
+  if (!seal_transaction_digest) {
+   return NextResponse.json(
+    { error: 'SEAL transaction digest required for decryption authorization' },
+    { status: 403 }
+   )
+  }
+
+  console.log('Decryption request:', { 
+   user_address, 
+   transaction_digest, 
+   seal_transaction_digest,
+   model_blob_id: model_blob_id.slice(0, 20) + '...',
+   dataset_blob_id: dataset_blob_id.slice(0, 20) + '...'
+  })
 
   const walrusService = new WalrusStorageService()
   // Create a temporary SUI client for this API call

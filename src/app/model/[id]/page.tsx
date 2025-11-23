@@ -257,13 +257,11 @@ export default function ModelPage({ params }: ModelPageProps) {
       <div className="lg:col-span-2">
        {/* Model Preview */}
        <div className="relative bg-gray-100 rounded-lg overflow-hidden mb-8 h-80">
-        <div className="absolute inset-0 flex items-center justify-center">
-         <img 
-          src="/images/Claude.png" 
-          alt={model.title}
-          className="w-full h-full object-contain p-8"
-         />
-        </div>
+        <img 
+         src="/images/Claude.png" 
+         alt={model.title}
+         className="w-full h-full object-cover"
+        />
        </div>
 
        {/* Model Information */}
