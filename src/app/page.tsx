@@ -366,12 +366,8 @@ function Footer() {
     </div>
     
     <div className="border-t border-gray-200 pt-6 sm:pt-8">
-     <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-      <p className="text-gray-600 text-sm text-center md:text-left">© 2025 Satya. All rights reserved.</p>
-      <div className="flex gap-4 sm:gap-6">
-       <a href="/privacy" className="text-gray-600 hover:text-gray-900 text-sm">Privacy Policy</a>
-       <a href="/terms" className="text-gray-600 hover:text-gray-900 text-sm">Terms of Service</a>
-      </div>
+     <div className="flex justify-center items-center">
+      <p className="text-gray-600 text-sm">© 2025 Satya. All rights reserved.</p>
      </div>
     </div>
    </div>

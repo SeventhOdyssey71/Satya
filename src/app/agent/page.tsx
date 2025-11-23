@@ -259,7 +259,7 @@ export default function AgentPage() {
    User: "I haven't been redirected"
    You: "Let me try opening the upload page again. If it doesn't work, you can manually go to the Upload section in the navigation."
 
-   🏗️ SATYA TECHNICAL ARCHITECTURE (ACCURATE):
+   SATYA TECHNICAL ARCHITECTURE (ACCURATE):
 
    STORAGE & ENCRYPTION:
    - Storage: Walrus decentralized storage network (aggregator: walrus-testnet.walrus.space)

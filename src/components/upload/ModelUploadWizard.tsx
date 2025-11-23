@@ -245,7 +245,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
    let userMessage = errorMessage;
    if (errorMessage.includes('toLowerCase')) {
     userMessage = 'Upload processing error. Your data may contain invalid characters. Please check your inputs and try again.';
-    console.log('🔧 toLowerCase error handled gracefully');
+    console.log('toLowerCase error handled gracefully');
    } else if (errorMessage.includes('wallet')) {
     userMessage = 'Wallet connection error. Please reconnect your wallet and try again.';
    } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {

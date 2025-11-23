@@ -218,7 +218,7 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
    console.log('Verification completed for model:', { modelId, verificationId, transactionDigest });
    
    // Show success notification immediately
-   alert(`🎉 Model verification completed successfully!\n\n✅ Your model has been verified and listed on the marketplace\n📈 Users can now discover and purchase your model\n🔗 Transaction: ${transactionDigest.slice(0, 20)}...\n\n👉 Visit the Marketplace tab to see your model!`);
+   alert(`Model verification completed successfully!\n\nYour model has been verified and listed on the marketplace\nUsers can now discover and purchase your model\nTransaction: ${transactionDigest.slice(0, 20)}...\n\nVisit the Marketplace tab to see your model!`);
    
    // Wait a bit for blockchain state to update, then refresh
    setTimeout(async () => {

@@ -212,7 +212,7 @@ export class SessionKeyManager {
   if (cached) {
    cached.metadata.isActive = false;
    this.sessionCache.delete(sessionId);
-   console.log(`🗑️ Invalidated SEAL session: ${sessionId.substring(0, 16)}...`);
+   console.log(`Invalidated SEAL session: ${sessionId.substring(0, 16)}...`);
    return true;
   }
   return false;
