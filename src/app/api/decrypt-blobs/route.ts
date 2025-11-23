@@ -138,10 +138,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!modelData) {
-   console.error('Failed to download model blob from Walrus:', {
-    modelDataExists: !!modelData,
-    modelSize: modelData?.length || 0,
-   })
+   console.error('Failed to download model blob from Walrus')
    return NextResponse.json(
     { error: 'Failed to download model file from Walrus' },
     { status: 500 }
