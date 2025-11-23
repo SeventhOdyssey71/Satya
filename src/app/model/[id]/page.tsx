@@ -56,6 +56,9 @@ function createModelDetailsFromEvent(event: ModelListedEvent, modelId: string): 
   creator: event.creator,
   authorAvatar: '/images/Claude.png',
   price: priceInSui,
+  walrusBlobId: event.walrusBlobId,
+  modelBlobId: event.walrusBlobId,
+  datasetBlobId: event.datasetBlobId || 'default-dataset-blob',
   attestationPrice,
   totalPrice,
   category: 'Machine Learning',
@@ -87,6 +90,7 @@ export default function ModelPage({ params }: ModelPageProps) {
  const [loading, setLoading] = useState(true)
  const [isPurchased, setIsPurchased] = useState(false)
  const [showDecryption, setShowDecryption] = useState(false)
+ const [purchaseTransactionDigest, setPurchaseTransactionDigest] = useState<string | null>(null)
  const router = useRouter()
  
  useEffect(() => {
@@ -118,6 +122,8 @@ export default function ModelPage({ params }: ModelPageProps) {
        creator: marketplaceListing.creator,
        authorAvatar: '/images/Claude.png',
        price: marketplaceListing.price || '1.0',
+       modelBlobId: marketplaceListing.modelBlobId,
+       datasetBlobId: marketplaceListing.datasetBlobId,
        attestationPrice: '0.1',
        totalPrice: (parseFloat(marketplaceListing.price || '1.0') + 0.15).toFixed(2),
        category: marketplaceListing.category || 'Machine Learning',
@@ -180,8 +186,11 @@ export default function ModelPage({ params }: ModelPageProps) {
   }
  }
 
- const handlePurchaseComplete = () => {
+ const handlePurchaseComplete = (transactionDigest?: string) => {
   setIsPurchased(true)
+  if (transactionDigest) {
+   setPurchaseTransactionDigest(transactionDigest)
+  }
  }
 
  const formatFileSize = (bytes: number): string => {
@@ -385,7 +394,10 @@ export default function ModelPage({ params }: ModelPageProps) {
    {/* Decryption Modal */}
    {showDecryption && (
     <DecryptionModal 
-     model={model}
+     model={{
+      ...model,
+      purchaseTransactionDigest
+     }}
      onClose={() => setShowDecryption(false)}
     />
    )}

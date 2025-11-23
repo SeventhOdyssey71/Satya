@@ -7,7 +7,7 @@ import { Transaction } from '@mysten/sui/transactions'
 
 interface ModelPurchaseFlowProps {
  model: any
- onComplete: () => void
+ onComplete: (transactionDigest?: string) => void
 }
 
 export default function ModelPurchaseFlow({ model, onComplete }: ModelPurchaseFlowProps) {
@@ -70,7 +70,7 @@ export default function ModelPurchaseFlow({ model, onComplete }: ModelPurchaseFl
     console.log('Purchase transaction successful:', result.digest)
     console.log(`Paid ${(creatorPaymentInMist / 1_000_000_000).toFixed(9)} SUI to creator: ${creatorAddress}`)
     console.log(`Paid ${(platformFeeInMist / 1_000_000_000).toFixed(9)} SUI platform fee to: ${treasuryAddress}`)
-    onComplete()
+    onComplete(result.digest)
    } else {
     throw new Error('Purchase transaction failed')
    }

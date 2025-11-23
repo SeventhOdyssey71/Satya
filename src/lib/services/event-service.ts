@@ -10,6 +10,7 @@ export interface ModelListedEvent {
  title: string;
  downloadPrice: string;
  walrusBlobId: string;
+ datasetBlobId?: string;
  timestamp: number;
  transactionDigest: string;
 }

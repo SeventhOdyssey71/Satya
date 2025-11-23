@@ -28,6 +28,9 @@ export interface ModelCard {
  creator?: string
  authorAvatar?: string
  category: string
+ modelBlobId?: string
+ datasetBlobId?: string
+ walrusBlobId?: string
  tags: string[]
  price: string
  downloads: number
