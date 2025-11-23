@@ -1,4 +1,3 @@
-export { useAuth } from './useAuth'
 export { useWallet } from './useWallet'
 export { useMarketplace } from './useMarketplace'
 export { useWalrus } from './useWalrus'
@@ -8,7 +7,6 @@ export { useSmartContract } from './useSmartContract'
 
 // Upload-specific hooks
 export { useUpload } from './useUpload'
-export { useWalletUpload } from './useWalletUpload'
 export { useUploadValidation } from './useUploadValidation'
 
 // Event-specific hooks

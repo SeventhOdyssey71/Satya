@@ -3,14 +3,12 @@
 import { MarketplaceService } from './marketplace-service';
 import { UploadService } from './upload-service';
 import { DownloadService } from './download-service';
-import { UserService } from './user-service';
 import { EventService } from './event-service';
 
 // Re-export service classes
 export { MarketplaceService } from './marketplace-service';
 export { UploadService } from './upload-service';
 export { DownloadService } from './download-service';
-export { UserService } from './user-service';
 export { EventService } from './event-service';
 
 // Service types
@@ -43,18 +41,11 @@ export type {
  DownloadProgressCallback
 } from './download-service';
 
-export type {
- UserProfile,
- UserActivity,
- UserStats,
- WalletConnection
-} from './user-service';
 
 // Service instances for global use
 let marketplaceService: MarketplaceService | null = null;
 let uploadService: UploadService | null = null;
 let downloadService: DownloadService | null = null;
-let userService: UserService | null = null;
 let eventService: EventService | null = null;
 
 // Singleton factory functions with runtime checks
@@ -121,16 +112,6 @@ export function getDownloadService(): DownloadService {
  return downloadService;
 }
 
-export function getUserService(): UserService {
- if (typeof window === 'undefined') {
-  return {} as UserService;
- }
- 
- if (!userService) {
-  userService = new UserService();
- }
- return userService;
-}
 
 export function getEventService(): EventService {
  if (typeof window === 'undefined') {
@@ -154,9 +135,6 @@ export const services = {
  get download() {
   return getDownloadService();
  },
- get user() {
-  return getUserService();
- },
  get events() {
   return getEventService();
  }
@@ -167,7 +145,6 @@ export async function checkServicesHealth(): Promise<{
  marketplace: string;
  upload: string;
  download: string;
- user: string;
  overall: string;
 }> {
  try {
@@ -184,16 +161,14 @@ export async function checkServicesHealth(): Promise<{
 
   // Download and user services are mostly local, so assume healthy unless proven otherwise
   const download = 'healthy';
-  const user = 'healthy';
 
-  const overall = [marketplace, upload, download, user].every(status => status === 'healthy') ? 
+  const overall = [marketplace, upload, download].every(status => status === 'healthy') ? 
    'healthy' : 'degraded';
 
   return {
    marketplace,
    upload,
    download,
-   user,
    overall
   };
 
@@ -202,7 +177,6 @@ export async function checkServicesHealth(): Promise<{
    marketplace: 'unknown',
    upload: 'unknown',
    download: 'unknown',
-   user: 'unknown',
    overall: 'failed'
   };
  }
@@ -215,7 +189,6 @@ export async function initializeServices(): Promise<void> {
   getMarketplaceService();
   getUploadService();
   getDownloadService();
-  getUserService();
   
   console.info('All services initialized successfully');
  } catch (error) {
