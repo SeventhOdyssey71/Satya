@@ -95,8 +95,8 @@ pub async fn process_data(
     let start_time = std::time::Instant::now();
     
     // Step 1: Download model and dataset from Walrus
-    let (model_data, model_hash) = download_and_hash_blob(&request.payload.model_blob_id, "model").await?;
-    let (dataset_data, dataset_hash) = download_and_hash_blob(&request.payload.dataset_blob_id, "dataset").await?;
+    let (model_data, model_hash) = download_and_hash_blob(&request.payload.model_blob_id, "model", &state).await?;
+    let (dataset_data, dataset_hash) = download_and_hash_blob(&request.payload.dataset_blob_id, "dataset", &state).await?;
     
     info!("Downloaded model ({}MB) and dataset ({}MB)", 
                model_data.len() / 1_048_576, 
@@ -202,7 +202,7 @@ pub async fn process_data(
 }
 
 /// Download blob from Walrus storage and compute hash
-async fn download_and_hash_blob(blob_id: &str, data_type: &str) -> Result<(Vec<u8>, String), EnclaveError> {
+async fn download_and_hash_blob(blob_id: &str, data_type: &str, state: &AppState) -> Result<(Vec<u8>, String), EnclaveError> {
     info!("Downloading blob from Walrus: {}", blob_id);
     
     // Check environment variable for enabling real downloads
@@ -212,7 +212,7 @@ async fn download_and_hash_blob(blob_id: &str, data_type: &str) -> Result<(Vec<u
     
     let data = if use_real_downloads {
         // Try real Walrus blob download first
-        match download_from_walrus(blob_id).await {
+        match download_from_walrus(blob_id, state).await {
             Ok(data) => data,
             Err(e) => {
                 info!("Failed to download from Walrus ({}), falling back to demo data for blob: {}", e, blob_id);
@@ -535,7 +535,7 @@ fn parse_real_seal_blob_sync(data: &[u8]) -> Result<(String, usize), String> {
 }
 
 /// Download blob from actual Walrus aggregator
-async fn download_from_walrus(blob_id: &str) -> Result<Vec<u8>, EnclaveError> {
+async fn download_from_walrus(blob_id: &str, state: &AppState) -> Result<Vec<u8>, EnclaveError> {
     // Set the blob ID for decryption use
     std::env::set_var("CURRENT_BLOB_ID", blob_id);
     
@@ -572,7 +572,7 @@ async fn download_from_walrus(blob_id: &str) -> Result<Vec<u8>, EnclaveError> {
     info!("Successfully downloaded {} bytes from Walrus", data.len());
     
     // Attempt to decrypt the blob if it appears to be encrypted
-    if let Ok(decrypted_data) = seal_impl::attempt_decrypt_blob(&data).await {
+    if let Ok(decrypted_data) = seal_impl::attempt_decrypt_blob(&data, &state.eph_kp).await {
         info!("Successfully decrypted blob: {} -> {} bytes", data.len(), decrypted_data.len());
         data = decrypted_data;
     } else {

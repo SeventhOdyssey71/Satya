@@ -124,6 +124,12 @@ class MLEvaluator:
     
     def _load_model_from_bytes(self, model_data):
         """Load model from binary data with security considerations"""
+        print(f"Attempting to load model: {len(model_data)} bytes, first bytes: {model_data[:20].hex()}")
+        
+        # Detect file format
+        format_info = self._detect_model_format(model_data)
+        print(f"Detected format: {format_info}")
+        
         try:
             # First try joblib (safer for sklearn models)
             import tempfile
@@ -131,34 +137,91 @@ class MLEvaluator:
                 tmp.write(model_data)
                 tmp.flush()
                 try:
-                    model_data = joblib.load(tmp.name)
+                    loaded_model = joblib.load(tmp.name)
                     os.unlink(tmp.name)
                     
                     # If it's already a dict with model/metadata, return as-is
-                    if isinstance(model_data, dict) and 'model' in model_data:
-                        print(f"Loaded model via joblib: {model_data.get('metadata', {}).get('model_type', 'unknown')}")
-                        return model_data
+                    if isinstance(loaded_model, dict) and 'model' in loaded_model:
+                        print(f"Loaded model via joblib: {loaded_model.get('metadata', {}).get('model_type', 'unknown')}")
+                        return loaded_model
                     else:
                         # If it's just a model, wrap it
-                        print(f"Loaded model via joblib: {type(model_data).__name__}")
-                        return {"model": model_data, "metadata": {"model_type": "joblib_model"}}
-                except:
+                        print(f"Loaded model via joblib: {type(loaded_model).__name__}")
+                        return {"model": loaded_model, "metadata": {"model_type": "joblib_model"}}
+                except Exception as joblib_error:
                     os.unlink(tmp.name)
+                    print(f"Joblib loading failed: {joblib_error}")
                     raise
         except:
             try:
                 # Fallback to pickle with warnings for trusted data only
                 warnings.warn(
                     "Using pickle for model deserialization. Only use with trusted data sources!",
-                    SecurityWarning
+                    UserWarning
                 )
                 import pickle
                 model = pickle.loads(model_data)
                 print(f"Loaded model via pickle: {model.get('metadata', {}).get('model_type', 'unknown')}")
                 return model
-            except Exception as e:
-                print(f"Failed to load model: {str(e)}")
+            except Exception as pickle_error:
+                print(f"Pickle loading failed: {pickle_error}")
+                print(f"Failed to load model - unsupported format: {format_info}")
                 return None
+    
+    def _detect_model_format(self, model_data):
+        """Detect the format of the model file"""
+        if len(model_data) < 20:
+            return {"format": "unknown", "size": len(model_data), "reason": "too_small"}
+            
+        signatures = {
+            b'\x89PNG\r\n\x1a\n': 'PNG image',
+            b'GIF87a': 'GIF image',
+            b'GIF89a': 'GIF image', 
+            b'\xff\xd8\xff': 'JPEG image',
+            b'PK\x03\x04': 'ZIP/PyTorch archive',
+            b'\x1f\x8b\x08': 'GZIP compressed',
+            b'\x80\x00': 'Pickle protocol 0',
+            b'\x80\x02': 'Pickle protocol 2',
+            b'\x80\x03': 'Pickle protocol 3',
+            b'\x80\x04': 'Pickle protocol 4',
+            b'\x93NUMPY': 'NumPy array',
+        }
+        
+        for sig, desc in signatures.items():
+            if model_data.startswith(sig):
+                return {"format": desc, "size": len(model_data), "signature": sig.hex()}
+        
+        # Check for PyTorch models (often start with specific patterns)
+        if b'pytorch' in model_data[:100].lower() or b'torch' in model_data[:100].lower():
+            return {"format": "PyTorch model (heuristic)", "size": len(model_data)}
+            
+        # Check for TensorFlow SavedModel
+        if b'tensorflow' in model_data[:100].lower() or b'saved_model' in model_data[:100].lower():
+            return {"format": "TensorFlow model (heuristic)", "size": len(model_data)}
+            
+        return {
+            "format": "unknown binary", 
+            "size": len(model_data), 
+            "first_bytes": model_data[:20].hex(),
+            "entropy": self._calculate_entropy(model_data[:1000])
+        }
+    
+    def _calculate_entropy(self, data):
+        """Calculate Shannon entropy to help identify data type"""
+        try:
+            import math
+            from collections import Counter
+            
+            if len(data) == 0:
+                return 0
+                
+            counts = Counter(data)
+            total = len(data)
+            entropy = -sum((count / total) * math.log2(count / total) for count in counts.values())
+            return round(entropy, 2)
+        except:
+            return 0
+    
     
     def _load_dataset_from_bytes(self, dataset_data):
         """Load dataset from binary data"""
