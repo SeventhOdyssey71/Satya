@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/ui/Header'
-import SealTestButton from '@/components/debug/SealTestButton'
 import { HiArrowRight, HiShieldCheck, HiBolt } from 'react-icons/hi2'
 import { TbShield, TbDatabase, TbNetwork, TbCloudCheck } from 'react-icons/tb'
 import { motion, useInView } from 'framer-motion'
@@ -21,8 +20,6 @@ export default function Home() {
    <TrustEnforcedSection />
    <FAQSection />
    <Footer />
-   
-   <SealTestButton />
   </div>
  )
 }
