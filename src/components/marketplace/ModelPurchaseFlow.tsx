@@ -24,20 +24,42 @@ export default function ModelPurchaseFlow({ model, onComplete }: ModelPurchaseFl
    return
   }
 
+  // Get model creator address and platform treasury
+  const creatorAddress = model.creator || model.author
+  const treasuryAddress = '0xcb4a3c693a334fe1be0161f446471a923c462178ef279b20f847f23c225a8d09'
+  
+  if (!creatorAddress || creatorAddress === 'Unknown' || creatorAddress.includes('...')) {
+   alert('Model creator address not available. Cannot process purchase.')
+   return
+  }
+
   setIsProcessing(true)
   
   try {
-   // Create SUI transaction for model purchase
+   // Create SUI transaction for model purchase with proper payment splits
    const tx = new Transaction()
    
    // Convert price from SUI to MIST (1 SUI = 1,000,000,000 MIST)
-   const priceInMist = Math.floor(parseFloat(model.price) * 1_000_000_000)
+   const totalPriceInMist = Math.floor(parseFloat(model.price) * 1_000_000_000)
    
-   // Split coins for payment
-   const [coin] = tx.splitCoins(tx.gas, [priceInMist])
+   // Calculate platform fee (2.5% = 250 basis points)
+   const platformFeePercentage = 250 // 2.5%
+   const feeDenominator = 10000
+   const platformFeeInMist = Math.floor((totalPriceInMist * platformFeePercentage) / feeDenominator)
+   const creatorPaymentInMist = totalPriceInMist - platformFeeInMist
    
-   // Transfer payment to the model creator (simulation)
-   tx.transferObjects([coin], account.address)
+   // Split coins for payments
+   const [creatorCoin] = tx.splitCoins(tx.gas, [creatorPaymentInMist])
+   const [platformCoin] = tx.splitCoins(tx.gas, [platformFeeInMist])
+   
+   // Transfer payment to creator
+   tx.transferObjects([creatorCoin], creatorAddress)
+   
+   // Transfer platform fee to treasury
+   tx.transferObjects([platformCoin], treasuryAddress)
+   
+   // Set gas budget
+   tx.setGasBudget(100000000) // 0.1 SUI
    
    // Execute the purchase transaction
    const result = await signAndExecuteTransaction({ 
@@ -45,13 +67,16 @@ export default function ModelPurchaseFlow({ model, onComplete }: ModelPurchaseFl
    })
 
    if (result.digest) {
+    console.log('Purchase transaction successful:', result.digest)
+    console.log(`Paid ${(creatorPaymentInMist / 1_000_000_000).toFixed(9)} SUI to creator: ${creatorAddress}`)
+    console.log(`Paid ${(platformFeeInMist / 1_000_000_000).toFixed(9)} SUI platform fee to: ${treasuryAddress}`)
     onComplete()
    } else {
     throw new Error('Purchase transaction failed')
    }
   } catch (error) {
    console.error('Purchase failed:', error)
-   alert('Purchase failed. Please try again.')
+   alert(`Purchase failed: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`)
   } finally {
    setIsProcessing(false)
   }

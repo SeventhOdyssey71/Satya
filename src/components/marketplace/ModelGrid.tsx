@@ -25,6 +25,7 @@ export interface ModelCard {
  title: string
  description: string
  author: string
+ creator?: string
  authorAvatar?: string
  category: string
  tags: string[]
