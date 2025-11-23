@@ -16,20 +16,58 @@ export default function DecryptionModal({ model, onClose }: DecryptionModalProps
  const handleDecrypt = async () => {
   setIsDecrypting(true)
   
-  // Simulate decryption process
-  setTimeout(() => {
+  try {
+   // Call the blob decryption API
+   const response = await fetch('/api/decrypt-blobs', {
+    method: 'POST',
+    headers: {
+     'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+     blobIds: [model.id],
+     userAddress: model.purchaserAddress || 'demo_user'
+    })
+   })
+
+   if (response.ok) {
+    const result = await response.json()
+    setIsComplete(true)
+    
+    // Create a downloadable blob from the decrypted data
+    if (result.decryptedBlobs && result.decryptedBlobs.length > 0) {
+     const decryptedData = result.decryptedBlobs[0]
+     const blob = new Blob([new Uint8Array(decryptedData.data)], { 
+      type: 'application/octet-stream' 
+     })
+     const url = URL.createObjectURL(blob)
+     setDownloadUrl(url)
+    } else {
+     throw new Error('No decrypted data received')
+    }
+   } else {
+    const errorText = await response.text()
+    throw new Error(`Decryption failed: ${errorText}`)
+   }
+  } catch (error) {
+   console.error('Decryption failed:', error)
+   alert('Decryption failed. Please try again.')
    setIsDecrypting(false)
-   setIsComplete(true)
-   setDownloadUrl(`https://example.com/download/${model.id}`)
-  }, 3000)
+  }
  }
 
  const handleDownload = () => {
-  // Simulate download
+  if (!downloadUrl) return
+  
+  // Download the decrypted model
   const link = document.createElement('a')
-  link.href = downloadUrl || '#'
-  link.download = `${model.title}.zip`
+  link.href = downloadUrl
+  link.download = `${model.title.replace(/[^a-zA-Z0-9]/g, '_')}_decrypted.bin`
+  document.body.appendChild(link)
   link.click()
+  document.body.removeChild(link)
+  
+  // Clean up the blob URL
+  URL.revokeObjectURL(downloadUrl)
  }
 
  return (

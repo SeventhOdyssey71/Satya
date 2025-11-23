@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Header from '@/components/ui/Header'
 import { MarketplaceGrid } from '@/components/marketplace/MarketplaceGrid'
 import { HiSparkles, HiMagnifyingGlass, HiArrowPath, HiShoppingCart, HiCheckBadge, HiClock } from 'react-icons/hi2'
@@ -512,6 +513,7 @@ function EnhancedMarketplaceGrid({
  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
  const [purchasingModel, setPurchasingModel] = useState<string | null>(null)
  const [purchaseError, setPurchaseError] = useState<string | null>(null)
+ const router = useRouter()
 
  const handlePurchase = async (model: MarketplaceModel) => {
   if (!currentAccount || !contractService) {
@@ -697,21 +699,22 @@ function EnhancedMarketplaceGrid({
           
           {/* Action Button */}
           <button
-            onClick={() => handlePurchase(model)}
+            onClick={() => {
+              if (model.creator === currentAccount?.address || 
+                  !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads)) {
+                return; // Don't navigate for disabled states
+              }
+              // Navigate to model details page using Next.js router
+              router.push(`/model/${model.id}`);
+            }}
             disabled={
-              purchasingModel === model.id ||
               !currentAccount ||
               model.creator === currentAccount?.address ||
               !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads)
             }
             className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md"
           >
-            {purchasingModel === model.id ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                Processing...
-              </>
-            ) : model.creator === currentAccount?.address ? (
+            {model.creator === currentAccount?.address ? (
               'Your Model'
             ) : !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads) ? (
               'Sold Out'

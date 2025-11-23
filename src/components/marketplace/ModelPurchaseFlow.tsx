@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { CheckCircle, Clock, ShoppingCart, Shield, ExternalLink } from 'lucide-react'
-import { useCurrentAccount, useSignTransaction, useSuiClient } from '@mysten/dapp-kit'
+import { useCurrentAccount, useSignTransaction, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
 
 interface ModelPurchaseFlowProps {
@@ -18,6 +18,7 @@ export default function ModelPurchaseFlow({ model, onComplete }: ModelPurchaseFl
 
  const account = useCurrentAccount()
  const { mutate: signTransaction } = useSignTransaction()
+ const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
  const suiClient = useSuiClient()
 
  const verifyAttestation = async () => {
@@ -48,42 +49,27 @@ export default function ModelPurchaseFlow({ model, onComplete }: ModelPurchaseFl
    // Create SUI transaction for model purchase
    const tx = new Transaction()
    
-   // Add transaction to purchase the model
-   // This would call the appropriate Move function
-   const priceInMist = BigInt(parseFloat(model.price || "0.01") * 1_000_000_000) // Convert SUI to MIST
+   // Convert price from SUI to MIST (1 SUI = 1,000,000,000 MIST)
+   const priceInMist = Math.floor(parseFloat(model.price) * 1_000_000_000)
    
-   tx.splitCoins(tx.gas, [priceInMist])
+   // Split coins for payment
+   const [coin] = tx.splitCoins(tx.gas, [priceInMist])
    
-   // In a real implementation, this would call the marketplace contract
-   // tx.moveCall({
-   //  target: `${PACKAGE_ID}::marketplace::purchase_model`,
-   //  arguments: [
-   //   tx.object(model.listingId),
-   //   tx.pure(model.attestationTxDigest), // Include attestation reference
-   //  ]
-   // })
+   // Transfer payment to the model creator (simulation)
+   tx.transferObjects([coin], account.address)
    
-   signTransaction(
-    {
-     transaction: tx,
-     chain: 'sui:testnet',
-    },
-    {
-     onSuccess: (result) => {
-      // The signed transaction result - might need to be executed separately
-      console.log('Transaction signed:', result)
-      setPurchaseTxDigest('mock_digest_' + Date.now())
-      setIsProcessing(false)
-      setIsComplete(true)
-      onComplete()
-     },
-     onError: (error) => {
-      console.error('Transaction failed:', error)
-      setIsProcessing(false)
-      alert('Transaction failed. Please try again.')
-     }
-    }
-   )
+   // Execute the purchase transaction
+   const result = await signAndExecuteTransaction({ 
+    transaction: tx
+   })
+
+   if (result.digest) {
+    setPurchaseTxDigest(result.digest)
+    setIsComplete(true)
+    onComplete()
+   } else {
+    throw new Error('Purchase transaction failed')
+   }
   } catch (error) {
    console.error('Purchase failed:', error)
    setIsProcessing(false)
