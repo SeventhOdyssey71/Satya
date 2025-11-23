@@ -231,7 +231,7 @@ export default function ModelPage({ params }: ModelPageProps) {
   <div className="min-h-screen bg-white">
    <Header />
    
-   <main className="relative z-10 pt-20 pb-12">
+   <main className="relative z-10 pt-24 pb-12">
     <div className="container max-w-7xl mx-auto px-6">
      {/* Back Button */}
      <button 

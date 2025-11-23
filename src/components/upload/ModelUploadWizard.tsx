@@ -280,8 +280,8 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
    validate: () => validation.isStepValid('basicInfo')
   },
   {
-   title: 'File TbUpload',
-   description: 'TbUpload your model and optional files',
+   title: 'File Upload',
+   description: 'Upload your model and optional files',
    component: FileUploadStep,
    validate: () => validation.isStepValid('files')
   },
@@ -527,7 +527,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
     onPrev={onPrev}
     isFirst={isFirst}
     isValid={isValid}
-    nextLabel="Continue to File TbUpload"
+    nextLabel="Continue to File Upload"
     onCancel={onCancel}
    />
   </div>

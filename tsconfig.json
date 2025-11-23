@@ -28,6 +28,9 @@
     "node_modules",
     "accelerator-redac/**",
     "nautilus-server/**",
-    "contracts/**"
+    "contracts/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__tests__/**"
   ]
 }
