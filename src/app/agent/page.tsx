@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Header from '@/components/ui/Header'
-import { geminiModel } from '@/lib/gemini-client'
+import { geminiModel, checkGeminiAvailability } from '@/lib/gemini-client'
 import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
 import { EventService } from '@/lib/services/event-service'
 
