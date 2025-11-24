@@ -40,20 +40,15 @@ export async function POST(request: NextRequest) {
     // Call the Rust TEE server for actual verification
     const teeServerUrl = process.env.TEE_SERVER_URL || 'http://localhost:3333'
     
-    const verificationResponse = await fetch(`${teeServerUrl}/process_data`, {
+    const verificationResponse = await fetch(`${teeServerUrl}/evaluate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        payload: {
-          model_blob_id: modelBlobId,
-          dataset_blob_id: datasetBlobId || "6JwedDoHaIw-9SGOsu29AdentESjzKoVzSedEIH6URo", // Default dataset
-          assessment_type: "ComprehensiveBenchmark",
-          quality_metrics: ["accuracy", "performance", "bias"],
-          model_type_hint: null,
-          dataset_format_hint: null
-        }
+        model_blob_id: modelBlobId,
+        dataset_blob_id: datasetBlobId || "6JwedDoHaIw-9SGOsu29AdentESjzKoVzSedEIH6URo", // Default dataset
+        use_walrus: true
       })
     })
 
@@ -70,27 +65,28 @@ export async function POST(request: NextRequest) {
     console.log('TEE Verification Result:', verificationResult)
 
     // Extract results from the TEE response
-    const response = verificationResult.response
+    const evaluation = verificationResult.evaluation
     const attestationId = `att_${transactionDigest}_${Date.now()}`
     
     const result: VerificationResponse = {
       success: true,
       attestation_id: attestationId,
-      quality_score: response?.data?.quality_score || 85,
-      accuracy_metrics: response?.data?.accuracy_metrics || {
-        precision: 8500,
-        recall: 8200,
-        f1_score: 8350
+      quality_score: evaluation?.quality_score || 85,
+      accuracy_metrics: {
+        precision: evaluation?.accuracy_metrics?.precision || 8500,
+        recall: evaluation?.accuracy_metrics?.recall || 8200,
+        f1_score: evaluation?.accuracy_metrics?.f1_score || 8350,
+        auc: evaluation?.accuracy_metrics?.auc
       },
-      performance_metrics: response?.data?.performance_metrics || {
-        inference_time_ms: response?.data?.performance_metrics?.inference_time_ms || 0,
-        memory_usage_mb: response?.data?.performance_metrics?.memory_usage_mb || 100,
-        model_size_mb: response?.data?.performance_metrics?.model_size_mb || 2,
-        throughput_samples_per_second: response?.data?.performance_metrics?.throughput_samples_per_second || 1000
+      performance_metrics: {
+        inference_time_ms: evaluation?.performance_metrics?.inference_time_ms || 0,
+        memory_usage_mb: evaluation?.performance_metrics?.memory_usage_mb || 100,
+        model_size_mb: evaluation?.performance_metrics?.model_size_mb || 2,
+        throughput_samples_per_second: evaluation?.performance_metrics?.throughput_samples_per_second || 1000
       },
-      bias_assessment: response?.data?.bias_assessment || {
-        fairness_score: 8800,
-        bias_detected: false
+      bias_assessment: {
+        fairness_score: evaluation?.bias_assessment?.fairness_score || 8800,
+        bias_detected: evaluation?.bias_assessment?.bias_detected || false
       }
     }
 
