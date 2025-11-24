@@ -73,8 +73,8 @@ export const SEAL_CONFIG = {
 // ============================================
 
 export const WALRUS_CONFIG = {
- AGGREGATOR_URL: process.env.NEXT_PUBLIC_WALRUS_AGGREGATOR || 'https://aggregator-devnet.walrus.space',
- PUBLISHER_URL: process.env.NEXT_PUBLIC_WALRUS_PUBLISHER || 'https://publisher-devnet.walrus.space',
+ AGGREGATOR_URL: process.env.NEXT_PUBLIC_WALRUS_AGGREGATOR_URL || 'https://aggregator.walrus-testnet.walrus.space',
+ PUBLISHER_URL: process.env.NEXT_PUBLIC_WALRUS_PUBLISHER_URL || 'https://publisher.walrus-testnet.walrus.space',
  SYSTEM_OBJECT: process.env.NEXT_PUBLIC_WALRUS_SYSTEM_OBJECT || '',
  
  // Storage Nodes
@@ -102,7 +102,7 @@ export const WALRUS_CONFIG = {
 // ============================================
 
 export const API_CONFIG = {
- BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001',
+ BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://www.satyaprotocol.com',
  ENDPOINTS: {
   // Authentication
   AUTH: {
@@ -198,7 +198,7 @@ export const APP_CONFIG = {
 
 export const NAUTILUS_CONFIG = {
  // For local development
- LOCAL_ENCLAVE_URL: 'http://localhost:8080',
+ LOCAL_ENCLAVE_URL: process.env.NEXT_PUBLIC_NAUTILUS_ENCLAVE_URL || 'https://3.235.226.216',
  
  // Attestation settings
  ATTESTATION_VALIDITY_MS: parseInt(process.env.NEXT_PUBLIC_ATTESTATION_VALIDITY_MS || '86400000', 10), // 24 hours

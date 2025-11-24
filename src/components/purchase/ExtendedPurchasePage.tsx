@@ -67,9 +67,9 @@ export default function ExtendedPurchasePage({
     const suiClient = new SuiClient({ url: process.env.NEXT_PUBLIC_SUI_NETWORK_URL || 'https://fullnode.testnet.sui.io' })
     
     const nautilusClient = new NautilusClient({
-     enclaveUrl: process.env.NEXT_PUBLIC_NAUTILUS_ENCLAVE_URL || 'http://localhost:8000',
-     verificationApiUrl: process.env.NEXT_PUBLIC_NAUTILUS_VERIFICATION_URL || 'http://localhost:8001',
-     attestationStorageUrl: process.env.NEXT_PUBLIC_NAUTILUS_ATTESTATION_URL || 'http://localhost:8002',
+     enclaveUrl: process.env.NEXT_PUBLIC_NAUTILUS_ENCLAVE_URL || 'https://3.235.226.216:3333',
+     verificationApiUrl: process.env.NEXT_PUBLIC_NAUTILUS_VERIFICATION_URL || 'https://3.235.226.216:3333',
+     attestationStorageUrl: process.env.NEXT_PUBLIC_NAUTILUS_ATTESTATION_URL || 'https://3.235.226.216:3333',
      network: 'testnet'
     })
 
