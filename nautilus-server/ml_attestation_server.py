@@ -129,10 +129,12 @@ def evaluate_model():
                 "evaluation": result
             })
         else:
-            return jsonify({"error": "Evaluation failed"}), 500
+            print("ERROR: Evaluation returned None/False")
+            return jsonify({"error": "Evaluation failed - no result returned"}), 500
             
     except Exception as e:
         print(f"Evaluation error: {str(e)}")
+        print(f"Error type: {type(e).__name__}")
         print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
