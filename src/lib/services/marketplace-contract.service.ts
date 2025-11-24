@@ -53,7 +53,7 @@ export class MarketplaceContractService {
  static async createWithFallback(): Promise<MarketplaceContractService> {
   // Return cached instance if available
   if (MarketplaceContractService.instance) {
-   console.log('Using cached MarketplaceContractService instance');
+   logger.debug('Using cached MarketplaceContractService instance');
    return MarketplaceContractService.instance;
   }
   
@@ -890,11 +890,11 @@ export class MarketplaceContractService {
     });
     
     if (response.data && response.data.length > 0) {
-     console.log(`Found ${response.data.length} models via registry`);
+     logger.debug(`Found ${response.data.length} models via registry`);
      return response.data;
     }
    } catch (registryError) {
-    console.warn('Registry query failed:', registryError);
+    logger.warn('Registry query failed', { error: registryError });
    }
 
    // Only try fallback if primary failed
@@ -955,11 +955,11 @@ export class MarketplaceContractService {
         });
         return modelObject;
        } else {
-        console.warn('No model ID found in event:', eventData);
+        logger.warn('No model ID found in event', { eventData });
        }
        return null;
       } catch (err) {
-       console.warn('Failed to fetch model object', { eventData: event.parsedJson, error: err });
+       logger.warn('Failed to fetch model object', { eventData: event.parsedJson, error: err });
        return null;
       }
      });
@@ -1185,7 +1185,7 @@ export class MarketplaceContractService {
         });
 
         if (recentObject.data && recentObject.data.type === expectedPendingModelType) {
-         console.log('✓ Found recent model via events:', modelId.slice(0, 10) + '...');
+         logger.debug(`✓ Found recent model via events: ${modelId.slice(0, 10)}...`);
          pendingModels.push({
           data: recentObject.data
          });
@@ -1200,7 +1200,7 @@ export class MarketplaceContractService {
     }
    }
 
-   console.log(`✓ Found ${pendingModels.length} pending models`);
+   logger.debug(`✓ Found ${pendingModels.length} pending models`);
 
    // Return the raw object data for the dashboard to transform
    return pendingModels.map(obj => ({
@@ -1361,7 +1361,7 @@ export class MarketplaceContractService {
    });
 
    if (!modelObject.data?.content) {
-    console.warn('Model object not found or has no content:', modelId);
+    logger.warn('Model object not found or has no content', { modelId });
     return null;
    }
 
@@ -1378,7 +1378,7 @@ export class MarketplaceContractService {
     downloads: fields.downloads || '0'
    };
   } catch (error) {
-   console.warn('Failed to get model details:', error);
+   logger.warn('Failed to get model details', { error });
    return null;
   }
  }
@@ -1431,7 +1431,7 @@ export class MarketplaceContractService {
         creator = modelDetails.creator || creator;
        }
       } catch (modelError) {
-       console.warn('Could not fetch model details:', modelError);
+       logger.warn('Could not fetch model details', { error: modelError });
       }
 
       return {
@@ -1448,7 +1448,7 @@ export class MarketplaceContractService {
        purchaseRecord: record.data?.objectId
       };
      } catch (parseError) {
-      console.warn('Error parsing purchase record:', parseError);
+      logger.warn('Error parsing purchase record', { error: parseError });
       return null;
      }
     })
