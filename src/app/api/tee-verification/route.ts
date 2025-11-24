@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Call the Rust TEE server for actual verification
-    const teeServerUrl = process.env.TEE_SERVER_URL || 'http://localhost:3333'
+    const teeServerUrl = process.env.TEE_SERVER_URL || 'http://3.235.226.216:3333'
     
     const verificationResponse = await fetch(`${teeServerUrl}/evaluate`, {
       method: 'POST',
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         model_blob_id: modelBlobId,
         dataset_blob_id: datasetBlobId || "6JwedDoHaIw-9SGOsu29AdentESjzKoVzSedEIH6URo", // Default dataset
-        use_walrus: true
+        use_walrus: true  // Use real Walrus downloads
       })
     })
 
