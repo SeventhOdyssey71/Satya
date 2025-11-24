@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Call the Rust TEE server for actual verification
-    const teeServerUrl = process.env.TEE_SERVER_URL || 'http://3.235.226.216:3333'
+    const teeServerUrl = process.env.TEE_SERVER_URL || 'https://3.235.226.216:3333'
     
     const verificationResponse = await fetch(`${teeServerUrl}/evaluate`, {
       method: 'POST',
