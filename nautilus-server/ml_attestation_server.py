@@ -13,6 +13,7 @@ import requests
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from ml_evaluator import MLEvaluator
+from seal_client import decrypt_blob_if_needed, get_seal_client
 
 app = Flask(__name__)
 CORS(app)
@@ -23,12 +24,29 @@ evaluator = MLEvaluator()
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
-    return jsonify({
-        "status": "healthy",
-        "service": "ml_attestation_server",
-        "version": "1.0.0",
-        "evaluator_ready": True
-    })
+    try:
+        # Test SEAL client connectivity
+        seal_client = get_seal_client()
+        seal_status = seal_client.test_key_servers()
+        seal_ready = sum(1 for working in seal_status.values() if working) >= seal_client.config.threshold
+        
+        return jsonify({
+            "status": "healthy",
+            "service": "ml_attestation_server",
+            "version": "1.0.0",
+            "evaluator_ready": True,
+            "seal_ready": seal_ready,
+            "seal_key_servers": seal_status
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "healthy",
+            "service": "ml_attestation_server", 
+            "version": "1.0.0",
+            "evaluator_ready": True,
+            "seal_ready": False,
+            "seal_error": str(e)
+        })
 
 @app.route('/evaluate', methods=['POST'])
 def evaluate_model():
@@ -55,8 +73,15 @@ def evaluate_model():
         
         # Get model data
         model_data = None
+        user_address = data.get("user_address")
+        transaction_digest = data.get("transaction_digest")
+        
         if data.get("use_walrus") and data.get("model_blob_id"):
-            model_data = download_from_walrus(data["model_blob_id"])
+            model_data = download_from_walrus(
+                data["model_blob_id"], 
+                user_address=user_address, 
+                transaction_digest=transaction_digest
+            )
         elif data.get("model_url"):
             model_data = download_from_url(data["model_url"])
         elif data.get("model_data"):
@@ -74,7 +99,11 @@ def evaluate_model():
         # Get dataset data
         dataset_data = None
         if data.get("use_walrus") and data.get("dataset_blob_id"):
-            dataset_data = download_from_walrus(data["dataset_blob_id"])
+            dataset_data = download_from_walrus(
+                data["dataset_blob_id"], 
+                user_address=user_address, 
+                transaction_digest=transaction_digest
+            )
         elif data.get("dataset_url"):
             dataset_data = download_from_url(data["dataset_url"])
         elif data.get("dataset_data"):
@@ -201,10 +230,10 @@ def download_dataset(dataset_name):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-def download_from_walrus(blob_id):
-    """Download blob from Walrus aggregator"""
+def download_from_walrus(blob_id, user_address=None, transaction_digest=None):
+    """Download and decrypt blob from Walrus aggregator with SEAL support"""
     aggregator_url = os.environ.get("WALRUS_AGGREGATOR_URL", "https://aggregator.walrus-testnet.walrus.space")
-    url = f"{aggregator_url}/v1/{blob_id}"
+    url = f"{aggregator_url}/v1/blobs/{blob_id}"
     
     print(f"Downloading from Walrus: {url}")
     
@@ -212,15 +241,29 @@ def download_from_walrus(blob_id):
         response = requests.get(url, timeout=30)
         response.raise_for_status()
         
-        data = response.content
-        if not data:
+        encrypted_data = response.content
+        if not encrypted_data:
             raise Exception("Downloaded blob is empty")
         
-        print(f"Downloaded {len(data)} bytes from Walrus")
-        return data
+        print(f"Downloaded {len(encrypted_data)} bytes from Walrus")
+        
+        # Decrypt with SEAL if needed
+        print("Attempting SEAL decryption...")
+        decrypted_data = decrypt_blob_if_needed(
+            encrypted_data, 
+            user_address=user_address, 
+            transaction_digest=transaction_digest
+        )
+        
+        if len(decrypted_data) != len(encrypted_data):
+            print(f"SEAL decryption successful: {len(encrypted_data)} → {len(decrypted_data)} bytes")
+        else:
+            print("No SEAL decryption needed (data was not encrypted)")
+        
+        return decrypted_data
         
     except Exception as e:
-        print(f"Failed to download from Walrus: {str(e)}")
+        print(f"Failed to download/decrypt from Walrus: {str(e)}")
         raise
 
 def download_from_url(url):
