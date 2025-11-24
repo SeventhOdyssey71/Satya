@@ -7,7 +7,7 @@ echo "Launching Nautilus server EC2 instance (simplified)..."
 REGION="us-east-1"
 KEY_PAIR_NAME="nautilus-keypair"
 SECURITY_GROUP_NAME="nautilus-server-sg"
-INSTANCE_TYPE="m5.large"
+INSTANCE_TYPE="m5.xlarge"
 
 # Get latest Amazon Linux 2 AMI with Nitro Enclaves support
 AMI_ID=$(aws ec2 describe-images \

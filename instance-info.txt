@@ -1,0 +1,5 @@
+Instance ID: i-01ae8dac8d80ceb61
+Public IP: 3.235.226.216
+SSH Command: ssh -i ~/.ssh/nautilus-keypair.pem ec2-user@3.235.226.216
+Region: us-east-1
+Security Group: sg-00a70b1c9a993b3d6
