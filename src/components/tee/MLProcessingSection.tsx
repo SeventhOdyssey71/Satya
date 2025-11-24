@@ -58,7 +58,7 @@ export default function MLProcessingSection({
 
  const fetchRealModels = async () => {
   try {
-   const response = await fetch('http://localhost:8001/models');
+   const response = await fetch(`${process.env.NEXT_PUBLIC_NAUTILUS_ENCLAVE_URL || 'https://3.235.226.216:3333'}/models`);
    if (response.ok) {
     const data = await response.json();
     setAvailableModels(data.models);
@@ -110,7 +110,7 @@ export default function MLProcessingSection({
    // Step 2: Process decrypted files in TEE
    setStatus('Processing decrypted files in Trusted Execution Environment...');
    
-   const teeResponse = await fetch('http://localhost:5001/complete_verification', {
+   const teeResponse = await fetch(`${process.env.NEXT_PUBLIC_NAUTILUS_VERIFICATION_URL || 'https://3.235.226.216:3333'}/complete_verification`, {
     method: 'POST',
     headers: {
      'Content-Type': 'application/json',
