@@ -6,32 +6,32 @@ const isDevelopment = process.env.NODE_ENV === 'development'
 const isDebugMode = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true'
 
 export const logger = {
-  log: (...args: any[]) => {
+  log: (message: string, ...args: any[]) => {
     if (isDevelopment || isDebugMode) {
-      console.log(...args)
+      console.log(message, ...args)
     }
   },
   
-  info: (...args: any[]) => {
+  info: (message: string, ...args: any[]) => {
     if (isDevelopment || isDebugMode) {
-      console.info(...args)
+      console.info(message, ...args)
     }
   },
   
-  debug: (...args: any[]) => {
+  debug: (message: string, ...args: any[]) => {
     if (isDevelopment || isDebugMode) {
-      console.debug(...args)
+      console.debug(message, ...args)
     }
   },
   
-  warn: (...args: any[]) => {
+  warn: (message: string, ...args: any[]) => {
     // Always log warnings
-    console.warn(...args)
+    console.warn(message, ...args)
   },
   
-  error: (...args: any[]) => {
+  error: (message: string, ...args: any[]) => {
     // Always log errors
-    console.error(...args)
+    console.error(message, ...args)
   }
 }
 

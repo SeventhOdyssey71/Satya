@@ -894,7 +894,7 @@ export class MarketplaceContractService {
      return response.data;
     }
    } catch (registryError) {
-    logger.warn('Registry query failed:', registryError);
+    logger.warn('Registry query failed', { error: registryError });
    }
 
    // Only try fallback if primary failed
@@ -955,7 +955,7 @@ export class MarketplaceContractService {
         });
         return modelObject;
        } else {
-        logger.warn('No model ID found in event:', eventData);
+        logger.warn('No model ID found in event', { eventData });
        }
        return null;
       } catch (err) {
@@ -1185,7 +1185,7 @@ export class MarketplaceContractService {
         });
 
         if (recentObject.data && recentObject.data.type === expectedPendingModelType) {
-         logger.debug('✓ Found recent model via events:', modelId.slice(0, 10) + '...');
+         logger.debug(`✓ Found recent model via events: ${modelId.slice(0, 10)}...`);
          pendingModels.push({
           data: recentObject.data
          });
@@ -1361,7 +1361,7 @@ export class MarketplaceContractService {
    });
 
    if (!modelObject.data?.content) {
-    logger.warn('Model object not found or has no content:', modelId);
+    logger.warn('Model object not found or has no content', { modelId });
     return null;
    }
 
@@ -1378,7 +1378,7 @@ export class MarketplaceContractService {
     downloads: fields.downloads || '0'
    };
   } catch (error) {
-   logger.warn('Failed to get model details:', error);
+   logger.warn('Failed to get model details', { error });
    return null;
   }
  }
@@ -1431,7 +1431,7 @@ export class MarketplaceContractService {
         creator = modelDetails.creator || creator;
        }
       } catch (modelError) {
-       logger.warn('Could not fetch model details:', modelError);
+       logger.warn('Could not fetch model details', { error: modelError });
       }
 
       return {
@@ -1448,7 +1448,7 @@ export class MarketplaceContractService {
        purchaseRecord: record.data?.objectId
       };
      } catch (parseError) {
-      logger.warn('Error parsing purchase record:', parseError);
+      logger.warn('Error parsing purchase record', { error: parseError });
       return null;
      }
     })
