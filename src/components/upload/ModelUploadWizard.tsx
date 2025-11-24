@@ -12,6 +12,7 @@ import ProgressIndicator from './ProgressIndicator'
 import UploadProgress from './UploadProgress'
 import UploadStatus from './UploadStatus'
 import { useUpload, useUploadValidation } from '@/hooks'
+import { useToast } from '@/contexts/ToastContext'
 import { PolicyType } from '@/lib/integrations/seal/types'
 import { ModelUploadService, type ModelUploadData as ServiceModelUploadData, type ModelUploadProgress } from '@/lib/services/model-upload.service'
 
@@ -51,6 +52,9 @@ interface StepProps {
  isWalletConnected?: boolean
  onCancel?: () => void
  onTbUpload?: () => Promise<void>
+ uploadProgress?: ModelUploadProgress | null
+ isUploading?: boolean
+ showToast: (message: string, type: 'success' | 'error' | 'info', duration?: number) => void
 }
 
 const CATEGORIES = [
@@ -75,6 +79,7 @@ interface ModelUploadWizardProps {
 }
 
 export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelUploadWizardProps = {}) {
+ const { showToast } = useToast()
  const [currentStep, setCurrentStep] = useState(0)
  const [data, setData] = useState<ModelUploadData>({
   title: '',
@@ -113,12 +118,12 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
  // Handle complete upload flow: SEAL + Walrus + Smart Contract
  const handleUpload = async () => {
   if (!isWalletConnected) {
-   alert('Please connect your wallet first')
+   showToast('Please connect your wallet first', 'error')
    return
   }
 
   if (!data.modelFile) {
-   alert('Please select a model file first')
+   showToast('Please select a model file first', 'error')
    return
   }
 
@@ -207,7 +212,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
    // Store the result in our local state
    setUploadResult(successResult);
    
-   alert(`Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Smart contract record created ✓\n\nPending Model ID: ${uploadResult.pendingModelId}\n\nYour model is now pending TEE verification. You can track its progress in the Dashboard.`)
+   showToast(`Model uploaded successfully!\n\n• File encrypted with SEAL ✓\n• Uploaded to Walrus storage ✓\n• Smart contract record created ✓\n\nPending Model ID: ${uploadResult.pendingModelId}\n\nYour model is now pending TEE verification. You can track its progress in the Dashboard.`, 'success', 8000)
    
    setCurrentStep(steps.length) // Go to result step
    
@@ -245,7 +250,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
    let userMessage = errorMessage;
    if (errorMessage.includes('toLowerCase')) {
     userMessage = 'Upload processing error. Your data may contain invalid characters. Please check your inputs and try again.';
-    console.log('🔧 toLowerCase error handled gracefully');
+    console.log('toLowerCase error handled gracefully');
    } else if (errorMessage.includes('wallet')) {
     userMessage = 'Wallet connection error. Please reconnect your wallet and try again.';
    } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
@@ -266,7 +271,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
     details: { error: errorMessage }
    })
 
-   alert(`Upload failed: ${userMessage}\n\nPlease try again or contact support if the issue persists.`)
+   showToast(`Upload failed: ${userMessage}\n\nPlease try again or contact support if the issue persists.`, 'error')
   } finally {
    setIsUploading(false)
   }
@@ -404,6 +409,7 @@ export default function ModelUploadWizard({ onUploadComplete, onCancel }: ModelU
      onTbUpload={handleUpload}
      uploadProgress={uploadProgress}
      isUploading={isUploading}
+     showToast={showToast}
     />
    </div>
   </div>
@@ -534,7 +540,7 @@ function BasicInfoStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCan
  )
 }
 
-function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel }: StepProps) {
+function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCancel, showToast }: StepProps) {
  const [isUploading, setIsUploading] = useState(false)
  const [uploadProgress, setUploadProgress] = useState(0)
 
@@ -578,7 +584,7 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
    } catch (error) {
     console.error('Model file upload failed:', error)
     setIsUploading(false)
-    alert(`Model file upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    showToast(`Model file upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error')
    }
   }
  }
@@ -621,7 +627,7 @@ function FileUploadStep({ data, onChange, onNext, onPrev, isFirst, isValid, onCa
    } catch (error) {
     console.error('Dataset file upload failed:', error)
     setIsUploading(false)
-    alert(`Dataset file upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    showToast(`Dataset file upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error')
    }
   }
  }

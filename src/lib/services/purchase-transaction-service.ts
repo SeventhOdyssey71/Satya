@@ -79,7 +79,7 @@ export class PurchaseTransactionService {
    // Transfer license NFT to buyer
    transaction.transferObjects([licenseNft], account.address);
 
-   console.log('📝 Signing transaction...');
+   console.log('Signing transaction...');
 
    // Sign and execute transaction
    const result = await signAndExecuteTransaction({

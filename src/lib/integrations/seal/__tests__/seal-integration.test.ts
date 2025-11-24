@@ -151,7 +151,7 @@ describe('SEAL Integration', () => {
  * Call this function to test SEAL integration in a development environment
  */
 export async function runManualSealTest(): Promise<void> {
- console.log('🔧 Starting manual SEAL integration test...');
+ console.log('Starting manual SEAL integration test...');
 
  try {
   const suiClient = new SuiClient({ url: getFullnodeUrl('testnet') });

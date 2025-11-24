@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { TbShieldX, TbShieldCheck, TbClockHour4, TbCertificate, TbRefresh, TbTrash } from 'react-icons/tb'
 import { ModelVerificationFlow } from '@/components/tee'
 import { useUploadTasks } from '@/contexts/UploadContext'
+import { useToast } from '@/contexts/ToastContext'
 import { useCurrentAccount } from '@mysten/dapp-kit'
 import { usePendingModels } from '@/hooks/usePendingModels'
 import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
@@ -42,6 +43,7 @@ interface DashboardPendingProps {
 
 export default function DashboardPending({ triggerRefresh, onRefreshComplete }: DashboardPendingProps = {}) {
  const { allTasks } = useUploadTasks()
+ const { showToast } = useToast()
  const currentAccount = useCurrentAccount()
  
  // Use the shared pending models hook
@@ -218,7 +220,11 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
    console.log('Verification completed for model:', { modelId, verificationId, transactionDigest });
    
    // Show success notification immediately
-   alert(`🎉 Model verification completed successfully!\n\n✅ Your model has been verified and listed on the marketplace\n📈 Users can now discover and purchase your model\n🔗 Transaction: ${transactionDigest.slice(0, 20)}...\n\n👉 Visit the Marketplace tab to see your model!`);
+   showToast(
+     `Model verification completed successfully!\n\nYour model has been verified and listed on the marketplace\nUsers can now discover and purchase your model\nTransaction: ${transactionDigest.slice(0, 20)}...\n\nVisit the Marketplace tab to see your model!`,
+     'success',
+     8000
+   );
    
    // Wait a bit for blockchain state to update, then refresh
    setTimeout(async () => {

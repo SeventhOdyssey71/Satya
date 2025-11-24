@@ -3,6 +3,7 @@ import { Russo_One, Albert_Sans } from 'next/font/google'
 import { WalletProviders } from '@/providers/WalletProvider'
 import { UploadProvider } from '@/contexts/UploadContext'
 import { NautilusProvider } from '@/lib/integrations/nautilus/context'
+import { ToastProvider } from '@/contexts/ToastContext'
 import GlobalUploadProgress from '@/components/upload/GlobalUploadProgress'
 import '@mysten/dapp-kit/dist/index.css'
 import './globals.css'
@@ -39,8 +40,10 @@ export default function RootLayout({
     <WalletProviders>
      <UploadProvider>
       <NautilusProvider>
-       {children}
-       <GlobalUploadProgress />
+       <ToastProvider>
+        {children}
+        <GlobalUploadProgress />
+       </ToastProvider>
       </NautilusProvider>
      </UploadProvider>
     </WalletProviders>

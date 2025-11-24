@@ -31,7 +31,7 @@ export class SealClientWrapper {
    this.sessionKeyManager = new SessionKeyManager(suiClient);
    
    // Create SEAL client with proper configuration
-   console.log('🔧 Initializing SEAL client for testnet with key server management');
+   console.log('Initializing SEAL client for testnet with key server management');
    
    // Use best available key servers
    const bestServers = this.keyServerManager.selectBestKeyServers();
