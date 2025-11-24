@@ -9,8 +9,8 @@ import type { Signer } from '@mysten/sui/cryptography';
 // TEE Configuration
 export const TEE_CONFIG = {
  ENCLAVE_ID: process.env.TEE_ENCLAVE_ID || 'satya-nitro-enclave-v1',
- ENCLAVE_URL: process.env.TEE_ENCLAVE_URL || 'http://localhost:3333',
- VERIFICATION_ENDPOINT: '/process_data',
+ ENCLAVE_URL: process.env.NAUTILUS_ENCLAVE_URL || 'http://3.235.226.216:3333',
+ VERIFICATION_ENDPOINT: '/evaluate',
  ATTESTATION_ENDPOINT: '/get_attestation',
  MAX_MODEL_SIZE: 100 * 1024 * 1024, // 100MB
  VERIFICATION_TIMEOUT: 5 * 60 * 1000, // 5 minutes

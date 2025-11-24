@@ -79,18 +79,13 @@ export function ModelVerificationFlow({
   try {
 
    // Step 1: Process data in TEE using nautilus server with real blob analysis
-   const teeResponse = await fetch('http://localhost:3333/process_data', {
+   const teeResponse = await fetch(`${process.env.NEXT_PUBLIC_TEE_SERVER_URL || process.env.TEE_SERVER_URL || 'http://3.235.226.216:3333'}/evaluate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-     payload: {
       model_blob_id: modelBlobId,
       dataset_blob_id: datasetBlobId || '',
-      assessment_type: 'QualityAnalysis',
-      quality_metrics: ['accuracy', 'performance', 'bias'],
-      model_type_hint: 'neural_network',
-      dataset_format_hint: datasetBlobId?.endsWith('.npy') ? 'npy' : 'csv'
-     }
+      use_walrus: true
     }),
    });
 
