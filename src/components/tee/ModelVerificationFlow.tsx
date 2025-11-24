@@ -79,7 +79,7 @@ export function ModelVerificationFlow({
   try {
 
    // Step 1: Process data in TEE using nautilus server with real blob analysis
-   const teeResponse = await fetch(`${process.env.NEXT_PUBLIC_TEE_SERVER_URL || process.env.TEE_SERVER_URL || 'https://3.235.226.216:3333'}/evaluate`, {
+   const teeResponse = await fetch(`${process.env.NEXT_PUBLIC_TEE_SERVER_URL || 'https://3.235.226.216'}/evaluate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
