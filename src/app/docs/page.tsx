@@ -717,7 +717,7 @@ function ContractsContent() {
               <div>
                 <span className="text-sm font-medium text-black">SEAL Package:</span>
                 <div className="bg-gray-50 p-2 rounded mt-1">
-                  <code className="text-sm text-gray-700">0x8afa5d31dbaa0a8fb07082692940ca3d56b5e856c5126cb5a3693f0a4de63b82</code>
+                  <code className="text-sm text-gray-700">0x98f8a6ce208764219b23dc51db45bf11516ec0998810e98f3a94548d788ff679</code>
                 </div>
               </div>
               <div>

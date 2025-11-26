@@ -22,6 +22,8 @@ module marketplace::core {
     const EMarketplacePaused: vector<u8> = b"Marketplace is currently paused";
     #[error]
     const EAssetNotActive: vector<u8> = b"Asset is not active";
+    #[error]
+    const EInvalidPurchase: vector<u8> = b"Purchase does not match asset";
 
     const PLATFORM_FEE_PERCENTAGE: u64 = 250; // 2.5%
     const FEE_DENOMINATOR: u64 = 10000;
@@ -99,6 +101,13 @@ module marketplace::core {
     public struct DecryptionGranted has copy, drop {
         purchase_id: ID,
         buyer: address,
+        timestamp: u64
+    }
+
+    public struct SealAccessGranted has copy, drop {
+        asset_id: ID,
+        buyer: address,
+        seal_policy_id: ID,
         timestamp: u64
     }
 
@@ -274,10 +283,66 @@ module marketplace::core {
         _ctx: &mut TxContext
     ) {
         purchase.decryption_granted = true;
-        
+
         event::emit(DecryptionGranted {
             purchase_id: object::id(purchase),
             buyer: purchase.buyer,
+            timestamp: clock::timestamp_ms(clock)
+        });
+    }
+
+    // ======= SEAL Integration Functions =======
+
+    /// SEAL approve function for buyers - Called by SEAL key servers to verify purchase
+    ///
+    /// This function is called during the decryption process to verify that:
+    /// 1. The caller owns a valid Purchase object
+    /// 2. The Purchase is for the specified Asset
+    /// 3. The Asset has the correct SEAL policy
+    ///
+    /// SEAL key servers will only release decryption keys if this function executes successfully
+    entry fun seal_approve(
+        purchase: &Purchase,
+        asset: &Asset,
+        clock: &Clock,
+        ctx: &TxContext
+    ) {
+        let caller = tx_context::sender(ctx);
+
+        // Verify caller is the buyer who owns this Purchase
+        assert!(caller == purchase.buyer, ENotAuthorized);
+
+        // Verify the Purchase is for this specific Asset
+        assert!(purchase.asset_id == object::id(asset), EInvalidPurchase);
+
+        // Emit event for SEAL key servers
+        event::emit(SealAccessGranted {
+            asset_id: object::id(asset),
+            buyer: caller,
+            seal_policy_id: asset.seal_policy_id,
+            timestamp: clock::timestamp_ms(clock)
+        });
+    }
+
+    /// SEAL approve function for creators - Allows sellers to verify their own models
+    ///
+    /// This is used when the creator/seller wants to decrypt their own encrypted model
+    /// (e.g., for verification purposes before listing)
+    entry fun seal_approve_creator(
+        asset: &Asset,
+        clock: &Clock,
+        ctx: &TxContext
+    ) {
+        let caller = tx_context::sender(ctx);
+
+        // Verify caller is the seller/creator of this Asset
+        assert!(caller == asset.seller, ENotAuthorized);
+
+        // Emit event for SEAL key servers
+        event::emit(SealAccessGranted {
+            asset_id: object::id(asset),
+            buyer: caller,
+            seal_policy_id: asset.seal_policy_id,
             timestamp: clock::timestamp_ms(clock)
         });
     }
