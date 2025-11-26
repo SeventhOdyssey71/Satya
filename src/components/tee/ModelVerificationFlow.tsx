@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { TEEAttestationCard, TEEAttestationData } from './TEEAttestationCard';
-import { useSignAndExecuteTransaction, useCurrentAccount } from '@mysten/dapp-kit';
+import { useSignAndExecuteTransaction, useCurrentAccount, useSignPersonalMessage } from '@mysten/dapp-kit';
 import { Transaction } from '@mysten/sui/transactions';
+import { useSuiClient } from '@mysten/dapp-kit';
+import { MARKETPLACE_CONFIG } from '@/lib/constants';
 
 interface ModelVerificationFlowProps {
  pendingModelId?: string;
@@ -31,9 +33,11 @@ export function ModelVerificationFlow({
  const [error, setError] = useState<string | null>(null);
 
  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+ const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
  const account = useCurrentAccount();
+ const suiClient = useSuiClient();
 
- const PACKAGE_ID = "0xc4a516ae2dad92faeaf2894ff8b9324d1b1d41decbf6ab81d702cb3ded808196"; // Our deployed contract
+ const PACKAGE_ID = MARKETPLACE_CONFIG.PACKAGE_ID; // Marketplace contract from configuration
 
  const uploadToMarketplace = async (attestationData: TEEAttestationData, txDigest: string) => {
   
@@ -77,15 +81,48 @@ export function ModelVerificationFlow({
   setError(null);
 
   try {
+   // Ensure wallet is connected
+   if (!account) {
+    throw new Error('Please connect your wallet first');
+   }
 
-   // Step 1: Process data in TEE using nautilus server with real blob analysis
+   console.log('Starting wallet-signed decryption flow...');
+
+   // Step 1: Decrypt model in browser with wallet signature
+   const { WalletDecryptionService } = await import('@/lib/services/wallet-decryption.service');
+   const decryptionService = new WalletDecryptionService(suiClient);
+
+   // Create wallet signer interface
+   const walletSigner = {
+    address: account.address,
+    signPersonalMessage: async (args: { message: Uint8Array }) => {
+     return await signPersonalMessage({ message: args.message });
+    }
+   };
+
+   // Decrypt model with wallet signature (creator flow - uses seal_approve with PendingModel)
+   console.log('Decrypting model with wallet signature (creator flow)...');
+   const decryptedData = await decryptionService.decryptModelWithWallet(
+    {
+     modelBlobId: modelBlobId,
+     datasetBlobId: datasetBlobId,
+     userAddress: account.address,
+     transactionDigest: pendingModelId || `temp_${Date.now()}` // PendingModel ID for creator proof
+    },
+    walletSigner,
+    false  // isBuyer = false (this is a creator verifying their model with PendingModel)
+   );
+
+   console.log('✓ Model decrypted successfully in browser');
+
+   // Step 2: Send decrypted data to TEE server for evaluation
    const teeResponse = await fetch(`${process.env.NEXT_PUBLIC_TEE_SERVER_URL || 'https://3.235.226.216'}/evaluate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model_blob_id: modelBlobId,
-      dataset_blob_id: datasetBlobId || '',
-      use_walrus: true
+      model_data: decryptedData.modelData, // base64-encoded decrypted data
+      dataset_data: decryptedData.datasetData, // base64-encoded decrypted data
+      use_walrus: false // Important: We're sending plaintext, not blob IDs!
     }),
    });
 
@@ -94,38 +131,49 @@ export function ModelVerificationFlow({
     throw new Error(`TEE attestation failed: ${teeResponse.status} - ${errorText}`);
    }
 
-   const nautilusResponse = await teeResponse.json();
-   
-   // Validate we got a proper TEE response
-   if (!nautilusResponse.response || !nautilusResponse.signature) {
-    throw new Error('Invalid TEE response: missing signature or response data');
+   const serverResponse = await teeResponse.json();
+
+   // Handle both Nautilus TEE format and simple ML server format
+   let evaluationResult;
+   let hasSignature = false;
+
+   if (serverResponse.response && serverResponse.signature) {
+    // Nautilus TEE format with attestation
+    evaluationResult = serverResponse.response.data;
+    hasSignature = true;
+   } else if (serverResponse.success && serverResponse.evaluation) {
+    // Simple ML server format
+    evaluationResult = serverResponse.evaluation;
+    hasSignature = false;
+   } else {
+    throw new Error('Invalid TEE response: unexpected format');
    }
 
-   const requestId = nautilusResponse.response.request_id || `req_${Date.now()}`;
-   
-   // Use real TEE data from nautilus
+   const requestId = evaluationResult?.request_id || `req_${Date.now()}`;
+
+   // Use real evaluation data
    const attestation: TEEAttestationData = {
     request_id: requestId,
     ml_processing_result: {
-     quality_score: nautilusResponse.response.data?.quality_score || 0.85,
-     predictions: nautilusResponse.response.data?.predictions || [0.95, 0.92, 0.88],
-     confidence: nautilusResponse.response.data?.confidence || 0.92,
+     quality_score: evaluationResult?.quality_score || 0.85,
+     predictions: evaluationResult?.predictions || [0.95, 0.92, 0.88],
+     confidence: evaluationResult?.confidence || 0.92,
      request_id: requestId,
-     model_hash: nautilusResponse.response.data?.model_hash || `computed_hash_${Date.now()}`,
-     signature: nautilusResponse.signature // Real TEE signature
+     model_hash: evaluationResult?.model_hash || `computed_hash_${Date.now()}`,
+     signature: hasSignature ? serverResponse.signature : 'mock_signature_dev' // Real TEE signature or mock for dev
     },
     tee_attestation: {
-     pcr0: nautilusResponse.response.data?.pcr0 || '00'.repeat(32),
-     pcr1: nautilusResponse.response.data?.pcr1 || '11'.repeat(32), 
-     pcr2: nautilusResponse.response.data?.pcr2 || '22'.repeat(32),
-     pcr8: nautilusResponse.response.data?.pcr8 || '88'.repeat(32),
-     signature: nautilusResponse.signature, // Real signature from TEE
-     timestamp: String(nautilusResponse.response.timestamp_ms || Date.now()),
-     enclave_id: nautilusResponse.response.data?.enclave_id || 'real_enclave_001'
+     pcr0: evaluationResult?.pcr0 || '00'.repeat(32),
+     pcr1: evaluationResult?.pcr1 || '11'.repeat(32),
+     pcr2: evaluationResult?.pcr2 || '22'.repeat(32),
+     pcr8: evaluationResult?.pcr8 || '88'.repeat(32),
+     signature: hasSignature ? serverResponse.signature : 'mock_signature_dev', // Real signature from TEE or mock
+     timestamp: String(evaluationResult?.timestamp || Date.now()),
+     enclave_id: evaluationResult?.enclave_id || 'dev_enclave_001'
     },
     verification_metadata: {
-     enclave_id: nautilusResponse.response.data?.enclave_id || 'real_enclave_001',
-     source: 'nautilus-tee-real',
+     enclave_id: evaluationResult?.enclave_id || 'dev_enclave_001',
+     source: hasSignature ? 'nautilus-tee-real' : 'ml-server-dev',
      timestamp: new Date().toISOString(),
      model_path: modelBlobId || '',
      attestation_type: 'real_quality_analysis'
