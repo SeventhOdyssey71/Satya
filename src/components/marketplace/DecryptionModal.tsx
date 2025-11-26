@@ -2,11 +2,8 @@
 
 import React, { useState } from 'react'
 import { X, Download, Lock, Unlock, CheckCircle, FileText } from 'lucide-react'
-import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
-import { Transaction } from '@mysten/sui/transactions'
-import { SessionKey } from '@mysten/seal'
-import { SuiClient } from '@mysten/sui/client'
-import { SEAL_CONFIG } from '@/lib/integrations/seal/config/seal.config'
+import { useCurrentAccount, useSignPersonalMessage, useSuiClient } from '@mysten/dapp-kit'
+import { WalletDecryptionService } from '@/lib/services/wallet-decryption.service'
 
 interface DecryptionModalProps {
  model: any
@@ -20,138 +17,98 @@ export default function DecryptionModal({ model, onClose }: DecryptionModalProps
  const [error, setError] = useState<string | null>(null)
  
  const account = useCurrentAccount()
- const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
+ const { mutateAsync: signPersonalMessage } = useSignPersonalMessage()
+ const suiClient = useSuiClient()
 
  const handleDecrypt = async () => {
   setIsDecrypting(true)
   setError(null)
-  
+
   try {
    if (!account) {
     throw new Error('Please connect your wallet to decrypt the model.')
    }
 
-   // Get blob IDs from model data
+   // Get blob IDs and purchase record from model data
    const modelBlobId = model.modelBlobId || model.walrusBlobId
-   const datasetBlobId = model.datasetBlobId || 'default-dataset-blob'
-   
+   // Filter out placeholder dataset blob IDs
+   const datasetBlobId = (model.datasetBlobId && model.datasetBlobId !== 'default-dataset-blob')
+     ? model.datasetBlobId
+     : undefined
+   const purchaseRecordId = model.purchaseRecordId || model.id
+
    if (!modelBlobId) {
     throw new Error('Model blob ID not found. Cannot decrypt without storage reference.')
    }
 
-   console.log('Creating SEAL key verification transaction:', { modelBlobId, datasetBlobId })
-   
-   // Step 1: Create SEAL session key for decryption authorization
-   console.log('Creating SEAL session key for decryption authorization...')
-   
-   let sealResult
-   try {
-    // Create SuiClient for SEAL operations
-    const suiClient = new SuiClient({ 
-     url: process.env.NEXT_PUBLIC_SUI_NETWORK_URL || 'https://fullnode.testnet.sui.io' 
-    })
-    
-    // Create a real SEAL session key - this generates the key verification transaction
-    const sessionKey = await SessionKey.create({
-     address: account.address,
-     packageId: SEAL_CONFIG.testnet.packageId,
-     ttlMin: 30, // 30 minute session for decryption
-     signer: account as any, // The wallet signer
-     suiClient: suiClient as any
-    })
-    
-    // The SessionKey.create() call above automatically creates and executes the key verification transaction
-    sealResult = {
-     digest: `seal_key_${Date.now()}_${Math.random().toString(36).slice(2)}`,
-     sessionKey: sessionKey.export() // Export the session key for API use
-    }
-    
-    console.log('SEAL session key created successfully:', sealResult.digest)
-   } catch (sealError) {
-    console.warn('SEAL session key creation failed, proceeding with fallback:', sealError)
-    
-    // Fallback: Create a simple transaction for demo purposes
-    try {
-     const sealTx = new Transaction()
-     const [coin] = sealTx.splitCoins(sealTx.gas, [1]) // Split 1 MIST as proof of authorization
-     sealTx.transferObjects([coin], account.address) // Transfer back to self
-     sealTx.setGasBudget(50000000) // 0.05 SUI
-     
-     const txResult = await signAndExecuteTransaction({
-      transaction: sealTx
-     })
-     
-     sealResult = { 
-      digest: txResult.digest || `seal_fallback_${Date.now()}_${Math.random().toString(36).slice(2)}`
-     }
-     
-     console.log('SEAL fallback transaction successful:', sealResult.digest)
-    } catch (fallbackError) {
-     console.error('Both SEAL and fallback transactions failed:', fallbackError)
-     // Use simulation as last resort
-     sealResult = { 
-      digest: `seal_sim_${Date.now()}_${Math.random().toString(36).slice(2)}` 
-     }
-    }
+   if (!purchaseRecordId) {
+    throw new Error('Purchase record ID not found. Cannot verify ownership.')
    }
-   
-   // Step 2: Call the blob decryption API with SEAL transaction proof
-   const response = await fetch('/api/decrypt-blobs', {
-    method: 'POST',
-    headers: {
-     'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-     model_blob_id: modelBlobId,
-     dataset_blob_id: datasetBlobId,
-     user_address: account.address,
-     transaction_digest: model.purchaseTransactionDigest || 'purchase_verified',
-     seal_transaction_digest: sealResult.digest
-    })
+
+   console.log('Starting wallet-signed SEAL decryption for buyer...', {
+    modelBlobId,
+    datasetBlobId,
+    purchaseRecordId,
+    buyer: account.address
    })
 
-   if (response.ok) {
-    const result = await response.json()
-    console.log('Decryption result:', result)
-    
-    if (result.success) {
-     setIsDecrypting(false)
-     setIsComplete(true)
-     
-     // Show info about the decrypted data
-     if (result.info) {
-      console.log('Decryption info:', result.info)
-     }
-     
-     // Create downloadable blobs from the decrypted data
-     const urls: {model?: string, dataset?: string} = {}
-     
-     // Handle model data
-     if (result.decrypted_model_data) {
-      const modelBlob = new Blob([new Uint8Array(result.decrypted_model_data)], { 
-       type: 'application/octet-stream' 
-      })
-      urls.model = URL.createObjectURL(modelBlob)
-     }
-     
-     // Handle dataset data (only if available and not empty)
-     if (result.decrypted_dataset_data && result.decrypted_dataset_data.length > 0) {
-      const datasetBlob = new Blob([new Uint8Array(result.decrypted_dataset_data)], { 
-       type: 'application/octet-stream' 
-      })
-      urls.dataset = URL.createObjectURL(datasetBlob)
-     } else {
-      console.log('No dataset data available for download')
-     }
-     
-     setDownloadUrls(urls)
-    } else {
-     throw new Error(result.error || 'Decryption failed')
+   // Use the WalletDecryptionService (same as ModelVerificationFlow)
+   const decryptionService = new WalletDecryptionService(suiClient)
+
+   // Create wallet signer interface
+   const walletSigner = {
+    address: account.address,
+    signPersonalMessage: async (args: { message: Uint8Array }) => {
+     return await signPersonalMessage({ message: args.message })
     }
-   } else {
-    const errorData = await response.json()
-    throw new Error(`Decryption failed: ${errorData.error || response.statusText}`)
    }
+
+   // Decrypt model with wallet signature
+   console.log('Decrypting model with buyer wallet signature...')
+   const decryptedData = await decryptionService.decryptModelWithWallet(
+    {
+     modelBlobId: modelBlobId,
+     datasetBlobId: datasetBlobId,
+     userAddress: account.address,
+     transactionDigest: purchaseRecordId // Use purchase record as proof of ownership
+    },
+    walletSigner
+   )
+
+   console.log('✓ Model decrypted successfully in browser')
+
+   // Convert base64 to Uint8Array for download
+   const modelData = Uint8Array.from(atob(decryptedData.modelData), c => c.charCodeAt(0))
+   const datasetData = Uint8Array.from(atob(decryptedData.datasetData), c => c.charCodeAt(0))
+
+   setIsDecrypting(false)
+   setIsComplete(true)
+
+   // Create downloadable blobs from the decrypted data
+   const urls: {model?: string, dataset?: string} = {}
+
+   // Handle model data
+   if (modelData && modelData.length > 0) {
+    const modelBlob = new Blob([modelData], {
+     type: 'application/octet-stream'
+    })
+    urls.model = URL.createObjectURL(modelBlob)
+    console.log('✓ Model download ready:', modelData.length, 'bytes')
+   }
+
+   // Handle dataset data (only if available and not empty)
+   if (datasetData && datasetData.length > 0) {
+    const datasetBlob = new Blob([datasetData], {
+     type: 'application/octet-stream'
+    })
+    urls.dataset = URL.createObjectURL(datasetBlob)
+    console.log('✓ Dataset download ready:', datasetData.length, 'bytes')
+   } else {
+    console.log('No dataset data available for download')
+   }
+
+   setDownloadUrls(urls)
+
   } catch (error) {
    const errorMessage = error instanceof Error ? error.message : 'Decryption failed. Please try again.'
    console.warn('Decryption failed:', errorMessage)
