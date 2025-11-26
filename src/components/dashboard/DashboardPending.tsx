@@ -470,7 +470,7 @@ export default function DashboardPending({ triggerRefresh, onRefreshComplete }: 
           <ModelVerificationFlow
            pendingModelId={model.id}
            modelBlobId={model.modelBlobId}
-           datasetBlobId={model.datasetBlobId}
+           datasetBlobId={model.datasetBlobId !== 'default-dataset-blob' ? model.datasetBlobId : undefined}
            modelName={model.title}
            onVerificationComplete={(attestationData, txDigest) => {
             handleVerificationComplete(model.id, 'verification-id', txDigest);
