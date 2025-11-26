@@ -488,8 +488,13 @@ export class MarketplaceContractService {
      ],
     });
 
-    const senderAddress = await signer.toSuiAddress();
-    tx.transferObjects([marketplaceModel], senderAddress);
+    // Share the MarketplaceModel so anyone can purchase it
+    // CRITICAL: purchase_model takes &mut MarketplaceModel, so it must be a shared object!
+    tx.moveCall({
+     target: '0x2::transfer::public_share_object',
+     typeArguments: [`${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::MarketplaceModel`],
+     arguments: [marketplaceModel]
+    });
 
    } else if (currentStatus === 1) {
     // VERIFYING - only need to complete verification
@@ -669,8 +674,13 @@ export class MarketplaceContractService {
     ],
    });
 
-   const senderAddress = await signer.toSuiAddress();
-   tx.transferObjects([marketplaceModel], senderAddress);
+   // Share the MarketplaceModel so anyone can purchase it
+   // CRITICAL: purchase_model takes &mut MarketplaceModel, so it must be a shared object!
+   tx.moveCall({
+    target: '0x2::transfer::public_share_object',
+    typeArguments: [`${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::MarketplaceModel`],
+    arguments: [marketplaceModel]
+   });
 
    const txResult = await signer.executeTransaction(tx);
 
