@@ -10,10 +10,19 @@ import tempfile
 import traceback
 import base64
 import requests
+from pathlib import Path
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from ml_evaluator import MLEvaluator
 from seal_client import decrypt_blob_if_needed, get_seal_client
+
+# Load environment variables from parent directory's .env file
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
+print(f"Loading environment from: {env_path}")
+print(f"SEAL_PACKAGE_ID: {os.getenv('SEAL_PACKAGE_ID', 'NOT SET')}")
+print(f"SEAL_KEY_SERVER_1_OBJECT_ID: {os.getenv('SEAL_KEY_SERVER_1_OBJECT_ID', 'NOT SET')}")
 
 app = Flask(__name__)
 CORS(app)
@@ -236,36 +245,122 @@ def download_from_walrus(blob_id, user_address=None, transaction_digest=None):
     """Download and decrypt blob from Walrus aggregator with SEAL support"""
     aggregator_url = os.environ.get("WALRUS_AGGREGATOR_URL", "https://aggregator.walrus-testnet.walrus.space")
     url = f"{aggregator_url}/v1/blobs/{blob_id}"
-    
+
     print(f"Downloading from Walrus: {url}")
-    
+
     try:
         response = requests.get(url, timeout=30)
         response.raise_for_status()
-        
-        encrypted_data = response.content
-        if not encrypted_data:
+
+        blob_data = response.content
+        if not blob_data:
             raise Exception("Downloaded blob is empty")
-        
-        print(f"Downloaded {len(encrypted_data)} bytes from Walrus")
-        
-        # Decrypt with SEAL if needed
-        print("Attempting SEAL decryption...")
-        decrypted_data = decrypt_blob_if_needed(
-            encrypted_data, 
-            user_address=user_address, 
-            transaction_digest=transaction_digest
-        )
-        
-        if len(decrypted_data) != len(encrypted_data):
-            print(f"SEAL decryption successful: {len(encrypted_data)} → {len(decrypted_data)} bytes")
+
+        print(f"Downloaded {len(blob_data)} bytes from Walrus")
+
+        # Check if blob has metadata header
+        # Format: [metadata_length(4 bytes)] [metadata_json] [encrypted_data]
+        if len(blob_data) < 4:
+            print("Blob too small for metadata header, treating as raw encrypted data")
+            encrypted_data = blob_data
+            metadata = None
         else:
-            print("No SEAL decryption needed (data was not encrypted)")
-        
+            # Read metadata length from first 4 bytes (little-endian)
+            metadata_length = int.from_bytes(blob_data[0:4], byteorder='little')
+
+            # Sanity check metadata length
+            if metadata_length > 0 and metadata_length < len(blob_data) - 4:
+                try:
+                    # Extract and parse metadata JSON
+                    metadata_bytes = blob_data[4:4 + metadata_length]
+                    metadata_string = metadata_bytes.decode('utf-8')
+                    metadata = json.loads(metadata_string)
+
+                    # Extract encrypted data after metadata
+                    encrypted_data = blob_data[4 + metadata_length:]
+
+                    print(f"Parsed SEAL metadata: policy_id={metadata.get('policy_id')}, " +
+                          f"algorithm={metadata.get('encryption_algorithm')}")
+                    print(f"Encrypted data size: {len(encrypted_data)} bytes")
+                except Exception as e:
+                    print(f"Failed to parse metadata header: {e}, treating as raw encrypted data")
+                    encrypted_data = blob_data
+                    metadata = None
+            else:
+                print(f"Invalid metadata length {metadata_length}, treating as raw encrypted data")
+                encrypted_data = blob_data
+                metadata = None
+
+        # Decrypt with SEAL if metadata is present
+        if metadata:
+            print("Decrypting with SEAL using metadata...")
+            decrypted_data = decrypt_with_seal_metadata(
+                encrypted_data,
+                metadata,
+                user_address=user_address,
+                transaction_digest=transaction_digest
+            )
+        else:
+            print("No metadata found, attempting generic SEAL decryption...")
+            decrypted_data = decrypt_blob_if_needed(
+                encrypted_data,
+                user_address=user_address,
+                transaction_digest=transaction_digest
+            )
+
+        print(f"Decryption result: {len(decrypted_data)} bytes")
         return decrypted_data
-        
+
     except Exception as e:
         print(f"Failed to download/decrypt from Walrus: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise
+
+def decrypt_with_seal_metadata(encrypted_data, metadata, user_address=None, transaction_digest=None):
+    """Decrypt data using SEAL metadata (encrypted DEK, policy ID, IV)"""
+    try:
+        print("Decrypting with SEAL metadata...")
+
+        # Extract metadata fields
+        encrypted_dek_base64 = metadata.get('encrypted_dek_base64')
+        policy_id = metadata.get('policy_id')
+        iv_base64 = metadata.get('iv_base64')
+
+        if not all([encrypted_dek_base64, policy_id, iv_base64]):
+            raise Exception(f"Missing required metadata fields: " +
+                          f"encrypted_dek={bool(encrypted_dek_base64)}, " +
+                          f"policy_id={bool(policy_id)}, " +
+                          f"iv={bool(iv_base64)}")
+
+        # Decode base64 fields
+        encrypted_dek = base64.b64decode(encrypted_dek_base64)
+        iv = base64.b64decode(iv_base64)
+
+        print(f"Encrypted DEK size: {len(encrypted_dek)} bytes")
+        print(f"IV size: {len(iv)} bytes")
+        print(f"Policy ID: {policy_id}")
+
+        # Step 1: Decrypt the DEK using SEAL
+        # In a real TEE environment, this would contact SEAL key servers
+        # For now, we'll use the seal_client's decryption
+        seal_client = get_seal_client()
+
+        # The encrypted DEK needs to be decrypted by SEAL to get the plaintext DEK
+        # This requires authorization (user_address, transaction_digest)
+        print(f"Requesting DEK decryption from SEAL (user={user_address})")
+
+        # For now, since we don't have full SEAL decryption implementation,
+        # we'll try the generic decryption on the full encrypted data
+        # TODO: Implement proper SEAL DEK decryption when SEAL SDK is available
+        plaintext_data = seal_client.decrypt_blob(encrypted_data, user_address, transaction_digest)
+
+        return plaintext_data
+
+    except Exception as e:
+        print(f"SEAL metadata decryption failed: {e}")
+        import traceback
+        traceback.print_exc()
         raise
 
 def download_from_url(url):
@@ -293,7 +388,7 @@ if __name__ == '__main__':
     # Production-safe configuration
     import os
     debug_mode = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
-    host = os.getenv('FLASK_HOST', '127.0.0.1')  # Localhost only by default
+    host = os.getenv('FLASK_HOST', 'localhost')  # Use 'localhost' for consistency
     port = int(os.getenv('FLASK_PORT', '3333'))
     
     if debug_mode:

@@ -6,7 +6,7 @@ import { WalrusStorageService } from '../integrations/walrus/services/storage-se
 import { logger } from '../integrations/core/logger';
 import { PolicyType, EncryptionResult } from '../integrations/seal/types';
 import { UploadResult } from '../integrations/walrus/types';
-import { SUI_CONFIG } from '../constants';
+import { SUI_CONFIG, SEAL_CONFIG } from '../constants';
 
 export interface FileUploadRequest {
  file: File;
@@ -131,16 +131,49 @@ export class UploadService {
      throw new Error(`Encryption failed: ${encryptionResult.error}`);
     }
 
-    processedData = new Uint8Array(encryptionResult.encryptedData);
-    
-    if (encryptionResult) {
-     logger.debug('File encrypted successfully', {
-      fileId,
-      policyId: encryptionResult.policyId,
-      originalSize: fileData.length,
-      encryptedSize: processedData.length
-     });
+    // Pack SEAL metadata into blob header for decryption
+    // Format: [metadata_length(4 bytes)] [metadata_json] [encrypted_data]
+    // CRITICAL: seal_package_id must be the MARKETPLACE package (where seal_approve is defined)
+    const marketplacePackageId = process.env.NEXT_PUBLIC_MARKETPLACE_PACKAGE_ID || '';
+    if (!marketplacePackageId) {
+     throw new Error('MARKETPLACE_PACKAGE_ID not configured');
     }
+
+    const metadata = {
+     encrypted_dek_base64: Buffer.from(encryptionResult.encryptedDEK).toString('base64'),
+     policy_id: encryptionResult.policyId,
+     iv_base64: Buffer.from(encryptionResult.iv).toString('base64'),
+     seal_package_id: marketplacePackageId, // Use marketplace package, not SEAL package!
+     encryption_algorithm: 'AES-256-GCM',
+     seal_threshold: 2
+    };
+
+    const metadataString = JSON.stringify(metadata);
+    const metadataBytes = new TextEncoder().encode(metadataString);
+    const metadataLength = metadataBytes.length;
+
+    // Build blob with metadata header
+    const blobData = new Uint8Array(4 + metadataLength + encryptionResult.encryptedData.length);
+
+    // Write metadata length (4 bytes, little-endian)
+    new DataView(blobData.buffer).setUint32(0, metadataLength, true);
+
+    // Write metadata
+    blobData.set(metadataBytes, 4);
+
+    // Write encrypted data
+    blobData.set(encryptionResult.encryptedData, 4 + metadataLength);
+
+    processedData = blobData;
+
+    logger.debug('File encrypted successfully with SEAL metadata', {
+     fileId,
+     policyId: encryptionResult.policyId,
+     originalSize: fileData.length,
+     encryptedSize: encryptionResult.encryptedData.length,
+     metadataSize: metadataLength,
+     totalBlobSize: blobData.length
+    });
    }
 
    if (controller.signal.aborted) {

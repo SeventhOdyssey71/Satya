@@ -91,6 +91,7 @@ export default function ModelPage({ params }: ModelPageProps) {
  const [isPurchased, setIsPurchased] = useState(false)
  const [showDecryption, setShowDecryption] = useState(false)
  const [purchaseTransactionDigest, setPurchaseTransactionDigest] = useState<string | null>(null)
+ const [purchaseRecordId, setPurchaseRecordId] = useState<string | null>(null)
  const router = useRouter()
  
  useEffect(() => {
@@ -186,10 +187,13 @@ export default function ModelPage({ params }: ModelPageProps) {
   }
  }
 
- const handlePurchaseComplete = (transactionDigest?: string) => {
+ const handlePurchaseComplete = (transactionDigest?: string, recordId?: string) => {
   setIsPurchased(true)
   if (transactionDigest) {
    setPurchaseTransactionDigest(transactionDigest)
+  }
+  if (recordId) {
+   setPurchaseRecordId(recordId)
   }
  }
 
@@ -391,10 +395,11 @@ export default function ModelPage({ params }: ModelPageProps) {
 
    {/* Decryption Modal */}
    {showDecryption && (
-    <DecryptionModal 
+    <DecryptionModal
      model={{
       ...model,
-      purchaseTransactionDigest
+      purchaseTransactionDigest,
+      purchaseRecordId
      }}
      onClose={() => setShowDecryption(false)}
     />

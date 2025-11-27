@@ -34,18 +34,19 @@ class SealClient:
         
     def _load_config(self) -> SealConfig:
         """Load SEAL configuration from environment"""
-        package_id = os.getenv("SEAL_PACKAGE_ID", "0x98f8a6ce208764219b23dc51db45bf11516ec0998810e98f3a94548d788ff679")
+        # Updated to match constants.ts - correct SEAL package for testnet
+        package_id = os.getenv("SEAL_PACKAGE_ID", "0x8afa5d31dbaa0a8fb07082692940ca3d56b5e856c5126cb5a3693f0a4de63b82")
         threshold = int(os.getenv("SEAL_THRESHOLD", "2"))
-        
-        # Load key servers from environment
+
+        # Load key servers from environment - updated to match constants.ts
         key_servers = [
             KeyServerConfig(
-                object_id=os.getenv("SEAL_KEY_SERVER_1_OBJECT_ID", "0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75"),
+                object_id=os.getenv("SEAL_KEY_SERVER_1_OBJECT_ID", "0x2304dd255b13eaf5cb471bd5188df946a64f1715ee2b7b02fecf306bd12ceebc"),
                 url=os.getenv("SEAL_KEY_SERVER_1_URL", "https://seal-key-server-testnet-1.mystenlabs.com"),
                 weight=1
             ),
             KeyServerConfig(
-                object_id=os.getenv("SEAL_KEY_SERVER_2_OBJECT_ID", "0xf5d14a81a982144ae441cd7d64b09027f116a468bd36e7eca494f750591623c8"),
+                object_id=os.getenv("SEAL_KEY_SERVER_2_OBJECT_ID", "0x81aeaa8c25d2c912e1dc23b4372305b7a602c4ec4cc3e510963bc635e500aa37"),
                 url=os.getenv("SEAL_KEY_SERVER_2_URL", "https://seal-key-server-testnet-2.mystenlabs.com"),
                 weight=1
             )
@@ -89,20 +90,22 @@ class SealClient:
         """Calculate Shannon entropy of data"""
         if not data:
             return 0.0
-            
+
         # Count byte frequencies
         frequencies = {}
         for byte in data:
             frequencies[byte] = frequencies.get(byte, 0) + 1
-            
-        # Calculate entropy
+
+        # Calculate Shannon entropy
+        import math
         entropy = 0.0
         length = len(data)
         for count in frequencies.values():
             probability = count / length
-            entropy -= probability * (probability.bit_length() - 1)
-            
-        return min(entropy / 8.0, 1.0)  # Normalize to 0-1 range
+            if probability > 0:
+                entropy -= probability * math.log2(probability)
+
+        return entropy / 8.0  # Normalize to 0-1 range (max entropy is 8 bits)
     
     def decrypt_blob(self, encrypted_data: bytes, user_address: str = None, transaction_digest: str = None) -> bytes:
         """Decrypt SEAL encrypted blob data"""

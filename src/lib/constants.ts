@@ -43,17 +43,17 @@ export const MARKETPLACE_CONFIG = {
 // ============================================
 
 export const SEAL_CONFIG = {
- PACKAGE_ID: '0x8afa5d31dbaa0a8fb07082692940ca3d56b5e856c5126cb5a3693f0a4de63b82',
+ PACKAGE_ID: '0x98f8a6ce208764219b23dc51db45bf11516ec0998810e98f3a94548d788ff679',
  UPGRADE_CAP_ID: process.env.NEXT_PUBLIC_SEAL_UPGRADE_CAP_ID || '',
- 
+
  // Key Servers - Updated with correct testnet server object IDs
  KEY_SERVERS: [
   {
-   OBJECT_ID: '0x2304dd255b13eaf5cb471bd5188df946a64f1715ee2b7b02fecf306bd12ceebc',
+   OBJECT_ID: '0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75',
    URL: 'https://seal-key-server-testnet-1.mystenlabs.com',
   },
   {
-   OBJECT_ID: '0x81aeaa8c25d2c912e1dc23b4372305b7a602c4ec4cc3e510963bc635e500aa37',
+   OBJECT_ID: '0xf5d14a81a982144ae441cd7d64b09027f116a468bd36e7eca494f750591623c8',
    URL: 'https://seal-key-server-testnet-2.mystenlabs.com',
   },
  ],

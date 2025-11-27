@@ -181,22 +181,30 @@ export class SealClientWrapper {
  
  /**
   * Encrypt data with SEAL using identity-based encryption
+  *
+  * IMPORTANT: packageId must match the package that contains the seal_approve function!
+  * We use the MARKETPLACE package ID because that's where seal_approve lives.
   */
  async encryptWithSeal(
   data: Uint8Array,
   policyId: string,
   identity: string,
-  threshold?: number
+  threshold?: number,
+  packageId?: string // Allow override for the package containing seal_approve
  ): Promise<{ encryptedObject: Uint8Array; symmetricKey: Uint8Array }> {
   try {
+   // Use provided packageId or fall back to SEAL package
+   // CRITICAL: This should be the MARKETPLACE package ID for Satya models!
+   const encryptionPackageId = packageId || SEAL_CONFIG.testnet.packageId;
+
    // Normalize package ID format
-   const packageId = SEAL_CONFIG.testnet.packageId.startsWith('0x') 
-    ? SEAL_CONFIG.testnet.packageId 
-    : `0x${SEAL_CONFIG.testnet.packageId}`;
+   const normalizedPackageId = encryptionPackageId.startsWith('0x')
+    ? encryptionPackageId
+    : `0x${encryptionPackageId}`;
 
    const encryptOptions: EncryptOptions = {
     threshold: threshold || SEAL_CONFIG.testnet.threshold,
-    packageId: packageId,
+    packageId: normalizedPackageId,
     id: identity, // Use the identity for encryption
     data,
     aad: new TextEncoder().encode(policyId) // Use policyId as additional authenticated data

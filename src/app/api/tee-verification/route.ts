@@ -48,7 +48,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         model_blob_id: modelBlobId,
         dataset_blob_id: datasetBlobId || "6JwedDoHaIw-9SGOsu29AdentESjzKoVzSedEIH6URo", // Default dataset
-        use_walrus: true  // Use real Walrus downloads
+        use_walrus: true,  // Use real Walrus downloads
+        user_address: userAddress,  // Required for SEAL decryption
+        transaction_digest: transactionDigest  // Required for SEAL decryption
       })
     })
 

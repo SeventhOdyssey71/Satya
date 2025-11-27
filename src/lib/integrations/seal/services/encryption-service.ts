@@ -253,17 +253,29 @@ export class SealEncryptionService {
  ): Promise<Uint8Array> {
   try {
    console.log(`Encrypting DEK with SEAL for policy ${policyId}`);
-   
-   // Use the policy ID as the identity for SEAL encryption
+
+   // CRITICAL: SEAL SDK requires a hex-encoded identity
+   // Convert policy ID to deterministic hex format
    const identity = this.generateIdentityFromPolicy(policyId);
-   console.log(`Generated identity for policy ${policyId}:`, identity);
-   
+   console.log(`Generated hex identity for SEAL: ${identity}`);
+
+   // CRITICAL: Use MARKETPLACE package ID, not SEAL package ID!
+   // The packageId must match where seal_approve function is defined (satya::marketplace)
+   const marketplacePackageId = process.env.NEXT_PUBLIC_MARKETPLACE_PACKAGE_ID || '';
+   if (!marketplacePackageId) {
+    throw new SealError('MARKETPLACE_PACKAGE_ID not configured in environment');
+   }
+
+   console.log(`Encrypting with marketplace package namespace: ${marketplacePackageId}`);
+
    // Encrypt DEK using SEAL's identity-based encryption
+   // Use hex-encoded identity (SEAL SDK requirement!)
    const result = await this.sealClient.encryptWithSeal(
     dek,
     policyId,
-    identity,
-    SEAL_CONFIG.testnet.threshold
+    identity, // Use hex-encoded identity!
+    SEAL_CONFIG.testnet.threshold,
+    marketplacePackageId // Use marketplace package, not SEAL package!
    );
    
    console.log(`DEK encrypted successfully with SEAL for policy ${policyId}`);
