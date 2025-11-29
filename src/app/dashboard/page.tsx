@@ -18,14 +18,22 @@ function DashboardContent() {
  const router = useRouter()
  const searchParams = useSearchParams()
 
- // Handle refresh parameter from upload redirect
+ // Handle URL parameters for navigation
  useEffect(() => {
   const refresh = searchParams.get('refresh')
+  const download = searchParams.get('download')
+
   if (refresh === 'true') {
-   // Switch to pending tab and trigger refresh
+   // Switch to pending tab and trigger refresh (from upload redirect)
    setActiveTab('pending')
    setPendingRefresh(true)
-   
+
+   // Clean up URL parameter
+   router.replace('/dashboard', { scroll: false })
+  } else if (download !== null) {
+   // Switch to downloads tab (from already-purchased model redirect)
+   setActiveTab('downloads')
+
    // Clean up URL parameter
    router.replace('/dashboard', { scroll: false })
   }
