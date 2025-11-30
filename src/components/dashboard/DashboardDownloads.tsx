@@ -30,13 +30,20 @@ interface Download {
  purchaseRecord?: string
 }
 
-export default function DashboardDownloads() {
+interface DashboardDownloadsProps {
+ triggerRefresh?: boolean
+ onRefreshComplete?: () => void
+}
+
+export default function DashboardDownloads({ triggerRefresh, onRefreshComplete }: DashboardDownloadsProps) {
  const [downloads, setDownloads] = useState<Download[]>([])
  const [loading, setLoading] = useState(true)
  const [error, setError] = useState<string | null>(null)
  const [decryptingModel, setDecryptingModel] = useState<Download | null>(null)
+ const [showRefreshSuccess, setShowRefreshSuccess] = useState(false)
  const currentAccount = useCurrentAccount()
 
+ // Load downloads on mount and when account changes
  useEffect(() => {
   if (currentAccount?.address) {
    loadDownloads()
@@ -45,6 +52,30 @@ export default function DashboardDownloads() {
    setDownloads([])
   }
  }, [currentAccount?.address])
+
+ // Handle refresh trigger from URL parameter (after purchase)
+ useEffect(() => {
+  if (triggerRefresh && currentAccount?.address) {
+   console.log('Refresh triggered for Downloads section - reloading purchases...')
+
+   // Add a small delay to allow blockchain indexing
+   setTimeout(() => {
+    loadDownloads().then(() => {
+     // Show success message
+     setShowRefreshSuccess(true)
+
+     // Hide success message after 5 seconds
+     setTimeout(() => {
+      setShowRefreshSuccess(false)
+     }, 5000)
+
+     if (onRefreshComplete) {
+      onRefreshComplete()
+     }
+    })
+   }, 2000) // 2 second delay for blockchain indexing
+  }
+ }, [triggerRefresh])
 
  const loadDownloads = async () => {
   if (!currentAccount?.address) {
@@ -59,14 +90,39 @@ export default function DashboardDownloads() {
    console.log('Loading downloads for user:', currentAccount.address)
 
    const contractService = new MarketplaceContractService()
+
+   // TEMP DEBUG: Check what owned objects we have
+   const suiClient = (contractService as any).suiClient
+   const ownedObjects = await suiClient.getOwnedObjects({
+    owner: currentAccount.address,
+    limit: 50,
+    options: { showContent: true, showType: true }
+   })
+
+   console.log('=== DEBUG: All owned objects ===')
+   console.log('Total owned objects:', ownedObjects.data.length)
+   ownedObjects.data.forEach((obj: any, i: number) => {
+    console.log(`Object ${i + 1}:`, {
+     type: obj.data?.type,
+     objectId: obj.data?.objectId?.substring(0, 20) + '...'
+    })
+   })
+
    const userPurchases = await contractService.getUserPurchases(currentAccount.address)
 
    console.log('Retrieved user purchases:', userPurchases)
+   console.log('Total purchases found:', userPurchases.length)
 
    // Fetch blob IDs for each purchase by querying the MarketplaceModel
    const enrichedPurchases = await Promise.all(
-    userPurchases.map(async (purchase) => {
+    userPurchases.map(async (purchase, index) => {
      try {
+      console.log(`Enriching purchase ${index + 1}/${userPurchases.length}:`, {
+       modelId: purchase.modelId,
+       purchaseId: purchase.id,
+       title: purchase.modelTitle
+      })
+
       // Fetch the MarketplaceModel object to get blob IDs
       const suiClient = (contractService as any).suiClient
       const modelObject = await suiClient.getObject({
@@ -74,22 +130,38 @@ export default function DashboardDownloads() {
        options: { showContent: true }
       })
 
+      if (modelObject.error) {
+       console.error(`Error fetching model ${purchase.modelId}:`, modelObject.error)
+       return purchase // Return without blob IDs
+      }
+
       const content = modelObject.data?.content as any
       const fields = content?.fields || {}
 
-      return {
+      const enriched = {
        ...purchase,
        modelBlobId: fields.model_blob_id,
        datasetBlobId: fields.dataset_blob_id,
        purchaseRecord: purchase.id // PurchaseRecord ID
       }
+
+      console.log(`✓ Enriched purchase ${index + 1}:`, {
+       modelBlobId: enriched.modelBlobId ? enriched.modelBlobId.substring(0, 20) + '...' : 'none',
+       datasetBlobId: enriched.datasetBlobId ? enriched.datasetBlobId.substring(0, 20) + '...' : 'none'
+      })
+
+      return enriched
      } catch (error) {
-      console.warn('Could not fetch blob IDs for model:', purchase.modelId, error)
-      return purchase
+      console.error(`Failed to enrich purchase ${index + 1}:`, {
+       error: error instanceof Error ? error.message : String(error),
+       purchase
+      })
+      return purchase // Return original purchase without blob IDs
      }
     })
    )
 
+   console.log('Final enriched purchases:', enrichedPurchases.length)
    setDownloads(enrichedPurchases)
 
   } catch (err) {
@@ -125,9 +197,14 @@ export default function DashboardDownloads() {
 
  if (loading) {
   return (
-   <div className="flex items-center justify-center py-12">
-    <div className="w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin" />
-    <p className="ml-4 text-gray-600">Loading your downloads...</p>
+   <div className="flex flex-col items-center justify-center py-12">
+    <div className="w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin mb-4" />
+    <p className="text-gray-600">{triggerRefresh ? 'Checking for new purchases...' : 'Loading your downloads...'}</p>
+    {triggerRefresh && (
+     <p className="text-sm text-gray-500 mt-2">
+      Please wait while we fetch your latest purchase from the blockchain
+     </p>
+    )}
    </div>
   )
  }
@@ -151,6 +228,21 @@ export default function DashboardDownloads() {
 
  return (
   <div className="space-y-6">
+   {/* Success notification after purchase */}
+   {showRefreshSuccess && downloads.length > 0 && (
+    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+     <div className="flex items-center gap-3">
+      <IoCheckmarkCircle className="w-5 h-5 text-green-600" />
+      <div>
+       <p className="font-medium text-green-800">Purchase Complete!</p>
+       <p className="text-sm text-green-700 mt-1">
+        Your model has been added to your downloads. Click "Decrypt & Download" to access it.
+       </p>
+      </div>
+     </div>
+    </div>
+   )}
+
    {/* Header */}
    <div className="flex items-center justify-between">
     <div>
@@ -159,9 +251,22 @@ export default function DashboardDownloads() {
       Access and re-download your purchased models anytime
      </p>
     </div>
-    
-    <div className="text-sm text-gray-600">
-     Total Downloads: {downloads.length}
+
+    <div className="flex items-center gap-3">
+     <div className="text-sm text-gray-600">
+      Total: {downloads.length}
+     </div>
+     <button
+      onClick={loadDownloads}
+      disabled={loading}
+      className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+      title="Refresh purchases"
+     >
+      <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Refresh
+     </button>
     </div>
    </div>
 
@@ -203,7 +308,7 @@ export default function DashboardDownloads() {
              <span>•</span>
              <span>Purchased: {new Date(download.downloadDate).toLocaleDateString()}</span>
              <span>•</span>
-             <span>{download.price} SUI</span>
+             <span>{(parseFloat(download.price) / 1_000_000_000).toFixed(2)} SUI</span>
             </div>
 
             {/* Status Badges */}
@@ -247,7 +352,7 @@ export default function DashboardDownloads() {
            <IoEye className="w-4 h-4" />
           </button>
 
-          {download.accessible && download.encrypted && download.modelBlobId && (
+          {download.accessible && download.encrypted && download.modelBlobId ? (
            <button
             onClick={() => handleDecrypt(download)}
             className="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
@@ -256,6 +361,11 @@ export default function DashboardDownloads() {
             <IoLockOpen className="w-4 h-4" />
             Decrypt & Download
            </button>
+          ) : (
+           <div className="px-3 py-2 bg-gray-100 text-gray-500 text-sm rounded-lg flex items-center gap-1">
+            <IoLockClosed className="w-4 h-4" />
+            <span>Loading...</span>
+           </div>
           )}
          </div>
         </div>
