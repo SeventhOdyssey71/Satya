@@ -12,8 +12,8 @@ interface WalletDropdownProps {
 
 export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownProps) {
   const [isPasskeyConnecting, setIsPasskeyConnecting] = useState(false)
-  const [showDappKitModal, setShowDappKitModal] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const hiddenConnectRef = useRef<HTMLDivElement>(null)
   const suiClient = useSuiClient()
 
   useEffect(() => {
@@ -39,7 +39,13 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
 
   const handleDappKitClick = () => {
     onClose() // Close dropdown first
-    setShowDappKitModal(true)
+    // Programmatically click the hidden ConnectButton
+    setTimeout(() => {
+      const connectButton = hiddenConnectRef.current?.querySelector('button')
+      if (connectButton) {
+        connectButton.click()
+      }
+    }, 100)
   }
 
   const handlePasskeyConnect = async () => {
@@ -135,17 +141,13 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
         </div>
       )}
 
-      {/* dApp Kit Modal */}
-      {showDappKitModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-          <div className="relative">
-            <ConnectButton 
-              connectText=""
-              className="[&>div]:!bg-transparent [&>div]:!border-0 [&>div]:!p-0 [&>div]:!shadow-none [&>div]:!rounded-none [&>div]:!flex [&>div]:!items-center [&>div]:!justify-center"
-            />
-          </div>
-        </div>
-      )}
+      {/* Always render hidden ConnectButton for programmatic clicking */}
+      <div 
+        ref={hiddenConnectRef}
+        style={{ position: 'absolute', left: '-9999px', top: '-9999px', pointerEvents: 'none' }}
+      >
+        <ConnectButton />
+      </div>
     </>
   )
 }
