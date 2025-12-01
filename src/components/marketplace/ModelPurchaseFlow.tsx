@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { CheckCircle, Clock, ShoppingCart, Shield, ExternalLink } from 'lucide-react'
 import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
+import { useRouter } from 'next/navigation'
 import { MARKETPLACE_CONFIG } from '@/lib/constants'
 
 interface ModelPurchaseFlowProps {
@@ -17,6 +18,7 @@ export default function ModelPurchaseFlow({ model, onComplete }: ModelPurchaseFl
  const account = useCurrentAccount()
  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
  const suiClient = useSuiClient()
+ const router = useRouter()
 
  const handlePurchase = async () => {
   if (!account) {
@@ -70,7 +72,18 @@ export default function ModelPurchaseFlow({ model, onComplete }: ModelPurchaseFl
    })
 
    if (existingPurchase) {
-    alert('You have already purchased this model.')
+    console.log('✓ Model already purchased, redirecting to dashboard download section...')
+
+    // Show friendly message and redirect to dashboard download section
+    const shouldRedirect = confirm(
+     'You already own this model!\n\n' +
+     'Click OK to go to your Dashboard where you can decrypt and download it.'
+    )
+
+    if (shouldRedirect) {
+     router.push('/dashboard?download')
+    }
+
     setIsProcessing(false)
     return
    }

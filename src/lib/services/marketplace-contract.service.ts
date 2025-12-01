@@ -1398,41 +1398,88 @@ export class MarketplaceContractService {
   */
  async getUserPurchases(userAddress: string): Promise<any[]> {
   try {
-   
+
+   logger.info('Fetching owned objects for user', { userAddress });
+
+   // Use StructType filter to get ONLY PurchaseRecord objects (same as ModelPurchaseFlow)
    const ownedObjects = await this.suiClient.getOwnedObjects({
     owner: userAddress,
-    options: { 
-     showContent: true, 
+    limit: 50, // Max limit allowed by Sui RPC
+    filter: {
+     StructType: `${MARKETPLACE_CONFIG.PACKAGE_ID}::marketplace::PurchaseRecord`
+    },
+    options: {
+     showContent: true,
      showType: true,
      showOwner: true,
      showPreviousTransaction: true
     }
    });
 
+   logger.info('Total owned objects fetched', { count: ownedObjects.data.length });
+
    // Filter for PurchaseRecord objects
-   const purchaseRecords = ownedObjects.data.filter(obj => {
+   const purchaseRecords = ownedObjects.data.filter((obj, index) => {
     const objectType = obj.data?.type;
-    return objectType?.includes('PurchaseRecord') || objectType?.includes('purchase_record');
+    const isPurchaseRecord = objectType?.includes('PurchaseRecord') || objectType?.includes('purchase_record');
+
+    if (index < 5) { // Log first 5 objects for debugging
+     logger.info(`Object ${index + 1} type check`, {
+      type: objectType,
+      isPurchaseRecord,
+      objectId: obj.data?.objectId
+     });
+    }
+
+    return isPurchaseRecord;
+   });
+
+   logger.info('PurchaseRecord objects found', {
+    count: purchaseRecords.length,
+    objectIds: purchaseRecords.map(r => r.data?.objectId)
    });
 
 
    // Transform purchase records into download format
    const purchases = await Promise.all(
-    purchaseRecords.map(async (record) => {
+    purchaseRecords.map(async (record, index) => {
      try {
       const content = record.data?.content as any;
       const fields = content?.fields || {};
-      
+
+      logger.info(`Processing purchase record ${index + 1}/${purchaseRecords.length}`, {
+       objectId: record.data?.objectId,
+       type: record.data?.type,
+       availableFields: Object.keys(fields)
+      });
+
       // Extract model information from purchase record
       const modelId = fields.model_id || fields.marketplace_model_id;
-      const purchasePrice = fields.price || fields.payment_amount || '0';
-      const purchaseTime = fields.timestamp || Date.now();
-      
+      const purchasePrice = fields.amount_paid || fields.price || fields.payment_amount || '0';
+      const purchaseTime = fields.purchased_at || fields.timestamp || Date.now();
+
+      logger.info(`Field extraction for purchase ${index + 1}`, {
+       modelId,
+       purchasePrice,
+       purchaseTime,
+       rawFields: {
+        model_id: fields.model_id,
+        amount_paid: fields.amount_paid,
+        purchased_at: fields.purchased_at
+       }
+      });
+
+      if (!modelId) {
+       logger.error(`Purchase record ${index + 1} has no model_id!`, {
+        allFields: fields
+       });
+      }
+
       // Try to get model details from marketplace
       let modelTitle = 'Unknown Model';
       let fileSize = 0;
       let creator = 'Unknown';
-      
+
       try {
        const modelDetails = await this.getModelDetails(modelId);
        if (modelDetails) {
@@ -1444,7 +1491,7 @@ export class MarketplaceContractService {
        logger.warn('Could not fetch model details', { error: modelError });
       }
 
-      return {
+      const purchase = {
        id: record.data?.objectId || `purchase_${Date.now()}`,
        modelId: modelId,
        modelTitle: modelTitle,
@@ -1457,15 +1504,25 @@ export class MarketplaceContractService {
        price: purchasePrice,
        purchaseRecord: record.data?.objectId
       };
+
+      logger.info(`✓ Parsed purchase ${index + 1}`, {
+       id: purchase.id,
+       modelTitle: purchase.modelTitle,
+       modelId: purchase.modelId
+      });
+
+      return purchase;
      } catch (parseError) {
-      logger.warn('Error parsing purchase record', { error: parseError });
+      logger.error(`Error parsing purchase record ${index + 1}`, { error: parseError });
       return null;
      }
     })
    );
 
    const validPurchases = purchases.filter(p => p !== null);
-   
+
+   logger.info('Final valid purchases', { count: validPurchases.length });
+
    return validPurchases;
    
   } catch (error) {

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { 
+import {
  IoDownload,
  IoEye,
  IoTime,
@@ -12,6 +12,7 @@ import {
 } from 'react-icons/io5'
 import { useCurrentAccount } from '@mysten/dapp-kit'
 import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
+import DecryptionModal from '@/components/marketplace/DecryptionModal'
 
 interface Download {
  id: string
@@ -24,14 +25,25 @@ interface Download {
  accessible: boolean
  creator: string
  price: string
+ modelBlobId?: string
+ datasetBlobId?: string
+ purchaseRecord?: string
 }
 
-export default function DashboardDownloads() {
+interface DashboardDownloadsProps {
+ triggerRefresh?: boolean
+ onRefreshComplete?: () => void
+}
+
+export default function DashboardDownloads({ triggerRefresh, onRefreshComplete }: DashboardDownloadsProps) {
  const [downloads, setDownloads] = useState<Download[]>([])
  const [loading, setLoading] = useState(true)
  const [error, setError] = useState<string | null>(null)
+ const [decryptingModel, setDecryptingModel] = useState<Download | null>(null)
+ const [showRefreshSuccess, setShowRefreshSuccess] = useState(false)
  const currentAccount = useCurrentAccount()
 
+ // Load downloads on mount and when account changes
  useEffect(() => {
   if (currentAccount?.address) {
    loadDownloads()
@@ -40,6 +52,30 @@ export default function DashboardDownloads() {
    setDownloads([])
   }
  }, [currentAccount?.address])
+
+ // Handle refresh trigger from URL parameter (after purchase)
+ useEffect(() => {
+  if (triggerRefresh && currentAccount?.address) {
+   console.log('Refresh triggered for Downloads section - reloading purchases...')
+
+   // Add a small delay to allow blockchain indexing
+   setTimeout(() => {
+    loadDownloads().then(() => {
+     // Show success message
+     setShowRefreshSuccess(true)
+
+     // Hide success message after 5 seconds
+     setTimeout(() => {
+      setShowRefreshSuccess(false)
+     }, 5000)
+
+     if (onRefreshComplete) {
+      onRefreshComplete()
+     }
+    })
+   }, 2000) // 2 second delay for blockchain indexing
+  }
+ }, [triggerRefresh])
 
  const loadDownloads = async () => {
   if (!currentAccount?.address) {
@@ -50,15 +86,84 @@ export default function DashboardDownloads() {
   try {
    setLoading(true)
    setError(null)
-   
+
    console.log('Loading downloads for user:', currentAccount.address)
-   
+
    const contractService = new MarketplaceContractService()
+
+   // TEMP DEBUG: Check what owned objects we have
+   const suiClient = (contractService as any).suiClient
+   const ownedObjects = await suiClient.getOwnedObjects({
+    owner: currentAccount.address,
+    limit: 50,
+    options: { showContent: true, showType: true }
+   })
+
+   console.log('=== DEBUG: All owned objects ===')
+   console.log('Total owned objects:', ownedObjects.data.length)
+   ownedObjects.data.forEach((obj: any, i: number) => {
+    console.log(`Object ${i + 1}:`, {
+     type: obj.data?.type,
+     objectId: obj.data?.objectId?.substring(0, 20) + '...'
+    })
+   })
+
    const userPurchases = await contractService.getUserPurchases(currentAccount.address)
-   
+
    console.log('Retrieved user purchases:', userPurchases)
-   setDownloads(userPurchases)
-   
+   console.log('Total purchases found:', userPurchases.length)
+
+   // Fetch blob IDs for each purchase by querying the MarketplaceModel
+   const enrichedPurchases = await Promise.all(
+    userPurchases.map(async (purchase, index) => {
+     try {
+      console.log(`Enriching purchase ${index + 1}/${userPurchases.length}:`, {
+       modelId: purchase.modelId,
+       purchaseId: purchase.id,
+       title: purchase.modelTitle
+      })
+
+      // Fetch the MarketplaceModel object to get blob IDs
+      const suiClient = (contractService as any).suiClient
+      const modelObject = await suiClient.getObject({
+       id: purchase.modelId,
+       options: { showContent: true }
+      })
+
+      if (modelObject.error) {
+       console.error(`Error fetching model ${purchase.modelId}:`, modelObject.error)
+       return purchase // Return without blob IDs
+      }
+
+      const content = modelObject.data?.content as any
+      const fields = content?.fields || {}
+
+      const enriched = {
+       ...purchase,
+       modelBlobId: fields.model_blob_id,
+       datasetBlobId: fields.dataset_blob_id,
+       purchaseRecord: purchase.id // PurchaseRecord ID
+      }
+
+      console.log(`✓ Enriched purchase ${index + 1}:`, {
+       modelBlobId: enriched.modelBlobId ? enriched.modelBlobId.substring(0, 20) + '...' : 'none',
+       datasetBlobId: enriched.datasetBlobId ? enriched.datasetBlobId.substring(0, 20) + '...' : 'none'
+      })
+
+      return enriched
+     } catch (error) {
+      console.error(`Failed to enrich purchase ${index + 1}:`, {
+       error: error instanceof Error ? error.message : String(error),
+       purchase
+      })
+      return purchase // Return original purchase without blob IDs
+     }
+    })
+   )
+
+   console.log('Final enriched purchases:', enrichedPurchases.length)
+   setDownloads(enrichedPurchases)
+
   } catch (err) {
    console.error('Failed to load downloads:', err)
    setError(err instanceof Error ? err.message : 'Failed to load downloads')
@@ -68,69 +173,13 @@ export default function DashboardDownloads() {
   }
  }
 
- const handleRedownload = async (download: Download) => {
-  try {
-   console.log('Starting redownload for model:', download.modelId)
-   
-   // Call the decrypt blobs API to get the decrypted model
-   const response = await fetch('/api/decrypt-blobs', {
-    method: 'POST',
-    headers: {
-     'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-     modelBlobId: download.modelId,
-     userAddress: currentAccount?.address
-    })
-   })
-
-   if (!response.ok) {
-    throw new Error('Failed to decrypt and download model')
-   }
-
-   const blob = await response.blob()
-   
-   // Create download link
-   const url = window.URL.createObjectURL(blob)
-   const link = document.createElement('a')
-   link.href = url
-   link.download = `${download.modelTitle.replace(/[^a-z0-9]/gi, '_')}.zip`
-   document.body.appendChild(link)
-   link.click()
-   link.remove()
-   window.URL.revokeObjectURL(url)
-   
-   console.log('Download completed successfully')
-   
-  } catch (error) {
-   console.error('Download failed:', error)
-   alert('Download failed. Please try again.')
-  }
- }
-
  const handleViewInMarketplace = (modelId: string) => {
   window.open(`/model/${modelId}`, '_blank')
  }
 
- const handleDecrypt = async (download: Download) => {
-  try {
-   console.log('Opening decryption interface for model:', download.modelId)
-   
-   // Create a popup window for decryption
-   const popup = window.open(
-    `/decrypt?modelId=${download.modelId}&title=${encodeURIComponent(download.modelTitle)}`,
-    'decryptModel',
-    'width=800,height=600,scrollbars=yes,resizable=yes'
-   )
-   
-   if (!popup) {
-    alert('Please allow popups to access the decryption interface')
-   }
-   
-  } catch (error) {
-   console.error('Failed to open decryption interface:', error)
-   alert('Failed to open decryption interface. Please try again.')
-  }
+ const handleDecrypt = (download: Download) => {
+  console.log('Opening decryption modal for model:', download.modelId)
+  setDecryptingModel(download)
  }
 
  // Show wallet connection prompt if no account
@@ -148,9 +197,14 @@ export default function DashboardDownloads() {
 
  if (loading) {
   return (
-   <div className="flex items-center justify-center py-12">
-    <div className="w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin" />
-    <p className="ml-4 text-gray-600">Loading your downloads...</p>
+   <div className="flex flex-col items-center justify-center py-12">
+    <div className="w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin mb-4" />
+    <p className="text-gray-600">{triggerRefresh ? 'Checking for new purchases...' : 'Loading your downloads...'}</p>
+    {triggerRefresh && (
+     <p className="text-sm text-gray-500 mt-2">
+      Please wait while we fetch your latest purchase from the blockchain
+     </p>
+    )}
    </div>
   )
  }
@@ -174,6 +228,21 @@ export default function DashboardDownloads() {
 
  return (
   <div className="space-y-6">
+   {/* Success notification after purchase */}
+   {showRefreshSuccess && downloads.length > 0 && (
+    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+     <div className="flex items-center gap-3">
+      <IoCheckmarkCircle className="w-5 h-5 text-green-600" />
+      <div>
+       <p className="font-medium text-green-800">Purchase Complete!</p>
+       <p className="text-sm text-green-700 mt-1">
+        Your model has been added to your downloads. Click "Decrypt & Download" to access it.
+       </p>
+      </div>
+     </div>
+    </div>
+   )}
+
    {/* Header */}
    <div className="flex items-center justify-between">
     <div>
@@ -182,9 +251,22 @@ export default function DashboardDownloads() {
       Access and re-download your purchased models anytime
      </p>
     </div>
-    
-    <div className="text-sm text-gray-600">
-     Total Downloads: {downloads.length}
+
+    <div className="flex items-center gap-3">
+     <div className="text-sm text-gray-600">
+      Total: {downloads.length}
+     </div>
+     <button
+      onClick={loadDownloads}
+      disabled={loading}
+      className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+      title="Refresh purchases"
+     >
+      <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Refresh
+     </button>
     </div>
    </div>
 
@@ -226,7 +308,7 @@ export default function DashboardDownloads() {
              <span>•</span>
              <span>Purchased: {new Date(download.downloadDate).toLocaleDateString()}</span>
              <span>•</span>
-             <span>{download.price} SUI</span>
+             <span>{(parseFloat(download.price) / 1_000_000_000).toFixed(2)} SUI</span>
             </div>
 
             {/* Status Badges */}
@@ -270,25 +352,21 @@ export default function DashboardDownloads() {
            <IoEye className="w-4 h-4" />
           </button>
 
-          {download.accessible && download.encrypted && (
+          {download.accessible && download.encrypted && download.modelBlobId ? (
            <button
             onClick={() => handleDecrypt(download)}
             className="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
-            title="Decrypt and Access"
+            title="Decrypt and Download"
            >
             <IoLockOpen className="w-4 h-4" />
-            Decrypt
+            Decrypt & Download
            </button>
+          ) : (
+           <div className="px-3 py-2 bg-gray-100 text-gray-500 text-sm rounded-lg flex items-center gap-1">
+            <IoLockClosed className="w-4 h-4" />
+            <span>Loading...</span>
+           </div>
           )}
-
-          <button
-           onClick={() => handleRedownload(download)}
-           className="px-3 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-1"
-           title="Download Again"
-          >
-           <IoDownload className="w-4 h-4" />
-           Download
-          </button>
          </div>
         </div>
        </div>
@@ -302,12 +380,28 @@ export default function DashboardDownloads() {
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
      <h4 className="font-medium text-blue-900 mb-2">Download Instructions</h4>
      <ul className="text-sm text-blue-800 space-y-1">
-      <li>• Click "Decrypt" to access SEAL encrypted models in a secure popup</li>
+      <li>• Click "Decrypt" to access SEAL encrypted models with your wallet signature</li>
       <li>• Use "Download" to get a fresh copy of your purchased models</li>
       <li>• All downloads are linked to your wallet address and remain accessible</li>
-      <li>• Encrypted models require TEE verification for security</li>
+      <li>• Encrypted models require wallet verification for security</li>
      </ul>
     </div>
+   )}
+
+   {/* Decryption Modal */}
+   {decryptingModel && decryptingModel.modelBlobId && (
+    <DecryptionModal
+     model={{
+      id: decryptingModel.modelId,
+      title: decryptingModel.modelTitle,
+      modelBlobId: decryptingModel.modelBlobId,
+      datasetBlobId: decryptingModel.datasetBlobId,
+      purchaseRecordId: decryptingModel.purchaseRecord || decryptingModel.id,
+      creator: decryptingModel.creator,
+      price: decryptingModel.price
+     }}
+     onClose={() => setDecryptingModel(null)}
+    />
    )}
   </div>
  )

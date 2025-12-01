@@ -15,17 +15,27 @@ function DashboardContent() {
  const [isConnected] = useState(true) // Simplified for now
  const [activeTab, setActiveTab] = useState<'overview' | 'pending' | 'history' | 'downloads'>('overview')
  const [pendingRefresh, setPendingRefresh] = useState(false)
+ const [downloadsRefresh, setDownloadsRefresh] = useState(false)
  const router = useRouter()
  const searchParams = useSearchParams()
 
- // Handle refresh parameter from upload redirect
+ // Handle URL parameters for navigation
  useEffect(() => {
   const refresh = searchParams.get('refresh')
+  const download = searchParams.get('download')
+
   if (refresh === 'true') {
-   // Switch to pending tab and trigger refresh
+   // Switch to pending tab and trigger refresh (from upload redirect)
    setActiveTab('pending')
    setPendingRefresh(true)
-   
+
+   // Clean up URL parameter
+   router.replace('/dashboard', { scroll: false })
+  } else if (download !== null) {
+   // Switch to downloads tab and trigger refresh (from purchase redirect)
+   setActiveTab('downloads')
+   setDownloadsRefresh(true)
+
    // Clean up URL parameter
    router.replace('/dashboard', { scroll: false })
   }
@@ -123,13 +133,18 @@ function DashboardContent() {
      <div>
       {activeTab === 'overview' && <DashboardOverview onNewUpload={() => router.push('/upload')} />}
       {activeTab === 'pending' && (
-       <DashboardPending 
+       <DashboardPending
         triggerRefresh={pendingRefresh}
         onRefreshComplete={() => setPendingRefresh(false)}
        />
       )}
       {activeTab === 'history' && <DashboardHistory />}
-      {activeTab === 'downloads' && <DashboardDownloads />}
+      {activeTab === 'downloads' && (
+       <DashboardDownloads
+        triggerRefresh={downloadsRefresh}
+        onRefreshComplete={() => setDownloadsRefresh(false)}
+       />
+      )}
      </div>
     </div>
    </main>

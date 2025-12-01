@@ -96,22 +96,28 @@ export class WalletDecryptionService {
     });
 
     // Import DEK as CryptoKey
+    // Ensure dek is a proper Uint8Array with ArrayBuffer (not SharedArrayBuffer)
+    const dekBuffer = new Uint8Array(dek);
     const cryptoKey = await crypto.subtle.importKey(
       'raw',
-      dek,
+      dekBuffer,
       { name: 'AES-GCM' },
       false,
       ['decrypt']
     );
 
     // Decrypt with AES-GCM
+    // Ensure iv and encryptedData are proper Uint8Arrays with ArrayBuffer
+    const ivBuffer = new Uint8Array(iv);
+    const encryptedBuffer = new Uint8Array(encryptedData);
+
     const decryptedBuffer = await crypto.subtle.decrypt(
       {
         name: 'AES-GCM',
-        iv: iv
+        iv: ivBuffer
       },
       cryptoKey,
-      encryptedData
+      encryptedBuffer
     );
 
     const decryptedData = new Uint8Array(decryptedBuffer);
