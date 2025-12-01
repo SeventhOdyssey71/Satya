@@ -251,8 +251,8 @@ export class WalletDecryptionService {
         request.userAddress,
         request.transactionDigest,  // PendingModel ID for creators
         request.modelBlobId,        // The blob ID we're decrypting
-        false,                      // isBuyer = false (this is for creators with Ed25519Keypair)
-        metadata.seal_package_id    // Use package ID from blob (for backwards compatibility)
+        false                       // isBuyer = false (this is for creators with Ed25519Keypair)
+        // Don't pass seal_package_id - seal_approve is in marketplace package, not SEAL package!
       );
 
       // Step 6: Decrypt DEK with SEAL
@@ -372,8 +372,8 @@ export class WalletDecryptionService {
         request.userAddress,
         request.transactionDigest,  // PurchaseRecord (buyers) or PendingModel (creators)
         request.modelBlobId,        // The blob ID we're decrypting
-        isBuyer,                    // Use the parameter passed to this function
-        metadata.seal_package_id    // Use package ID from blob (for backwards compatibility)
+        isBuyer                     // Use the parameter passed to this function
+        // Don't pass seal_package_id - seal_approve is in marketplace package, not SEAL package!
       );
 
       // Step 6: Decrypt DEK with SEAL
