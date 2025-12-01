@@ -118,3 +118,7 @@ debug_*.js
 
 # Test output
 test-results/
+
+# SSH Keys and Certificates
+*.pem
+*.key
