@@ -137,19 +137,11 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
 
       {/* dApp Kit Modal */}
       {showDappKitModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-          <div className="relative bg-white rounded-lg p-6 max-w-sm w-full mx-4">
-            <button
-              onClick={() => setShowDappKitModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="relative">
             <ConnectButton 
               connectText=""
-              className="[&>button]:!bg-transparent [&>button]:!border-0 [&>button]:!p-0 [&>button]:!shadow-none"
+              className="[&>div]:!bg-transparent [&>div]:!border-0 [&>div]:!p-0 [&>div]:!shadow-none [&>div]:!rounded-none [&>div]:!flex [&>div]:!items-center [&>div]:!justify-center"
             />
           </div>
         </div>
