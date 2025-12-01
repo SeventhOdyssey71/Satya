@@ -119,7 +119,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-light"
           >
            <span className="text-base">
-            {account.address.slice(0, 6)}...{account.address.slice(-4)}
+            Connected
            </span>
           </button>
           
@@ -158,7 +158,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
            className="flex items-center gap-2 px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-light text-sm"
           >
            <span>
-            {account.address.slice(0, 4)}...{account.address.slice(-3)}
+            Connected
            </span>
           </button>
           
