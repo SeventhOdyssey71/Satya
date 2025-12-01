@@ -19,10 +19,19 @@ export class PasskeyAuth {
   }
 
   /**
-   * Create a new passkey for the user
+   * Create a new passkey for the user (only if one doesn't exist)
    */
   async createPasskey(username: string): Promise<PasskeyAuthResult> {
     try {
+      // Check if we already have a passkey
+      const existingAddress = localStorage.getItem('satya_passkey_address')
+      if (existingAddress) {
+        return {
+          success: false,
+          error: 'Passkey already exists. Use authenticate instead.'
+        }
+      }
+
       // Check if WebAuthn is supported
       if (!PasskeyAuth.isSupported()) {
         return {
@@ -45,8 +54,9 @@ export class PasskeyAuth {
       const publicKey = keypair.getPublicKey()
       const address = publicKey.toSuiAddress()
 
-      // Store for future use
+      // Store the address and keypair data for consistent reuse
       localStorage.setItem('satya_passkey_address', address)
+      localStorage.setItem('satya_passkey_created', 'true')
 
       return {
         success: true,
@@ -87,13 +97,12 @@ export class PasskeyAuth {
 
       // Authenticate with existing passkey
       const keypair = await PasskeyKeypair.getPasskeyInstance(provider)
-      const publicKey = keypair.getPublicKey()
-      const address = publicKey.toSuiAddress()
-
+      
+      // Always return the stored address to maintain consistency
       return {
         success: true,
         keypair,
-        address,
+        address: storedAddress, // Use stored address instead of regenerating
       }
     } catch (error) {
       console.error('Passkey authentication failed:', error)
@@ -108,7 +117,8 @@ export class PasskeyAuth {
    * Check if passkey is available
    */
   hasStoredPasskey(): boolean {
-    return !!localStorage.getItem('satya_passkey_address')
+    return !!localStorage.getItem('satya_passkey_address') && 
+           !!localStorage.getItem('satya_passkey_created')
   }
 
   /**
@@ -116,6 +126,7 @@ export class PasskeyAuth {
    */
   clearPasskey(): void {
     localStorage.removeItem('satya_passkey_address')
+    localStorage.removeItem('satya_passkey_created')
   }
 
   /**
