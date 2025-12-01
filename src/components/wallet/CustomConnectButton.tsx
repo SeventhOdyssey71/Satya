@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useCurrentAccount } from '@mysten/dapp-kit'
-import { WalletConnectionModal } from './WalletConnectionModal'
+import { WalletDropdown } from './WalletDropdown'
 
 interface CustomConnectButtonProps {
   className?: string
@@ -10,26 +10,29 @@ interface CustomConnectButtonProps {
 }
 
 export function CustomConnectButton({ className, children }: CustomConnectButtonProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const account = useCurrentAccount()
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   if (account) {
     return null // Don't show if already connected
   }
 
   return (
-    <>
+    <div className="relative">
       <button
-        onClick={() => setIsModalOpen(true)}
+        ref={buttonRef}
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         className={className || "bg-black text-white border-black px-4 py-2 rounded-lg font-light text-base hover:bg-gray-800 transition-colors"}
       >
         {children || "Connect Wallet"}
       </button>
       
-      <WalletConnectionModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+      <WalletDropdown 
+        isOpen={isDropdownOpen}
+        onClose={() => setIsDropdownOpen(false)}
+        buttonRef={buttonRef}
       />
-    </>
+    </div>
   )
 }
