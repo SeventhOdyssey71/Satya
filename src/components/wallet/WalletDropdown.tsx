@@ -15,6 +15,7 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
   const { mutate: connect } = useConnectWallet()
   const [isConnecting, setIsConnecting] = useState<string | null>(null)
   const [isPasskeyConnecting, setIsPasskeyConnecting] = useState(false)
+  const [showWalletList, setShowWalletList] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const suiClient = useSuiClient()
 
@@ -38,6 +39,13 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isOpen, onClose, buttonRef])
+
+  // Reset wallet list view when dropdown closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShowWalletList(false)
+    }
+  }, [isOpen])
 
   const handleConnectWallet = async (walletName: string) => {
     setIsConnecting(walletName)
@@ -153,33 +161,79 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
       ref={dropdownRef}
       className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-2"
     >
-      {/* Wallet Options */}
-      {supportedWallets.map((wallet) => (
-        <button
-          key={wallet.name}
-          onClick={() => handleConnectWallet(wallet.name)}
-          disabled={isConnecting === wallet.name}
-          className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {/* Wallet Logo */}
-          {getWalletLogo(wallet.name)}
-          
-          {/* Wallet Name */}
-          <div className="flex-1">
-            <div className="font-medium text-gray-900 text-sm">
-              {getWalletDisplayName(wallet.name)}
+      {!showWalletList ? (
+        <>
+          {/* Use dApp Kit Button */}
+          <button
+            onClick={() => setShowWalletList(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+          >
+            {/* Wallet Icon */}
+            <div className="w-6 h-6 border border-gray-300 rounded flex items-center justify-center flex-shrink-0">
+              <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+              </svg>
             </div>
-          </div>
+            
+            {/* Text */}
+            <div className="flex-1">
+              <div className="font-medium text-gray-900 text-sm">Use dApp Kit</div>
+            </div>
 
-          {/* Loading Spinner */}
-          {isConnecting === wallet.name && (
-            <div className="w-4 h-4 border border-gray-400 border-t-transparent rounded-full animate-spin" />
-          )}
-        </button>
-      ))}
+            {/* Arrow */}
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
 
-      {/* Divider */}
-      <div className="border-t border-gray-200 my-2" />
+          {/* Divider */}
+          <div className="border-t border-gray-200 my-2" />
+        </>
+      ) : (
+        <>
+          {/* Back Button */}
+          <button
+            onClick={() => setShowWalletList(false)}
+            className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 transition-colors"
+          >
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="text-sm text-gray-600">Back</span>
+          </button>
+
+          {/* Divider */}
+          <div className="border-t border-gray-200 my-1" />
+
+          {/* Wallet Options */}
+          {supportedWallets.map((wallet) => (
+            <button
+              key={wallet.name}
+              onClick={() => handleConnectWallet(wallet.name)}
+              disabled={isConnecting === wallet.name}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {/* Wallet Logo */}
+              {getWalletLogo(wallet.name)}
+              
+              {/* Wallet Name */}
+              <div className="flex-1">
+                <div className="font-medium text-gray-900 text-sm">
+                  {getWalletDisplayName(wallet.name)}
+                </div>
+              </div>
+
+              {/* Loading Spinner */}
+              {isConnecting === wallet.name && (
+                <div className="w-4 h-4 border border-gray-400 border-t-transparent rounded-full animate-spin" />
+              )}
+            </button>
+          ))}
+
+          {/* Divider */}
+          <div className="border-t border-gray-200 my-2" />
+        </>
+      )}
 
       {/* Passkey Option */}
       <button
