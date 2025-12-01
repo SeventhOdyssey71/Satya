@@ -26,9 +26,10 @@ export class PasskeyAuth {
       // Check if we already have a passkey
       const existingAddress = localStorage.getItem('satya_passkey_address')
       if (existingAddress) {
+        // Return the existing address instead of creating a new one
         return {
-          success: false,
-          error: 'Passkey already exists. Use authenticate instead.'
+          success: true,
+          address: existingAddress,
         }
       }
 

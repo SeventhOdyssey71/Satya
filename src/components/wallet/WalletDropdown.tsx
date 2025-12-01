@@ -54,24 +54,17 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
     try {
       const passkeyAuth = new PasskeyAuth(suiClient)
       
-      // Check if passkey exists
-      let result
-      if (passkeyAuth.hasStoredPasskey()) {
-        // Authenticate with existing passkey
-        result = await passkeyAuth.authenticateWithPasskey()
-      } else {
-        // Create new passkey
+      // Always try to authenticate first (since passkeys are discoverable)
+      let result = await passkeyAuth.authenticateWithPasskey()
+      
+      // If authentication fails because no passkey exists, create one
+      if (!result.success && result.error?.includes('No passkey found')) {
         const username = `satya-user-${Date.now()}`
         result = await passkeyAuth.createPasskey(username)
       }
 
-      if (result.success && result.keypair) {
-        // Store the keypair for the session
-        // Note: In a real app, you'd want to integrate this with your auth context
-        console.log('Passkey authentication successful:', result.address)
-        
-        // You can create a custom wallet adapter here or use the keypair directly
-        // For now, we'll just log success
+      if (result.success && result.address) {
+        console.log('Passkey connection successful:', result.address)
         alert(`Passkey connected! Address: ${result.address}`)
         onClose()
       } else {
