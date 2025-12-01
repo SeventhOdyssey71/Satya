@@ -31,8 +31,14 @@ export class PasskeyAuth {
         }
       }
 
-      // Create passkey provider
-      const provider = new BrowserPasskeyProvider('Satya Protocol', {})
+      // Create passkey provider - allow platform authenticators (Touch ID, Windows Hello)
+      const provider = new BrowserPasskeyProvider('Satya Protocol', {
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform', // Enable built-in biometrics
+          userVerification: 'preferred',
+          requireResidentKey: true,
+        },
+      })
 
       // Create Sui keypair with passkey
       const keypair = await PasskeyKeypair.getPasskeyInstance(provider)
@@ -70,8 +76,14 @@ export class PasskeyAuth {
         }
       }
 
-      // Create passkey provider
-      const provider = new BrowserPasskeyProvider('Satya Protocol', {})
+      // Create passkey provider - allow platform authenticators (Touch ID, Windows Hello)
+      const provider = new BrowserPasskeyProvider('Satya Protocol', {
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform', // Enable built-in biometrics
+          userVerification: 'preferred',
+          requireResidentKey: true,
+        },
+      })
 
       // Authenticate with existing passkey
       const keypair = await PasskeyKeypair.getPasskeyInstance(provider)
