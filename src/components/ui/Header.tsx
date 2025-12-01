@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useCurrentAccount, ConnectButton, useDisconnectWallet } from '@mysten/dapp-kit'
+import { useCurrentAccount, useDisconnectWallet } from '@mysten/dapp-kit'
+import { CustomConnectButton } from '../wallet'
 
 interface HeaderProps {
  isHomepage?: boolean
@@ -142,9 +143,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
           )}
          </div>
         ) : (
-         <div className="[&>button]:!bg-black [&>button]:!text-white [&>button]:!border-black [&>button]:!px-4 [&>button]:!py-2 [&>button]:!rounded-lg [&>button]:!font-light [&>button]:!text-base [&>button]:hover:!bg-gray-800 [&>button]:!transition-colors">
-          <ConnectButton />
-         </div>
+         <CustomConnectButton className="bg-black text-white border-black px-4 py-2 rounded-lg font-light text-base hover:bg-gray-800 transition-colors" />
         )}
         </div>
        </div>
@@ -183,9 +182,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
           )}
          </div>
         ) : (
-         <div className="[&>button]:!bg-black [&>button]:!text-white [&>button]:!border-black [&>button]:!px-3 [&>button]:!py-1.5 [&>button]:!rounded-lg [&>button]:!font-light [&>button]:!text-sm [&>button]:hover:!bg-gray-800 [&>button]:!transition-colors">
-          <ConnectButton />
-         </div>
+         <CustomConnectButton className="bg-black text-white border-black px-3 py-1.5 rounded-lg font-light text-sm hover:bg-gray-800 transition-colors" />
         )}
 
         {/* Hamburger Menu */}
