@@ -116,7 +116,8 @@ export function ModelVerificationFlow({
    console.log('✓ Model decrypted successfully in browser');
 
    // Step 2: Send decrypted data to TEE server for evaluation
-   const teeResponse = await fetch(`${process.env.NEXT_PUBLIC_TEE_SERVER_URL || 'https://3.235.226.216'}/evaluate`, {
+   // Use /api/evaluate proxy to bypass CORS (forwards to production TEE server)
+   const teeResponse = await fetch('/api/evaluate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
