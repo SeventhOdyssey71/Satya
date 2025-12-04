@@ -4,6 +4,7 @@ import { WalletProviders } from '@/providers/WalletProvider'
 import { UploadProvider } from '@/contexts/UploadContext'
 import { NautilusProvider } from '@/lib/integrations/nautilus/context'
 import { ToastProvider } from '@/contexts/ToastContext'
+import { PasskeyWalletProvider } from '@/contexts/PasskeyWalletContext'
 import GlobalUploadProgress from '@/components/upload/GlobalUploadProgress'
 import '@mysten/dapp-kit/dist/index.css'
 import './globals.css'
@@ -38,14 +39,16 @@ export default function RootLayout({
   <html lang="en" className={`${russo.variable} ${albert.variable}`}>
    <body className="antialiased font-albert font-light">
     <WalletProviders>
-     <UploadProvider>
-      <NautilusProvider>
-       <ToastProvider>
-        {children}
-        <GlobalUploadProgress />
-       </ToastProvider>
-      </NautilusProvider>
-     </UploadProvider>
+     <PasskeyWalletProvider>
+      <UploadProvider>
+       <NautilusProvider>
+        <ToastProvider>
+         {children}
+         <GlobalUploadProgress />
+        </ToastProvider>
+       </NautilusProvider>
+      </UploadProvider>
+     </PasskeyWalletProvider>
     </WalletProviders>
    </body>
   </html>

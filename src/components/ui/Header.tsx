@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useCurrentAccount, ConnectButton, useDisconnectWallet } from '@mysten/dapp-kit'
+import { useCurrentAccount, useDisconnectWallet } from '@mysten/dapp-kit'
+import { CustomConnectButton } from '../wallet'
+import { usePasskeyWallet } from '../../contexts/PasskeyWalletContext'
 
 interface HeaderProps {
  isHomepage?: boolean
@@ -14,6 +16,10 @@ export default function Header({ isHomepage = false }: HeaderProps) {
  const isHomepageRoute = isHomepage || pathname === '/'
  const account = useCurrentAccount()
  const { mutate: disconnect } = useDisconnectWallet()
+ const { passkeyWallet, disconnectPasskey } = usePasskeyWallet()
+
+ // Use passkey wallet if available, otherwise use regular wallet
+ const currentWallet = passkeyWallet || account
  const [showDropdown, setShowDropdown] = useState(false)
  const [showMobileDropdown, setShowMobileDropdown] = useState(false)
  const [showMobileMenu, setShowMobileMenu] = useState(false)
@@ -111,14 +117,14 @@ export default function Header({ isHomepage = false }: HeaderProps) {
         
         <div className="flex-1 flex justify-end">
         {/* Wallet Connection */}
-        {account ? (
+        {currentWallet ? (
          <div className="relative" ref={dropdownRef}>
           <button 
            onClick={() => setShowDropdown(!showDropdown)}
            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-light"
           >
            <span className="text-base">
-            {account.address.slice(0, 6)}...{account.address.slice(-4)}
+            {currentWallet?.address?.slice(0, 6)}...{currentWallet?.address?.slice(-4)}
            </span>
           </button>
           
@@ -127,7 +133,11 @@ export default function Header({ isHomepage = false }: HeaderProps) {
             <button
              onClick={async () => {
               try {
-               await disconnect()
+               if (passkeyWallet) {
+                disconnectPasskey()
+               } else {
+                await disconnect()
+               }
                setShowDropdown(false)
               } catch (error) {
                console.error('Failed to disconnect wallet:', error)
@@ -142,9 +152,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
           )}
          </div>
         ) : (
-         <div className="[&>button]:!bg-black [&>button]:!text-white [&>button]:!border-black [&>button]:!px-4 [&>button]:!py-2 [&>button]:!rounded-lg [&>button]:!font-light [&>button]:!text-base [&>button]:hover:!bg-gray-800 [&>button]:!transition-colors">
-          <ConnectButton />
-         </div>
+         <CustomConnectButton className="bg-black text-white border-black px-4 py-2 rounded-lg font-light text-base hover:bg-gray-800 transition-colors" />
         )}
         </div>
        </div>
@@ -152,14 +160,14 @@ export default function Header({ isHomepage = false }: HeaderProps) {
        {/* Mobile Navigation */}
        <div className="md:hidden flex items-center gap-3">
         {/* Mobile Wallet */}
-        {account ? (
+        {currentWallet ? (
          <div className="relative" ref={mobileDropdownRef}>
           <button 
            onClick={() => setShowMobileDropdown(!showMobileDropdown)}
            className="flex items-center gap-2 px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-light text-sm"
           >
            <span>
-            {account.address.slice(0, 4)}...{account.address.slice(-3)}
+            {currentWallet?.address?.slice(0, 4)}...{currentWallet?.address?.slice(-3)}
            </span>
           </button>
           
@@ -168,7 +176,11 @@ export default function Header({ isHomepage = false }: HeaderProps) {
             <button
              onClick={async () => {
               try {
-               await disconnect()
+               if (passkeyWallet) {
+                disconnectPasskey()
+               } else {
+                await disconnect()
+               }
                setShowMobileDropdown(false)
               } catch (error) {
                console.error('Failed to disconnect wallet:', error)
@@ -183,9 +195,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
           )}
          </div>
         ) : (
-         <div className="[&>button]:!bg-black [&>button]:!text-white [&>button]:!border-black [&>button]:!px-3 [&>button]:!py-1.5 [&>button]:!rounded-lg [&>button]:!font-light [&>button]:!text-sm [&>button]:hover:!bg-gray-800 [&>button]:!transition-colors">
-          <ConnectButton />
-         </div>
+         <CustomConnectButton className="bg-black text-white border-black px-3 py-1.5 rounded-lg font-light text-sm hover:bg-gray-800 transition-colors" />
         )}
 
         {/* Hamburger Menu */}

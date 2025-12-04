@@ -122,3 +122,7 @@ test-results/
 # SSH Keys and Certificates
 *.pem
 *.key
+
+# Reference folders (external examples/references)
+passkey-app/
+*-reference/
