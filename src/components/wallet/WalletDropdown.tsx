@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { useConnectWallet, useWallets, useSuiClient, ConnectButton } from '@mysten/dapp-kit'
-import { PasskeyAuth } from '../../lib/auth/passkey-auth'
+import { useRef, useEffect } from 'react'
+import { ConnectButton } from '@mysten/dapp-kit'
+import { usePasskeyWallet } from '../../contexts/PasskeyWalletContext'
 
 interface WalletDropdownProps {
   isOpen: boolean
@@ -11,10 +11,9 @@ interface WalletDropdownProps {
 }
 
 export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownProps) {
-  const [isPasskeyConnecting, setIsPasskeyConnecting] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const hiddenConnectRef = useRef<HTMLDivElement>(null)
-  const suiClient = useSuiClient()
+  const { connectPasskey, isLoading } = usePasskeyWallet()
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -49,33 +48,15 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
   }
 
   const handlePasskeyConnect = async () => {
-    setIsPasskeyConnecting(true)
+    // Prevent multiple simultaneous operations
+    if (isLoading) return
     
     try {
-      const passkeyAuth = new PasskeyAuth(suiClient)
-      
-      // Always try to authenticate first (since passkeys are discoverable)
-      let result = await passkeyAuth.authenticateWithPasskey()
-      
-      // If authentication fails because no passkey exists, create one
-      if (!result.success && result.error?.includes('No passkey found')) {
-        const username = `satya-user-${Date.now()}`
-        result = await passkeyAuth.createPasskey(username)
-      }
-
-      if (result.success && result.address) {
-        console.log('Passkey connection successful:', result.address)
-        alert(`Passkey connected! Address: ${result.address}`)
-        onClose()
-      } else {
-        console.error('Passkey connection failed:', result.error)
-        alert(`Failed to connect with passkey: ${result.error}`)
-      }
+      await connectPasskey()
+      onClose()
     } catch (error) {
-      console.error('Passkey error:', error)
+      console.error('Passkey connection failed:', error)
       alert('Passkey connection failed')
-    } finally {
-      setIsPasskeyConnecting(false)
     }
   }
 
@@ -111,7 +92,7 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
           {/* Passkey Option */}
           <button
             onClick={handlePasskeyConnect}
-            disabled={isPasskeyConnecting}
+            disabled={isLoading}
             className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {/* Simple Key Icon */}
@@ -127,7 +108,7 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
             </div>
 
             {/* Loading Spinner only */}
-            {isPasskeyConnecting && (
+            {isLoading && (
               <div className="w-4 h-4 border border-gray-400 border-t-transparent rounded-full animate-spin" />
             )}
           </button>

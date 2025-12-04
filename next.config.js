@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Exclude reference folders from build
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
+  
   async rewrites() {
     return [
       {
