@@ -24,19 +24,10 @@ export class PasskeyWallet {
     this.client = suiClient
   }
 
-  async createWallet(): Promise<PasskeyAuthResult> {
+  private async createNewWallet(): Promise<PasskeyAuthResult> {
     try {
-      // Check if we already have a passkey saved
-      const existingWallet = this.getStoredWallet()
-      if (existingWallet) {
-        // Return existing passkey forever
-        return {
-          success: true,
-          address: existingWallet.address,
-          publicKey: existingWallet.publicKey,
-        }
-      }
-
+      console.log('Creating NEW passkey wallet...')
+      
       // Check if WebAuthn is supported
       if (!PasskeyWallet.isSupported()) {
         return {
@@ -45,12 +36,14 @@ export class PasskeyWallet {
         }
       }
 
-      // Create Sui keypair with passkey
+      // Create Sui keypair with passkey - this will prompt for new passkey creation
       this.keypair = await PasskeyKeypair.getPasskeyInstance(this.provider)
       const publicKey = this.keypair.getPublicKey()
       this.address = publicKey.toSuiAddress()
 
       const publicKeyBase64 = publicKey.toBase64()
+      
+      console.log('New passkey wallet created with address:', this.address)
       
       // Save wallet data in structured format
       this.saveWallet({
@@ -70,90 +63,65 @@ export class PasskeyWallet {
       console.error('Passkey creation failed:', error)
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error: error instanceof Error ? error.message : 'Failed to create passkey wallet'
       }
     }
   }
 
-  async recoverWallet(): Promise<PasskeyAuthResult> {
+  private async authenticateExistingWallet(): Promise<PasskeyAuthResult> {
     try {
-      // Check if we have saved data first
-      const storedWallet = this.getStoredWallet()
-      if (storedWallet) {
-        // Verify the stored data by attempting authentication
-        try {
-          this.keypair = await PasskeyKeypair.getPasskeyInstance(this.provider)
-          const publicKey = this.keypair.getPublicKey()
-          const recoveredAddress = publicKey.toSuiAddress()
-          
-          // Validate that recovered address matches stored address
-          if (recoveredAddress !== storedWallet.address) {
-            throw new Error('Address mismatch: stored and recovered addresses do not match')
-          }
-          
-          this.address = storedWallet.address
-          return {
-            success: true,
-            address: storedWallet.address,
-            publicKey: storedWallet.publicKey,
-            keypair: this.keypair
-          }
-        } catch (verificationError) {
-          console.warn('Stored wallet verification failed, attempting full recovery:', verificationError)
-          // Fall through to full recovery process
+      console.log('Authenticating with existing passkey wallet...')
+      
+      // Use existing passkey to authenticate - this should NOT create a new one
+      try {
+        // Get the passkey instance using the existing credential
+        this.keypair = await PasskeyKeypair.getPasskeyInstance(this.provider)
+        const publicKey = this.keypair.getPublicKey()
+        this.address = publicKey.toSuiAddress()
+        
+        const storedWallet = this.getStoredWallet()
+        if (storedWallet && storedWallet.address !== this.address) {
+          console.warn('Authenticated address does not match stored address')
+          console.warn('Stored:', storedWallet.address, 'Authenticated:', this.address)
         }
-      }
-
-      // Use recovery method from passkey-app for deterministic recovery
-      const testMessage1 = new TextEncoder().encode('Sui wallet recovery 1')
-      const possiblePks1 = await PasskeyKeypair.signAndRecover(this.provider, testMessage1)
-      
-      const testMessage2 = new TextEncoder().encode('Sui wallet recovery 2')
-      const possiblePks2 = await PasskeyKeypair.signAndRecover(this.provider, testMessage2)
-      
-      const commonPk = this.findCommonPublicKey(possiblePks1, possiblePks2)
-      if (!commonPk) {
-        throw new Error('Could not recover wallet - no common public key found')
-      }
-      
-      this.keypair = new PasskeyKeypair(commonPk.toRawBytes(), this.provider)
-      this.address = commonPk.toSuiAddress()
-      
-      const publicKeyBase64 = commonPk.toBase64()
-      
-      // Save the recovered wallet
-      this.saveWallet({
-        address: this.address,
-        publicKey: publicKeyBase64,
-        createdAt: Date.now(),
-        version: APP_CONFIG.STORAGE_VERSION
-      })
-
-      return {
-        success: true,
-        keypair: this.keypair,
-        address: this.address,
-        publicKey: publicKeyBase64,
+        
+        // Update stored wallet with current session
+        if (storedWallet) {
+          this.address = storedWallet.address // Use stored address as authoritative
+        } else {
+          // Save this as the authoritative wallet
+          this.saveWallet({
+            address: this.address,
+            publicKey: publicKey.toBase64(),
+            createdAt: Date.now(),
+            version: APP_CONFIG.STORAGE_VERSION
+          })
+        }
+        
+        console.log('Successfully authenticated with passkey wallet:', this.address)
+        
+        return {
+          success: true,
+          keypair: this.keypair,
+          address: this.address,
+          publicKey: publicKey.toBase64(),
+        }
+      } catch (authError) {
+        console.error('Authentication failed:', authError)
+        return {
+          success: false,
+          error: 'Failed to authenticate with existing passkey'
+        }
       }
     } catch (error) {
-      console.error('Passkey recovery failed:', error)
+      console.error('Passkey authentication failed:', error)
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Recovery failed'
+        error: error instanceof Error ? error.message : 'Authentication failed'
       }
     }
   }
 
-  private findCommonPublicKey(pks1: PublicKey[], pks2: PublicKey[]): PublicKey | null {
-    for (const pk1 of pks1) {
-      for (const pk2 of pks2) {
-        if (pk1.toBase64() === pk2.toBase64()) {
-          return pk1
-        }
-      }
-    }
-    return null
-  }
 
   async connect(): Promise<PasskeyAuthResult> {
     // Check if WebAuthn is supported first
@@ -164,15 +132,35 @@ export class PasskeyWallet {
       }
     }
     
-    // Check if we have saved passkey
+    // Check if we have a saved passkey wallet
     const storedWallet = this.getStoredWallet()
-    if (storedWallet) {
-      // Try to recover/authenticate with existing passkey
-      return await this.recoverWallet()
-    }
     
-    // Create new passkey if none exists
-    return await this.createWallet()
+    if (storedWallet) {
+      console.log('Found existing passkey wallet, authenticating...')
+      // We have an existing wallet - authenticate with it
+      return await this.authenticateExistingWallet()
+    } else {
+      console.log('No existing passkey wallet found, creating new one...')
+      // No existing wallet - create a new one
+      return await this.createNewWallet()
+    }
+  }
+
+  // Force create a new wallet (used only for initial setup)
+  async createWallet(): Promise<PasskeyAuthResult> {
+    return await this.createNewWallet()
+  }
+
+  // Force authenticate with existing wallet (used when we know one exists)
+  async authenticateWallet(): Promise<PasskeyAuthResult> {
+    const storedWallet = this.getStoredWallet()
+    if (!storedWallet) {
+      return {
+        success: false,
+        error: 'No existing wallet found to authenticate with'
+      }
+    }
+    return await this.authenticateExistingWallet()
   }
 
   getAddress(): string | null {
@@ -238,6 +226,13 @@ export class PasskeyWallet {
     this.clearStoredWallet()
   }
 
+  // Clear all passkey data and force fresh wallet creation
+  clearWallet(): void {
+    console.log('Clearing all passkey wallet data...')
+    this.disconnect()
+    // This will force the next connect() to create a new wallet
+  }
+
   /**
    * Storage helper methods
    */
@@ -282,6 +277,10 @@ export class PasskeyWallet {
     if (typeof window === 'undefined') return
     
     try {
+      // Ensure we only save one wallet by clearing any existing data first
+      this.clearStoredWallet()
+      
+      console.log('Saving single passkey wallet:', data.address)
       localStorage.setItem(STORAGE_KEYS.WALLET_DATA, JSON.stringify(data))
     } catch (error) {
       console.error('Failed to save wallet data:', error)
