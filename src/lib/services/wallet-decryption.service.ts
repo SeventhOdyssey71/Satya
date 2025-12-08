@@ -40,6 +40,7 @@ export interface WalletSigner {
 
 export class WalletDecryptionService {
   private suiClient: SuiClient;
+  private activeDecryptions = new Map<string, Promise<DecryptedModelData>>();
 
   constructor(suiClient: SuiClient) {
     this.suiClient = suiClient;
@@ -344,6 +345,29 @@ export class WalletDecryptionService {
   ): Promise<DecryptedModelData> {
     console.log('Starting wallet-signed decryption (browser)...', request, { isBuyer });
 
+    // Prevent concurrent decryptions of the same model by the same user
+    const decryptionKey = `${request.userAddress}-${request.modelBlobId}-${request.transactionDigest}`;
+    if (this.activeDecryptions.has(decryptionKey)) {
+      console.log('Decryption already in progress, waiting for existing operation...');
+      return this.activeDecryptions.get(decryptionKey)!;
+    }
+
+    const decryptionPromise = this._performDecryption(request, walletSigner, isBuyer);
+    this.activeDecryptions.set(decryptionKey, decryptionPromise);
+
+    try {
+      const result = await decryptionPromise;
+      return result;
+    } finally {
+      this.activeDecryptions.delete(decryptionKey);
+    }
+  }
+
+  private async _performDecryption(
+    request: WalletDecryptionRequest,
+    walletSigner: WalletSigner,
+    isBuyer: boolean
+  ): Promise<DecryptedModelData> {
     try {
       // Step 1: Download encrypted model from Walrus
       const modelBlob = await this.downloadFromWalrus(request.modelBlobId);
