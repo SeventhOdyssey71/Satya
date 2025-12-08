@@ -12,6 +12,7 @@ import { WALRUS_CONFIG, SEAL_CONFIG } from '@/lib/constants';
 import {
   initializeSealClient,
   createSealSessionKey,
+  createSealSessionKeyWithWallet,
   decryptWithSeal,
   parseSealMetadata,
   uint8ArrayToBase64,
@@ -355,7 +356,6 @@ export class WalletDecryptionService {
 
       // Step 4: Create session key with wallet signature
       // IMPORTANT: Use the package ID from the blob metadata, not the config!
-      const { createSealSessionKeyWithWallet } = await import('@/lib/integrations/seal/seal-browser');
       const sessionKey = await createSealSessionKeyWithWallet(
         walletSigner.address,
         this.suiClient,
