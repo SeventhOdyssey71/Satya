@@ -6,6 +6,8 @@ import { useSignAndExecuteTransaction, useCurrentAccount, useSignPersonalMessage
 import { Transaction } from '@mysten/sui/transactions';
 import { useSuiClient } from '@mysten/dapp-kit';
 import { MARKETPLACE_CONFIG } from '@/lib/constants';
+import { WalletDecryptionService } from '@/lib/services/wallet-decryption.service';
+import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service';
 
 interface ModelVerificationFlowProps {
  pendingModelId?: string;
@@ -89,7 +91,6 @@ export function ModelVerificationFlow({
    console.log('Starting wallet-signed decryption flow...');
 
    // Step 1: Decrypt model in browser with wallet signature
-   const { WalletDecryptionService } = await import('@/lib/services/wallet-decryption.service');
    const decryptionService = new WalletDecryptionService(suiClient);
 
    // Create wallet signer interface
@@ -216,7 +217,6 @@ export function ModelVerificationFlow({
   try {
    
    // Import the marketplace contract service
-   const { MarketplaceContractService } = await import('@/lib/services/marketplace-contract.service');
    const contractService = new MarketplaceContractService();
    await contractService.initialize();
 

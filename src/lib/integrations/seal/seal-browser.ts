@@ -62,6 +62,9 @@ export async function createSealSessionKey(
  *
  * This version works with @mysten/dapp-kit wallet adapters
  */
+// Track ongoing session key creations to prevent recursion
+const ongoingCreations = new Map<string, Promise<SessionKey>>();
+
 export async function createSealSessionKeyWithWallet(
   userAddress: string,
   suiClient: SuiClient,
@@ -71,25 +74,46 @@ export async function createSealSessionKeyWithWallet(
 ): Promise<SessionKey> {
   console.log('Creating SEAL session key with wallet signature...', { userAddress, packageId });
 
-  // Create session key with the SAME package ID that was used to encrypt the blob
-  const sessionKey = await SessionKey.create({
-    address: userAddress,
-    packageId: packageId,  // Use the package ID from the encrypted blob
-    ttlMin,
-    suiClient: suiClient as any,
-  });
+  // Prevent infinite recursion by tracking ongoing creations
+  const creationKey = `${userAddress}-${packageId}-${ttlMin}`;
+  if (ongoingCreations.has(creationKey)) {
+    console.log('Session key creation already in progress, waiting...');
+    return ongoingCreations.get(creationKey)!;
+  }
 
-  // Get personal message to sign
-  const message = sessionKey.getPersonalMessage();
-  console.log('Personal message to sign:', message);
-  console.log('Message type:', typeof message);
-  console.log('Message length:', message.length);
+  const creationPromise = (async () => {
+    try {
+      // Create session key with the SAME package ID that was used to encrypt the blob
+      const sessionKey = await SessionKey.create({
+        address: userAddress,
+        packageId: packageId,  // Use the package ID from the encrypted blob
+        ttlMin,
+        suiClient: suiClient as any,
+      });
 
-  // Sign with connected wallet
-  // IMPORTANT: message is already a Uint8Array, pass it directly!
-  const { signature: walletSignature } = await signPersonalMessage({
-    message: message  // Pass the Uint8Array directly, no conversion!
-  });
+      // Get personal message to sign
+      const message = sessionKey.getPersonalMessage();
+      console.log('Personal message to sign:', message);
+      console.log('Message type:', typeof message);
+      console.log('Message length:', message.length);
+
+      // Sign with connected wallet
+      // IMPORTANT: message is already a Uint8Array, pass it directly!
+      const { signature: walletSignature } = await signPersonalMessage({
+        message: message  // Pass the Uint8Array directly, no conversion!
+      });
+
+      // Continue with the rest of the function...
+      return { sessionKey, walletSignature };
+    } finally {
+      // Clean up tracking
+      ongoingCreations.delete(creationKey);
+    }
+  })();
+
+  ongoingCreations.set(creationKey, creationPromise.then(({ sessionKey }) => sessionKey));
+
+  const { sessionKey, walletSignature } = await creationPromise;
 
   console.log('Wallet signature received (base64):', walletSignature);
 
@@ -108,9 +132,9 @@ export async function createSealSessionKeyWithWallet(
     const publicKey = sigBytes.slice(65); // Extract public key from signature
     console.log('Public key from signature:', Array.from(publicKey).map(b => b.toString(16).padStart(2, '0')).join(''));
 
-    // Verify the signature
+    // Verify the signature  
     const verified = await verifyPersonalMessageSignature(
-      new Uint8Array(Buffer.from(message)),
+      sessionKey.getPersonalMessage(),
       walletSignature
     );
     console.log('Signature verification result:', verified);
