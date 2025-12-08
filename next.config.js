@@ -13,6 +13,9 @@ const nextConfig = {
   },
   output: 'standalone',
   
+  // Turbopack configuration (empty to silence warnings)
+  turbopack: {},
+  
   // Extended timeout for large file uploads (10 minutes)
   // Note: This requires Vercel Pro plan for timeouts > 10s in production
   experimental: {
