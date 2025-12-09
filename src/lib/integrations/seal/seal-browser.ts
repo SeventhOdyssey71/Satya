@@ -270,15 +270,58 @@ export interface SealBlobMetadata {
   seal_threshold: number;
 }
 
+// Add helper function to detect if blob is SEAL-encrypted
+function isSealEncryptedBlob(blobData: ArrayBuffer): boolean {
+  if (blobData.byteLength < 4) return false;
+  
+  const metadataLength = new DataView(blobData).getUint32(0, true);
+  
+  // Basic checks for valid metadata length
+  if (metadataLength <= 0 || metadataLength > blobData.byteLength - 4) {
+    return false;
+  }
+  
+  // Additional check: try to parse metadata as JSON
+  try {
+    const metadataBytes = new Uint8Array(blobData, 4, metadataLength);
+    const metadataString = new TextDecoder().decode(metadataBytes);
+    const metadata = JSON.parse(metadataString);
+    
+    // Check if it has required SEAL metadata fields
+    return metadata.encrypted_dek_base64 && metadata.policy_id && metadata.iv_base64;
+  } catch {
+    return false;
+  }
+}
+
 export function parseSealMetadata(blobData: ArrayBuffer): {
   metadata: SealBlobMetadata;
   encryptedData: Uint8Array;
 } {
+  console.log('Parsing SEAL metadata from blob of size:', blobData.byteLength);
+  
+  // Check if blob is too small to have SEAL metadata format
+  if (blobData.byteLength < 4) {
+    throw new Error(`Blob too small to contain SEAL metadata: ${blobData.byteLength} bytes`);
+  }
+  
+  // Read first 16 bytes to inspect blob format
+  const firstBytes = new Uint8Array(blobData, 0, Math.min(16, blobData.byteLength));
+  console.log('First 16 bytes (hex):', Array.from(firstBytes).map(b => b.toString(16).padStart(2, '0')).join(' '));
+  console.log('First 16 bytes (ASCII):', String.fromCharCode(...firstBytes.filter(b => b >= 32 && b <= 126)));
+  
   // Read metadata length (4 bytes, little-endian)
   const metadataLength = new DataView(blobData).getUint32(0, true);
+  console.log('Parsed metadata length:', metadataLength);
 
   if (metadataLength <= 0 || metadataLength > blobData.byteLength - 4) {
-    throw new Error(`Invalid metadata length: ${metadataLength}`);
+    // This might not be a SEAL-encrypted blob, check if it looks like raw file data
+    const fileHeader = new Uint8Array(blobData, 0, Math.min(512, blobData.byteLength));
+    const headerText = String.fromCharCode(...fileHeader.filter(b => b >= 32 && b <= 126));
+    console.log('Blob appears to be raw file data, not SEAL-encrypted');
+    console.log('File header preview:', headerText.slice(0, 100));
+    
+    throw new Error(`Invalid metadata length: ${metadataLength}. This appears to be a raw file, not a SEAL-encrypted blob. Expected SEAL format with metadata header.`);
   }
 
   // Extract and parse metadata JSON

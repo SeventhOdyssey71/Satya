@@ -369,13 +369,45 @@ export class WalletDecryptionService {
     isBuyer: boolean
   ): Promise<DecryptedModelData> {
     try {
-      // Step 1: Download encrypted model from Walrus
+      // Step 1: Download model from Walrus
       const modelBlob = await this.downloadFromWalrus(request.modelBlobId);
 
-      // Step 2: Parse SEAL metadata
-      const { metadata, encryptedData } = parseSealMetadata(modelBlob);
+      // Step 2: Check if model is SEAL-encrypted
+      let isEncrypted = false;
+      let metadata: any = null;
+      let encryptedData: Uint8Array;
+      
+      try {
+        const result = parseSealMetadata(modelBlob);
+        metadata = result.metadata;
+        encryptedData = result.encryptedData;
+        isEncrypted = true;
+        console.log('✓ Model is SEAL-encrypted, proceeding with decryption...');
+      } catch (error) {
+        console.log('ℹ Model is not SEAL-encrypted, treating as plain file:', error);
+        isEncrypted = false;
+        // For unencrypted files, we can still perform verification but without decryption
+        encryptedData = new Uint8Array(modelBlob);
+      }
 
-      // Step 3: Initialize SEAL client
+      if (!isEncrypted) {
+        // For unencrypted models, return the raw data with mock metadata
+        console.log('✓ Model is unencrypted, returning raw data');
+        return {
+          modelData: uint8ArrayToBase64(encryptedData),
+          datasetData: uint8ArrayToBase64(new Uint8Array(0)), // Empty dataset
+          metadata: {
+            encrypted_dek_base64: '',
+            policy_id: 'unencrypted',
+            iv_base64: '',
+            seal_package_id: '',
+            encryption_algorithm: 'none',
+            seal_threshold: 0
+          }
+        };
+      }
+
+      // Step 3: Initialize SEAL client (only for encrypted models)
       const sealClient = initializeSealClient(this.suiClient);
 
       // Step 4: Create session key with wallet signature
