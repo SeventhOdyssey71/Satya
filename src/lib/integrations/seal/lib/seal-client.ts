@@ -412,8 +412,8 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   SealClientWrapper.resetInstance();
  });
  
- // Also clear on hot reload if available
- if ((module as any).hot) {
+ // Also clear on hot reload if available (Node.js environment only)
+ if (typeof module !== 'undefined' && (module as any).hot) {
   (module as any).hot.dispose(() => {
    SealClientWrapper.resetInstance();
   });
