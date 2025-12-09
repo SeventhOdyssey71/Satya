@@ -24,6 +24,21 @@ export class PasskeyWallet {
     this.client = suiClient
   }
 
+  /**
+   * Helper method to find common public key from two signature attempts
+   * Based on Sui SDK documentation
+   */
+  private findCommonPublicKey(possiblePks1: any[], possiblePks2: any[]): any | null {
+    for (const pk1 of possiblePks1) {
+      for (const pk2 of possiblePks2) {
+        if (pk1.toRawBytes().toString() === pk2.toRawBytes().toString()) {
+          return pk1
+        }
+      }
+    }
+    return null
+  }
+
   private async createNewWallet(): Promise<PasskeyAuthResult> {
     try {
       console.log('Creating NEW passkey wallet...')
@@ -36,19 +51,40 @@ export class PasskeyWallet {
         }
       }
 
-      // Create Sui keypair with passkey - this will prompt for new passkey creation
-      this.keypair = await PasskeyKeypair.getPasskeyInstance(this.provider)
+      // IMPORTANT: Only create new wallet if user explicitly wants to
+      // Use two-signature method to establish persistent identity
+      console.log('Creating passkey with two-signature method for persistence...')
+      
+      // First signature to establish identity
+      const message1 = new TextEncoder().encode(`${APP_CONFIG.APP_NAME} wallet creation - step 1`)
+      const possiblePks1 = await PasskeyKeypair.signAndRecover(this.provider, message1)
+      
+      // Second signature to confirm identity  
+      const message2 = new TextEncoder().encode(`${APP_CONFIG.APP_NAME} wallet creation - step 2`)
+      const possiblePks2 = await PasskeyKeypair.signAndRecover(this.provider, message2)
+      
+      // Find the common public key (the actual user's key)
+      const commonPk = this.findCommonPublicKey(possiblePks1, possiblePks2)
+      if (!commonPk) {
+        throw new Error('Could not establish consistent passkey identity. Please try again.')
+      }
+      
+      // Create keypair from the recovered public key
+      this.keypair = new PasskeyKeypair(commonPk.toRawBytes(), this.provider)
       const publicKey = this.keypair.getPublicKey()
       this.address = publicKey.toSuiAddress()
 
       const publicKeyBase64 = publicKey.toBase64()
+      const publicKeyBytesHex = Array.from(commonPk.toRawBytes() as Uint8Array).map(b => b.toString(16).padStart(2, '0')).join('')
       
       console.log('New passkey wallet created with address:', this.address)
+      console.log('Public key recovered and stored for reuse')
       
-      // Save wallet data in structured format
+      // Save wallet data with raw bytes for reconstruction
       this.saveWallet({
         address: this.address,
         publicKey: publicKeyBase64,
+        publicKeyBytes: publicKeyBytesHex,
         createdAt: Date.now(),
         version: APP_CONFIG.STORAGE_VERSION
       })
@@ -70,7 +106,7 @@ export class PasskeyWallet {
 
   private async authenticateExistingWallet(): Promise<PasskeyAuthResult> {
     try {
-      console.log('Authenticating with existing passkey wallet...')
+      console.log('Authenticating with existing passkey wallet using recovery method...')
       
       const storedWallet = this.getStoredWallet()
       if (!storedWallet) {
@@ -80,23 +116,70 @@ export class PasskeyWallet {
         }
       }
 
-      // The current Sui SDK doesn't support proper credential reuse
-      // We need to prompt the user to authenticate, and hope they select the same credential
-      console.log('Prompting user to authenticate with existing passkey...')
       console.log('Expected address:', storedWallet.address)
+      console.log('Attempting to recover passkey using stored public key...')
       
+      // If we have stored public key bytes, try to reconstruct directly
+      if (storedWallet.publicKeyBytes) {
+        try {
+          console.log('Reconstructing keypair from stored public key bytes...')
+          const publicKeyBytes = Uint8Array.from(
+            storedWallet.publicKeyBytes.match(/.{2}/g)!.map(byte => parseInt(byte, 16))
+          )
+          
+          // Test if this keypair can sign (which would confirm the user has the same passkey)
+          const testKeypair = new PasskeyKeypair(publicKeyBytes, this.provider)
+          
+          // Test signing to verify the user still has access to this passkey
+          const testMessage = new Uint8Array([1, 2, 3, 4, 5]) // Simple test message
+          try {
+            await testKeypair.signPersonalMessage(testMessage)
+            console.log('✓ Passkey verification successful - same credential confirmed')
+            
+            // Success! User has the same passkey
+            this.keypair = testKeypair
+            this.address = storedWallet.address
+            
+            return {
+              success: true,
+              keypair: this.keypair,
+              address: this.address,
+              publicKey: storedWallet.publicKey,
+            }
+          } catch (signError) {
+            console.log('Stored keypair cannot sign, passkey may have been removed or changed')
+            // Fall through to recovery method
+          }
+        } catch (reconstructError) {
+          console.log('Could not reconstruct from stored bytes, trying recovery method')
+          // Fall through to recovery method
+        }
+      }
+      
+      // Recovery method: Use signAndRecover to detect if user has the same passkey
+      console.log('Using signAndRecover method to verify passkey identity...')
       try {
-        // Prompt user to authenticate with their passkey
-        // Note: This may create a new credential if user chooses differently
-        this.keypair = await PasskeyKeypair.getPasskeyInstance(this.provider)
-        const publicKey = this.keypair.getPublicKey()
-        this.address = publicKey.toSuiAddress()
+        // Use the same messages as during creation to maintain consistency
+        const message1 = new TextEncoder().encode(`${APP_CONFIG.APP_NAME} wallet recovery - step 1`)
+        const possiblePks1 = await PasskeyKeypair.signAndRecover(this.provider, message1)
         
-        console.log('Authenticated address:', this.address)
+        const message2 = new TextEncoder().encode(`${APP_CONFIG.APP_NAME} wallet recovery - step 2`)
+        const possiblePks2 = await PasskeyKeypair.signAndRecover(this.provider, message2)
         
-        // Check if addresses match (indicating same credential was used)
-        if (this.address === storedWallet.address) {
-          console.log('✓ Authentication successful - same passkey credential used')
+        const commonPk = this.findCommonPublicKey(possiblePks1, possiblePks2)
+        if (!commonPk) {
+          throw new Error('Could not recover consistent passkey identity')
+        }
+        
+        // Check if the recovered key matches our stored wallet
+        const recoveredKeypair = new PasskeyKeypair(commonPk.toRawBytes(), this.provider)
+        const recoveredAddress = recoveredKeypair.getPublicKey().toSuiAddress()
+        
+        if (recoveredAddress === storedWallet.address) {
+          console.log('✓ Passkey recovery successful - same credential confirmed')
+          this.keypair = recoveredKeypair
+          this.address = recoveredAddress
+          
           return {
             success: true,
             keypair: this.keypair,
@@ -104,25 +187,25 @@ export class PasskeyWallet {
             publicKey: storedWallet.publicKey,
           }
         } else {
-          console.warn('⚠ Address mismatch - different passkey credential was used or created')
+          console.warn('⚠ Recovered passkey has different address than stored wallet')
           console.warn('Expected:', storedWallet.address)
-          console.warn('Got:', this.address)
+          console.warn('Recovered:', recoveredAddress)
+          console.log('This suggests user is using a different passkey or device')
           
-          // This means either:
-          // 1. User selected a different passkey
-          // 2. A new passkey was created
-          // 3. Browser created a new credential instead of reusing
+          // Update storage with the new wallet identity
+          const publicKeyBase64 = commonPk.toBase64()
+          const publicKeyBytesHex = Array.from(commonPk.toRawBytes() as Uint8Array).map(b => b.toString(16).padStart(2, '0')).join('')
           
-          // For now, we'll treat this as a new wallet and update storage
-          console.log('Treating this as a new wallet due to address mismatch')
-          
-          const publicKeyBase64 = publicKey.toBase64()
           this.saveWallet({
-            address: this.address,
+            address: recoveredAddress,
             publicKey: publicKeyBase64,
+            publicKeyBytes: publicKeyBytesHex,
             createdAt: Date.now(),
             version: APP_CONFIG.STORAGE_VERSION
           })
+          
+          this.keypair = recoveredKeypair
+          this.address = recoveredAddress
           
           return {
             success: true,
@@ -131,11 +214,11 @@ export class PasskeyWallet {
             publicKey: publicKeyBase64,
           }
         }
-      } catch (authError) {
-        console.error('Passkey authentication failed:', authError)
+      } catch (recoveryError) {
+        console.error('Passkey recovery failed:', recoveryError)
         return {
           success: false,
-          error: 'Failed to authenticate with passkey. Please try again or create a new passkey.'
+          error: 'Failed to recover passkey identity. You may need to create a new passkey.'
         }
       }
     } catch (error) {

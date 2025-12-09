@@ -8,6 +8,7 @@ import { useSuiClient } from '@mysten/dapp-kit';
 import { MARKETPLACE_CONFIG } from '@/lib/constants';
 import { WalletDecryptionService } from '@/lib/services/wallet-decryption.service';
 import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service';
+import { usePasskeyWallet } from '@/contexts/PasskeyWalletContext';
 
 interface ModelVerificationFlowProps {
  pendingModelId?: string;
@@ -38,8 +39,17 @@ export function ModelVerificationFlow({
  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
  const account = useCurrentAccount();
  const suiClient = useSuiClient();
+ const { passkeyWallet, walletInstance } = usePasskeyWallet();
 
  const PACKAGE_ID = MARKETPLACE_CONFIG.PACKAGE_ID; // Marketplace contract from configuration
+
+ // Helper to check if any wallet is connected (dapp-kit or passkey)
+ const isWalletConnected = account || passkeyWallet?.isConnected
+ const getConnectedWalletAddress = () => {
+   if (account) return account.address
+   if (passkeyWallet?.isConnected) return passkeyWallet.address
+   return null
+ }
 
  const uploadToMarketplace = async (attestationData: TEEAttestationData, txDigest: string) => {
   
@@ -84,8 +94,13 @@ export function ModelVerificationFlow({
 
   try {
    // Ensure wallet is connected
-   if (!account) {
+   if (!isWalletConnected) {
     throw new Error('Please connect your wallet first');
+   }
+   
+   const walletAddress = getConnectedWalletAddress()
+   if (!walletAddress) {
+    throw new Error('Could not get wallet address');
    }
 
    console.log('Starting wallet-signed decryption flow...');
@@ -93,13 +108,26 @@ export function ModelVerificationFlow({
    // Step 1: Decrypt model in browser with wallet signature
    const decryptionService = new WalletDecryptionService(suiClient);
 
-   // Create wallet signer interface
-   const walletSigner = {
+   // Create wallet signer interface based on wallet type
+   const walletSigner = account ? {
+    // dApp Kit wallet
     address: account.address,
     signPersonalMessage: async (args: { message: Uint8Array }) => {
      return await signPersonalMessage({ message: args.message });
     }
-   };
+   } : passkeyWallet?.isConnected && walletInstance && passkeyWallet.address ? {
+    // Passkey wallet
+    address: passkeyWallet.address,
+    signPersonalMessage: async (args: { message: Uint8Array }) => {
+     const messageString = new TextDecoder().decode(args.message);
+     const signature = await walletInstance.signPersonalMessage(messageString);
+     return { signature };
+    }
+   } : null;
+
+   if (!walletSigner) {
+    throw new Error('No valid wallet signer available');
+   }
 
    // Decrypt model with wallet signature (creator flow - uses seal_approve with PendingModel)
    console.log('Decrypting model with wallet signature (creator flow)...');
@@ -107,7 +135,7 @@ export function ModelVerificationFlow({
     {
      modelBlobId: modelBlobId,
      datasetBlobId: datasetBlobId,
-     userAddress: account.address,
+     userAddress: walletAddress,
      transactionDigest: pendingModelId || `temp_${Date.now()}` // PendingModel ID for creator proof
     },
     walletSigner,
@@ -191,8 +219,14 @@ export function ModelVerificationFlow({
  };
 
  const verifyOnChain = async () => {
-  if (!account || !attestationData) {
+  if (!isWalletConnected || !attestationData) {
    setError('Please connect wallet and generate attestation first');
+   return;
+  }
+  
+  const walletAddress = getConnectedWalletAddress()
+  if (!walletAddress) {
+   setError('Could not get wallet address');
    return;
   }
 
@@ -231,8 +265,9 @@ export function ModelVerificationFlow({
    const signatureBytes = Buffer.from(attestationData.tee_attestation.signature, 'hex');
    const verifierSignature = new Uint8Array(signatureBytes.slice(0, 64));
 
-   // Create wallet signer
-   const walletSigner = {
+   // Create wallet signer based on connected wallet type
+   const walletSigner = account ? {
+    // dApp Kit wallet signer
     toSuiAddress: async () => {
      return account.address;
     },
@@ -273,7 +308,34 @@ export function ModelVerificationFlow({
       }
      });
     }
-   };
+   } : passkeyWallet?.isConnected && walletInstance && passkeyWallet.address ? {
+    // Passkey wallet signer
+    toSuiAddress: async () => {
+     return passkeyWallet.address;
+    },
+    executeTransaction: async (tx: Transaction) => {
+     try {
+      const result = await walletInstance.signAndExecuteTransaction({
+       transaction: tx,
+       options: {
+        showBalanceChanges: true,
+        showEvents: true,
+        showInput: true,
+        showEffects: true,
+        showObjectChanges: true
+       }
+      });
+      return result;
+     } catch (error) {
+      console.error('❌ Passkey transaction failed:', error);
+      throw error;
+     }
+    }
+   } : null;
+
+   if (!walletSigner) {
+    throw new Error('No valid wallet signer available for transaction');
+   }
 
    // Step 1: Complete verification on blockchain
 
@@ -378,9 +440,9 @@ export function ModelVerificationFlow({
      <span className="text-sm font-medium text-green-900">Blockchain Verification</span>
      <button
       onClick={verifyOnChain}
-      disabled={isVerifyingOnChain || !account}
+      disabled={isVerifyingOnChain || !isWalletConnected}
       className={`px-3 py-1 text-xs font-medium rounded ${
-       isVerifyingOnChain || !account
+       isVerifyingOnChain || !isWalletConnected
         ? 'opacity-50 cursor-not-allowed bg-gray-400 text-white'
         : 'bg-green-600 text-white hover:bg-green-700'
       }`}
@@ -390,7 +452,7 @@ export function ModelVerificationFlow({
         <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
         <span>Signing...</span>
        </div>
-      ) : !account ? (
+      ) : !isWalletConnected ? (
        <span>Connect Wallet</span>
       ) : (
        <span>Sign Transaction</span>

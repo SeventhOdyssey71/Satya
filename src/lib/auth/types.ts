@@ -11,6 +11,7 @@ export interface PasskeyAuthResult {
 export interface StoredWalletData {
   address: string
   publicKey: string
+  publicKeyBytes?: string  // Store raw bytes for reconstruction
   createdAt: number
   version: string
 }

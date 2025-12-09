@@ -120,7 +120,7 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
               <div className="font-medium text-gray-900 text-sm">
                 {passkeyWallet ? 'Use Existing Passkey' : 'Create Passkey'}
               </div>
-              {passkeyWallet && (
+              {passkeyWallet?.address && (
                 <div className="text-xs text-gray-500 truncate">
                   {passkeyWallet.address.slice(0, 8)}...{passkeyWallet.address.slice(-6)}
                 </div>
