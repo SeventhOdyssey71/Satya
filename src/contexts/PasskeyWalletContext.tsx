@@ -18,6 +18,7 @@ interface PasskeyWalletContextType {
   isLoading: boolean
   connectPasskey: () => Promise<void>
   disconnectPasskey: () => void
+  recreatePasskey: () => Promise<void>
   signPersonalMessage: (message: string) => Promise<string>
 }
 
@@ -91,6 +92,35 @@ export function PasskeyWalletProvider({ children }: { children: React.ReactNode 
     setPasskeyWalletState(null)
   }, [walletInstance])
 
+  const recreatePasskey = useCallback(async () => {
+    if (!walletInstance) {
+      throw new Error('Wallet instance not initialized')
+    }
+
+    setIsLoading(true)
+    try {
+      const result = await walletInstance.recreateWallet()
+      
+      if (result.success && result.address) {
+        const walletState: PasskeyWalletState = {
+          address: result.address,
+          publicKey: result.publicKey || null,
+          isConnected: true,
+          type: 'passkey'
+        }
+        
+        setPasskeyWalletState(walletState)
+      } else {
+        throw new Error(result.error || 'Failed to recreate passkey wallet')
+      }
+    } catch (error) {
+      console.error('Passkey recreation failed:', error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }, [walletInstance])
+
   const signPersonalMessage = useCallback(async (message: string): Promise<string> => {
     if (!walletInstance) {
       throw new Error('Wallet instance not initialized')
@@ -108,6 +138,7 @@ export function PasskeyWalletProvider({ children }: { children: React.ReactNode 
       isLoading,
       connectPasskey,
       disconnectPasskey,
+      recreatePasskey,
       signPersonalMessage
     }}>
       {children}

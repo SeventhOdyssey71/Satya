@@ -13,7 +13,7 @@ interface WalletDropdownProps {
 export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const hiddenConnectRef = useRef<HTMLDivElement>(null)
-  const { connectPasskey, isLoading } = usePasskeyWallet()
+  const { connectPasskey, recreatePasskey, isLoading, passkeyWallet } = usePasskeyWallet()
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -56,7 +56,20 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
       onClose()
     } catch (error) {
       console.error('Passkey connection failed:', error)
-      alert('Passkey connection failed')
+      alert('Passkey connection failed: ' + (error as Error).message)
+    }
+  }
+
+  const handlePasskeyRecreate = async () => {
+    // Prevent multiple simultaneous operations
+    if (isLoading) return
+    
+    try {
+      await recreatePasskey()
+      onClose()
+    } catch (error) {
+      console.error('Passkey recreation failed:', error)
+      alert('Passkey recreation failed: ' + (error as Error).message)
     }
   }
 
@@ -104,7 +117,14 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
             
             {/* Passkey Text */}
             <div className="flex-1">
-              <div className="font-medium text-gray-900 text-sm">Use Passkeys</div>
+              <div className="font-medium text-gray-900 text-sm">
+                {passkeyWallet ? 'Use Existing Passkey' : 'Create Passkey'}
+              </div>
+              {passkeyWallet && (
+                <div className="text-xs text-gray-500 truncate">
+                  {passkeyWallet.address.slice(0, 8)}...{passkeyWallet.address.slice(-6)}
+                </div>
+              )}
             </div>
 
             {/* Loading Spinner only */}
@@ -112,6 +132,33 @@ export function WalletDropdown({ isOpen, onClose, buttonRef }: WalletDropdownPro
               <div className="w-4 h-4 border border-gray-400 border-t-transparent rounded-full animate-spin" />
             )}
           </button>
+
+          {/* Passkey Recreation Option (only show if existing wallet) */}
+          {passkeyWallet && (
+            <button
+              onClick={handlePasskeyRecreate}
+              disabled={isLoading}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {/* Refresh Icon */}
+              <div className="w-6 h-6 border border-gray-300 rounded flex items-center justify-center flex-shrink-0">
+                <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
+              
+              {/* Recreation Text */}
+              <div className="flex-1">
+                <div className="font-medium text-gray-900 text-sm">Recreate Passkey</div>
+                <div className="text-xs text-gray-500">Create new if having issues</div>
+              </div>
+
+              {/* Loading Spinner only */}
+              {isLoading && (
+                <div className="w-4 h-4 border border-gray-400 border-t-transparent rounded-full animate-spin" />
+              )}
+            </button>
+          )}
         </div>
       )}
 

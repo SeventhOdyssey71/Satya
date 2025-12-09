@@ -72,45 +72,70 @@ export class PasskeyWallet {
     try {
       console.log('Authenticating with existing passkey wallet...')
       
-      // Use existing passkey to authenticate - this should NOT create a new one
+      const storedWallet = this.getStoredWallet()
+      if (!storedWallet) {
+        return {
+          success: false,
+          error: 'No existing wallet found'
+        }
+      }
+
+      // The current Sui SDK doesn't support proper credential reuse
+      // We need to prompt the user to authenticate, and hope they select the same credential
+      console.log('Prompting user to authenticate with existing passkey...')
+      console.log('Expected address:', storedWallet.address)
+      
       try {
-        // Get the passkey instance using the existing credential
+        // Prompt user to authenticate with their passkey
+        // Note: This may create a new credential if user chooses differently
         this.keypair = await PasskeyKeypair.getPasskeyInstance(this.provider)
         const publicKey = this.keypair.getPublicKey()
         this.address = publicKey.toSuiAddress()
         
-        const storedWallet = this.getStoredWallet()
-        if (storedWallet && storedWallet.address !== this.address) {
-          console.warn('Authenticated address does not match stored address')
-          console.warn('Stored:', storedWallet.address, 'Authenticated:', this.address)
-        }
+        console.log('Authenticated address:', this.address)
         
-        // Update stored wallet with current session
-        if (storedWallet) {
-          this.address = storedWallet.address // Use stored address as authoritative
+        // Check if addresses match (indicating same credential was used)
+        if (this.address === storedWallet.address) {
+          console.log('✓ Authentication successful - same passkey credential used')
+          return {
+            success: true,
+            keypair: this.keypair,
+            address: this.address,
+            publicKey: storedWallet.publicKey,
+          }
         } else {
-          // Save this as the authoritative wallet
+          console.warn('⚠ Address mismatch - different passkey credential was used or created')
+          console.warn('Expected:', storedWallet.address)
+          console.warn('Got:', this.address)
+          
+          // This means either:
+          // 1. User selected a different passkey
+          // 2. A new passkey was created
+          // 3. Browser created a new credential instead of reusing
+          
+          // For now, we'll treat this as a new wallet and update storage
+          console.log('Treating this as a new wallet due to address mismatch')
+          
+          const publicKeyBase64 = publicKey.toBase64()
           this.saveWallet({
             address: this.address,
-            publicKey: publicKey.toBase64(),
+            publicKey: publicKeyBase64,
             createdAt: Date.now(),
             version: APP_CONFIG.STORAGE_VERSION
           })
-        }
-        
-        console.log('Successfully authenticated with passkey wallet:', this.address)
-        
-        return {
-          success: true,
-          keypair: this.keypair,
-          address: this.address,
-          publicKey: publicKey.toBase64(),
+          
+          return {
+            success: true,
+            keypair: this.keypair,
+            address: this.address,
+            publicKey: publicKeyBase64,
+          }
         }
       } catch (authError) {
-        console.error('Authentication failed:', authError)
+        console.error('Passkey authentication failed:', authError)
         return {
           success: false,
-          error: 'Failed to authenticate with existing passkey'
+          error: 'Failed to authenticate with passkey. Please try again or create a new passkey.'
         }
       }
     } catch (error) {
@@ -231,6 +256,13 @@ export class PasskeyWallet {
     console.log('Clearing all passkey wallet data...')
     this.disconnect()
     // This will force the next connect() to create a new wallet
+  }
+
+  // Force create a new wallet even if one exists (for troubleshooting)
+  async recreateWallet(): Promise<PasskeyAuthResult> {
+    console.log('Force creating new passkey wallet (clearing existing data)...')
+    this.clearWallet()
+    return await this.createNewWallet()
   }
 
   /**
