@@ -7,6 +7,7 @@ import { MarketplaceGrid } from '@/components/marketplace/MarketplaceGrid'
 import { HiSparkles, HiMagnifyingGlass, HiArrowPath, HiShoppingCart, HiCheckBadge, HiClock } from 'react-icons/hi2'
 import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { MarketplaceContractService } from '@/lib/services/marketplace-contract.service'
+import { usePasskeyWallet } from '@/contexts/PasskeyWalletContext'
 
 // Disable static generation to avoid service initialization issues during build
 export const dynamic = 'force-dynamic'
@@ -510,10 +511,14 @@ function EnhancedMarketplaceGrid({
  onPurchase: () => void
 }) {
  const currentAccount = useCurrentAccount()
+ const { passkeyWallet } = usePasskeyWallet()
  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
  const [purchasingModel, setPurchasingModel] = useState<string | null>(null)
  const [purchaseError, setPurchaseError] = useState<string | null>(null)
  const router = useRouter()
+
+ // Check if any wallet is connected (dApp kit or passkey)
+ const isAnyWalletConnected = currentAccount || passkeyWallet?.isConnected
 
  const handlePurchase = async (model: MarketplaceModel) => {
   if (!currentAccount || !contractService) {
@@ -700,21 +705,21 @@ function EnhancedMarketplaceGrid({
           {/* Action Button */}
           <button
             onClick={() => {
-              if (model.creator === currentAccount?.address || 
+              if (model.creator === (currentAccount?.address || passkeyWallet?.address) || 
                   !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads)) {
                 return; // Don't navigate for disabled states
               }
-              // Navigate to model details page using Next.js router
-              router.push(`/model/${model.id}`);
+              // Navigate to model verification page using Next.js router
+              router.push(`/model/${model.id}/verify`);
             }}
             disabled={
-              !currentAccount ||
-              model.creator === currentAccount?.address ||
+              !isAnyWalletConnected ||
+              model.creator === (currentAccount?.address || passkeyWallet?.address) ||
               !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads)
             }
             className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md"
           >
-            {model.creator === currentAccount?.address ? (
+            {model.creator === (currentAccount?.address || passkeyWallet?.address) ? (
               'Your Model'
             ) : !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads) ? (
               'Sold Out'
