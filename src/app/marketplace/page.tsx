@@ -709,8 +709,8 @@ function EnhancedMarketplaceGrid({
                   !!(model.maxDownloads && model.currentDownloads >= model.maxDownloads)) {
                 return; // Don't navigate for disabled states
               }
-              // Navigate to model verification page using Next.js router
-              router.push(`/model/${model.id}/verify`);
+              // Navigate to model details page using Next.js router
+              router.push(`/model/${model.id}`);
             }}
             disabled={
               !isAnyWalletConnected ||

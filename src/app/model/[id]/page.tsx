@@ -18,6 +18,9 @@ import { ModelCard } from '@/components/marketplace/ModelGrid'
 import { EventService, ModelListedEvent } from '@/lib/services/event-service'
 import ModelPurchaseFlow from '@/components/marketplace/ModelPurchaseFlow'
 import DecryptionModal from '@/components/marketplace/DecryptionModal'
+import { ModelVerificationFlow } from '@/components/tee/ModelVerificationFlow'
+import { usePasskeyWallet } from '@/contexts/PasskeyWalletContext'
+import { useCurrentAccount } from '@mysten/dapp-kit'
 
 // Disable static generation to avoid service initialization issues during build
 export const dynamic = 'force-dynamic'
@@ -92,7 +95,13 @@ export default function ModelPage({ params }: ModelPageProps) {
  const [showDecryption, setShowDecryption] = useState(false)
  const [purchaseTransactionDigest, setPurchaseTransactionDigest] = useState<string | null>(null)
  const [purchaseRecordId, setPurchaseRecordId] = useState<string | null>(null)
+ const [showVerification, setShowVerification] = useState(false)
+ const currentAccount = useCurrentAccount()
+ const { passkeyWallet } = usePasskeyWallet()
  const router = useRouter()
+
+ // Check if any wallet is connected
+ const isAnyWalletConnected = currentAccount || passkeyWallet?.isConnected
  
  useEffect(() => {
   params.then(({ id }) => {
@@ -358,33 +367,47 @@ export default function ModelPage({ params }: ModelPageProps) {
           </div>
          </div>
 
-         {/* Purchase Flow */}
-         {!isPurchased ? (
-          <ModelPurchaseFlow 
-           model={model}
-           onComplete={handlePurchaseComplete}
-          />
-         ) : (
-          <div className="space-y-4">
-           <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-2 text-green-800">
-             <CheckCircle className="w-4 h-4" />
-             <span className="text-sm font-medium">Purchase Complete!</span>
-            </div>
-            <p className="text-sm text-green-600 mt-1 font-light">
-             You now have access to this model
-            </p>
-           </div>
-           
+         {/* Action Buttons */}
+         <div className="space-y-4">
+          {/* Verification Button */}
+          {isAnyWalletConnected && (
            <button
-            onClick={() => setShowDecryption(true)}
-            className="w-full bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors font-medium flex items-center justify-center gap-2"
+            onClick={() => setShowVerification(true)}
+            className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
            >
-            <Download className="w-4 h-4" />
-            Download Model
+            <CheckCircle className="w-4 h-4" />
+            Verify Model with TEE
            </button>
-          </div>
-         )}
+          )}
+          
+          {/* Purchase Flow */}
+          {!isPurchased ? (
+           <ModelPurchaseFlow 
+            model={model}
+            onComplete={handlePurchaseComplete}
+           />
+          ) : (
+           <div className="space-y-4">
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+             <div className="flex items-center gap-2 text-green-800">
+              <CheckCircle className="w-4 h-4" />
+              <span className="text-sm font-medium">Purchase Complete!</span>
+             </div>
+             <p className="text-sm text-green-600 mt-1 font-light">
+              You now have access to this model
+             </p>
+            </div>
+            
+            <button
+             onClick={() => setShowDecryption(true)}
+             className="w-full bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors font-medium flex items-center justify-center gap-2"
+            >
+             <Download className="w-4 h-4" />
+             Download Model
+            </button>
+           </div>
+          )}
+         </div>
         </div>
 
        </div>
@@ -392,6 +415,38 @@ export default function ModelPage({ params }: ModelPageProps) {
      </div>
     </div>
    </main>
+
+   {/* Verification Modal */}
+   {showVerification && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+     <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="p-6 border-b border-gray-200">
+       <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-900">TEE Model Verification</h2>
+        <button
+         onClick={() => setShowVerification(false)}
+         className="text-gray-400 hover:text-gray-600"
+        >
+         ×
+        </button>
+       </div>
+      </div>
+      
+      <div className="p-6">
+       <ModelVerificationFlow
+        pendingModelId={id}
+        modelBlobId={model.modelBlobId || 'unknown'}
+        datasetBlobId={model.datasetBlobId || 'default-dataset-blob'}
+        modelName={model.title}
+        onVerificationComplete={() => {
+         setShowVerification(false)
+         // Optionally reload model data to show updated verification status
+        }}
+       />
+      </div>
+     </div>
+    </div>
+   )}
 
    {/* Decryption Modal */}
    {showDecryption && (
