@@ -5,6 +5,9 @@ interface VerificationRequest {
   datasetBlobId?: string | null
   transactionDigest: string
   userAddress: string
+  // Optional: Pre-decrypted data (for browser-side decryption)
+  modelData?: string  // base64-encoded
+  datasetData?: string  // base64-encoded
 }
 
 interface VerificationResponse {
@@ -20,7 +23,7 @@ interface VerificationResponse {
 export async function POST(request: NextRequest) {
   try {
     const body: VerificationRequest = await request.json()
-    const { modelBlobId, datasetBlobId, transactionDigest, userAddress } = body
+    const { modelBlobId, datasetBlobId, transactionDigest, userAddress, modelData, datasetData } = body
 
     // Validate required fields
     if (!modelBlobId || !transactionDigest || !userAddress) {
@@ -34,24 +37,45 @@ export async function POST(request: NextRequest) {
       modelBlobId,
       datasetBlobId,
       transactionDigest,
-      userAddress
+      userAddress,
+      hasModelData: !!modelData,
+      hasDatasetData: !!datasetData
     })
 
-    // Call the Rust TEE server for actual verification
+    // Call the TEE server for actual verification
     const teeServerUrl = process.env.TEE_SERVER_URL || 'https://3.235.226.216:3333'
+    
+    // Choose evaluation method based on available data
+    let requestPayload: any;
+    
+    if (modelData && datasetData) {
+      // Use pre-decrypted data (browser-side decryption)
+      console.log('Using pre-decrypted model data for TEE evaluation')
+      requestPayload = {
+        model_data: modelData,
+        dataset_data: datasetData,
+        use_walrus: false,  // We're sending plaintext, not blob IDs
+        user_address: userAddress,
+        transaction_digest: transactionDigest
+      };
+    } else {
+      // Use blob IDs (server-side decryption)
+      console.log('Using blob IDs for TEE server-side decryption')
+      requestPayload = {
+        model_blob_id: modelBlobId,
+        dataset_blob_id: datasetBlobId || "6JwedDoHaIw-9SGOsu29AdentESjzKoVzSedEIH6URo", // Default dataset
+        use_walrus: true,  // Use real Walrus downloads
+        user_address: userAddress,  // Required for SEAL decryption
+        transaction_digest: transactionDigest  // Required for SEAL decryption
+      };
+    }
     
     const verificationResponse = await fetch(`${teeServerUrl}/evaluate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model_blob_id: modelBlobId,
-        dataset_blob_id: datasetBlobId || "6JwedDoHaIw-9SGOsu29AdentESjzKoVzSedEIH6URo", // Default dataset
-        use_walrus: true,  // Use real Walrus downloads
-        user_address: userAddress,  // Required for SEAL decryption
-        transaction_digest: transactionDigest  // Required for SEAL decryption
-      })
+      body: JSON.stringify(requestPayload)
     })
 
     if (!verificationResponse.ok) {

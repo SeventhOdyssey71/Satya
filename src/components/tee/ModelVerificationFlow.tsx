@@ -144,14 +144,18 @@ export function ModelVerificationFlow({
 
    console.log('✓ Model decrypted successfully in browser');
 
-   // Step 2: Send decrypted data to TEE server for evaluation
-   const teeResponse = await fetch(`${process.env.NEXT_PUBLIC_TEE_SERVER_URL || 'https://3.235.226.216'}/evaluate`, {
+   // Step 2: Send to TEE verification API (which proxies to TEE server)
+   const teeResponse = await fetch('/api/tee-verification', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model_data: decryptedData.modelData, // base64-encoded decrypted data
-      dataset_data: decryptedData.datasetData, // base64-encoded decrypted data
-      use_walrus: false // Important: We're sending plaintext, not blob IDs!
+      modelBlobId: modelBlobId,
+      datasetBlobId: datasetBlobId,
+      transactionDigest: pendingModelId || `temp_${Date.now()}`,
+      userAddress: walletAddress,
+      // Include decrypted data for direct evaluation
+      modelData: decryptedData.modelData,
+      datasetData: decryptedData.datasetData
     }),
    });
 
