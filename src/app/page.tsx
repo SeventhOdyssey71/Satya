@@ -40,7 +40,7 @@ function HeroSection() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, delay: 0.1 }}
      >
-      Next-Gen Data Infrastructure for AI
+Verifiable AI & Data Marketplace
      </motion.h1>
      
      <motion.p 
@@ -49,8 +49,8 @@ function HeroSection() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, delay: 0.2 }}
      >
-      Zero-knowledge proofs, decentralized storage, and modular blockchain infrastructure. 
-      Powering the next generation of verifiable AI and data markets.
+Secure AI models and datasets with zero-knowledge proofs, encrypted storage, and blockchain transparency. 
+      Building the future of trusted machine learning with cutting-edge cryptography.
      </motion.p>
 
      <motion.div 
@@ -81,7 +81,7 @@ function HeroSection() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, delay: 0.4 }}
      >
-      <p className="text-base sm:text-lg font-regola text-gray-600 mb-6 sm:mb-8">Powered by 0G Labs Infrastructure</p>
+      <p className="text-base sm:text-lg font-regola text-gray-600 mb-6 sm:mb-8">Built on Advanced Cryptographic Stack</p>
       <div className="flex items-center justify-center gap-6 sm:gap-8 md:gap-12 lg:gap-16">
        <div className="p-3 sm:p-4 bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
         <Image 
@@ -127,23 +127,23 @@ function FeaturesSection() {
  const features = [
   {
    icon: <TbShield className="w-6 h-6 sm:w-8 sm:h-8" />,
-   title: "Zero-Knowledge Proofs",
-   description: "Cryptographic verification without revealing sensitive data"
+   title: "Cryptographic Verification",
+   description: "Zero-knowledge proofs ensure model integrity without revealing sensitive data"
   },
   {
    icon: <TbDatabase className="w-6 h-6 sm:w-8 sm:h-8" />,
-   title: "Modular Data Availability",
-   description: "Scalable storage layer with built-in verification"
+   title: "Encrypted Storage",
+   description: "Advanced encryption with policy-based access control for AI models"
   },
   {
    icon: <TbNetwork className="w-6 h-6 sm:w-8 sm:h-8" />,
-   title: "Decentralized Infrastructure",
-   description: "Permissionless network with economic incentives"
+   title: "Decentralized Network",
+   description: "Distributed storage for resilient, always-available data"
   },
   {
    icon: <TbCloudCheck className="w-6 h-6 sm:w-8 sm:h-8" />,
-   title: "Instant Finality",
-   description: "Sub-second confirmation with Byzantine fault tolerance"
+   title: "Blockchain Transparency",
+   description: "Immutable records with sub-second transaction finality"
   }
  ]
 
@@ -154,10 +154,10 @@ function FeaturesSection() {
      <AnimatedSection>
       <div className="text-center mb-12 sm:mb-14 md:mb-16">
        <h2 className="text-3xl sm:text-4xl md:text-5xl font-regola font-medium mb-3 sm:mb-4 text-black">
-        Zero-Knowledge Infrastructure
+        Enterprise-Grade Security
        </h2>
        <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4">
-        Built on 0G's modular blockchain with native data availability
+        Built with zero-knowledge proofs and blockchain technology
        </p>
       </div>
      </AnimatedSection>
@@ -189,19 +189,19 @@ function TrustedMarketplacesSection() {
      <AnimatedSection>
       <div className="text-center mb-12 sm:mb-14 md:mb-16">
        <h2 className="text-3xl sm:text-4xl md:text-5xl font-regola font-medium mb-3 sm:mb-4 text-black">
-        Verifiable AI Data Markets
+        Trusted AI Model Marketplace
        </h2>
        <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4">
-        Trade AI models and datasets with cryptographic proof and instant settlement
+        Buy, sell, and verify AI models with complete transparency and security
        </p>
       </div>
      </AnimatedSection>
 
      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
       {[
-       { title: "ZK Proofs Generated", count: "--", description: "Cryptographic verifications" },
-       { title: "Data Stored", count: "--", description: "In decentralized storage" },
-       { title: "Network Validators", count: "--", description: "Securing the infrastructure" }
+       { title: "Verified Models", count: "--", description: "Cryptographically verified AI models" },
+       { title: "Active Users", count: "--", description: "Developers and researchers" },
+       { title: "Total Volume", count: "--", description: "In secure transactions" }
       ].map((stat, index) => (
        <AnimatedSection key={index} delay={index * 0.1}>
         <div className="text-center p-6 sm:p-8 bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
@@ -227,10 +227,10 @@ function SuiStackSection() {
     <AnimatedSection>
      <div className="text-center mb-12 sm:mb-14 md:mb-16">
       <h2 className="text-3xl sm:text-4xl md:text-5xl font-regola font-medium mb-3 sm:mb-4 text-black">
-       Built on 0G Network
+       Powered by Advanced Cryptography
       </h2>
       <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4">
-       Next-generation modular blockchain with native data availability
+       Leveraging zero-knowledge proofs and decentralized storage
       </p>
      </div>
     </AnimatedSection>
@@ -238,18 +238,18 @@ function SuiStackSection() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-4xl mx-auto">
      <AnimatedSection delay={0.1}>
       <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 hover:shadow-lg transition-shadow">
-       <h3 className="text-xl sm:text-2xl font-regola font-medium text-black mb-3 sm:mb-4">Modular Architecture</h3>
+       <h3 className="text-xl sm:text-2xl font-regola font-medium text-black mb-3 sm:mb-4">Security First</h3>
        <p className="text-sm sm:text-base text-gray-600 font-regola">
-        Separable consensus and data availability layers for maximum scalability
+        Multi-layer security with zero-knowledge proofs, encryption, and blockchain immutability
        </p>
       </div>
      </AnimatedSection>
 
      <AnimatedSection delay={0.2}>
       <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 hover:shadow-lg transition-shadow">
-       <h3 className="text-xl sm:text-2xl font-regola font-medium text-black mb-3 sm:mb-4">Infinite Scale</h3>
+       <h3 className="text-xl sm:text-2xl font-regola font-medium text-black mb-3 sm:mb-4">Lightning Fast</h3>
        <p className="text-sm sm:text-base text-gray-600 font-regola">
-        Horizontal scaling with programmable pricing for AI and data workloads
+        Sub-second finality with optimized cryptographic verification and storage retrieval
        </p>
       </div>
      </AnimatedSection>
@@ -266,15 +266,15 @@ function TrustEnforcedSection() {
     <AnimatedSection>
      <div className="max-w-4xl mx-auto text-center">
       <h2 className="text-3xl sm:text-4xl md:text-5xl font-regola font-medium mb-6 sm:mb-8 text-black">
-       Verifiable by Design
+       Trust, Enforced by Technology
       </h2>
       <p className="text-lg sm:text-xl text-gray-600 mb-8 sm:mb-10 md:mb-12 px-4 font-regola">
-       Every computation is provable, every piece of data is verifiable, every transaction is trustless
+       Every model is verified, every transaction is transparent, every byte is secure
       </p>
       
       <Link href="/marketplace">
        <button className="btn-primary text-base sm:text-lg">
-        Start Building
+        Start Building Trust
         <HiArrowRight className="inline-block ml-2 w-4 h-4 sm:w-5 sm:h-5" />
        </button>
       </Link>
@@ -288,20 +288,20 @@ function TrustEnforcedSection() {
 function FAQSection() {
  const faqs = [
   {
-   question: "What are zero-knowledge proofs?",
-   answer: "ZK proofs enable cryptographic verification of computations without revealing the underlying data, ensuring privacy while maintaining trust and verifiability."
+   question: "How does cryptographic verification work?",
+   answer: "Satya uses zero-knowledge proofs to verify AI model integrity and authenticity without revealing sensitive data or proprietary algorithms."
   },
   {
-   question: "How does 0G's modular architecture work?",
-   answer: "0G separates consensus and data availability layers, allowing independent scaling and optimization for AI workloads with programmable pricing."
+   question: "What makes Satya's marketplace secure?",
+   answer: "Multi-layer security with blockchain transparency, encrypted storage, and cryptographic attestation ensures trust between buyers and sellers."
   },
   {
-   question: "What is data availability sampling?",
-   answer: "DA sampling ensures data integrity across the network without requiring every node to download all data, enabling massive scale for AI applications."
+   question: "How is data encrypted and stored?",
+   answer: "Models are encrypted using advanced cryptography and stored on decentralized networks with policy-based access control for authorized users only."
   },
   {
-   question: "How does instant finality benefit AI markets?",
-   answer: "Sub-second transaction confirmation enables real-time AI model trading and inference, supporting high-frequency applications and automated systems."
+   question: "Why use blockchain for AI markets?",
+   answer: "Blockchain provides immutable records of transactions and verifications, creating a transparent audit trail that builds trust and prevents fraud."
   }
  ]
 
@@ -339,14 +339,9 @@ function Footer() {
    <div className="container-custom px-4 sm:px-6">
     <div className="flex flex-col md:flex-row justify-between items-start mb-8 sm:mb-10 md:mb-12">
      <div className="mb-6 md:mb-0">
-      <div className="flex items-center gap-2 mb-3 sm:mb-4">
-       <div className="w-8 h-8 bg-gradient-to-br from-purple-shade to-purple-1 rounded-lg flex items-center justify-center">
-        <span className="text-white font-regola font-medium text-lg">0G</span>
-       </div>
-       <h3 className="font-regola font-medium text-black text-lg">0G Labs</h3>
-      </div>
+      <h3 className="font-regola font-medium text-black mb-3 sm:mb-4 text-lg">Satya</h3>
       <p className="text-gray-600 text-sm max-w-sm font-regola">
-       Next-generation modular blockchain infrastructure for verifiable AI and data markets.
+       Building the future of trusted AI with verifiable data markets.
       </p>
      </div>
      
@@ -372,7 +367,7 @@ function Footer() {
     
     <div className="border-t border-gray-200 pt-6 sm:pt-8">
      <div className="flex justify-center items-center">
-      <p className="text-gray-600 text-sm font-regola">© 2025 0G Labs. All rights reserved.</p>
+      <p className="text-gray-600 text-sm font-regola">© 2025 Satya. All rights reserved.</p>
      </div>
     </div>
    </div>

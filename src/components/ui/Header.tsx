@@ -49,14 +49,13 @@ export default function Header({ isHomepage = false }: HeaderProps) {
   <header className="bg-white/95 backdrop-blur-xl fixed top-0 left-0 right-0 z-50 pt-2">
    <div className="container-custom">
     <div className="flex items-center justify-between py-3">
-     {/* 0G Labs Logo */}
+     {/* Satya Logo */}
      <Link href="/" className="hover:opacity-80 transition-opacity">
-      <div className="flex items-center gap-3">
-       <div className="w-8 h-8 bg-gradient-to-br from-purple-shade to-purple-1 rounded-lg flex items-center justify-center">
-        <span className="text-white font-regola font-medium text-lg">0G</span>
-       </div>
-       <span className="text-xl font-regola font-medium text-black">0G Labs</span>
-      </div>
+      <img 
+       src="/images/SatyaNav.png" 
+       alt="Satya" 
+       className="h-8"
+      />
      </Link>
 
      {isHomepageRoute ? (

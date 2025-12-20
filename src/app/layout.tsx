@@ -12,10 +12,10 @@ import './globals.css'
 // Font variables removed - using CSS imports in globals.css
 
 export const metadata: Metadata = {
- title: '0G Labs - Next-Gen Data Infrastructure',
- description: 'Modular blockchain infrastructure for verifiable AI and data markets with zero-knowledge proofs',
+ title: 'Satya - Verifiable AI & Data Marketplace',
+ description: 'Secure AI models and datasets with zero-knowledge proofs, encrypted storage, and blockchain transparency',
  icons: {
-  icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="%239200E1"/><text x="50%" y="50%" font-family="sans-serif" font-size="14" font-weight="600" fill="white" text-anchor="middle" dy="0.35em">0G</text></svg>',
+  icon: '/images/satya icon black.svg',
  },
 }
 
