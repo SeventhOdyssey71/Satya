@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Test - Regola Pro & Geist Mono</title>
+    
+    <!-- Load the same fonts as our app -->
+    <link rel="preconnect" href="https://api.fontshare.com">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=regola-pro@300,400,500&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: #FEFEFE;
+            color: #000000;
+        }
+        
+        .regola-book {
+            font-family: "Regola Pro", system-ui, -apple-system, sans-serif;
+            font-weight: 300;
+            font-size: 24px;
+            margin: 20px 0;
+            line-height: 1.4;
+        }
+        
+        .regola-regular {
+            font-family: "Regola Pro", system-ui, -apple-system, sans-serif;
+            font-weight: 400;
+            font-size: 24px;
+            margin: 20px 0;
+            line-height: 1.4;
+        }
+        
+        .regola-medium {
+            font-family: "Regola Pro", system-ui, -apple-system, sans-serif;
+            font-weight: 500;
+            font-size: 24px;
+            margin: 20px 0;
+            line-height: 1.4;
+        }
+        
+        .mono-test {
+            font-family: "JetBrains Mono", Consolas, Monaco, monospace;
+            font-weight: 500;
+            font-size: 18px;
+            margin: 20px 0;
+            background: #f5f5f5;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        
+        .fallback-test {
+            font-family: system-ui, -apple-system, sans-serif;
+            font-weight: 400;
+            font-size: 24px;
+            margin: 20px 0;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="font-family: 'Regola Pro', sans-serif; font-weight: 500; color: #9200E1;">
+        Satya Font Test
+    </h1>
+    
+    <div class="regola-book">
+        Regola Pro Book (300): The quick brown fox jumps over the lazy dog. ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 !@#$%^&*()
+    </div>
+    
+    <div class="regola-regular">
+        Regola Pro Regular (400): The quick brown fox jumps over the lazy dog. ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 !@#$%^&*()
+    </div>
+    
+    <div class="regola-medium">
+        Regola Pro Medium (500): The quick brown fox jumps over the lazy dog. ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 !@#$%^&*()
+    </div>
+    
+    <div class="mono-test">
+        JetBrains Mono Medium (500): 
+        const testCode = () => {
+            return "Hello, World!";
+        };
+        console.log(testCode());
+    </div>
+    
+    <div class="fallback-test">
+        Fallback System Font: This should look different from Regola Pro if the fonts are loading correctly.
+    </div>
+    
+    <script>
+        // Check if fonts are loaded
+        document.fonts.ready.then(() => {
+            console.log('Fonts loaded!');
+            document.fonts.forEach(font => {
+                console.log(`Font: ${font.family}, Status: ${font.status}`);
+            });
+        });
+        
+        // Test font loading
+        const testRegola = new FontFace('Regola Pro', 'url(https://api.fontshare.com/v2/css?f[]=regola-pro@300,400,500)');
+        testRegola.load().then(() => {
+            console.log('Regola Pro loaded successfully!');
+        }).catch(err => {
+            console.error('Regola Pro failed to load:', err);
+        });
+    </script>
+</body>
+</html>

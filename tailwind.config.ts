@@ -9,8 +9,14 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        regola: ['Regola Pro', 'sans-serif'],
-        mono: ['Geist Mono', 'monospace'],
+        regola: ['"Regola Pro"', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'Consolas', 'Monaco', 'monospace'],
+      },
+      fontWeight: {
+        'book': '300',      // Regola Pro Book
+        'normal': '400',    // Regola Pro Regular  
+        'medium': '500',    // Regola Pro Medium
+        'mono': '500',      // Geist Mono Medium (using JetBrains Mono)
       },
       colors: {
         background: 'var(--background)',

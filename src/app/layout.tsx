@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-// 0G Labs fonts are imported via CSS in globals.css
 import { WalletProviders } from '@/providers/WalletProvider'
 import { UploadProvider } from '@/contexts/UploadContext'
 import { NautilusProvider } from '@/lib/integrations/nautilus/context'
@@ -9,7 +8,6 @@ import GlobalUploadProgress from '@/components/upload/GlobalUploadProgress'
 import '@mysten/dapp-kit/dist/index.css'
 import './globals.css'
 
-// Font variables removed - using CSS imports in globals.css
 
 export const metadata: Metadata = {
  title: 'Satya - Verifiable AI & Data Marketplace',
@@ -26,7 +24,7 @@ export default function RootLayout({
 }) {
  return (
   <html lang="en">
-   <body className="antialiased">
+   <body className="antialiased font-regola">
     <WalletProviders>
      <PasskeyWalletProvider>
       <UploadProvider>
