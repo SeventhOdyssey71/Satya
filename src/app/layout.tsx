@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Russo_One, Albert_Sans } from 'next/font/google'
+// 0G Labs fonts are imported via CSS in globals.css
 import { WalletProviders } from '@/providers/WalletProvider'
 import { UploadProvider } from '@/contexts/UploadContext'
 import { NautilusProvider } from '@/lib/integrations/nautilus/context'
@@ -9,24 +9,13 @@ import GlobalUploadProgress from '@/components/upload/GlobalUploadProgress'
 import '@mysten/dapp-kit/dist/index.css'
 import './globals.css'
 
-const russo = Russo_One({
- weight: '400',
- subsets: ['latin'],
- variable: '--font-russo',
-})
-
-const albert = Albert_Sans({
- weight: ['300', '400', '500'],
- subsets: ['latin'],
- variable: '--font-albert',
- display: 'swap',
-})
+// Font variables removed - using CSS imports in globals.css
 
 export const metadata: Metadata = {
- title: 'Satya Data Marketplace',
- description: 'Secure ML model and dataset marketplace with TEE verification',
+ title: '0G Labs - Next-Gen Data Infrastructure',
+ description: 'Modular blockchain infrastructure for verifiable AI and data markets with zero-knowledge proofs',
  icons: {
-  icon: '/images/satya icon black.svg',
+  icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="%239200E1"/><text x="50%" y="50%" font-family="sans-serif" font-size="14" font-weight="600" fill="white" text-anchor="middle" dy="0.35em">0G</text></svg>',
  },
 }
 
@@ -36,8 +25,8 @@ export default function RootLayout({
  children: React.ReactNode
 }) {
  return (
-  <html lang="en" className={`${russo.variable} ${albert.variable}`}>
-   <body className="antialiased font-albert font-light">
+  <html lang="en">
+   <body className="antialiased">
     <WalletProviders>
      <PasskeyWalletProvider>
       <UploadProvider>

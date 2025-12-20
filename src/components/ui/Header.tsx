@@ -49,20 +49,21 @@ export default function Header({ isHomepage = false }: HeaderProps) {
   <header className="bg-white/95 backdrop-blur-xl fixed top-0 left-0 right-0 z-50 pt-2">
    <div className="container-custom">
     <div className="flex items-center justify-between py-3">
-     {/* Logo */}
+     {/* 0G Labs Logo */}
      <Link href="/" className="hover:opacity-80 transition-opacity">
-      <img 
-       src="/images/SatyaNav.png" 
-       alt="Satya" 
-       className="h-8"
-      />
+      <div className="flex items-center gap-3">
+       <div className="w-8 h-8 bg-gradient-to-br from-purple-shade to-purple-1 rounded-lg flex items-center justify-center">
+        <span className="text-white font-regola font-medium text-lg">0G</span>
+       </div>
+       <span className="text-xl font-regola font-medium text-black">0G Labs</span>
+      </div>
      </Link>
 
      {isHomepageRoute ? (
       /* Homepage: Get Started Button */
       <Link 
        href="/marketplace" 
-       className="px-6 py-2 bg-ocean text-white hover:bg-deep-ocean active:bg-deep-ocean/90 transition-all duration-200 rounded-full font-albert font-normal text-[17px]"
+       className="btn-primary"
       >
        Get Started
       </Link>
@@ -75,40 +76,40 @@ export default function Header({ isHomepage = false }: HeaderProps) {
         <nav className="flex items-center gap-8">
          <Link 
           href="/marketplace"
-          className={`transition-colors text-base ${
+          className={`transition-colors text-base font-regola ${
            pathname === '/marketplace' 
             ? 'text-black font-medium' 
-            : 'text-gray-500 font-light hover:text-gray-700'
+            : 'text-gray-600 hover:text-black'
           }`}
          >
           Marketplace
          </Link>
          <Link 
           href="/dashboard"
-          className={`transition-colors text-base ${
+          className={`transition-colors text-base font-regola ${
            pathname === '/dashboard' 
             ? 'text-black font-medium' 
-            : 'text-gray-500 font-light hover:text-gray-700'
+            : 'text-gray-600 hover:text-black'
           }`}
          >
           Dashboard
          </Link>
          <Link 
           href="/upload"
-          className={`transition-colors text-base ${
+          className={`transition-colors text-base font-regola ${
            pathname === '/upload' 
             ? 'text-black font-medium' 
-            : 'text-gray-500 font-light hover:text-gray-700'
+            : 'text-gray-600 hover:text-black'
           }`}
          >
           Upload
          </Link>
          <Link 
           href="/agent"
-          className={`transition-colors text-base ${
+          className={`transition-colors text-base font-regola ${
            pathname === '/agent' 
             ? 'text-black font-medium' 
-            : 'text-gray-500 font-light hover:text-gray-700'
+            : 'text-gray-600 hover:text-black'
           }`}
          >
           Agent
@@ -121,7 +122,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
          <div className="relative" ref={dropdownRef}>
           <button 
            onClick={() => setShowDropdown(!showDropdown)}
-           className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-light"
+           className="flex items-center gap-2 px-4 py-2 bg-purple-shade text-white rounded-lg hover:bg-purple-600 transition-colors font-regola"
           >
            <span className="text-base">
             {currentWallet?.address?.slice(0, 6)}...{currentWallet?.address?.slice(-4)}
@@ -129,7 +130,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
           </button>
           
           {showDropdown && (
-           <div className="absolute right-0 mt-2 w-48 bg-white border border-ocean/10 rounded-2xl shadow-lg z-10 overflow-hidden">
+           <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-1 rounded-2xl shadow-lg z-10 overflow-hidden">
             <button
              onClick={async () => {
               try {
@@ -144,7 +145,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
                setShowDropdown(false)
               }
              }}
-             className="w-full text-left px-4 py-2.5 text-[15px] font-albert font-normal text-ocean hover:bg-aqua/10 transition-colors"
+             className="w-full text-left px-4 py-2.5 text-[15px] font-regola text-black hover:bg-purple-shade/10 transition-colors"
             >
              Disconnect Wallet
             </button>
@@ -152,7 +153,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
           )}
          </div>
         ) : (
-         <CustomConnectButton className="bg-black text-white border-black px-4 py-2 rounded-lg font-light text-base hover:bg-gray-800 transition-colors" />
+         <CustomConnectButton className="btn-primary text-base" />
         )}
         </div>
        </div>
@@ -164,7 +165,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
          <div className="relative" ref={mobileDropdownRef}>
           <button 
            onClick={() => setShowMobileDropdown(!showMobileDropdown)}
-           className="flex items-center gap-2 px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-light text-sm"
+           className="flex items-center gap-2 px-3 py-1.5 bg-purple-shade text-white rounded-lg hover:bg-purple-600 transition-colors font-regola text-sm"
           >
            <span>
             {currentWallet?.address?.slice(0, 4)}...{currentWallet?.address?.slice(-3)}
@@ -172,7 +173,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
           </button>
           
           {showMobileDropdown && (
-           <div className="absolute right-0 mt-2 w-40 bg-white border border-ocean/10 rounded-xl shadow-lg z-10 overflow-hidden">
+           <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-1 rounded-xl shadow-lg z-10 overflow-hidden">
             <button
              onClick={async () => {
               try {
@@ -187,7 +188,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
                setShowMobileDropdown(false)
               }
              }}
-             className="w-full text-left px-3 py-2 text-sm font-albert font-normal text-ocean hover:bg-aqua/10 transition-colors"
+             className="w-full text-left px-3 py-2 text-sm font-regola text-black hover:bg-purple-shade/10 transition-colors"
             >
              Disconnect
             </button>
@@ -195,7 +196,7 @@ export default function Header({ isHomepage = false }: HeaderProps) {
           )}
          </div>
         ) : (
-         <CustomConnectButton className="bg-black text-white border-black px-3 py-1.5 rounded-lg font-light text-sm hover:bg-gray-800 transition-colors" />
+         <CustomConnectButton className="btn-primary btn-sm" />
         )}
 
         {/* Hamburger Menu */}
@@ -231,10 +232,10 @@ export default function Header({ isHomepage = false }: HeaderProps) {
        <Link 
         href="/marketplace"
         onClick={() => setShowMobileMenu(false)}
-        className={`px-4 py-2 transition-colors text-base ${
+        className={`px-4 py-2 transition-colors text-base font-regola ${
          pathname === '/marketplace' 
-          ? 'text-black font-medium bg-gray-50' 
-          : 'text-gray-500 font-light hover:text-gray-700 hover:bg-gray-50'
+          ? 'text-black font-medium bg-purple-shade/5' 
+          : 'text-gray-600 hover:text-black hover:bg-purple-shade/5'
         }`}
        >
         Marketplace
@@ -242,10 +243,10 @@ export default function Header({ isHomepage = false }: HeaderProps) {
        <Link 
         href="/dashboard"
         onClick={() => setShowMobileMenu(false)}
-        className={`px-4 py-2 transition-colors text-base ${
+        className={`px-4 py-2 transition-colors text-base font-regola ${
          pathname === '/dashboard' 
-          ? 'text-black font-medium bg-gray-50' 
-          : 'text-gray-500 font-light hover:text-gray-700 hover:bg-gray-50'
+          ? 'text-black font-medium bg-purple-shade/5' 
+          : 'text-gray-600 hover:text-black hover:bg-purple-shade/5'
         }`}
        >
         Dashboard
@@ -253,10 +254,10 @@ export default function Header({ isHomepage = false }: HeaderProps) {
        <Link 
         href="/upload"
         onClick={() => setShowMobileMenu(false)}
-        className={`px-4 py-2 transition-colors text-base ${
+        className={`px-4 py-2 transition-colors text-base font-regola ${
          pathname === '/upload' 
-          ? 'text-black font-medium bg-gray-50' 
-          : 'text-gray-500 font-light hover:text-gray-700 hover:bg-gray-50'
+          ? 'text-black font-medium bg-purple-shade/5' 
+          : 'text-gray-600 hover:text-black hover:bg-purple-shade/5'
         }`}
        >
         Upload
@@ -264,10 +265,10 @@ export default function Header({ isHomepage = false }: HeaderProps) {
        <Link 
         href="/agent"
         onClick={() => setShowMobileMenu(false)}
-        className={`px-4 py-2 transition-colors text-base ${
+        className={`px-4 py-2 transition-colors text-base font-regola ${
          pathname === '/agent' 
-          ? 'text-black font-medium bg-gray-50' 
-          : 'text-gray-500 font-light hover:text-gray-700 hover:bg-gray-50'
+          ? 'text-black font-medium bg-purple-shade/5' 
+          : 'text-gray-600 hover:text-black hover:bg-purple-shade/5'
         }`}
        >
         Agent

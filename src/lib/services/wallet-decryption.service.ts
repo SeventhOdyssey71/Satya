@@ -131,16 +131,17 @@ export class WalletDecryptionService {
   /**
    * Create SEAL approve transaction for decryption authorization
    *
-   * For creators: Calls seal_approve with document_id + PendingModel (proves ownership)
-   * For buyers: Calls seal_approve_buyer with document_id + PurchaseRecord (proves ownership of purchase)
+   * For creators: Calls seal_approve_creator with Asset (proves ownership)
+   * For buyers: Calls seal_approve with Purchase + Asset (proves purchase ownership)
    */
   private async createApproveTransaction(
     policyId: string,
     userAddress: string,
-    assetId: string,  // The pending model ID (creator) or purchase record ID (buyer)
+    assetId: string,  // For buyers: the Asset ID. For creators: the Asset ID
     blobId: string,   // The encrypted blob ID being decrypted
     isBuyer: boolean = true,  // Default to buyer flow (most common case)
-    marketplacePackageId?: string  // Optional: Use package ID from blob metadata (for backwards compatibility)
+    marketplacePackageId?: string,  // Optional: Use package ID from blob metadata (for backwards compatibility)
+    purchaseRecordId?: string  // Required for buyers: the Purchase record ID
   ): Promise<Uint8Array> {
     const userType = isBuyer ? 'buyer' : 'creator';
     console.log(`Creating SEAL approve transaction for ${userType}...`, {
@@ -193,21 +194,50 @@ export class WalletDecryptionService {
     );
 
     // Choose the right function based on user type
-    const functionName = isBuyer ? 'seal_approve_buyer' : 'seal_approve';
-    const objectType = isBuyer ? 'PurchaseRecord' : 'PendingModel';
+    const functionName = isBuyer ? 'seal_approve' : 'seal_approve_creator';
 
-    console.log(`Calling ${functionName} with ${objectType} object:`, assetId);
+    console.log(`Calling ${functionName} for ${isBuyer ? 'buyer' : 'creator'}:`, assetId);
 
-    // Call satya::marketplace::seal_approve or seal_approve_buyer
-    // First parameter MUST be document_id (vector<u8>) for SEAL key servers
-    tx.moveCall({
-      target: `${SATYA_MARKETPLACE_PACKAGE_ID}::marketplace::${functionName}`,
-      arguments: [
-        tx.pure.vector('u8', documentIdBytes), // document_id: vector<u8> (blob ID)
-        tx.object(assetId),                    // PurchaseRecord (buyer) or PendingModel (creator)
-        tx.object('0x6')                       // Clock object
-      ]
-    });
+    // Call marketplace::seal_approve or seal_approve_creator
+    // Parameters differ based on function:
+    // - seal_approve: (purchase: &Purchase, asset: &Asset, clock: &Clock)
+    // - seal_approve_creator: (asset: &Asset, clock: &Clock)
+    if (isBuyer) {
+      // For buyers: seal_approve(purchase, asset, clock)
+      if (!purchaseRecordId) {
+        console.log('⚠️ Purchase record ID not provided for buyer transaction, using assetId as purchase record');
+        // Fallback: assume assetId is actually the Purchase record ID
+        console.log(`Calling seal_approve with purchase: ${assetId}, asset: ${assetId} (same object)`);
+        tx.moveCall({
+          target: `${SATYA_MARKETPLACE_PACKAGE_ID}::core::seal_approve`,
+          arguments: [
+            tx.object(assetId),  // purchase object (assuming assetId is Purchase record)
+            tx.object(assetId),  // asset object (same as purchase - let contract validate)
+            tx.object('0x6')     // Clock object
+          ]
+        });
+      } else {
+        console.log(`Calling seal_approve with purchase: ${purchaseRecordId}, asset: ${assetId}`);
+        tx.moveCall({
+          target: `${SATYA_MARKETPLACE_PACKAGE_ID}::core::seal_approve`,
+          arguments: [
+            tx.object(purchaseRecordId),  // purchase object (Purchase record)
+            tx.object(assetId),           // asset object (Asset record)
+            tx.object('0x6')              // Clock object
+          ]
+        });
+      }
+    } else {
+      // For creators: seal_approve_creator(asset, clock)
+      console.log(`Calling seal_approve_creator with asset: ${assetId}`);
+      tx.moveCall({
+        target: `${SATYA_MARKETPLACE_PACKAGE_ID}::core::seal_approve_creator`,
+        arguments: [
+          tx.object(assetId),  // asset object (Asset record)
+          tx.object('0x6')     // Clock object
+        ]
+      });
+    }
 
     // Build transaction kind only (PTB) for SEAL key server validation
     // Key servers expect only the programmable transaction block, not full transaction
